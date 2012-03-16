@@ -16,6 +16,7 @@
 #    under the License.
 
 import logging
+import predictor
 
 class ServerFarm(Object):
     def __init__(self):
@@ -36,7 +37,7 @@ class ServerFarm(Object):
         self._backInservice = 0
         self._probes = []
         self._rservers = []
-        self._predictor = "Round Robin"
+        self._predictor = predictor.RoundRobin()
         self._retcodeMap = ""
         self._status = "ACTIVE"
         self._created = None
