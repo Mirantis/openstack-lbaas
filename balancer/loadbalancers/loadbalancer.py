@@ -17,23 +17,6 @@
 
 import logging
 
-SF
- id
- name
- status
- RServer[]
- 
-RServer
- id
- name
- IP
- port
- status
- 
-Probe
-VS
-
-
 class LoadBalancer(object):
     def __init__(self):
         self._id = None
@@ -82,11 +65,3 @@ class LoadBalancer(object):
     @created.setter
     def created(self,  value):
         self._created = value
-    
-    @property
-    def updated(self):
-        return self._updated
-    
-    @updated.setter
-    def updated(self,  value):
-        self._updated = value
