@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Project SYSTEM "Project-4.6.dtd">
+<!-- eric4 project file for project balancer -->
+<!-- Saved: 2012-03-16, 16:07:54 -->
+<!-- Copyright (C) 2012 ,  -->
+<Project version="4.6">
+  <Language>en</Language>
+  <ProgLanguage mixed="0">Python</ProgLanguage>
+  <ProjectType>Console</ProjectType>
+  <Description>Initial project for Cisco LB Service</Description>
+  <Version>1.0</Version>
+  <Author></Author>
+  <Email></Email>
+  <Sources>
+    <Source>openstack/__init__.py</Source>
+    <Source>openstack/common/__init__.py</Source>
+    <Source>openstack/common/utils.py</Source>
+    <Source>openstack/common/context.py</Source>
+    <Source>openstack/common/exception.py</Source>
+    <Source>openstack/common/middleware/__init__.py</Source>
+    <Source>openstack/common/middleware/context.py</Source>
+    <Source>openstack/common/wsgi.py</Source>
+    <Source>openstack/common/config.py</Source>
+    <Source>setup.py</Source>
+    <Source>balancer/__init__.py</Source>
+    <Source>balancer/version.py</Source>
+    <Source>balancer/api/__init__.py</Source>
+    <Source>balancer/api/v1/__init__.py</Source>
+    <Source>balancer/api/v1/router.py</Source>
+    <Source>balancer/api/v1/images.py</Source>
+    <Source>balancer/api/v1/members.py</Source>
+    <Source>balancer/api/v1/controller.py</Source>
+    <Source>balancer/api/v1/filters.py</Source>
+    <Source>balancer/api/middleware/__init__.py</Source>
+    <Source>balancer/api/versions.py</Source>
+    <Source>tests/__init__.py</Source>
+    <Source>tests/unit/__init__.py</Source>
+    <Source>tests/functional/__init__.py</Source>
+    <Source>doc/source/conf.py</Source>
+    <Source>__init__.py</Source>
+  </Sources>
+  <Forms>
+  </Forms>
+  <Translations>
+  </Translations>
+  <Resources>
+  </Resources>
+  <Interfaces>
+  </Interfaces>
+  <Others>
+  </Others>
+  <Vcs>
+    <VcsType>None</VcsType>
+  </Vcs>
+  <FiletypeAssociations>
+    <FiletypeAssociation pattern="*.pyw" type="SOURCES" />
+    <FiletypeAssociation pattern="*.idl" type="INTERFACES" />
+    <FiletypeAssociation pattern="*.py" type="SOURCES" />
+    <FiletypeAssociation pattern="*.ptl" type="SOURCES" />
+  </FiletypeAssociations>
+</Project>
