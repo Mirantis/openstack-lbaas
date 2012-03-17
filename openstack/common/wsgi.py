@@ -34,6 +34,7 @@ import webob.exc
 
 from openstack.common import exception
 
+logger = logging.getLogger('openstack.common.wsgi')
 
 class WritableLogger(object):
     """A thin wrapper that responds to `write` and logs."""
@@ -247,8 +248,10 @@ class JSONRequestDeserializer(object):
 
     def default(self, request):
         if self.has_body(request):
+            logger.debug("Deserialization: request has body")
             return {'body': self.from_json(request.body)}
         else:
+            logger.debug("Deserialization: request has NOT body")
             return {}
 
 
@@ -263,6 +266,7 @@ class JSONResponseSerializer(object):
         return json.dumps(data, default=sanitizer)
 
     def default(self, response, result):
+        logger.debug("JSONSerializer default method called.")
         response.headers.add('Content-Type', 'application/json')
         response.body = self.to_json(result)
 
@@ -299,6 +303,7 @@ class Resource(object):
     @webob.dec.wsgify(RequestClass=Request)
     def __call__(self, request):
         """WSGI method that controls (de)serialization and method dispatch."""
+        logger.debug("Resource __call__ is invoked")
         action_args = self.get_action_args(request.environ)
         action = action_args.pop('action', None)
 
@@ -316,9 +321,16 @@ class Resource(object):
         return self.dispatch(self.deserializer, action, request)
 
     def serialize_response(self, action, action_result, request):
+        msg = "Called serialize response Action:%s Result:%s  Request:%s" % (action,  action_result,  request)
+        logger.debug(msg)
         response = webob.Response()
-        self.dispatch(self.serializer, action, response,
-                      action_result, request)
+        logger.debug("serializer: dispatching call")
+        #TODO check why it fails with original openstack code
+        #self.dispatch(self.serializer, action, response,
+         #             action_result, request)
+        self.serializer.default(response,  action_result)
+        msg = "Response: %s" % response
+        logger.debug(msg)
         return response
 
     def execute_action(self, action, request, **action_args):

@@ -27,5 +27,16 @@ class LoadbalancerRegistry(object):
     def addBalancer(self, lb_balancer):
         self._balancers[balancer.id()] = balancer
         
+    def getBalancer(self,  id):
+        #TODO Add exception handling here
+        return self._balancers[id]
+    
+    def getBlanacerList(self):
+        return self._balancers
+    
         
-        
+global registry 
+registry = LoadbalancerRegistry()
+
+def getLBRegistry():
+        return registry
