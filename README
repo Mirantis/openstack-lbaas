@@ -8,3 +8,12 @@ The skeleton project is designed to show a recommended set of modules
 for creating a simple WSGI server, with a versioned API, clean separation
 of modules, a standard way of structuring both unit and functional tests,
 configuration files, and documentation.
+
+1. How to run unittest:
+    a) execute ./run-test.sh  First time it will initialize venv folder (download some pkgs)
+
+2. How to start balancer service
+    a) check config file - ./etc/balancer-api-paste.ini
+    b) in top level directory execute ./bin/balancer-api --config-file ./etc/balancer-api-paste.ini
+    
+    
