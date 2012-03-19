@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project balancer -->
-<!-- Saved: 2012-03-19, 17:12:50 -->
+<!-- Saved: 2012-03-19, 16:56:09 -->
 <!-- Copyright (C) 2012 ,  -->
 <Project version="4.6">
   <Language>en</Language>
@@ -52,6 +52,7 @@
     <Source>balancer/tests/unit/test_storage.py</Source>
     <Source>balancer/tests/unit/test_devices.py</Source>
     <Source>balancer/tests/functional/__init__.py</Source>
+    <Source>balancer/drivers/acedriver.py</Source>
   </Sources>
   <Forms>
   </Forms>
