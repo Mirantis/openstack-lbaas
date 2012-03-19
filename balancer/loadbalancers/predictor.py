@@ -28,9 +28,10 @@ class BasePredictor(Object):
         self._type = value
         
 class HashAddrPredictor(BasePredictor):
-    self._maskType = None
-    self._ipNetmask = ""
-    self._ipv6Prefix = ""
+    def __init__(self):
+        self._maskType = None
+        self._ipNetmask = ""
+        self._ipv6Prefix = ""
         
     @property
     def maskType(self):
@@ -52,8 +53,9 @@ class HashAddrPredictor(BasePredictor):
         self._ipv6Prefix = value
 
 class HashURL(BasePredictor):
-    self._beginPattern = ""
-    self._endPattern = ""
+    def __init__(self):
+        self._beginPattern = ""
+        self._endPattern = ""
     
     @property
     def beginPattern(self):
@@ -69,8 +71,9 @@ class HashURL(BasePredictor):
         self._endPattern = value
 
 class HashContent(HashURL):
-    self._length = ""
-    self._offsetBytes = ""
+    def __init__(self):
+        self._length = ""
+        self._offsetBytes = ""
     
     @property
     def length(self):
@@ -86,7 +89,8 @@ class HashContent(HashURL):
         self._offsetBytes = value
 
 class HashCookie(BasePredictor):
-    self._cookieName = ""
+    def __init__(self):
+        self._cookieName = ""
     
     @property
     def cookieName(self):
@@ -96,8 +100,9 @@ class HashCookie(BasePredictor):
         self._cookieName = value
 
 class HashHeader(BasePredictor):
-    self._customHeader = ""
-    self._definedHeader = None
+    def __init__(self):
+        self._customHeader = ""
+        self._definedHeader = None
     
     @property
     def customHeader(self):
@@ -116,8 +121,9 @@ class HashLayer4(HashContent):
     pass
 
 class LeastBandwidth(BasePredictor):
-    self._accessTime = ""
-    self._samples = ""
+    def __init__(self):
+        self._accessTime = ""
+        self._samples = ""
     
     @property
     def accessTime(self):
@@ -133,7 +139,8 @@ class LeastBandwidth(BasePredictor):
         self._samples = value
 
 class LeastConn(BasePredictor):
-    self._slowStartDur = ""
+    def __init__(self):
+        self._slowStartDur = ""
     
     @property
     def slowStartDur(self):
@@ -143,9 +150,10 @@ class LeastConn(BasePredictor):
         self._slowStartDur = value
 
 class LeastLoaded(BasePredictor):
-    self._snmpProbe = ""
-    self._autoAdjust = None
-    self._weightConn = None
+    def __init__(self):
+        self._snmpProbe = ""
+        self._autoAdjust = None
+        self._weightConn = None
     
     @property
     def snmpProbe(self):
@@ -167,9 +175,10 @@ class LeastLoaded(BasePredictor):
         self._weightConn = value
 
 class Response(BasePredictor):
-    self._responseType = ""
-    self._samples = ""
-    self._weightConn = None
+    def __init__(self):
+        self._responseType = ""
+        self._samples = ""
+        self._weightConn = None
     
     @property
     def responseType(self):
