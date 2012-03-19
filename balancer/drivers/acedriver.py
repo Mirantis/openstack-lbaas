@@ -1,37 +1,36 @@
 import re
 
 class acedriver():
-    def __init__():
-        pass
+    def __init__(self):
+        self.healthprobe = "ICMP"
+    
+    def __str__(self):
+        return "oops"
 
-	def add (dict):
-		if self.dict == "rs_name":
-			checkproperty_name(self.dict)
-		if self.dict == "ip":
-			checkproperty_ip(self.dict)
-		if self.dict == "sfarm_name":
-			checkproperty_name(self.dict)
-		# after checking necessary parametrs create rserver and serverfarm
-		
-		if not checkInDB(self.rs_name):
-			create_rserv()
-		
-	def checkproperty_name(name):
-		if re.match (name, "regexpress"):
+    def AddLB(self, dict): #.rs_name, .rs_ip, ._sfarm
+        return self.checkproperty_ip(dict.rs_ip)
+        
+    def checkproperty_name(self, name):
+		if re.match (name, "[a-z]"):
 			return 1
 		else:
 			return "Wrong name"
 
-	def create_rserv():
-        
+    def checkproperty_ip(self,  ipaddr):
+        if re.match(ipaddr, '^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}$'):
+			return "match !"
+        else:
+			return "Wrong"
+
 
 class lb():
-	pass
-	lb.rs_name = "RS01"
-	lb.rs_ip = "10.1.1.1"
-    lb.sfarm = ""
-    lb.description = "description"
+    def __init__(self):
+        self.rs_name = "rs001"
+        self.rs_ip = "10.1.1.1"
+        self.sfarm_name = "sfarm001"
 
+
+rsObject = lb()
+#print rsObject
 r = acedriver()
-r.add(rsObject)
-
+print r.AddLB(rsObject)
