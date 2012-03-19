@@ -18,25 +18,87 @@
 import logging
 
 import  balancer.loadbalancers.loadbalancer
+from balancer.storage.storage   import *
+from balancer.common.utils import Singleton
 
+
+class LBCache(object):
+    class LBCacheEntry:
+        def __init__(self, lb):
+            self._lb = lb
+            self._dirty = False
+        @property
+        def entry(self):
+            return self._lb
+        
+        @property
+        def dirty(self):
+            return self._dirty
+        
+        def mark(self):
+            self._drity = True
+    
+    def __init__(self):
+        self._entries = {}
+    
+    def addEntry(self,  lb):
+        self._entries[lb.id] = LBCacheEntry(lb)
+    
+    def getEntry(self,  id):
+        entry = self._entries.get(k,  None)
+        if entry != None:
+            return entry.entry
+        else:
+            return None
+    
+    def removeEntry(self,  id):
+        #TODO check for existance
+        del self._entries[id]
+    
+@Singleton
 class LoadbalancerRegistry(object):
     
     def __init__(self):
-            self._balancers = {}
+        self._init = False
+        pass
+
+    def init(self,  conf):
+        if not self._init:
+            self._storage = Storage(conf)
+            self._cache = LBCache()
+            self._init = True
     
     def addBalancer(self, lb_balancer):
-        self._balancers[balancer.id()] = balancer
+        #TODO add some logic here to return data from cache
+        wr = self._storage.getWriter()
+        wr.writeLoadBalancer(lb_balancer)
+        self._cache.addEntry(lb_balancer)
+        pass
         
     def getBalancer(self,  id):
         #TODO Add exception handling here
-        return self._balancers[id]
+        lb = self._cache.getEntry(id)
+        if lb != None:
+            return lb
+        else:
+            reader = self._storage.getReader()
+            lb = reader.getLoadBalancerById(id)
+            self._cache.addEntry(lb)
+            return lb
     
     def getBlanacerList(self):
-        return self._balancers
+        reader = self._storage.getReader()
+        lb_list = reader.getLoadBalancers()
+        for lb in lb_list:
+            self._cache.addEntry(lb)
+        return lb_list
+        
     
         
-global registry 
-registry = LoadbalancerRegistry()
 
-def getLBRegistry():
-        return registry
+
+def getLBRegistry(conf):
+    lbr = LoadbalancerRegistry.Instance()
+    lbr.init(conf)
+    return lbr
+    

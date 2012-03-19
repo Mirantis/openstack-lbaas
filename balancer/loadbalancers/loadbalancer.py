@@ -17,7 +17,7 @@
 
 import logging
 
-
+logger = logging.getLogger(__name__)
 
 class LoadBalancer(object):
     def __init__(self):
@@ -30,6 +30,14 @@ class LoadBalancer(object):
     
     def loadFromRow(self,  row):
         #TODO implement this
+        msg = 'LoadBalancer create from row. Id: %s' % row[0]
+        logger.debug(msg)
+        self._id = row[0]
+        self._name=row[1]
+        self._algorithm = row[2]
+        self._status = row[3]
+        self._created = row[4]
+        self._updated = row[5]
         pass
     @property
     def id(self):

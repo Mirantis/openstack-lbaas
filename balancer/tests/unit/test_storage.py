@@ -20,7 +20,7 @@ import unittest
 
 from balancer.storage.storage import *
 from balancer.loadbalancers.loadbalancer import LoadBalancer
-
+from openstack.common import exception
 class StorageTestCase(unittest.TestCase):
     
     def test_lb_save(self):
@@ -31,11 +31,44 @@ class StorageTestCase(unittest.TestCase):
         lb.staus = "ACTIVE"
         lb.created = "01-01-2012 11:22:33"
         lb.updated = "02-02-2012 11:22:33"
-        stor = Storage( {'db_path':'/home/gokrokve/work/OpenStack/balancer/db/balancer.db'})
+        stor = Storage( {'db_path':'/home/gokrokve/work/OpenStack/balancer/db/testdb.db'})
         wr = stor.getWriter()
         wr.writeLoadBalancer(lb)
         read  = stor.getReader()
         newlb = read.getLoadBalancerById(123)
         self.assertEquals(newlb.name,  "testLB")
+    
+    def test_exception_on_nonexistent_lb(self):
+        stor = Storage( {'db_path':'/home/gokrokve/work/OpenStack/balancer/db/testdb.db'})
+        read  = stor.getReader()
+        try:
+            newlb = read.getLoadBalancerById(1234)
+        except exception.NotFound:
+            pass
+        else:
+            self.fail("No exception was raised for non-existent LB")
+            
+    def test_multiple_lb_select(self):
+        lb = LoadBalancer()
+        lb.name  = "testLB2"
+        lb.id = 124
+        lb.algorithm = "ROUND_ROBIN"
+        lb.staus = "ACTIVE"
+        lb.created = "01-01-2012 11:22:33"
+        lb.updated = "02-02-2012 11:22:33"
+        stor = Storage( {'db_path':'/home/gokrokve/work/OpenStack/balancer/db/testdb.db'})
+        wr = stor.getWriter()
+        wr.writeLoadBalancer(lb)
+        lb.name  = "testLB3"
+        lb.id = 125
+        lb.algorithm = "ROUND_ROBIN"
+        lb.staus = "DOWN"
+        lb.created = "01-01-2012 11:22:33"
+        lb.updated = "02-02-2012 11:22:33"
+        wr.writeLoadBalancer(lb)
+        read  = stor.getReader()
+        lb_list = read.getLoadBalancers()
+        self.assertEquals(len(lb_list), 3)
+    
     
     

@@ -84,6 +84,10 @@ then
   fi
 fi
 
+echo "Cleaning test database"
+rm -f ./db/testdb.db
+sqlite3 ./db/testdb.db < ./etc/tables.sql
+
 if [ $just_pep8 -eq 1 ]; then
     run_pep8
     exit

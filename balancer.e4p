@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project balancer -->
-<!-- Saved: 2012-03-19, 11:01:04 -->
+<!-- Saved: 2012-03-19, 17:12:50 -->
 <!-- Copyright (C) 2012 ,  -->
 <Project version="4.6">
   <Language>en</Language>
@@ -31,11 +31,7 @@
     <Source>balancer/api/v1/filters.py</Source>
     <Source>balancer/api/middleware/__init__.py</Source>
     <Source>balancer/api/versions.py</Source>
-    <Source>tests/__init__.py</Source>
-    <Source>tests/unit/__init__.py</Source>
-    <Source>tests/functional/__init__.py</Source>
     <Source>doc/source/conf.py</Source>
-    <Source>__init__.py</Source>
     <Source>balancer/loadbalancers/__init__.py</Source>
     <Source>balancer/loadbalancers/loadbalancer.py</Source>
     <Source>balancer/loadbalancers/loadbalancers.py</Source>
@@ -50,7 +46,6 @@
     <Source>balancer/devices/__init__.py</Source>
     <Source>balancer/devices/device.py</Source>
     <Source>balancer/storage/__init__.py</Source>
-    <Source>tests/unit/test_devices.py</Source>
     <Source>balancer/storage/storage.py</Source>
     <Source>balancer/tests/__init__.py</Source>
     <Source>balancer/tests/unit/__init__.py</Source>

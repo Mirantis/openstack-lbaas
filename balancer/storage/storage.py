@@ -18,16 +18,23 @@
 import sqlite3
 
 from balancer.loadbalancers.loadbalancer import *
+from openstack.common import exception
+
+logger = logging.getLogger(__name__)
+
 
 class Reader(object):
     """ Reader class is used for db read opreations"""
     def __init__(self,  db):
+        logger.debug("Reader: connecting to db: %s" % db)
         self._con = sqlite3.connect(db)
     
     def getLoadBalancers(self):
         cursor = self._con.cursor()
         cursor.execute('SELECT * FROM loadbalancers')
-        rows = cur.fetchall()
+        rows = cursor.fetchall()
+        if rows == None:
+             raise exception.NotFound()
         list = []
         for row in rows:
             lb = LoadBalancer()
@@ -38,20 +45,27 @@ class Reader(object):
     def getLoadBalancerById(self,  id):
          cursor = self._con.cursor()
          cursor.execute('SELECT * FROM loadbalancers WHERE id = %s' % id)
-         rows = cursor.fetchone()
+         row = cursor.fetchone()
+         if row == None:
+             raise exception.NotFound()
          lb = LoadBalancer()
-         lb.loadFromRow(rows)
+         lb.loadFromRow(row)
          return lb
         
 
 class Writer(object):
     def __init__(self,  db):
+        logger.debug("Writer: connecting to db: %s" % db)
         self._con = sqlite3.connect(db)
     
     def writeLoadBalancer(self,  lb):
+         logger.debug("Saving LoadBalancer instance in DB.")
          cursor = self._con.cursor()
-         command = "INSERT INTO loadbalancers (id, name, algorithm , status , created , updated ) VALUES(%d,'%s','%s','%s','%s','%s')" % (lb.id,  lb.name,  lb.algorithm,  lb.status,  lb.created,  lb.updated)
+         command = "INSERT INTO loadbalancers (id, name, algorithm , status , created , updated ) VALUES(%d,'%s','%s','%s','%s','%s');" % (lb.id,  lb.name,  lb.algorithm,  lb.status,  lb.created,  lb.updated)
+         msg = "Executing command: %s" % command
+         logger.debug(msg)
          cursor.execute(command)
+         self._con.commit()
        
         
 class Storage(object):

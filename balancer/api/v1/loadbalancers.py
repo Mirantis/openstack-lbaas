@@ -39,7 +39,7 @@ class Controller(object):
         try:
             msg = "Got index request. Request: %s" % req
             logger.debug(msg)
-            registry = getLBRegistry()
+            registry = getLBRegistry(self.conf)
             list = registry.getBlanacerList()
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
@@ -55,6 +55,7 @@ class Controller(object):
         msg = "Got create request. Request: %s Args: %s" % (req,  args)
         logger.debug(msg)
         registry = getLBRegistry()
+        
         
         return {'status': "Done"}
         pass
