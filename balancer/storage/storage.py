@@ -30,7 +30,7 @@ class Reader(object):
         rows = cur.fetchall()
         list = []
         for row in rows:
-            lb = loadbalancer.LoadBalancer()
+            lb = LoadBalancer()
             lb.loadFromRow(row)
             list.append(lb)
         return list
@@ -38,9 +38,9 @@ class Reader(object):
     def getLoadBalancerById(self,  id):
          cursor = self._con.cursor()
          cursor.execute('SELECT * FROM loadbalancers WHERE id = %s' % id)
-         rows = cur.fetch()
-         lb = loadbalancer.LoadBalancer()
-         lb.loadFromRow(row)
+         rows = cursor.fetchone()
+         lb = LoadBalancer()
+         lb.loadFromRow(rows)
          return lb
         
 
@@ -60,7 +60,7 @@ class Storage(object):
          self._writer = Writer(self._db)
 
     def getReader(self):
-        return Reader()
+        return Reader(self._db)
         
     def getWriter(self):
         return self._writer

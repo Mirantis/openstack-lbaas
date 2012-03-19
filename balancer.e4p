@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project balancer -->
-<!-- Saved: 2012-03-18, 19:32:16 -->
+<!-- Saved: 2012-03-19, 11:01:04 -->
 <!-- Copyright (C) 2012 ,  -->
 <Project version="4.6">
   <Language>en</Language>
@@ -52,6 +52,11 @@
     <Source>balancer/storage/__init__.py</Source>
     <Source>tests/unit/test_devices.py</Source>
     <Source>balancer/storage/storage.py</Source>
+    <Source>balancer/tests/__init__.py</Source>
+    <Source>balancer/tests/unit/__init__.py</Source>
+    <Source>balancer/tests/unit/test_storage.py</Source>
+    <Source>balancer/tests/unit/test_devices.py</Source>
+    <Source>balancer/tests/functional/__init__.py</Source>
   </Sources>
   <Forms>
   </Forms>
