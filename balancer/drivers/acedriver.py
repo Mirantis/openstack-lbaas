@@ -29,8 +29,8 @@ class lb():
 	pass
 	lb.rs_name = "RS01"
 	lb.rs_ip = "10.1.1.1"
-    lb.sfarm
-    lb.description = "rfddttgrg"
+    lb.sfarm = ""
+    lb.description = "description"
 
 r = acedriver()
 r.add(rsObject)
