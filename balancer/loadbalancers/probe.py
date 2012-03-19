@@ -578,7 +578,184 @@ class SIPTCPprobe(SIPUDPprobe):
     def openTimeout(self, value):
         self._openTimeout = value
 
-class SMTPprobe():
+class SMTPprobe(Probe):
+    def __init__(self):
+        self._destIP = ""
+        self._tcpConnTerm = None
+        self._openTimeout = 1
+    @property
+    def destIP(self):
+        return self._destIP
+    @destIP.setter
+    def destIP(self, value):
+        self._destIP = value    
+    @property
+    def tcpConnTerm(self):
+        return self._tcpConnTerm
+    @tcpConnTerm.setter
+    def tcpConnTerm(self, value):
+        self._tcpConnTerm = value
+    @property
+    def openTimeout(self):
+        return self._openTimeout
+    @openTimeout.setter
+    def openTimeout(self, value):
+        self._openTimeout = value
+    
+class SNMPprobe(Probe):
+    def __init__(self):
+        self._destIP = ""
+        self._SNMPComm = ""
+        self._SNMPver = None
+        
+    @property
+    def destIP(self):
+        return self._destIP
+    @destIP.setter
+    def destIP(self, value):
+        self._destIP = value 
+    @property
+    def SNMPComm(self):
+        return self._SNMPComm
+    @SNMPComm.setter
+    def SNMPComm(self, value):
+        self._SNMPComm = value
+    @property
+    def SNMPver(self):
+        return self._SNMPver
+    @SNMPver.setter
+    def SNMPver(self, value):
+        self._SNMPver = value
+
+class TCPprobe(Probe):
+    def __init__(self):
+        self._destIPv4v6 = ""
+        self._tcpConnTerm = None
+        self._openTimeout = 1
+        self._expectRegExp = ""
+        self._expectRegExpOffset = ""      
+
+    @property
+    def destIPv4v6(self):
+        return self._destIPv4v6
+    @destIPv4v6.setter
+    def destIPv4v6(self, value):
+        self._destIPv4v6 = value
+    @property
+    def tcpConnTerm(self):
+        return self._tcpConnTerm
+    @tcpConnTerm.setter
+    def tcpConnTerm(self, value):
+        self._tcpConnTerm = value
+    @property
+    def openTimeout(self):
+        return self._openTimeout
+    @openTimeout.setter
+    def openTimeout(self, value):
+        self._openTimeout = value
+    @property
+    def expectRegExp(self):
+        return self._expectRegExp
+    @expectRegExp.setter
+    def expectRegExp(self, value):
+        self._expectRegExp = value
+    @property
+    def expectRegExpOffset(self):
+        return self._expectRegExpOffset
+    @expectRegExpOffset.setter
+    def expectRegExpOffset(self, value):
+        self._expectRegExpOffset = value
+
+class TELNETprobe(SMTPprobe):
     pass
 
-    
+class UDPprobe(ECHOUDPprobe):
+    def __init__(self):
+        self._expectRegExp = ""
+        self._expectRegExpOffset = ""   
+    @property
+    def expectRegExp(self):
+        return self._expectRegExp
+    @expectRegExp.setter
+    def expectRegExp(self, value):
+        self._expectRegExp = value
+    @property
+    def expectRegExpOffset(self):
+        return self._expectRegExpOffset
+    @expectRegExpOffset.setter
+    def expectRegExpOffset(self, value):
+        self._expectRegExpOffset = value
+
+class VMprobe(Object):
+    def __init__(self):
+        self._id = None
+        self._name = ""
+        self._type = None
+        self._description = ""
+        self._probeInterval = 300
+        self._maxCPUburstThresh = 99
+        self._minCPUburstThresh = 99
+        self._maxMemBurstThresh = 99
+        self._minMemBurstThresh = 99
+        self._VMControllerName = None
+        
+    @property
+    def id(self):
+        return self._id
+    @id.setter
+    def id(self, value):
+        self._id = value
+    @property
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self, value):
+        self._name = value
+    @property
+    def type(self):
+        return self._type_failDetect
+    @type.setter
+    def type(self, value):
+        self._type = value
+    @property
+    def description(self):
+        return self._description
+    @description.setter
+    def description(self, value):
+        self._description = value
+    @property
+    def probeInterval(self):
+        return self._probeInterval
+    @probeInterval.setter
+    def probeInterval(self, value):
+        self._probeInterval = value
+    @property
+    def maxCPUburstThresh(self):
+        return self._maxCPUburstThresh
+    @maxCPUburstThresh.setter
+    def maxCPUburstThresh(self, value):
+        self._maxCPUburstThresh = value
+    @property
+    def minCPUburstThresh(self):
+        return self._maxCPUburstThresh
+    @minCPUburstThresh.setter
+    def minCPUburstThresh(self, value):
+        self._minCPUburstThresh = value
+    @property
+    def maxMemBurstThresh(self):
+        return self._maxMemBurstThresh
+    @maxMemBurstThresh.setter
+    def maxMemBurstThresh(self, value):
+        self._maxMemBurstThresh = value
+    @property
+    def minMemBurstThresh(self):
+        return self._minMemBurstThresh
+    @minMemBurstThresh.setter
+    def minMemBurstThresh(self, value):
+        self._minMemBurstThresh = value    
+    @property
+    def VMControllerName(self):
+        return self._VMControllerName
+    @VMControllerName.setter
+    def VMControllerName(self, value):
+        self._VMControllerName = value
