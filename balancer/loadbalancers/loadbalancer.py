@@ -28,6 +28,9 @@ class LoadBalancer(object):
         self._created = None
         self._updated = None
     
+    def loadFromRow(self,  row):
+        #TODO implement this
+        pass
     @property
     def id(self):
         return self._id
@@ -61,7 +64,7 @@ class LoadBalancer(object):
         self._status = value
     
     @property
-    def  created():
+    def  created(self):
         return self._created
     
     @created.setter

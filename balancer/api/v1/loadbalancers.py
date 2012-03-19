@@ -30,6 +30,8 @@ SUPPORTED_FILTERS = balancer.api.v1.SUPPORTED_FILTERS
 class Controller(object):
 
     def __init__(self, conf):
+        msg = "Creating loadbalancers controller with config: %s" % conf
+        logger.debug(msg)
         self.conf = conf
         pass
     

@@ -23,6 +23,7 @@ import json
 import logging
 import sys
 import datetime
+import urllib2
 
 import eventlet
 import eventlet.wsgi
@@ -247,9 +248,17 @@ class JSONRequestDeserializer(object):
         return json.loads(datastring)
 
     def default(self, request):
+        msg = "Request deserialization: %s" % request
+        logger.debug(msg)
         if self.has_body(request):
             logger.debug("Deserialization: request has body")
-            return {'body': self.from_json(request.body)}
+            if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+                body  =  urllib2.unquote(request.body)
+            else:
+                body = request.body
+            msg = "Request body: %s" % body
+            logger.debug(msg)
+            return {'body': self.from_json(body)}
         else:
             logger.debug("Deserialization: request has NOT body")
             return {}

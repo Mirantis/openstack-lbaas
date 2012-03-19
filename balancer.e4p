@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project balancer -->
-<!-- Saved: 2012-03-16, 19:55:19 -->
+<!-- Saved: 2012-03-18, 19:32:16 -->
 <!-- Copyright (C) 2012 ,  -->
 <Project version="4.6">
   <Language>en</Language>
@@ -27,8 +27,6 @@
     <Source>balancer/api/__init__.py</Source>
     <Source>balancer/api/v1/__init__.py</Source>
     <Source>balancer/api/v1/router.py</Source>
-    <Source>balancer/api/v1/images.py</Source>
-    <Source>balancer/api/v1/members.py</Source>
     <Source>balancer/api/v1/controller.py</Source>
     <Source>balancer/api/v1/filters.py</Source>
     <Source>balancer/api/middleware/__init__.py</Source>
@@ -44,6 +42,16 @@
     <Source>balancer/loadbalancers/realserver.py</Source>
     <Source>balancer/loadbalancers/serverfarm.py</Source>
     <Source>balancer/loadbalancers/predictor.py</Source>
+    <Source>balancer/api/v1/loadbalancers.py</Source>
+    <Source>balancer/common/__init__.py</Source>
+    <Source>balancer/common/cfg.py</Source>
+    <Source>balancer/common/context.py</Source>
+    <Source>balancer/common/wsgi.py</Source>
+    <Source>balancer/devices/__init__.py</Source>
+    <Source>balancer/devices/device.py</Source>
+    <Source>balancer/storage/__init__.py</Source>
+    <Source>tests/unit/test_devices.py</Source>
+    <Source>balancer/storage/storage.py</Source>
   </Sources>
   <Forms>
   </Forms>

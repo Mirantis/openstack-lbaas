@@ -22,11 +22,11 @@ import subprocess
 from setuptools import setup, find_packages
 from setuptools.command.sdist import sdist
 
-from skeleton import version
+from balancer import version
 
 
 if os.path.isdir('.bzr'):
-    with open("skeleton/vcsversion.py", 'w') as version_file:
+    with open("balancer/vcsversion.py", 'w') as version_file:
         vcs_cmd = subprocess.Popen(["bzr", "version-info", "--python"],
                                    stdout=subprocess.PIPE)
         vcsversion = vcs_cmd.communicate()[0]
@@ -68,7 +68,7 @@ except:
 
 
 setup(
-    name='skeleton',
+    name='balancer',
     version=version.canonical_version_string(),
     description='The Skeleton project provides a simple WSGI server demo',
     license='Apache License (2.0)',
@@ -86,4 +86,4 @@ setup(
         'Programming Language :: Python :: 2.6',
         'Environment :: No Input/Output (Daemon)',
     ],
-    scripts=['bin/skeleton-api'])
+    scripts=['bin/balancer-api'])
