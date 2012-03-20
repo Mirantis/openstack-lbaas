@@ -35,7 +35,7 @@ class HaproxyConfigFile:
         self.haproxy_config_file = open (self.haproxy_config_file_path,  "r")
         block_start=False
         new_config_file = []
-        print ListenBlockName
+        #print ListenBlockName
         for line in  self.haproxy_config_file :
             if  not line.strip(): continue
             if  line.find ('#') >= 0: continue
@@ -53,6 +53,7 @@ class HaproxyConfigFile:
         for out_line in new_config_file:
             self.haproxy_config_file_tmp.write("%s\n" % out_line)
         self.haproxy_config_file_tmp.close()
+        return ListenBlockName
  
     def DeleteRServer (self, ListenBlockName, RServerName):
         self.haproxy_config_file = open (self.haproxy_config_file_path,  "r")
@@ -78,6 +79,9 @@ class HaproxyConfigFile:
         for out_line in new_config_file:
             self.haproxy_config_file_tmp.write("%s\n" % out_line)
         self.haproxy_config_file_tmp.close()
+        return ListenBlockName
+
+        
         
     #def CreateVIP(self, name,  ip, port,  mode,  balance,  option,  reservers):
         

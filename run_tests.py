@@ -280,7 +280,7 @@ if __name__ == '__main__':
     formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     c = config.Config(stream=sys.stdout,
                       env=os.environ,

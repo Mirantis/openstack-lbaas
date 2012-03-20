@@ -11,7 +11,12 @@ class HAproxyDriverTestCase (unittest.TestCase):
         filename = HaproxyConfigFile()
         self.assertEqual(filename.GetHAproxyConfigFileName(),  "/etc/haproxy/haproxy.cfg")
       
-    
+    def test_DeleteListenBlock (self):
+        test = HaproxyConfigFile()
+        self.assertEqual(test.DeleteListenBlock("appli1-rewrite"), 'appli1-rewrite')
+        
+
+
 
 if __name__ == "__main__":
 	unittest.main()
