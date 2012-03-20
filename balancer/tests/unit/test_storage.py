@@ -31,7 +31,7 @@ class StorageTestCase(unittest.TestCase):
         lb.staus = "ACTIVE"
         lb.created = "01-01-2012 11:22:33"
         lb.updated = "02-02-2012 11:22:33"
-        stor = Storage( {'db_path':'/home/gokrokve/work/OpenStack/balancer/db/testdb.db'})
+        stor = Storage( {'db_path':'./db/testdb.db'})
         wr = stor.getWriter()
         wr.writeLoadBalancer(lb)
         read  = stor.getReader()
@@ -39,7 +39,7 @@ class StorageTestCase(unittest.TestCase):
         self.assertEquals(newlb.name,  "testLB")
     
     def test_exception_on_nonexistent_lb(self):
-        stor = Storage( {'db_path':'/home/gokrokve/work/OpenStack/balancer/db/testdb.db'})
+        stor = Storage( {'db_path':'./db/testdb.db'})
         read  = stor.getReader()
         try:
             newlb = read.getLoadBalancerById(1234)
@@ -56,7 +56,7 @@ class StorageTestCase(unittest.TestCase):
         lb.staus = "ACTIVE"
         lb.created = "01-01-2012 11:22:33"
         lb.updated = "02-02-2012 11:22:33"
-        stor = Storage( {'db_path':'/home/gokrokve/work/OpenStack/balancer/db/testdb.db'})
+        stor = Storage( {'db_path':'./db/testdb.db'})
         wr = stor.getWriter()
         wr.writeLoadBalancer(lb)
         lb.name  = "testLB3"

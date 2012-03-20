@@ -4,7 +4,7 @@
 import re
 import sys
 import os
-from balancer.loadbalancers.relaserver import RealServer
+from balancer.loadbalancers.realserver import RealServer
 
 #class HaproxyRServer(VServerName):
 #   def _init_(self):
@@ -28,6 +28,8 @@ class HaproxyConfigFile:
         self.haproxy_config_file_tmp_path="/tmp/haproxy.cfg"
         self.debug = False
          
+    def GetHAproxyConfigFileName(self):
+        return self.haproxy_config_file_path
     
     def DeleteListenBlock (self,  ListenBlockName):
         self.haproxy_config_file = open (self.haproxy_config_file_path,  "r")

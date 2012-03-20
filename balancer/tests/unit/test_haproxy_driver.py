@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from haproxy_config_file_editor import  HaproxyConfigFile
+from balancer.haproxy_driver.haproxy_config_file_editor import  HaproxyConfigFile
 import unittest
 
 
-class test_haproxy_config_file_editor (unittest.TestCase):
-    def setUp(self):
-        pass
+class HAproxyDriverTestCase (unittest.TestCase):
 
-    def testFileName(self):
+
+    def test_FileName(self):
         filename = HaproxyConfigFile()
-        print filename.GetFilename()
-        self.assertEqual(filename.GetFilename(),  "bla-bla")
+        self.assertEqual(filename.GetHAproxyConfigFileName(),  "/etc/haproxy/haproxy.cfg")
       
     
 
