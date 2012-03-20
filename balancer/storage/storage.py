@@ -19,6 +19,7 @@ import sqlite3
 
 from balancer.loadbalancers.loadbalancer import *
 from openstack.common import exception
+from balancer.devices.device import LBDevice
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,29 @@ class Reader(object):
          lb = LoadBalancer()
          lb.loadFromRow(row)
          return lb
+    
+    def getDeviceById(self,  id):
+         cursor = self._con.cursor()
+         cursor.execute('SELECT * FROM devices WHERE id = %s' % id)
+         row = cursor.fetchone()
+         if row == None:
+             raise exception.NotFound()
+         lb = LBDevice()
+         lb.loadFromRow(row)
+         return lb
+
+    def getDevices(self,):
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM devices')
+        rows = cursor.fetchall()
+        if rows == None:
+             raise exception.NotFound()
+        list = []
+        for row in rows:
+            lb = LBDevice()
+            lb.loadFromRow(row)
+            list.append(lb)
+        return list
         
 
 class Writer(object):
@@ -61,11 +85,24 @@ class Writer(object):
     def writeLoadBalancer(self,  lb):
          logger.debug("Saving LoadBalancer instance in DB.")
          cursor = self._con.cursor()
-         command = "INSERT INTO loadbalancers (id, name, algorithm , status , created , updated ) VALUES(%d,'%s','%s','%s','%s','%s');" % (lb.id,  lb.name,  lb.algorithm,  lb.status,  lb.created,  lb.updated)
+         command = "INSERT INTO loadbalancers (id, name, algorithm , status , created , updated ) VALUES(%d,'%s','%s','%s','%s','%s');"  % (lb.id,  lb.name,  lb.algorithm,  lb.status,  lb.created,  lb.updated)
          msg = "Executing command: %s" % command
          logger.debug(msg)
          cursor.execute(command)
          self._con.commit()
+         
+    def writeDevice(self,  device):
+         logger.debug("Saving Device instance in DB.")
+         cursor = self._con.cursor()
+         command = "INSERT INTO devices (id,  name, type, version, supports_IPv6, require_VIP_IP, has_ACL, supports_VLAN ) VALUES(%d,'%s','%s','%s',%d, %d, %d, %d);"  % (device.id,  device.name,  device.type,  device.version,  device.supports_IPv6,  device.require_VIP_IP, device.has_ACL,  device.supports_VLAN )
+         msg = "Executing command: %s" % command
+         logger.debug(msg)
+         cursor.execute(command)
+         self._con.commit()
+        
+        
+         
+        
        
         
 class Storage(object):
