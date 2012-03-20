@@ -30,3 +30,11 @@ class LBGetIndexWorker(SyncronousWorker):
         pass
 
 
+class CreateLBWorker(ASyncronousWorker):
+        def __init__(self,  task):
+            super(CreateLBWorker, self).__init__(task)
+        
+        def run(self):
+            self._task.status = STATUS_PROGRESS
+            
+              

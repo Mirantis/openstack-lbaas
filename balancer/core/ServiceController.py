@@ -98,15 +98,5 @@ class ServiceController():
     
     def execute(self,  action,  params):
         #TODO add logic here
-        
-    
-
-
-        
-        
-    
-    
-    
-    
-        
+        pass
         
