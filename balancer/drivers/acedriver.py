@@ -2,35 +2,56 @@ import re
 
 class acedriver():
     def __init__(self):
-        self.healthprobe = "ICMP"
+        pass
     
-    def __str__(self):
-        return "oops"
-
-    def AddLB(self, dict): #.rs_name, .rs_ip, ._sfarm
-        return self.checkproperty_ip(dict.rs_ip)
+    def addVS(self, obj):
+        pass
+    
+    def addRealServer(self, obj):
+        TMP=""
+        errorDescr = self.checkRealServerProperty(obj)
+        if errorDescr != None:
+            return errorDescr
+        TMP=TMP+"<RS>\n"
+        TMP=TMP+"<name>rsever "+obj.rs_type+" "+obj.rs_name+"<\\name>\n"
+        TMP=TMP+"<ip>ip address "+obj.rs_ip+"<\\ip>\n"
+        TMP=TMP+"<state>"+obj.rs_state+"<\\state>\n"
+        TMP=TMP+"<\\RS>\n"
+        return TMP
         
-    def checkproperty_name(self, name):
-		if re.match (name, "[a-z]"):
-			return 1
-		else:
-			return "Wrong name"
-
-    def checkproperty_ip(self,  ipaddr):
-        if re.match(ipaddr, '^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}$'):
-			return "match !"
+    def checkRealServerProperty(self,  obj):
+        errorDescr = None
+        if self.checkproperty_name(obj.rs_name) is False:
+            errorDescr = str(errorDescr)+"Wrong server name\n"
+        if self.checkproperty_ip(obj.rs_ip) is False:
+            errorDescr =  errorDescr+"Wrong ip address\n"
+        return errorDescr
+    
+    def checkproperty_name(self, name): #Not finished
+        if re.match('^[\w\d]{0,32}$', name) == None:
+            return False
         else:
-			return "Wrong"
+            return True
 
+    def checkproperty_ip(self,  ipaddr): #Not finished
+        if re.match('^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}$', ipaddr) == None:
+            return False
+        else:
+            return True
+        
 
 class lb():
     def __init__(self):
+        self.rs_type = "host"
         self.rs_name = "rs001"
-        self.rs_ip = "10.1.1.1"
+        self.rs_ip = "250.111.111.111"
+        self.rs_state = "inservice"
         self.sfarm_name = "sfarm001"
+        self.sfarm_probes = ["ICMP",  "HTTP"]
 
+    def __getitem__(self, key):
+        self.obj = key
 
 rsObject = lb()
-#print rsObject
 r = acedriver()
-print r.AddLB(rsObject)
+print r.addRealServer(rsObject)
