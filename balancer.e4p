@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project balancer -->
-<!-- Saved: 2012-03-20, 12:04:50 -->
+<!-- Saved: 2012-03-20, 12:12:00 -->
 <!-- Copyright (C) 2012 ,  -->
 <Project version="4.6">
   <Language>en</Language>
@@ -56,6 +56,7 @@
     <Source>balancer/loadbalancers/probe.py</Source>
     <Source>balancer/haproxy_driver/haproxy_config_file_editor.py</Source>
     <Source>balancer/haproxy_driver/__init__.py</Source>
+    <Source>balancer/tests/unit/test_haproxy_driver.py</Source>
   </Sources>
   <Forms>
   </Forms>
