@@ -17,7 +17,7 @@
 
 import logging
 import predictor
-import probes
+import probe
 import realserver
 
 class ServerFarm(object):
