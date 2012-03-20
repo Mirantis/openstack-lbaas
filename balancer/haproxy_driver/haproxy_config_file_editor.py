@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import shlex
+
 import re
 import sys
 import os
+from balancer.loadbalancers.relaserver import RealServer
 
 #class HaproxyRServer(VServerName):
 #   def _init_(self):
@@ -76,6 +77,9 @@ class HaproxyConfigFile:
             self.haproxy_config_file_tmp.write("%s\n" % out_line)
         self.haproxy_config_file_tmp.close()
         
+    #def CreateVIP(self, name,  ip, port,  mode,  balance,  option,  reservers):
+        
+    
     
 
 
