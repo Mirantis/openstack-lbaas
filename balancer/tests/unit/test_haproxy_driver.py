@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from balancer.drivers.haproxy.haproxy_driver.haproxy_config_file_editor import  HaproxyConfigFile
+from balancer.drivers.haproxy.haproxy_config_file_editor import  HaproxyConfigFile
 import unittest
 
 
