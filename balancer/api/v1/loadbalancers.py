@@ -17,11 +17,14 @@
 
 import logging
 import sys
+import  balancer.loadbalancers
 
 from openstack.common import exception
 from openstack.common import wsgi
-import  balancer.loadbalancers
 from balancer.loadbalancers.loadbalancers import getLBRegistry
+from balancer.core.ServiceController import *
+
+
 
 logger = logging.getLogger('balancer.api.v1.loadbalancers')
 SUPPORTED_PARAMS = balancer.api.v1.SUPPORTED_PARAMS
@@ -33,6 +36,7 @@ class Controller(object):
         msg = "Creating loadbalancers controller with config: %s" % conf
         logger.debug(msg)
         self.conf = conf
+        self._service_controller = ServiceController.Instance()
         pass
     
     def index(self, req):
@@ -55,8 +59,6 @@ class Controller(object):
         msg = "Got create request. Request: %s Args: %s" % (req,  args)
         logger.debug(msg)
         registry = getLBRegistry()
-        
-        
         return {'status': "Done"}
         pass
         
