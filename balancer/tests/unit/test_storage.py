@@ -21,7 +21,25 @@ import unittest
 from balancer.storage.storage import *
 from balancer.loadbalancers.loadbalancer import LoadBalancer
 from openstack.common import exception
+from balancer.devices.device import LBDevice
 class StorageTestCase(unittest.TestCase):
+    
+    def test_device_save(self):
+        device = LBDevice()
+        device.id = 111
+        device.name = "DeviceName001"
+        device.type = "ACE"
+        device.version = "1.0"
+        device.require_VIP_IP = True
+        device.has_ACL = True
+        device.supports_VLAN = False
+        stor = Storage( {'db_path':'./db/testdb.db'})
+        wr = stor.getWriter()
+        wr.writeDevice(device)
+        read  = stor.getReader()
+        new_device = read.getDeviceById(111)
+        self.assertEquals(new_device.name,  "DeviceName001")
+        
     
     def test_lb_save(self):
         lb = LoadBalancer()

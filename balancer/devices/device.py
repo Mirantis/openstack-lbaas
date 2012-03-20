@@ -17,6 +17,7 @@
 
 class LBDevice(object):
     def __init__(self):
+        self._id = None
         self._name = None
         self._type = "ACE"
         self._version = None
@@ -25,41 +26,74 @@ class LBDevice(object):
         self._has_ACL = True
         self._supports_VLAN = True
     
+    def loadFromRow(self,  row):
+        self._id = row[0]
+        self._name = row[1]
+        self._type = row[2]
+        self._version = row[3]
+        self._supports_IPv6 = row[4]
+        self._require_VIP_IP = row[5]
+        self._has_ACL = row[6]
+        self._supports_VLAN = row[7]
     
     @property
-    def Name(self):
+    def id(self):
+        return self._id
+    
+    @id.setter
+    def id(self,  value):
+        self._id = value
+    @property
+    def name(self):
         return self._name
-    @Name.setter
-    def Name(self,  value):
+    @name.setter
+    def name(self,  value):
         self._name = value
     
     @property
-    def Type(self):
+    def type(self):
         return self._type
-    @Type.setter
-    def Type(self,  value):
+    @type.setter
+    def type(self,  value):
         self._type = value
     
     @property
-    def Version(self):
+    def version(self):
         return self._version
     
-    @Version.setter
-    def Version(self,  value):
+    @version.setter
+    def version(self,  value):
         self._version = value
     
     @property
-    def Supports_IPv6(self):
+    def supports_IPv6(self):
         return self._supports_IPv6
+        
+    @supports_IPv6.setter
+    def supports_IPv6(self,  value):
+        self._supports_IPv6 = value
+    
     
     @property
-    def Require_VIP_IP(self):
+    def require_VIP_IP(self):
         return self._require_VIP_IP
-    
+        
+    @require_VIP_IP.setter
+    def require_VIP_IP(self,  value):
+        self._require_VIP_IP = value
+
+
     @property
-    def Has_ACL(self):
+    def has_ACL(self):
         return self._has_ACL
-    
-    def Supports_VLAN(self):
+    @has_ACL.setter
+    def has_ACL(self,  value):
+        self._has_ACL = value
+
+    @property
+    def supports_VLAN(self):
         return self._supports_VLAN
         
+    @supports_VLAN.setter
+    def supports_VLAN(self,  value):
+        self._supports_VLAN  = value

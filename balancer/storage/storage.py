@@ -55,6 +55,8 @@ class Reader(object):
     
     def getDeviceById(self,  id):
          cursor = self._con.cursor()
+         if id == None:
+             raise exception.NotFound("Empty device id.")
          cursor.execute('SELECT * FROM devices WHERE id = %s' % id)
          row = cursor.fetchone()
          if row == None:
