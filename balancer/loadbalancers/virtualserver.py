@@ -21,6 +21,7 @@ import vlan
 class VirtualServer(object):
     def __init__(self):
         self._id = None
+        self._sf_id = None
         self._name = ""
         self._ipType = "IPv4"
         self._ip = ""
@@ -39,6 +40,8 @@ class VirtualServer(object):
         self._protocolInspect = None #need to describe in new module
         self._appAccelAndOpt = None #need to describe in new module
         self._L7LoadBalancing = None #need to describe in new module
+        self._serverFarm = None
+        self._backupServerFarm = None
         self._SSLproxyServName = None #need to describe in new module
         self._defaultL7LBAction = None #need to describe in new module
         self._SSLinitiation = None #need to describe in new module
@@ -52,6 +55,12 @@ class VirtualServer(object):
     @id.setter
     def id(self, value):
         self._id  = value
+    @property
+    def sf_id(self):
+        return self._sf_id 
+    @sf_id.setter
+    def sf_id(self, value):
+        self._sf_id  = value
     @property
     def name(self):
         return self._name
@@ -154,6 +163,18 @@ class VirtualServer(object):
     @L7LoadBalancing.setter
     def L7LoadBalancing(self, value):
         self._L7LoadBalancing = value
+    @property
+    def serverFarm(self):
+        return self._serverFarm
+    @serverFarm.setter
+    def serverFarm(self, value):
+        self._serverFarm = value
+    @property
+    def backupServerFarm(self):
+        return self._backupServerFarm
+    @backupServerFarm.setter
+    def backupServerFarm(self, value):
+        self._backupServerFarm = value
     @property
     def SSLproxyServName(self):
         return self._SSLproxyServName

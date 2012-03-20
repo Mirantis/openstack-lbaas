@@ -23,6 +23,7 @@ import realserver
 class ServerFarm(object):
     def __init__(self):
         self._id = None
+        self._lb_id = None
         self._name = ""
         self._type = "Host"
         self._description = ""
@@ -52,7 +53,15 @@ class ServerFarm(object):
     @id.setter
     def id(self,  value):
         self._id = value
-
+    
+    @property
+    def lb_id(self):
+        return self._lb_id
+        
+    @lb_id.setter
+    def lb_id(self, value):
+        self._lb_id = value
+        
     @property
     def name(self):
         return self._name

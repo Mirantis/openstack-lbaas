@@ -20,6 +20,7 @@ import logging
 class RealServer(object):
     def __init__(self):
         self._id = None
+        self._sf_id = None
         self._name = ""
         self._type = "Host"
         self._webHostRedir = ""
@@ -46,6 +47,14 @@ class RealServer(object):
     def id(self,  value):
         self._id = value
 
+    @property
+    def sf_id(self):
+        return self._sf_id
+        
+    @sf_id.setter
+    def sf_id(self,  value):
+        self._sf_id = value
+        
     @property
     def name(self):
         return self._name
