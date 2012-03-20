@@ -17,7 +17,7 @@
 
 import logging
 
-class BasePredictor(Object):
+class BasePredictor(object):
     def __init__(self):
         self._type = None
     @property
@@ -29,6 +29,7 @@ class BasePredictor(Object):
         
 class HashAddrPredictor(BasePredictor):
     def __init__(self):
+        BasePredictor.__init__()
         self._maskType = None
         self._ipNetmask = ""
         self._ipv6Prefix = ""
@@ -54,6 +55,7 @@ class HashAddrPredictor(BasePredictor):
 
 class HashURL(BasePredictor):
     def __init__(self):
+        BasePredictor.__init__()
         self._beginPattern = ""
         self._endPattern = ""
     
@@ -72,6 +74,7 @@ class HashURL(BasePredictor):
 
 class HashContent(HashURL):
     def __init__(self):
+        HashURL.__init__()
         self._length = ""
         self._offsetBytes = ""
     
@@ -90,6 +93,7 @@ class HashContent(HashURL):
 
 class HashCookie(BasePredictor):
     def __init__(self):
+        BasePredictor.__init__()
         self._cookieName = ""
     
     @property
@@ -101,6 +105,7 @@ class HashCookie(BasePredictor):
 
 class HashHeader(BasePredictor):
     def __init__(self):
+        BasePredictor.__init__()
         self._customHeader = ""
         self._definedHeader = None
     
@@ -118,10 +123,13 @@ class HashHeader(BasePredictor):
         self._definedHeader = value
 
 class HashLayer4(HashContent):
+    def __init__(self):
+        HashContent.__init__()
     pass
 
 class LeastBandwidth(BasePredictor):
     def __init__(self):
+        BasePredictor.__init__()
         self._accessTime = ""
         self._samples = ""
     
@@ -140,6 +148,7 @@ class LeastBandwidth(BasePredictor):
 
 class LeastConn(BasePredictor):
     def __init__(self):
+        BasePredictor.__init__()
         self._slowStartDur = ""
     
     @property
@@ -151,6 +160,7 @@ class LeastConn(BasePredictor):
 
 class LeastLoaded(BasePredictor):
     def __init__(self):
+        BasePredictor.__init__()
         self._snmpProbe = ""
         self._autoAdjust = None
         self._weightConn = None
@@ -176,6 +186,7 @@ class LeastLoaded(BasePredictor):
 
 class Response(BasePredictor):
     def __init__(self):
+        BasePredictor.__init__()
         self._responseType = ""
         self._samples = ""
         self._weightConn = None
@@ -200,4 +211,6 @@ class Response(BasePredictor):
         self._weightConn = value
 
 class RounRobin(BasePredictor):
+    def __init__(self):
+        BasePredictor.__init__()
     pass

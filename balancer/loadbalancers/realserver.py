@@ -17,7 +17,7 @@
 
 import logging
 
-class RealServer(Object):
+class RealServer(object):
     def __init__(self):
         self._id = None
         self._name = ""

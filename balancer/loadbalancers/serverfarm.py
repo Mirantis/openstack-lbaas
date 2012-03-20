@@ -18,7 +18,7 @@
 import logging
 import predictor
 
-class ServerFarm(Object):
+class ServerFarm(object):
     def __init__(self):
         self._id = None
         self._name = ""

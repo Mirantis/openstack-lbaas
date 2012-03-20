@@ -17,7 +17,7 @@
 
 import logging
 
-class Probe(Object):
+class Probe(object):
     def __init__(self):
         self._id = ""
         self._name = ""
@@ -102,6 +102,7 @@ class Probe(Object):
 
 class DNSprobe(Probe):
     def __init__(self):
+        Probe.__init__()
         self._domainName = ""
     
     @property
@@ -113,6 +114,7 @@ class DNSprobe(Probe):
 
 class ECHOUDPprobe(Probe):
     def __init__(self):
+        Probe.__init__()
         self._sendData = ""
         self._destIP = ""
     
@@ -131,6 +133,7 @@ class ECHOUDPprobe(Probe):
 
 class ECHOTCPprobe(ECHOUDPprobe):
     def __init__(self):
+        ECHOUDPprobe.__init__()
         self._tcpConnTerm = None
         self._openTimeout = 1
     
@@ -148,10 +151,13 @@ class ECHOTCPprobe(ECHOUDPprobe):
         self._openTimeout = value
     
 class FINGERprobe(ECHOUDPprobe):
+    def __init__(self):
+        ECHOUDPprobe.__init__()
     pass
 
 class FTPprobe(Probe):
     def __init__(self):
+        Probe.__init__()
         self._destIP = ""
         self._tcpConnTerm = None
         self._openTimeout = 1
@@ -177,6 +183,7 @@ class FTPprobe(Probe):
 
 class HTTPprobe(Probe):
     def __init__(self):
+        Probe.__init__()
         self._requestMethodType = "GET"    
         self._requestHTTPurl = "/"
         self._appendPortHostTag = None
@@ -268,6 +275,7 @@ class HTTPprobe(Probe):
 
 class HTTPSprobe(HTTPprobe):
     def __init__(self):
+        HTTPprobe.__init__()
         self._cipher = None
         self._SSLversion = None
     
@@ -285,9 +293,12 @@ class HTTPSprobe(HTTPprobe):
         self._SSLversion = value
 
 class ICMPprobe(Probe):
+    def __init__(self):
+        Probe.__init__()
     pass
 class IMAPprobe(Probe):
     def __init__(self):
+        Probe.__init__()
         self._userName = ""
         self._password = ""
         self._confPassword = ""
@@ -343,6 +354,7 @@ class IMAPprobe(Probe):
 
 class POPprobe(Probe):
     def __init__(self):
+        Probe.__init__()
         self._userName = ""
         self._password = ""
         self._confPassword = ""
@@ -390,6 +402,7 @@ class POPprobe(Probe):
 
 class RADIUSprobe(Probe):
     def __init__(self):
+        Probe.__init__()
         self._userName = ""
         self._password = ""
         self._confPassword = ""
@@ -430,6 +443,7 @@ class RADIUSprobe(Probe):
 
 class RTSPprobe(Probe):
     def __init__(self):
+        Probe.__init__()
         self._requareHeaderValue = ""
         self._proxyRequareHeaderValue = ""
         self._requestMethodType = None
@@ -483,6 +497,7 @@ class RTSPprobe(Probe):
 
 class SCRIPTEDprobe(Probe):
     def __init__(self):
+        Probe.__init__()
         self._scriptName = ""
         self._scriptArgv = ""
         self._copied = None
@@ -538,6 +553,7 @@ class SCRIPTEDprobe(Probe):
 
 class SIPUDPprobe(Probe):
     def __init__(self):
+        Probe.__init__()
         self._destIP = ""
         self._expectRegExp = ""
         self._expectRegExpOffset = ""
@@ -562,6 +578,7 @@ class SIPUDPprobe(Probe):
         
 class SIPTCPprobe(SIPUDPprobe):
     def __init__(self):
+        SIPUDPprobe.__init__()
         self._tcpConnTerm = None
         self._openTimeout = 1
         
@@ -580,6 +597,7 @@ class SIPTCPprobe(SIPUDPprobe):
 
 class SMTPprobe(Probe):
     def __init__(self):
+        Probe.__init__()
         self._destIP = ""
         self._tcpConnTerm = None
         self._openTimeout = 1
@@ -604,6 +622,7 @@ class SMTPprobe(Probe):
     
 class SNMPprobe(Probe):
     def __init__(self):
+        Probe.__init__()
         self._destIP = ""
         self._SNMPComm = ""
         self._SNMPver = None
@@ -629,6 +648,7 @@ class SNMPprobe(Probe):
 
 class TCPprobe(Probe):
     def __init__(self):
+        Probe.__init__()
         self._destIPv4v6 = ""
         self._tcpConnTerm = None
         self._openTimeout = 1
@@ -667,10 +687,13 @@ class TCPprobe(Probe):
         self._expectRegExpOffset = value
 
 class TELNETprobe(SMTPprobe):
+    def __init__(self):
+        SMTPprobe.__init__()
     pass
 
 class UDPprobe(ECHOUDPprobe):
     def __init__(self):
+        ECHOUDPprobe.__init__()
         self._expectRegExp = ""
         self._expectRegExpOffset = ""   
     @property
@@ -686,7 +709,7 @@ class UDPprobe(ECHOUDPprobe):
     def expectRegExpOffset(self, value):
         self._expectRegExpOffset = value
 
-class VMprobe(Object):
+class VMprobe(object):
     def __init__(self):
         self._id = None
         self._name = ""
