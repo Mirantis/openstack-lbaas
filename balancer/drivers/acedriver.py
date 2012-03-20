@@ -2,6 +2,37 @@ class acedriver():
     def __init__(self):
         pass
     
+    def addRealServer(self, obj):
+        TMP="<RealServer>\n"
+        TMP=TMP+"rsever "+obj._type+" "+obj._name+"\n"
+        if obj._type == "host":
+            TMP=TMP+"ip address "+obj._IP+"\n"
+            if obj._failOnAll != None: TMP=TMP+"fail-on-all\n"
+        TMP=TMP+"conn-limit max "+str(obj._maxCon)+" min "+str(obj._minCon)+"\n"
+        TMP=TMP+"weight "+str(obj._weight)+"\n"
+        TMP=TMP+"description "+obj._description+"\n"
+        if obj._type == "redirect" and obj._webHostRedir != "":
+            TMP=TMP+"webhost-redirection "+obj._webHostRedir+"\n"
+        if obj._rateBandwidth != "":
+            TMP=TMP+"rate-limit bandwidth "+str(obj._rateBandwidth)+"\n"
+        if obj._rateConn != "":
+            TMP=TMP+"rate-limit connection "+str(obj._rateConn)+"\n"
+        if obj._state != "":
+            TMP=TMP+obj._state+"\n"
+        for i in range(len(obj._probes)):
+            TMP=TMP+"probe "+obj._probes[i]+"\n"
+        TMP=TMP+"<\\RealServer>\n"
+        return TMP
+
+    def modReaslServer(self, obj):
+        pass
+
+    def delRealServer(self, obj):
+        TMP="<RealServer>\n"
+        TMP=TMP+"no rsever "+obj._name+"\n"
+        TMP=TMP+"<\\RealServer>\n"
+        return TMP
+
     def addSFarm(self, obj):
         TMP="<SFarm>\n"
         TMP=TMP+"rsever "+obj._type+" "+obj._name+"\n"
@@ -31,40 +62,12 @@ class acedriver():
             if (obj._partialThreshPercentage != None) and (obj._backInservice != None):
                 TMP=TMP+"partial-threshold "+obj._partialThreshPercentage+" back-inservice "+obj._backInservice+"\n"
         TMP=TMP+"predictor"+obj._predictor #Check it !!!
-    
-    def addRealServer(self, obj):
+        TMP="<\\SFarm>\n"
+        
+    def SFarm_addRS(self, obj):
         TMP="<RealServer>\n"
-        TMP=TMP+"rsever "+obj._type+" "+obj._name+"\n"
-        if obj._type == "host":
-            TMP=TMP+"ip address "+obj._IP+"\n"
-            if obj._failOnAll != None: TMP=TMP+"fail-on-all\n"
-        TMP=TMP+"conn-limit max "+str(obj._maxCon)+" min "+str(obj._minCon)+"\n"
-        TMP=TMP+"weight "+str(obj._weight)+"\n"
-        TMP=TMP+"description "+obj._description+"\n"
-        if obj._type == "redirect" and obj._webHostRedir != "":
-            TMP=TMP+"webhost-redirection "+obj._webHostRedir+"\n"
-        if obj._rateBandwidth != "":
-            TMP=TMP+"rate-limit bandwidth "+str(obj._rateBandwidth)+"\n"
-        if obj._rateConn != "":
-            TMP=TMP+"rate-limit connection "+str(obj._rateConn)+"\n"
-        if obj._state != "":
-            TMP=TMP+obj._state+"\n"
-        for i in range(len(obj._probes)):
-            TMP=TMP+"probe "+obj._probes[i]+"\n"
-        TMP=TMP+"<\\RealServer>\n"
-        return TMP
-
-    def delRealServer(self, obj):
-        TMP="<RealServer>\n"
-        TMP=TMP+"no rsever "+obj._name+"\n"
-        TMP=TMP+"<\\RealServer>\n"
-        return TMP
-
-    def updateReaslServer(self, obj):
         pass
     
-    
-
-y = ServerFarm()
-x = acedriver()
-print x.addRealServer(y)
+    def SFarm_delRS(self, obj):
+        pass
+        
