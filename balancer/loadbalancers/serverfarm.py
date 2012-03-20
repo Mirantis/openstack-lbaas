@@ -17,6 +17,8 @@
 
 import logging
 import predictor
+import probes
+import realserver
 
 class ServerFarm(object):
     def __init__(self):
@@ -98,7 +100,7 @@ class ServerFarm(object):
     @connFailureThreshCount.setter
     def connFailureThreshCount(self, value):
         self._connFailureThreshCount = value
-    _created
+
     @property
     def resetTimeout(self):
         return self._resetTimeout
