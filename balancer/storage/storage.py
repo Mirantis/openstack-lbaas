@@ -20,7 +20,7 @@ import sqlite3
 from balancer.loadbalancers.loadbalancer import *
 from openstack.common import exception
 from balancer.devices.device import LBDevice
-
+from balancer.core.configuration import Configuration
 logger = logging.getLogger(__name__)
 
 
@@ -96,7 +96,9 @@ class Writer(object):
     def writeDevice(self,  device):
          logger.debug("Saving Device instance in DB.")
          cursor = self._con.cursor()
-         command = "INSERT INTO devices (id,  name, type, version, supports_IPv6, require_VIP_IP, has_ACL, supports_VLAN ) VALUES(%d,'%s','%s','%s',%d, %d, %d, %d);"  % (device.id,  device.name,  device.type,  device.version,  device.supports_IPv6,  device.require_VIP_IP, device.has_ACL,  device.supports_VLAN )
+         command = "INSERT INTO devices (id,  name, type, version, supports_IPv6, require_VIP_IP, has_ACL, supports_VLAN, ip, port, user, pass ) VALUES('%s','%s','%s','%s',%d, %d, %d, %d,'%s','%s','%s','%s');"  % (device.id,  device.name,  
+                                                                                                                                                                                                device.type,  device.version,  device.supports_IPv6,  device.require_VIP_IP, device.has_ACL,  device.supports_VLAN,  
+                                                                                                                                                                                                device.ip,  device.port,  device.user,  device.password )
          msg = "Executing command: %s" % command
          logger.debug(msg)
          cursor.execute(command)
@@ -108,8 +110,12 @@ class Writer(object):
        
         
 class Storage(object):
-    def __init__(self,  conf):
-         self._db = conf['db_path']
+    def __init__(self,  conf=None):
+         if conf == None:
+            conf_data = Configuration.Instance()
+            conf = conf_data.get()
+            db = conf['db_path']
+         self._db =db
          self._writer = Writer(self._db)
 
     def getReader(self):

@@ -19,8 +19,14 @@ import logging
 import sys
 import threading
 
+SYNCHRONOUS_WORKER = "SYNCHRONOUS"
+ASYNCHRONOUS_WORKER = "ASYNCHRONOUS"
+STATUS_PROGRESS = "IN_PROGRESS"
+STATUS_DONE = "DONE"
+STATUS_ERROR = "ERROR"
 
-class SyncronousWorker():
+
+class SyncronousWorker(object):
     def __init__(self,  task):
         self._type = SYNCHRONOUS_WORKER
         self._task = task
@@ -48,7 +54,6 @@ class ASyncronousWorker(threading.Thread):
     
     def run(self):
         self._task.status = STATUS_PROGRESS
-        
         self._task.status = STATUS_DONE
         pass
     

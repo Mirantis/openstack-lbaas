@@ -1,4 +1,4 @@
-CREATE TABLE loadbalancers(id INT, name TEXT, algorithm TEXT, status TEXT, created TEXT, updated TEXT);
+CREATE TABLE loadbalancers(id TEXT, name TEXT, algorithm TEXT, status TEXT, created TEXT, updated TEXT);
 
 CREATE TABLE serverfarms(id INT, lb_id INT,  name TEXT,
          type TEXT,  description TEXT, failAction TEXT, inbandHealthCheck TEXT, connFailureThreshCount TEXT,  resetTimeout TEXT,   resumeService TEXT,  transparent TEXT, 
@@ -12,11 +12,10 @@ CREATE TABLE rservers(id INT, sf_id INT, name TEXT,
          weight INT,  probes TEXT, rateBandwidth INT,   rateConn INT,    created TEXT,  updated TEXT);
 
 
-CREATE TABLE transactions (id INT, status TEXT, action TEXT, params TEXT);
+CREATE TABLE transactions (id TEXT, status TEXT, action TEXT, params TEXT);
 
-CREATE TABLE devices (id INT,  name  TEXT, type TEXT, version TEXT, supports_IPv6 INT, require_VIP_IP INT, has_ACL INT, supports_VLAN INT);
+CREATE TABLE devices (id TEXT,  name  TEXT, type TEXT, version TEXT, supports_IPv6 INT, require_VIP_IP INT, has_ACL INT, supports_VLAN INT, ip TEXT, port TEXT, user TEXT, pass TEXT);
 
-#CREATE TABLE vips(id INT, ip_type TEXT, ip_addr TEXT, transport_proto TEXT, app_proto TEXT, port INT, vlan INT, sf_id INT, backup_sf_id INT);
 CREATE TABLE vips(id INT, sf_id INT, name TEXT, ipType TEXT, ip TEXT, virtIPmask TEXT, proto TEXT, appProto TEXT, Port TEXT, allVLANs TEXT, VLAN TEXT,
         connParameterMap  TEXT,  KALAPtagName TEXT,  KALAPprimaryOutOfServ TEXT,  ICMPreply TEXT,  status TEXT,  protocolInspect TEXT,  appAccelAndOpt TEXT,
         L7LoadBalancing TEXT,  serverFarm TEXT,  backupServerFarm TEXT,  SSLproxyServName TEXT,  defaultL7LBAction TEXT,  SSLinitiation TEXT,  NAT TEXT,

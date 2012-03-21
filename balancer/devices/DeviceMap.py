@@ -1,6 +1,6 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
-# Copyright 2011 OpenStack LLC.
+# Copyright 2012 OpenStack LLC.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,4 +15,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from balancer.drivers.cisco_ace.acedriver import AceDriver
 
+
+class DeviceMap(object):
+    def __init__(self):
+        self._map = {}
+    
+    def getDriver(self,  lbdevice):
+        if lb_device.Type  == "ACE":
+            return AceDriver()
+        if lb_device.Type == "HAPROXY":
+            return None
+        return None
+    
+    
+        
+    

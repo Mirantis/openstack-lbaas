@@ -19,9 +19,10 @@ import logging
 
 import routes
 import loadbalancers
+import devices
 
-
-from balancer.common import wsgi
+from openstack.common import wsgi
+from balancer.core.configuration import Configuration
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,8 @@ class API(wsgi.Router):
 
     def __init__(self, conf, **local_conf):
         self.conf = conf
+        config = Configuration.Instance()
+        config.put(conf)
         mapper = routes.Mapper()
 
         lb_resource = loadbalancers.create_resource(self.conf)
@@ -48,7 +51,20 @@ class API(wsgi.Router):
                        controller=lb_resource,
                        action="create",
                        conditions=dict(method=["POST"]))
-
+        device_resource = devices.create_resource(self.conf)
+        
+        mapper.resource("devices", "devices", controller=device_resource,
+                        collection={'detail': 'GET'})
+        
+        mapper.connect("/devices/", controller=device_resource, action="index")
+        
+        mapper.connect("/devices/{id}", controller=device_resource,
+                       action="device_data", conditions=dict(method=["GET"]))
+                       
+        mapper.connect("/devices/",
+                       controller=device_resource,
+                       action="create",
+                       conditions=dict(method=["POST"]))
 
    
 

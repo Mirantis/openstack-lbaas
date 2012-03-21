@@ -14,10 +14,11 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import uuid
 
 class LBDevice(object):
     def __init__(self):
-        self._id = None
+        self._id = uuid.uuid1().hex
         self._name = None
         self._type = "ACE"
         self._version = None
@@ -25,6 +26,10 @@ class LBDevice(object):
         self._require_VIP_IP = True
         self._has_ACL = True
         self._supports_VLAN = True
+        self._ip = None
+        self._port = None
+        self._user = None
+        self._pass = None
     
     def loadFromRow(self,  row):
         self._id = row[0]
@@ -35,6 +40,44 @@ class LBDevice(object):
         self._require_VIP_IP = row[5]
         self._has_ACL = row[6]
         self._supports_VLAN = row[7]
+        self._ip = row[8]
+        self._port = row[9]
+        self._user = row[10]
+        self._pass = row[11]
+
+    
+    @property 
+    def ip(self):
+        return self._ip
+    @ip.setter
+    def ip(self,  value):
+        self._ip = value
+    
+    @property
+    def port(self):
+        return self._port
+    
+    @port.setter
+    def port(self,  value):
+        self._port = value
+        
+    @property
+    def user(self):
+        return self._user
+    
+    @user.setter
+    def user(self,  value):
+        self._user = value
+
+    @property
+    def password(self):
+        return self._pass
+    
+    @password.setter
+    def password(self,  value):
+        self._pass = value
+
+
     
     @property
     def id(self):

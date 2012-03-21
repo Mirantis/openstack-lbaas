@@ -17,40 +17,38 @@
 
 import logging
 import sys
-
 import  balancer.loadbalancers
 
 from openstack.common import exception
 from openstack.common import wsgi
+from balancer.devices.device import LBDevice
 
 from balancer.core.ServiceController import *
-from balancer.core.LoadBalancerCommandsWorker import *
+from balancer.core.deviceworkers import *
 from balancer.core.Worker import *
 
-
-logger = logging.getLogger('balancer.api.v1.loadbalancers')
-SUPPORTED_PARAMS = balancer.api.v1.SUPPORTED_PARAMS
-SUPPORTED_FILTERS = balancer.api.v1.SUPPORTED_FILTERS
+logger = logging.getLogger('balancer.api.v1.devices')
 
 class Controller(object):
 
     def __init__(self, conf):
-        msg = "Creating loadbalancers controller with config:loadbalancers.py %s" % conf
+        msg = "Creating device controller with config: %s" % conf
         logger.debug(msg)
         self.conf = conf
         self._service_controller = ServiceController.Instance()
         pass
     
-    def index(self, req):
+    def index(self,  req):
         try:
             msg = "Got index request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
-            mapper = LBActionMapper()
+            mapper = DeviceActionMapper()
             worker = mapper.getWorker(task, "index" )
             if worker.type ==  SYNCHRONOUS_WORKER:
                 result = worker.run()
-                return {'loadbalancers': result}
+                logger.debug("Obtained response: %s" % result)
+                return {'devices': result}
             
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
@@ -65,24 +63,30 @@ class Controller(object):
             msg = _("Unauthorized image access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
-        return {'loadbalancers': list}
+      
+        pass
         
-    def create(self,  req,  **args):
+    def create(self,  req,   **args):
+        msg = "Got create request. Request: %s" % req
+        logger.debug(msg)
         try:
-            msg = "Got create request. Request: %s" % req
+            params = args['body']
+            msg = "Request params: %s" % params
             logger.debug(msg)
+            self._validate_params(params)
             task = self._service_controller.createTask()
-            mapper =LBActionMapper()
+            task.parameters = params
+            mapper = DeviceActionMapper()
             worker = mapper.getWorker(task, "create" )
             if worker.type ==  SYNCHRONOUS_WORKER:
                 result = worker.run()
-                return {'loadbalancers': result}
+                
+                return {'devices': result}
             
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'task_id' : task.id}
-
+                return {'task_id' : task.id}            
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
@@ -90,46 +94,17 @@ class Controller(object):
         except exception.NotAuthorized:
             msg = _("Unauthorized image access")
             logger.debug(msg)
-            raise webob.exc.HTTPForbidden(msg)
-
+            raise webob.exc.HTTPForbidden(msg)        
+        return {'devices': list}
         
-    def loadbalancer_data(self,  req,  id):
-       pass
+    def device_data(self,  req):
+        pass
         
-        
-    def _get_query_params(self, req):
-        """
-        Extracts necessary query params from request.
-
-        :param req: the WSGI Request object
-        :retval dict of parameters that can be used by registry client
-        """
-        params = {'filters': self._get_filters(req)}
-
-        for PARAM in SUPPORTED_PARAMS:
-            if PARAM in req.params:
-                params[PARAM] = req.params.get(PARAM)
-        return params
-
-    def _get_filters(self, req):
-        """
-        Return a dictionary of query param filters from the request
-
-        :param req: the Request object coming from the wsgi layer
-        :retval a dict of key/value filters
-        """
-        query_filters = {}
-        for param in req.params:
-            if param in SUPPORTED_FILTERS or param.startswith('property-'):
-                query_filters[param] = req.params.get(param)
-                if not filters.validate(param, query_filters[param]):
-                    raise HTTPBadRequest('Bad value passed to filter %s '
-                                         'got %s' % (param,
-                                                     query_filters[param]))
-        return query_filters
-
+    def _validate_params(self,  params):
+        pass
+                
 def create_resource(conf):
-    """Loadbalancers  resource factory method"""
+    """Devices  resource factory method"""
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = wsgi.JSONResponseSerializer()
     return wsgi.Resource(Controller(conf), deserializer, serializer)
