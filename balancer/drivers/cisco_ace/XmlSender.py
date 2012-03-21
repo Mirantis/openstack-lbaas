@@ -19,6 +19,7 @@
 import urllib2
 import base64
 import re 
+import balancer.drivers.cisco_ace.Context
 
 class XmlSender:
     def __init__(self,  context):
@@ -42,4 +43,4 @@ class XmlSender:
         </request_xml>""" % command
         
         massage = urllib2.urlopen(request, data)
-        return re.search(message.read(), 'XML_CMD_SUCCESS')
+        return re.search    (message.read(), 'XML_CMD_SUCCESS')
