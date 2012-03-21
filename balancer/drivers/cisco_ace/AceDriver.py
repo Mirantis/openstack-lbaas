@@ -92,16 +92,61 @@ class AceDriver(BaseDriver):
         TMP=TMP+"<//serverfarm>\n"
         return TMP
     
-    def createProbe(self, obj): #Now, correct only  for ICMP
-        TMP="<probe type='"+obj.type+"' name='"+obj.name+"'>\n"
-        if obj.description != None: 
-            TMP=TMP+"<description>"+obj.description+"<\\description>\n"
-        if obj.failDetect != None:
-            TMP=TMP+"<faildetect>"+obj.failDetect+"<\faildetect>\n"
-        TMP=TMP+"<interval>"+obj.probeInterval+"<\interval>\n"
-        TMP=TMP+"<passdetect interval>"+obj.passDetectInterval+"<\passdetect interval>\n"
-        TMP=TMP+"<\\probe>\n"
-        pass
+    def createProbe(self,  context,  probe): #Now, correct only  for ICMP and partially dor HTTP
+        TMP="<probe type='"+probe.type+"' name='"+probe.name+"'>\n"
+        if probe.description != None: 
+            TMP=TMP+"<description>"+probe.description+"</description>\n"
+        if probe.failDetect != None:
+            TMP=TMP+"<faildetect>"+str(probe.failDetect)+"</faildetect>\n"
+        if probe.probeInterval != None:
+            TMP=TMP+"<interval>"+str(probe.probeInterval)+"</interval>\n"
+        if probe.passDetectInterval != None:
+            TMP=TMP+"<passdetect interval>"+str(probe.passDetectInterval)+"</passdetect interval>\n"
+        if probe.type == "HTTP": #Necessary add ._method and ._ url to probe.py 
+            if probe.port != None:
+                TMP=TMP+"<port>"+str(probe.port)+"</port>\n"
+            TMP=TMP+"<reques method='"+probe.method+"'"
+            if probe.url != None:
+                TMP=TMP+"'"+probe.url+"'"
+            TMP=TMP+"/>\n"
+        
+        #More settings
+        if probe.passDetectCount != None:
+            TMP=TMP+"<passdetect count>"+str(probe.passDetectCount)+"</passdetect count>\n"
+        if probe.receiveTimeout != None:
+            TMP=TMP+"<receive>"+str(probe.receiveTimeout)+"</receive>\n"
+        if probe.destip != None: #Necessary add ._destip to probe.py
+            TMP=TMP+"<ip address='"+probe.destip+"'"
+            if probe.isRouted != None:
+                TMP=TMP+" type='"+probe.isRouted+"'"
+            TMP=TMP+"/>\n"
+        
+        TMP=TMP+"</probe>"
+        return TMP
+    
+    def attachProbeToSF(self,  context,  serverfarm,  probe):
+        TMP="<serverfarm name='"+serverfarm.name+"'>\n"
+        TMP=TMP+"<probe name='"+probe.name+"'/>\n"
+        TMP=TMP+"</serverfarm>"
+    
+    def createVIP(self,  context, vip,  sfarm): 
+        #access-list permit ip any any - must be added !
+        TMP="<policy map type='loadbalance' conf='first-match' name='"+vip.name+"-l7slb'>\n"
+        TMP=TMP+"<class name='class-default'>\n"
+        TMP=TMP+"<serverfarm name='"+sfarm.name+"'/>\n"
+        TMP=TMP+"</class>\n"
+        TMP=TMP+"</policy map>\n"
+        
+        TMP=TMP+"<class map type='match-all' name='"+vip.name+"'>\n"
+        TMP=TMP+"<param line='2' criteria='match virtual-adress "+vip.ip+" "+vip.virtIPmask+"'/>\n" #How define <line number> ?
+        TMP=TMP+"</class map>"
+        
+        TMP=TMP+"<policy map type='multi-match' name='int"+vip.id+"'>\n"
+        TMP=TMP+"<class name='"+vip.name+"'>"
+        TMP=TMP+"<loadbalance policy name='"+vip.name+"-l7slb'>\n"
+        TMP=TMP+"<loadbalance vip inservice'>\n"
+        TMP=TMP+"</class>"
+        TMP=TMP+"</policy map>"
         
 
     def deleteRServer(self, obj):
