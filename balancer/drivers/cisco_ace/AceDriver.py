@@ -15,21 +15,26 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from balancer.loadbalancers.realserver import RealServer
-from balancer.BaseDriver import BaseDriver
-
-#class Context(BaseContext):
-#    pass
+from BaseDriver import BaseDriver
+from Context import Context
+from XmlSender import XmlSender
 
 class AceDriver(BaseDriver):
     def __init__(self):
         pass
     
-    def createRServer(self, obj):
-        TMP="<rserver "
-        TMP=TMP+"type='"+obj.type+"' name='"+obj.name+"'>\n"
-        if obj.type == "host":
-            TMP=TMP+"<ip address node='address' ipv4-address='"+obj.IP+"'/>\n"
+    def createRServer(self, context, rserver):
+        XMLstr = "<rserver "
+        XMLstr = XMLstr + "type='host' name='" + rserver.name + "'>\n"
+        if rserver.type == "host":
+            XMLstr = XMLstr + "<ip address node='address' ipv4-address='" + rserver.IP + "'/>\n"
+            
+        XMLstr = XMLstr + "</rserver>"
+            
+        s = XmlSender(context)
+        return s.deployConfig(context, XMLstr)    
+
+        q = """
             if obj.failOnAll != None: TMP=TMP+"fail-on-all\n"
         TMP=TMP+"conn-limit max "+str(obj.maxCon)+" min "+str(obj.minCon)+"\n"
         TMP=TMP+"weight "+str(obj.weight)+"\n"
@@ -45,7 +50,7 @@ class AceDriver(BaseDriver):
         for i in range(len(obj.probes)):
             TMP=TMP+"probe "+obj.probes[i]+"\n"
         TMP=TMP+"<inservice/></rserver>\n"
-        return TMP
+        """
 
     def createServerFarm(self, obj):
         TMP="<SFarm>\n"

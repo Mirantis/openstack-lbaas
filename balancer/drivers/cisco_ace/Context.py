@@ -15,9 +15,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from BaseDriver import BaseContext
+
 class Context(BaseContext):
     def __init__(self, ip, port, login, password):
-        self._ip = ip
-        self._port = port
-        self._login = login
-        self._password = password
+        self.ip = ip
+        self.port = port
+        self.login = login
+        self.password = password

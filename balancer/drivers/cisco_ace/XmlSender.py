@@ -19,11 +19,11 @@
 import urllib2
 import base64
 import re 
-import balancer.drivers.cisco_ace.Context
+import Context
 
 class XmlSender:
     def __init__(self,  context):
-        self._url = "https://%s:%s/bin/xml_agent" % (context.ip, context.port)
+        self.url = "https://%s:%s/bin/xml_agent" % (context.ip, context.port)
 
     def getParam(self, name):
         return self._params.get(name,  None)
@@ -42,5 +42,8 @@ class XmlSender:
         %s
         </request_xml>""" % command
         
-        massage = urllib2.urlopen(request, data)
-        return re.search    (message.read(), 'XML_CMD_SUCCESS')
+        message = urllib2.urlopen(request, data)
+        if message.read().find('XML_CMD_SUCCESS'):
+            return 'OK' 
+        else:
+            return 'ERROR'
