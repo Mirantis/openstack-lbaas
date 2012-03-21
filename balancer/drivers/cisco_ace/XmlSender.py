@@ -40,11 +40,12 @@ class XmlSender:
         
         data = """xml_cmd=<request_xml>\r\n%s\r\n</request_xml>""" % command
         
-        print data 
-        
-        message = urllib2.urlopen(request, data)
-        print message.read()
-        if message.read().find('XML_CMD_SUCCESS'):
-            return 'OK' 
-        else:
-            return 'ERROR'
+        try:
+            message = urllib2.urlopen(request, data)
+            s = message.read()
+            if s.find('XML_CMD_SUCCESS'):
+                return 'OK' 
+            else:
+                return 'ERROR'
+        except:
+            return 'DEVICE ERROR'

@@ -55,54 +55,57 @@ class AceDriver(BaseDriver):
             # without parameter  redirection-code=
 
         if (rserver.state == "In Service"):
-            XMLstr = XMLstr + "  <inservice/>"
+            XMLstr = XMLstr + "  <inservice/>\r\n"
             
         XMLstr = XMLstr + "</rserver>"
+        
         s = XmlSender(context)
         return s.deployConfig(context, XMLstr)    
+
+
 
 
     def createServerFarm(self,  context,  serverfarm):
         if not bool(serverfarm.name):
             return "ERROR"
         
-        XMLstr="<serverfarm type='"+serverfarm.type.lower()+"' name='"+serverfarm.name+"'>\r\n"
+        XMLstr = "<serverfarm type='" + serverfarm.type.lower() + "' name='" + serverfarm.name + "'>\r\n"
         
         if bool(serverfarm.description):
-            XMLstr=XMLstr+"<description descr-string='"+serverfarm.description+"'/> \r\n"
+            XMLstr = XMLstr + "<description descr-string='" + serverfarm.description + "'/> \r\n"
         
         if bool(serverfarm.failAction):
-            XMLstr=XMLstr+"<failaction failaction-type='"+serverfarm.failAction+"'/>\r\n"
+            XMLstr = XMLstr + "<failaction failaction-type='" + serverfarm.failAction + "'/>\r\n"
         
         if bool(serverfarm.predictor): #Some predictors are may include additional parameters !
-            XMLstr=XMLstr+"<predictor predictor-method='"+serverfarm.predictor+"'/>\r\n"
+            XMLstr = XMLstr + "<predictor predictor-method='" + serverfarm.predictor + "'/>\r\n"
         
         for i in range(len(serverfarm.probes)):
-            XMLstr=XMLstr+"<probe_sfarm probe-name='"+serverfarm.probes[i]+"'/>\r\n"
+            XMLstr = XMLstr + "<probe_sfarm probe-name='" + serverfarm.probes[i] + "'/>\r\n"
         
         if serverfarm.type.lower() == "host":
             if bool(serverfarm.failOnAll): 
-                XMLstr=XMLstr+"<probe_sfarm probe-name='fail-on-all'/>\r\n"
+                XMLstr = XMLstr + "<probe_sfarm probe-name='fail-on-all'/>\r\n"
             
             if bool(serverfarm.transparent):
-                XMLstr=XMLstr+"<transparent/>\r\n"
+                XMLstr = XMLstr + "<transparent/>\r\n"
             
             if bool(serverfarm.partialThreshPercentage) and bool(serverfarm.backInservice):
-                XMLstr=XMLstr+"<partial-threshold value='"+serverfarm.partialThreshPercentage+"' back-inservice='"+serverfarm.backInservice+"'/>\r\n"
+                XMLstr = XMLstr + "<partial-threshold value='" + serverfarm.partialThreshPercentage + "' back-inservice='" + serverfarm.backInservice + "'/>\r\n"
             
             if bool(serverfarm.inbandHealthCheck):
-                XMLstr=XMLstr+"<inband-health check='"+serverfarm.inbandHealthCheck+"'"
+                XMLstr = XMLstr + "<inband-health check='" + serverfarm.inbandHealthCheck + "'"
                 if serverfarm.inbandHealthCheck.lower == "log":
-                    XMLstr=XMLstr+"threshold='"+str(serverfarm.connFailureThreshCount)+"' reset='"+str(serverfarm.resetTimeout)+"'" #Do deploy if  resetTimeout='' ?
+                    XMLstr = XMLstr + "threshold='" + str(serverfarm.connFailureThreshCount) + "' reset='" + str(serverfarm.resetTimeout) + "'" #Do deploy if  resetTimeout='' ?
                     
                 if serverfarm.inbandHealthCheck.lower == "remove":
                     XMLstr=XMLstr+"threshold='"+str(serverfarm.connFailureThreshCount)+"' reset='"+str(serverfarm.resetTimeout)+"'  resume-service='"+str(serverfarm.resumeService)+"'" #Do deploy if  resumeService='' ?
                 XMLstr=XMLstr+"/>\r\n"
             
             if bool(serverfarm.dynamicWorkloadScale): # Need to upgrade (may include VM's)
-                XMLstr=XMLstr+"<dws type='"+serverfarm.failAction+"'/>\r\n"
+                XMLstr = XMLstr + "<dws type='" + serverfarm.failAction + "'/>\r\n"
         
-        XMLstr=XMLstr+"</serverfarm>"
+        XMLstr = XMLstr + "</serverfarm>"
         
         res = XmlSender(context)
         return res.deployConfig(context, XMLstr) 
@@ -173,7 +176,45 @@ class AceDriver(BaseDriver):
         TMP=TMP+"</policy map>"
         
 
+
     def deleteRServer(self, context, rserver):
-        XMLstr = "<rserver sense='no' name='" + rserver.name + "'></rserver>\n"
+        if not bool(rserver.name): 
+            return 'ERROR'
+            
+        XMLstr = "<rserver sense='no' name='" + rserver.name + "'></rserver>"
+        
         s = XmlSender(context)
         return s.deployConfig(context, XMLstr)    
+        
+        
+        
+    def deleteServerFarm(self,  context,  serverfarm):
+        if not bool(serverfarm.name): 
+            return 'ERROR'
+
+        XMLstr = "<serverfarm sense='no' name='" + serverfarm.name + "'></serverfarm>"
+        
+        s = XmlSender(context)
+        return s.deployConfig(context, XMLstr) 
+        
+        
+        
+    def activateRServer(self,  context,  serverfarm,  rserver):
+        if not bool(rserver.name): 
+            return 'ERROR'
+
+        XMLstr = "<rserver name='" + rserver.name + "'>\r\n  <inservice/>\r\n</rserver>"
+        
+        s = XmlSender(context)
+        return s.deployConfig(context, XMLstr)
+        
+        
+        
+    def suspendRServer(self,  context,  serverfarm,  rserver):
+        if not bool(rserver.name): 
+            return 'ERROR'
+
+        XMLstr = "<rserver name='" + rserver.name + "'>\r\n  <inservice sense='no'/>\r\n</rserver>"
+        
+        s = XmlSender(context)
+        return s.deployConfig(context, XMLstr)
