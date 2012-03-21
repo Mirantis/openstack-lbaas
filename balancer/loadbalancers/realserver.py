@@ -26,6 +26,7 @@ class RealServer(object):
         self._webHostRedir = ""
         self._ipType = "IPv4"
         self._IP = ""
+        self._port = ""
         self._state= "In Service"
         self._opstate = "InService"
         self._description = ""
@@ -38,7 +39,31 @@ class RealServer(object):
         self._rateConn = ""
         self._created = None
         self._updated = None
-    
+
+    def loadFromRow(self, row):
+        msg = 'LoadBalancer create from row. Id: %s' % row[0]
+        logger.debug(msg)
+        self._id = row[0]
+        self._sf_id = row[1]
+        self._name = row[2]
+        self._type = row[3]
+        self._webHostRedir = row[4]
+        self._ipType = row[5]
+        self._IP = row[6]
+        self._port = row[7]
+        self._state= row[8]
+        self._opstate = row[9]
+        self._description = row[10]
+        self._failOnAll = row[11]
+        self._minCon = row[12]
+        self._maxCon = row[13]
+        self._weight = row[14]
+        self._probes = row[15]
+        self._rateBandwidth = row[16]
+        self._rateConn = row[17]
+        self._created = row[18]
+        self._updated = row[19]        
+
     @property
     def id(self):
         return self._id
@@ -86,6 +111,14 @@ class RealServer(object):
     @ipType.setter
     def ipType(self, value):
         self._ipType = value
+    
+    @property
+    def port(self):
+        return self._port
+    
+    @port.setter
+    def port(self, value):
+        self._port = value
 
     @property
     def state(self):

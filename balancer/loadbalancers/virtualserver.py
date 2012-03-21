@@ -48,7 +48,38 @@ class VirtualServer(object):
         self._NAT = [] #need to describe in new module
         self._created = None
         self._updated = None
-    
+
+    def loadFromRow(self, row):
+        msg = 'LoadBalancer create from row. Id: %s' % row[0]
+        logger.debug(msg)
+        self._id = row[1]
+        self._sf_id = row[2]
+        self._name = row[3]
+        self._ipType = row[4]
+        self._ip = row[5]
+        self._virtIPmask = row[6]
+        self._proto = row[7]
+        self._appProto = row[8]
+        self._Port = row[9]
+        self._allVLANs = row[10]
+        self._VLAN = row[11]
+        self._connParameterMap = row[12]
+        self._KALAPtagName = row[13]
+        self._KALAPprimaryOutOfServ = row[14]
+        self._ICMPreply = row[15]
+        self._status = row[16]
+        self._protocolInspect = row[17]
+        self._appAccelAndOpt = row[18]
+        self._L7LoadBalancing = row[19]
+        self._serverFarm = row[20]
+        self._backupServerFarm = row[21]
+        self._SSLproxyServName = row[22]
+        self._defaultL7LBAction = row[23]
+        self._SSLinitiation = row[24]
+        self._NAT = row[25]
+        self._created = row[26]
+        self._updated = row[27]
+
     @property
     def id(self):
         return self._id 

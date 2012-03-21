@@ -54,7 +54,46 @@ class VLAN(object):
         self._inputPolicies = []
         self._inputAccessGroup = []
         self._outputAccessGroup = []
+
+    def loadFromRow(self,  row):
+        #TODO implement this
+        msg = 'LoadBalancer create from row. Id: %s' % row[0]
+        logger.debug(msg)
+        self._id = row[0]
+        self._description = row[1]
+        self._intType = row[2]
+        self._IPaddr = row[3]
+        self._aliasIPaddr = row[4]
+        self._peerIPaddr = row[5]
+        self._netmask = row[6]
+        self._adminStatus = row[7]
+        self._enableMACsticky = row[8]
+        self._enableNormalization = row[9]
+        self._enableIPv6 = row[10]
+        self._ipv6GlobalIP = row[11]
+        self._ipv6UniqueLocalAddr = row[12]
+        self._ipv6LinkLocalAddr = row[13]
+        self._ipv6PeerLinkLocalAddr = row[14]
+        self._enableICMPguard = row[15]
+        self._enableDHCPrelay = row[16]
+        self._RPF = row[17]
+        self._reassemblyTimeout = row[18]
+        self._maxFragChainsAllowed = row[19]
+        self._minFragMTUvalue = row[20]
+        self._MTU = row[21]
+        self._actionForIPheaderOptions = row[22]
+        self._enableMACAddrAutogen = row[23]
+        self._minTTLipHeaderValue = row[24]
+        self._enableSynCookieThreshValue = row[25]
+        self._actionForDBfit = row[26]
+        self._ARPinspectType = row[27]
+        self._UDPconfigCommands = row[28]
+        self._secondaryIPgroups = row[29]
+        self._inputPolicies = row[30]
+        self._inputAccessGroup = row[31]
+        self._outputAccessGroup = row[32]
         
+
     @property
     def id(self):
         return self._id
