@@ -62,38 +62,52 @@ class AceDriver(BaseDriver):
         return s.deployConfig(context, XMLstr)    
 
 
-    def createServerFarm(self, obj):
-        TMP="<SFarm>\n"
-        TMP=TMP+"sfarm "+obj.type+" "+obj.name+"\n"
-        for i in range(len(obj.probes)):
-            TMP=TMP+"probe "+obj.probes[i]+"\n"
-        if obj.failAction != None:
-            TMP=TMP+"failaction "+obj.failAction+"\n"
-        TMP=TMP+"description "+obj.description+"\n"
-        if obj.type == "host":
-            if obj.dynamicWorkloadScale != None: # Need to upgrade (may include VM's)
-                TMP=TMP+"dws "+obj.failAction+"\n"
-            if obj.failOnAll != None: 
-                TMP=TMP+"fail-on-all\n"
-            if obj.inbandHealthCheck == "remove":
-                TMP=TMP+"inband-health check"+obj.inbandHealthCheck+"remove"+obj.connFailureThreshCount
-                if obj.resetTimeout != None:
-                    TMP=TMP+" reset"+obj.resetTimeout
-                if obj.resumeService != None:
-                    TMP=TMP+" resume-service"+obj.resumeService
-                TMP=TMP+"\n"
-            elif obj.inbandHealthCheck == "log":
-                TMP=TMP+"inband-health check"+obj.inbandHealthCheck+"remove"+obj.connFailureThreshCount+"\n"
-            else:
-                TMP=TMP+"inband-health check"+obj.inbandHealthCheck+"\n"
-            if obj.transparent != None:
-                TMP=TMP+"transparent\n"
-            if (obj.partialThreshPercentage != None) and (obj.backInservice != None):
-                TMP=TMP+"partial-threshold "+obj.partialThreshPercentage+" back-inservice "+obj.backInservice+"\n"
-        TMP=TMP+"predictor"+obj.predictor #Now correct for RoundRobin. Some predictors are may include additional parameters !
-        TMP="<\\SFarm>\n"
-        return TMP
+    def createServerFarm(self,  context,  serverfarm):
+        if not bool(serverfarm.name):
+            return "ERROR"
         
+        XMLstr="<serverfarm type='"+serverfarm.type.lower()+"' name='"+serverfarm.name+"'>\r\n"
+        
+        if bool(serverfarm.description):
+            XMLstr=XMLstr+"<description descr-string='"+serverfarm.description+"'/> \r\n"
+        
+        if bool(serverfarm.failAction):
+            XMLstr=XMLstr+"<failaction failaction-type='"+serverfarm.failAction+"'/>\r\n"
+        
+        if bool(serverfarm.predictor): #Some predictors are may include additional parameters !
+            XMLstr=XMLstr+"<predictor predictor-method='"+serverfarm.predictor+"'/>\r\n"
+        
+        for i in range(len(serverfarm.probes)):
+            XMLstr=XMLstr+"<probe_sfarm probe-name='"+serverfarm.probes[i]+"'/>\r\n"
+        
+        if serverfarm.type.lower() == "host":
+            if bool(serverfarm.failOnAll): 
+                XMLstr=XMLstr+"<probe_sfarm probe-name='fail-on-all'/>\r\n"
+            
+            if bool(serverfarm.transparent):
+                XMLstr=XMLstr+"<transparent/>\r\n"
+            
+            if bool(serverfarm.partialThreshPercentage) and bool(serverfarm.backInservice):
+                XMLstr=XMLstr+"<partial-threshold value='"+serverfarm.partialThreshPercentage+"' back-inservice='"+serverfarm.backInservice+"'/>\r\n"
+            
+            if bool(serverfarm.inbandHealthCheck):
+                XMLstr=XMLstr+"<inband-health check='"+serverfarm.inbandHealthCheck+"'"
+                if serverfarm.inbandHealthCheck.lower == "log":
+                    XMLstr=XMLstr+"threshold='"+str(serverfarm.connFailureThreshCount)+"' reset='"+str(serverfarm.resetTimeout)+"'" #Do deploy if  resetTimeout='' ?
+                    
+                if serverfarm.inbandHealthCheck.lower == "remove":
+                    XMLstr=XMLstr+"threshold='"+str(serverfarm.connFailureThreshCount)+"' reset='"+str(serverfarm.resetTimeout)+"'  resume-service='"+str(serverfarm.resumeService)+"'" #Do deploy if  resumeService='' ?
+                XMLstr=XMLstr+"/>\r\n"
+            
+            if bool(serverfarm.dynamicWorkloadScale): # Need to upgrade (may include VM's)
+                XMLstr=XMLstr+"<dws type='"+serverfarm.failAction+"'/>\r\n"
+        
+        XMLstr=XMLstr+"</serverfarm>"
+        
+        res = XmlSender(context)
+        return res.deployConfig(context, XMLstr) 
+
+    
     def addRServerToSF(self, obj): 
         TMP="<serverfarm name='"+obj.name+"'>\n"
         for i in range(len(obj.rservers)):
