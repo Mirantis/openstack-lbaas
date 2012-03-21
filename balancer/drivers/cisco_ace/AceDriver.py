@@ -18,8 +18,8 @@
 from balancer.loadbalancers.realserver import RealServer
 from balancer.BaseDriver import BaseDriver
 
-class Context(BaseContext):
-    pass
+#class Context(BaseContext):
+#    pass
 
 class AceDriver(BaseDriver):
     def __init__(self):
@@ -47,13 +47,9 @@ class AceDriver(BaseDriver):
         TMP=TMP+"<inservice/></rserver>\n"
         return TMP
 
-    def deleteRServer(self, obj):
-        TMP="<rserver sense='no' type='host' name='" + obj.name + "'></rserver>\n"
-        return TMP
-
     def createServerFarm(self, obj):
         TMP="<SFarm>\n"
-        TMP=TMP+"rsever "+obj.type+" "+obj.name+"\n"
+        TMP=TMP+"sfarm "+obj.type+" "+obj.name+"\n"
         for i in range(len(obj.probes)):
             TMP=TMP+"probe "+obj.probes[i]+"\n"
         if obj.failAction != None:
@@ -79,13 +75,30 @@ class AceDriver(BaseDriver):
                 TMP=TMP+"transparent\n"
             if (obj.partialThreshPercentage != None) and (obj.backInservice != None):
                 TMP=TMP+"partial-threshold "+obj.partialThreshPercentage+" back-inservice "+obj.backInservice+"\n"
-        TMP=TMP+"predictor"+obj.predictor #Check it !!!
+        TMP=TMP+"predictor"+obj.predictor #Now correct for RoundRobin. Some predictors are may include additional parameters !
         TMP="<\\SFarm>\n"
+        return TMP
         
-    def addRServerToSF(self, obj):
-        TMP="<RealServer>\n"
-        pass
+    def addRServerToSF(self, obj): 
+        TMP="<serverfarm name='"+obj.name+"'>\n"
+        for i in range(len(obj.rservers)):
+            TMP=TMP+"<rserver name="+obj.probes[i]+"\\\n"
+            TMP=TMP+"<inservice sense='inservice'\\>\n"
+        TMP=TMP+"<//serverfarm>\n"
+        return TMP
     
-    def deleteRServerFromSF(self, obj):
+    def createProbe(self, obj): #Now, correct only  for ICMP
+        TMP="<probe type='"+obj.type+"' name='"+obj.name+"'>\n"
+        if obj.description != None: 
+            TMP=TMP+"<description>"+obj.description+"<\\description>\n"
+        if obj.failDetect != None:
+            TMP=TMP+"<faildetect>"+obj.failDetect+"<\faildetect>\n"
+        TMP=TMP+"<interval>"+obj.probeInterval+"<\interval>\n"
+        TMP=TMP+"<passdetect interval>"+obj.passDetectInterval+"<\passdetect interval>\n"
+        TMP=TMP+"<\\probe>\n"
         pass
         
+
+    def deleteRServer(self, obj):
+        TMP="<rserver sense='no' type='host' name='" + obj.name + "'></rserver>\n"
+        return TMP
