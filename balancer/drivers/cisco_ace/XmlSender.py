@@ -1,31 +1,28 @@
+# vim: tabstop=4 shiftwidth=4 softtabstop=4
+
+# Copyright 2012 OpenStack LLC.
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+
 import urllib2
 import base64
 import re 
 
-url = "https://10.4.15.30:10443/bin/xml_agent"
-username = "admin"
-password = "cisco123"
-
-r = urllib2.Request(url)
-
-base64string = base64.encodestring(
-                '%s:%s' % (username, password))[:-1]
-authheader =  "Basic %s" % base64string
-r.add_header("Authorization", authheader)
-
-data = """xml_cmd=<request_xml>
-%s
-</request_xml>"""
-
-handle = urllib2.urlopen(r, data)
-print handle.geturl()
-t = handle.read()
-print t
-
-
 class XmlSender:
     def __init__(self,  context):
-        self.url = "https://%s:%s/bin/xml_agent" % (context.ip, context.port)
+        self._url = "https://%s:%s/bin/xml_agent" % (context.ip, context.port)
 
     def getParam(self, name):
         return self._params.get(name,  None)
@@ -45,4 +42,4 @@ class XmlSender:
         </request_xml>""" % command
         
         massage = urllib2.urlopen(request, data)
-        return re.find(message.read(), 'XML_CMD_SUCCESS')
+        return re.search(message.read(), 'XML_CMD_SUCCESS')
