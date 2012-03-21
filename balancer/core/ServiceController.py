@@ -55,6 +55,9 @@ class ServiceTask():
         def parameters(self,  value):
             self._params = value
         
+        def addParameter(self,  name,  value):
+            self._params[name] = value
+        
         @property
         def status(self):
             self.lock.acquire()
@@ -67,6 +70,7 @@ class ServiceTask():
             self.lock.acquire()
             self._status = value
             self.lock.release()
+        
 
 @Singleton
 class ServiceController():

@@ -36,5 +36,35 @@ class CreateLBWorker(ASyncronousWorker):
         
         def run(self):
             self._task.status = STATUS_PROGRESS
+            try:
+                params = self._task.parameters
+                
+                driver = params['driver']
+                
+                nodes = params['nodes']
+                
+                sf = params['serverfarm']
+                
+                createSF(sf)
+                
+                for node in nodes:
+                    createRServer(sf, node)
+                
+                probes = params['probes']
+                
+                for probe in probes:
+                    createProbe(probe)
+                    attachProbeToSF(sf,  probe)
+                
+                vserver = params['vserver']
+                
+                createVServer(vserver,  sf)
+            except exception:
+                self._task.status = STATUS_ERROR
+                #TODO Do rollback. We need command pattern here
+            
+            self._task.status = STATUS_DONE
+            
+            
             
               
