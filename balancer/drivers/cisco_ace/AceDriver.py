@@ -24,13 +24,19 @@ class AceDriver(BaseDriver):
         pass
     
     def createRServer(self, context, rserver):
+        if not bool(rserver.name): 
+            return 'ERROR'
+
         XMLstr = "<rserver "
-        XMLstr = XMLstr + "type='host' name='" + rserver.name + "'>\n"
-        if rserver.type == "host":
-            XMLstr = XMLstr + "<ip address node='address' ipv4-address='" + rserver.IP + "'/>\n"
-            
+        XMLstr = XMLstr + "type='" + rserver.type.lower() + "' name='" + rserver.name + "'>\r\n"
+        if bool(rserver.IP):
+            XMLstr = XMLstr + "  <ip_address node='address' ipv4-address='" + rserver.IP + "'/>\r\n"
+        if bool(rserver.description): 
+            XMLstr = XMLstr + "  <description descr-string='" + rserver.description + "'/>\r\n"
+        if bool(rserver.maxCon):
+            pass
+
         XMLstr = XMLstr + "</rserver>"
-            
         s = XmlSender(context)
         return s.deployConfig(context, XMLstr)    
 

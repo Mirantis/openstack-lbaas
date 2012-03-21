@@ -14,7 +14,7 @@ from realserver import RealServer
 
 rs = RealServer()
 rs.name = 'Test_to_delete'
-rs.ip = '10.1.1.1'
+rs.IP = '10.1.1.1'
 
 cont = Context('10.4.15.30', '10443', 'admin', 'cisco123')
 driver = AceDriver()

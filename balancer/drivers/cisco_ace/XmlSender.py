@@ -38,11 +38,12 @@ class XmlSender:
         
         request.add_header("Authorization", authheader)
         
-        data = """xml_cmd<request_xml>
-        %s
-        </request_xml>""" % command
+        data = """xml_cmd=<request_xml>\r\n%s\r\n</request_xml>""" % command
+        
+        print data 
         
         message = urllib2.urlopen(request, data)
+        print message.read()
         if message.read().find('XML_CMD_SUCCESS'):
             return 'OK' 
         else:
