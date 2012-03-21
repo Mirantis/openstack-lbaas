@@ -23,40 +23,44 @@ class AceDriver(BaseDriver):
     def __init__(self):
         pass
     
+    
     def createRServer(self, context, rserver):
         if not bool(rserver.name): 
             return 'ERROR'
 
-        XMLstr = "<rserver "
-        XMLstr = XMLstr + "type='" + rserver.type.lower() + "' name='" + rserver.name + "'>\r\n"
-        if bool(rserver.IP):
-            XMLstr = XMLstr + "  <ip_address node='address' ipv4-address='" + rserver.IP + "'/>\r\n"
+        XMLstr = "<rserver type='" + rserver.type.lower() + "' name='" + rserver.name + "'>\r\n"
+        
         if bool(rserver.description): 
             XMLstr = XMLstr + "  <description descr-string='" + rserver.description + "'/>\r\n"
-        if bool(rserver.maxCon):
-            pass
+            
+        if bool(rserver.IP):
+            XMLstr = XMLstr + "  <ip_address node='address' ipv4-address='" + rserver.IP + "'/>\r\n"
+            
+        XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + "' min='" + str(rserver.minCon) + "'/>\r\n"
+        
+        if bool(rserver.rateConn):
+            XMLstr = XMLstr + "  <rate-limit type='connection' value='" + str(rserver.rateConn) + "'/>\r\n"
+            
+        if bool(rserver.rateBandwidth):
+            XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + str(rserver.rateBandwidth) + "'/>\r\n"        
 
+        if bool(rserver.failOnAll):
+            XMLstr = XMLstr + "  <fail-on-all/>\r\n"
+
+        if (rserver.type.lower() == "host"):
+            XMLstr = XMLstr + "  <weight value='" + str(rserver.weight) + "'/>\r\n"
+            
+        if bool(rserver.webHostRedir):
+            XMLstr = XMLstr + "  <webhost-redirection relocation-string='" + rserver.webHostRedir + "'/>\r\n" 
+            # without parameter  redirection-code=
+
+        if (rserver.state == "In Service"):
+            XMLstr = XMLstr + "  <inservice/>"
+            
         XMLstr = XMLstr + "</rserver>"
         s = XmlSender(context)
         return s.deployConfig(context, XMLstr)    
 
-        q = """
-            if obj.failOnAll != None: TMP=TMP+"fail-on-all\n"
-        TMP=TMP+"conn-limit max "+str(obj.maxCon)+" min "+str(obj.minCon)+"\n"
-        TMP=TMP+"weight "+str(obj.weight)+"\n"
-        TMP=TMP+"description "+obj.description+"\n"
-        if obj.type == "redirect" and obj.webHostRedir != "":
-            TMP=TMP+"webhost-redirection "+obj.webHostRedir+"\n"
-        if obj.rateBandwidth != "":
-            TMP=TMP+"rate-limit bandwidth "+str(obj.rateBandwidth)+"\n"
-        if obj.rateConn != "":
-            TMP=TMP+"rate-limit connection "+str(obj.rateConn)+"\n"
-        if obj.state != "":
-            TMP=TMP+obj.state+"\n"
-        for i in range(len(obj.probes)):
-            TMP=TMP+"probe "+obj.probes[i]+"\n"
-        TMP=TMP+"<inservice/></rserver>\n"
-        """
 
     def createServerFarm(self, obj):
         TMP="<SFarm>\n"
@@ -155,6 +159,7 @@ class AceDriver(BaseDriver):
         TMP=TMP+"</policy map>"
         
 
-    def deleteRServer(self, obj):
-        TMP="<rserver sense='no' type='host' name='" + obj.name + "'></rserver>\n"
-        return TMP
+    def deleteRServer(self, context, rserver):
+        XMLstr = "<rserver sense='no' name='" + rserver.name + "'></rserver>\n"
+        s = XmlSender(context)
+        return s.deployConfig(context, XMLstr)    
