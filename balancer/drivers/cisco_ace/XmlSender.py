@@ -43,6 +43,7 @@ class XmlSender:
         try:
             message = urllib2.urlopen(request, data)
             s = message.read()
+            print s
             if s.find('XML_CMD_SUCCESS'):
                 return 'OK' 
             else:
