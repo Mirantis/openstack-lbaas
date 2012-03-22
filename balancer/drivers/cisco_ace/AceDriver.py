@@ -284,20 +284,23 @@ class AceDriver(BaseDriver):
             XMLstr=XMLstr+"/>\r\n"
         if bool(rserver.maxCon) and bool(rserver.minCon):
             XMLstr=XMLstr+"<conn-limit max='"+str(rserver.maxCon)+"' min='"+str(rserver.minCon)+"'/>\r\n"
-        else:
-            XMLstr=XMLstr+"<conn-limit sense='no'/>\r\n"
         if bool(rserver.rateConn):
             XMLstr=XMLstr+"<rate-limit type='connection' value='"+str(rserver.rateConn)+"'/>\r\n"
         if bool(rserver.rateBandwidth):
-            XMLstr=XMLstr+"<rate-limit type='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>"
-       
-        
-        if rserver.state.lower() == "inservice":
-            XMLstr=XMLstr+"<inservice/>\r\n"
-        if rserver.state.lower() == "standby":
-            XMLstr=XMLstr+"<inservice mode='"+rserver.state.lower()+"'/>\r\n"
-        if rserver.state.lower() == "outofservice":
-            XMLstr=XMLstr+"<inservice sense='no'/>\r\n"
+            XMLstr=XMLstr+"<rate-limit type='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>\r\n"
+        if bool(rserver.cookieStr):
+            XMLstr=XMLstr+"<cookie-string value='"+rserver.cookieStr+"'/>\r\n"
+        for i in range(len(rserver.probes)):
+            XMLstr=XMLstr+"<probe_sfarm probe-name='"+rserver.probes[i]+"'/>\r\n"
+        if bool(rserver.failOnAll):
+            XMLstr=XMLstr+"<probe_sfarm probe-name='fail-on-all'/>"
+        if bool(rserver.state):
+            if rserver.state.lower() == "inservice":
+                XMLstr=XMLstr+"<inservice/>\r\n"
+            if rserver.state.lower() == "standby":
+                XMLstr=XMLstr+"<inservice mode='"+rserver.state.lower()+"'/>\r\n"
+            if rserver.state.lower() == "outofservice":
+                XMLstr=XMLstr+"<inservice sense='no'/>\r\n"
         XMLstr=XMLstr+"</rserver_sfarm>\r\n"
         XMLstr=XMLstr+"</serverfarm>"
         
@@ -310,14 +313,12 @@ class AceDriver(BaseDriver):
             return "ERROR"
         
         XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
-        XMLstr=XMLstr+" <rserver_sfarm sense='no' name='"+rserver.name+"'/>\r\n"
-        XMLstr=XMLstr+"</serverfarm>"
-        
-        XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
-        XMLstr=XMLstr+" <rserver_sfarm name='"+rserver.name+"'"
+        XMLstr=XMLstr+"<rserver_sfarm sense='no' name='"+rserver.name+"'"
         if bool(rserver.port):
             XMLstr=XMLstr+" port='"+rserver.port+"'"
         XMLstr=XMLstr+">\r\n"
+        XMLstr=XMLstr+"</rserver_sfarm>\r\n"
+        XMLstr=XMLstr+"</serverfarm>"
         
         res = XmlSender(context)
         return res.deployConfig(context, XMLstr)
@@ -357,22 +358,31 @@ class AceDriver(BaseDriver):
     
     def createVIP(self,  context, vip,  sfarm): 
         #access-list permit ip any any - must be added !
-        TMP="<policy map type='loadbalance' conf='first-match' name='"+vip.name+"-l7slb'>\n"
-        TMP=TMP+"<class name='class-default'>\n"
-        TMP=TMP+"<serverfarm name='"+sfarm.name+"'/>\n"
-        TMP=TMP+"</class>\n"
-        TMP=TMP+"</policy map>\n"
+        #!!! Before create we must perform a check for the presentce  access-list vip-acl remark... and its participation in vlan.
         
-        TMP=TMP+"<class map type='match-all' name='"+vip.name+"'>\n"
-        TMP=TMP+"<param line='2' criteria='match virtual-adress "+vip.ip+" "+vip.virtIPmask+"'/>\n" #How define <line number> ?
-        TMP=TMP+"</class map>"
         
-        TMP=TMP+"<policy map type='multi-match' name='int"+vip.id+"'>\n"
-        TMP=TMP+"<class name='"+vip.name+"'>"
-        TMP=TMP+"<loadbalance policy name='"+vip.name+"-l7slb'>\n"
-        TMP=TMP+"<loadbalance vip inservice'>\n"
-        TMP=TMP+"</class>"
-        TMP=TMP+"</policy map>"
+        # 1) Add a access-list
+        XMLstr="<access-list id='vip-acl' line='"++"' config-type='extended' perm-value='permit' protocol-name='ip' src-type='any' host_dest-addr='"+vip.ip+"'/>\r\n"
+        #2) Add a policy-map
+        XMLstr=XMLstr+"<policy-map_lb type='loadbalance' match-type='first-match' pmap-name='"+vip.name+"-l7slb'>\r\n"
+        XMLstr=XMLstr+"<class_pmap_lb match-cmap-default='class-default'>\r\n"
+        XMLstr=XMLstr+"<serverfarm_pmap sfarm-name='"+sfarm.name+"'/>"
+        XMLstr=XMLstr+"</class_pmap_lb>\r\n"
+        XMLstr=XMLstr+"</policy-map_lb>\r\n"
+        #3)Add a class-map
+        XMLstr=XMLstr+"<class-map match-type='match-all' name='"+vip.name+"'>"
+        XMLstr=XMLstr+"<match_virtual-addr seq-num='"++"' addr-type='virtual-address' ipv4-address='"+vip.ip+"' protocol-type='"+vip.proto.lower()+"'"
+        if vip.proto.lower() != "any":
+            XMLstr=XMLstr+" operator='eq' port-"+vip.proto.lower()+"-name='"+vip.Port+"'"
+        XMLstr=XMLstr+"/>\r\n"
+        XMLstr=XMLstr+"</class-map>\r\n"
+        #4)Add a policy policy-map multi-match
+        XMLstr=XMLstr+"<policy-map_multimatch match-type='multi-match' pmap-name='int2'>\r\n" # int2 ???
+        XMLstr=XMLstr+"<class cmap-name='"+vip.name+"'>\r\n"
+        XMLstr=XMLstr+"<loadbalance vip_config-type='inservice'/>\r\n"
+        XMLstr=XMLstr+"<loadbalance policy='"+vip.name+"-l7slb'/>\r\n"
+        XMLstr=XMLstr+"</class>"
+        XMLstr=XMLstr+"</policy-map_multimatch>"
     
     
     def deleteVIP(self,  context,  vip):
