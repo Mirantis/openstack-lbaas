@@ -27,7 +27,7 @@ class RealServer(object):
         self._ipType = "IPv4"
         self._IP = ""
         self._port = ""
-        self._state= "InService"
+        self._state= "InService" #StandBy, OutOfService
         self._opstate = "InService"
         self._description = ""
         self._failOnAll = None
