@@ -21,6 +21,7 @@ from balancer.loadbalancers.loadbalancer import *
 from openstack.common import exception
 from balancer.devices.device import LBDevice
 from balancer.core.configuration import Configuration
+from balancer.loadbalancers.realserver import RealServer 
 logger = logging.getLogger(__name__)
 
 
@@ -107,6 +108,32 @@ class Reader(object):
             prb.loadFromRow(row)
             list.append(prb)
         return list        
+
+    def getRServerById(self,  id):
+         cursor = self._con.cursor()
+         if id == None:
+             raise exception.NotFound("Empty device id.")
+         cursor.execute('SELECT * FROM rservers WHERE id = %s' % id)
+         row = cursor.fetchone()
+         if row == None:
+             raise exception.NotFound()
+         rs = RealServer()
+         rs.loadFromRow(row)
+         return rs
+
+    def getRServers(self):
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM rservers')
+        rows = cursor.fetchall()
+        if rows == None:
+             raise exception.NotFound()
+        list = []
+        for row in rows:
+            rs = RealServer()
+            rs.loadFromRow(row)
+            list.append(rs)
+        return list
+        
 
 class Writer(object):
     def __init__(self,  db):
