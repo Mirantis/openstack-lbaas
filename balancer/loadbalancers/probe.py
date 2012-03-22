@@ -193,7 +193,6 @@ class HTTPprobe(Probe):
         self._openTimeout = 1
         self._userName = ""
         self._password = ""
-        self._confPassword = ""
         self._expectRegExp = ""
         self._expectRegExpOffset = ""
         self._hash = None

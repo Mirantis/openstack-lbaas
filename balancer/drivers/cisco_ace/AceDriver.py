@@ -120,9 +120,39 @@ class AceDriver(BaseDriver):
         return TMP
     
     def createProbe(self,  context,  probe): #Now, correct only  for ICMP and partially dor HTTP
-        TMP="<probe type='"+probe.type+"' name='"+probe.name+"'>\n"
-        if probe.description != None: 
-            TMP=TMP+"<description>"+probe.description+"</description>\n"
+        if not bool(probe.name): 
+            return 'ERROR'
+    
+        if (probe.type.lower() == 'http'):
+            XMLstr = "<probe_http type='http' name='" + probe.name + "'>\r\n"
+
+            if bool(probe.description): 
+                XMLstr = XMLstr + "  <description descr-string='" + probe.description + "'/>\r\n"
+                
+            if bool(probe.destIPv4v6):
+                XMLstr = XMLstr + "  <ip_address address='" + probe.destIPv4v6 + "'"
+                if bool(probe.isRouted):
+                    XMLstr = XMLstr + " routing-option='routed'"
+                XMLstr = XMLstr + "/>\r\n"
+                
+            if bool(probe.port):
+                XMLstr = XMLstr + "  <port value='" + str(probe.port) + "'/>\r\n"
+        
+            if bool(probe.probeInterval):
+                XMLstr = XMLstr + "  <interval value='" + str(probe.probeInterval) + "'/>\r\n"
+                
+            if bool(probe.passDetectInterval):
+                XMLstr = XMLstr + "  <passdetect interval='" + str(probe.passDetectInterval) + "'/>\r\n"
+                
+            if bool(probe.passDetectCount):
+                XMLstr = XMLstr + "  <passdetect count='" + str(probe.passDetectCount) + "'/>\r\n"
+                
+            if bool(probe.receiveTimeout):
+                XMLstr = XMLstr + "  <receive timeout='" + str(probe.receiveTimeout) + "'/>\r\n"
+                
+            if (bool(probe.userName) and bool(probe.password)):
+                
+            
         if probe.failDetect != None:
             TMP=TMP+"<faildetect>"+str(probe.failDetect)+"</faildetect>\n"
         if probe.probeInterval != None:
