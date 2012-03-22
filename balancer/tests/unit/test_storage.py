@@ -22,7 +22,7 @@ from balancer.storage.storage import *
 from balancer.loadbalancers.loadbalancer import LoadBalancer
 from openstack.common import exception
 from balancer.devices.device import LBDevice
-from balancer.loadbalancers.probe import *
+from balancer.loadbalancers.probe import DNSprobe
 
 class StorageTestCase(unittest.TestCase):
     
@@ -89,6 +89,27 @@ class StorageTestCase(unittest.TestCase):
         read  = stor.getReader()
         lb_list = read.getLoadBalancers()
         self.assertEquals(len(lb_list), 3)
-    
+
+    def test_probe_save(self):
+        prb = DNSprobe()
+        prb.name  = "testProbe"
+        prb.type = 'DNSprobe'
+        prb.id = '1234'
+        prb.description = 'Test Probe'
+        prb.probeInterval = '20'
+        prb.isRouted = 'True'
+        prb.passDetectInterval = '60'
+        prb.receiveTimeout = '10'
+        prb.port = '8080'
+        prb.passDetectCount = '4'
+        prb.failDetect = '6'
+        prb.domainName = 'domainname'
+        
+        stor = Storage( {'db_path':'./db/testdb.db'})
+        wr = stor.getWriter()
+        wr.writeLoadBalancer(prb)
+        read  = stor.getReader()
+        newprb = read.getProbeById(1234)
+        self.assertEquals(prb.name,  "testDNSProbe")
     
     
