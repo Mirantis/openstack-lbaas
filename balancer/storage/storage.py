@@ -165,21 +165,18 @@ class Writer(object):
         logger.debug("Saving Probe instance in DB.")
         cursor = self._con.cursor()
         dict = prb.convertToDict()
-        command = "INSERT INTO probes ("
+        command1 = "INSERT INTO probes ("
+        command2 = ""
         i=0
         for key in dict.keys():
             if i < len(dict)-1:
-                command = command + key+','
+                command1 += key +','
+                command2 +=str(dict[key]) + ","
             else:
-                command = command + key + ") VALUES("
+                command1 += key + ") VALUES("
+                command2 +=str(dict[key]) + ");"
             i+=1
-        i=0
-        for val in dict.values():
-            if i < len(dict)-1:
-                command +=str(val) + ","
-            else:
-                command +=str(val) + ");"
-            i+=1
+        command = command1+command2
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
