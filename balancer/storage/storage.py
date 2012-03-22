@@ -21,6 +21,7 @@ from balancer.loadbalancers.loadbalancer import *
 from openstack.common import exception
 from balancer.devices.device import LBDevice
 from balancer.core.configuration import Configuration
+from balancer.loadbalancers.probe import *
 from balancer.loadbalancers.realserver import RealServer 
 logger = logging.getLogger(__name__)
 
@@ -170,9 +171,8 @@ class Writer(object):
             if i < len(dict)-1:
                 command = command + key+','
             else:
-                command = command + key
+                command = command + key + ") VALUES("
             i+=1
-        command += ") VALUES("
         i=0
         for val in dict.values():
             if i < len(dict)-1:
@@ -185,7 +185,15 @@ class Writer(object):
         cursor.execute(command)
         self._con.commit()            
          
-        
+    def writeRServer(self,  rs):
+         logger.debug("Saving RServer instance in DB.")
+         cursor = self._con.cursor()
+         command = "INSERT INTO rservers (id, sf_id, name, type,webHostRedir,ipType,IP,port,state,opstate, description, failOnAll, minCon,  maxCon, weight,  probes, rateBandwidth,   rateConn,    backupRS,  backupRSport,  created,  updated) ) VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s',%d, %d, %d,'%s','%d','%d','%s','%s','%s','%s');"  % (rs.id,  
+                                rs.sf_id,  rs.name,  rs.type,  rs.webHostRedir,  rs.ipType, rs.IP, rs.port,  rs.state,  rs.opstate, rs.description, rs.failOnAll, rs.minCon, rs.maxCon,  rs.weight,  rs.probes, rs.rateBandwidth,  rs.rateConn,  rs.backupRS,  rs.backupRSport,  rs.created,  rs.updated )
+         msg = "Executing command: %s" % command
+         logger.debug(msg)
+         cursor.execute(command)
+         self._con.commit()        
        
         
 class Storage(object):
