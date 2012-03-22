@@ -26,6 +26,7 @@ from balancer.loadbalancers.realserver import RealServer
 from balancer.loadbalancers.predictor import *
 from balancer.loadbalancers.serverfarm import ServerFarm
 from balancer.loadbalancers.virtualserver import VirtualServer
+from balancer.loadbalancers.vlan import VLAN
 logger = logging.getLogger(__name__)
 
 
@@ -216,6 +217,45 @@ class Reader(object):
             list.append(vs)
         return list 
 
+    def getServerFarms(self):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM serverfarms')
+        rows = cursor.fetchall()
+        if rows == None:
+             raise exception.NotFound()
+        list = []
+        for row in rows:
+            sf = ServerFarm()
+            sf.loadFromRow(row)
+            list.append(sf)
+        return list 
+
+    def getVLANbyId(self, id):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM vlans WHERE id = %s' % id)
+        row = cursor.fetchone()
+        if row == None:
+            raise exception.NotFound()
+        vlan = VLAN()
+        vlan.loadFromRow(row)
+        return vlan     
+
+    def getVLANs(self):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM vlans')
+        rows = cursor.fetchall()
+        if rows == None:
+             raise exception.NotFound()
+        list = []
+        for row in rows:
+            vlan = VLAN()
+            vlan.loadFromRow(row)
+            list.append(vlan)
+        return list 
+
 class Writer(object):
     def __init__(self,  db):
         logger.debug("Writer: connecting to db: %s" % db)
@@ -319,6 +359,27 @@ class Writer(object):
         cursor = self._con.cursor()
         dict = vs.convertToDict()
         command1 = "INSERT INTO vips ("
+        command2 = ""
+        i=0
+        for key in dict.keys():
+            if i < len(dict)-1:
+                command1 += key +','
+                command2 +=str(dict[key]) + ","
+            else:
+                command1 += key + ") VALUES("
+                command2 +=str(dict[key]) + ");"
+            i+=1
+        command = command1+command2
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit() 
+
+    def writeVLAN(self, vlan):
+        logger.debug("Saving VLAN instance in DB.")
+        cursor = self._con.cursor()
+        dict = vlan.convertToDict()
+        command1 = "INSERT INTO vlans ("
         command2 = ""
         i=0
         for key in dict.keys():
