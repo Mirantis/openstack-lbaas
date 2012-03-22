@@ -246,7 +246,6 @@ class HTTPprobe(Probe):
     @password.setter
     def password(self, value):
         self._password = value
-        self._confPassword = value
     @property
     def expectRegExp(self):
         return self._expectRegExp
@@ -301,7 +300,6 @@ class IMAPprobe(Probe):
         Probe.__init__(self)
         self._userName = ""
         self._password = ""
-        self._confPassword = ""
         self._destIP = ""
         self._tcpConnTerm = None
         self._openTimeout = 1
@@ -320,7 +318,6 @@ class IMAPprobe(Probe):
     @password.setter
     def password(self, value):
         self._password = value
-        self._confPassword = value
     @property
     def destIP(self):
         return self._destIP
@@ -357,7 +354,6 @@ class POPprobe(Probe):
         Probe.__init__(self)
         self._userName = ""
         self._password = ""
-        self._confPassword = ""
         self._destIP = ""
         self._tcpConnTerm = None
         self._openTimeout = 1
@@ -374,7 +370,6 @@ class POPprobe(Probe):
     @password.setter
     def password(self, value):
         self._password = value
-        self._confPassword = value
     @property
     def destIP(self):
         return self._destIP
@@ -405,7 +400,6 @@ class RADIUSprobe(Probe):
         Probe.__init__(self)
         self._userName = ""
         self._password = ""
-        self._confPassword = ""
         self._userSecret = ""
         self._destIP = ""
         self._NASIPaddr = ""
@@ -421,7 +415,6 @@ class RADIUSprobe(Probe):
     @password.setter
     def password(self, value):
         self._password = value
-        self._confPassword = value
     @property
     def userSecret(self):
         return self._userSecret
@@ -504,7 +497,6 @@ class SCRIPTEDprobe(Probe):
         self._proto = None
         self._userName = ""
         self._password = ""
-        self._confPassword = ""
         self._sourceFileName = ""
     
     @property
@@ -542,8 +534,7 @@ class SCRIPTEDprobe(Probe):
         return self._password
     @password.setter
     def password(self, value):
-        self._password = value
-        self._confPassword = value    
+        self._password = value  
     @property
     def sourceFileName(self):
         return self._sourceFileName
