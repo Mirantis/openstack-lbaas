@@ -24,8 +24,7 @@ import shutil
 
   
 class HaproxyConfigFile:
-    def __init__(self, haproxy_config_file_path = '/tmp/haproxy.cfg'):
-        test_config = './balancer/tests/unit/testfiles/haproxy.cfg'
+    def __init__(self, haproxy_config_file_path = '/tmp/haproxy.cfg',  test_config='./balancer/tests/unit/testfiles/haproxy.cfg'):
         shutil.copyfile (test_config, "/tmp/haproxy.cfg")
         self.haproxy_config_file_path = haproxy_config_file_path
     def GetHAproxyConfigFileName(self):
@@ -114,7 +113,7 @@ class HaproxyConfigFile:
         return ListenBlockName
 
 if __name__ == '__main__':
-    config = HaproxyConfigFile()
+    config = HaproxyConfigFile('/tmp/haproxy.cfg', '../../tests/unit/testfiles/haproxy.cfg')
     config.DeleteListenBlock("appli2-insert")
     #config.DeleteRServer("appli1-rewrite", "app1_2" )
     #config.AddRServer("appli1-rewrite", "new_server", "1.1.1.1", "80"  )
