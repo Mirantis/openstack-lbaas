@@ -38,7 +38,8 @@ class HaproxyDriver(BaseDriver):
     def createRServer(self, context, rserver):
         if not bool(rserver.name): 
             return 'RSERVER NAME ERROR'
-        config_file 
+        config_file  = HaproxyConfigFile(/tmp/haproxy.cfg)
+        config_file.
         pass
     
     
