@@ -107,7 +107,7 @@ class StorageTestCase(unittest.TestCase):
         
         stor = Storage( {'db_path':'./db/testdb.db'})
         wr = stor.getWriter()
-        wr.writeLoadBalancer(prb)
+        wr.writeProbe(prb)
         read  = stor.getReader()
         newprb = read.getProbeById(1234)
         self.assertEquals(prb.name,  "testDNSProbe")

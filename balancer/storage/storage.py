@@ -195,6 +195,7 @@ class Writer(object):
         
 class Storage(object):
     def __init__(self,  conf=None):
+         db = None
          if conf == None:
             conf_data = Configuration.Instance()
             conf = conf_data.get()
