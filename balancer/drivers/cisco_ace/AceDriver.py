@@ -151,35 +151,40 @@ class AceDriver(BaseDriver):
                 XMLstr = XMLstr + "  <receive timeout='" + str(probe.receiveTimeout) + "'/>\r\n"
                 
             if (bool(probe.userName) and bool(probe.password)):
-                
+                XMLstr = XMLstr + "  <credentials username='" + probe.userName + "' password='" + probe.password + "'/>\r\n"
             
-        if probe.failDetect != None:
-            TMP=TMP+"<faildetect>"+str(probe.failDetect)+"</faildetect>\n"
-        if probe.probeInterval != None:
-            TMP=TMP+"<interval>"+str(probe.probeInterval)+"</interval>\n"
-        if probe.passDetectInterval != None:
-            TMP=TMP+"<passdetect interval>"+str(probe.passDetectInterval)+"</passdetect interval>\n"
-        if probe.type == "HTTP": #Necessary add ._method and ._ url to probe.py 
-            if probe.port != None:
-                TMP=TMP+"<port>"+str(probe.port)+"</port>\n"
-            TMP=TMP+"<reques method='"+probe.method+"'"
-            if probe.url != None:
-                TMP=TMP+"'"+probe.url+"'"
-            TMP=TMP+"/>\n"
+            if bool(probe.requestMethodType):
+                XMLstr = XMLstr + "  <request method='" + probe.requestMethodType + "' url='" + probe.requestHTTPurl + "'/>\r\n"
+            
+            if (bool(probe.expectStatusCodeMin) and bool(probe.expectStatusCodeMax)):
+                XMLstr = XMLstr + "  <expect_status status_min='" + str(probe.expectStatusCodeMin) + "' status_max='" + str(probe.expectStatusCodeMax) + "'/>\r\n"
+            
+            # headers is not presented in Probe class and Ace Driver not configured this parameter too
+            
+            if bool(probe.appendPortHostTag):
+                XMLstr = XMLstr + "  <append-port-hosttag/>\r\n"
+            
+            if bool(probe.hash):
+                XMLstr = XMLstr + "  <hash"
+                if bool(probe.hashString):
+                    XMLstr = XMLstr + " hash-string='" + probe.hashString + "'"
+                XMLstr = XMLstr + "/>\r\n"
+                
+            if bool(probe.tcpConnTerm):
+                XMLstr = XMLstr + "  <connection_term term='forced'/>\r\n"
+                
+            if bool(probe.openTimeout):
+                XMLstr = XMLstr + "  <open timeout='" + str(probe.openTimeout) + "'/>\r\n"
+            
+            if bool(probe.expectRegExp):
+                XMLstr = XMLstr + "  <expect_regex regex='" + probe.expectRegExp + "'"
+                if bool(probe.expectRegExpOffset):
+                    XMLstr = XMLstr + " offset='" + probe.expectRegExpOffset + "'"
+                XMLstr = XMLstr + "/>\r\n"
         
-        #More settings
-        if probe.passDetectCount != None:
-            TMP=TMP+"<passdetect count>"+str(probe.passDetectCount)+"</passdetect count>\n"
-        if probe.receiveTimeout != None:
-            TMP=TMP+"<receive>"+str(probe.receiveTimeout)+"</receive>\n"
-        if probe.destip != None: #Necessary add ._destip to probe.py
-            TMP=TMP+"<ip address='"+probe.destip+"'"
-            if probe.isRouted != None:
-                TMP=TMP+" type='"+probe.isRouted+"'"
-            TMP=TMP+"/>\n"
-        
-        TMP=TMP+"</probe>"
-        return TMP
+        s = XmlSender(context)
+        return s.deployConfig(context, XMLstr)  
+
     
     def attachProbeToSF(self,  context,  serverfarm,  probe):
         TMP="<serverfarm name='"+serverfarm.name+"'>\n"
