@@ -26,7 +26,17 @@ class BasePredictor(object):
     @type.setter
     def type(self, value):
         self._type = value
+
+    def loadFromRow(self, dict):
+        for attr in dict.keys():
+            if hasattr(self, '_'+attr): setattr(self, '_'+attr, dict[attr])
+        pass
         
+    def convertToDict(self):
+        dict = {}
+        for key in self.__dict__.keys():
+            dict.update({key[1:]:self.__dict__[key]})            
+        return dict
 class HashAddrPredictor(BasePredictor):
     def __init__(self):
         BasePredictor.__init__(self)
