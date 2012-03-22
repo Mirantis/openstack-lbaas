@@ -32,7 +32,17 @@ class Probe(object):
         self._receiveTimeout = 10
         self._isRouted = None
         self._port = ""
-    
+        
+    def loadFromRow(self, dict):
+        for attr in dict.keys():
+            if hasattr(self, '_'+attr): setattr(self, '_'+attr, dict[attr])
+        pass
+    def convertToDict(self):
+        dict = {}
+        for key in self.__dict__.keys():
+            dict.update({key[1:]:self.__dict__[key]})            
+        return dict
+
     @property
     def id(self):
         return self._id
