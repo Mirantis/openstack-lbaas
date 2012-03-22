@@ -11,9 +11,9 @@ from serverfarm import ServerFarm
 from probe import Probe
 
 rs = RealServer()
-rs.name = 'abc_RS_Host'
+rs.name = 'abc_RS_Host2'
 rs.IP = '10.1.1.1'
-rs.port = "10"
+rs.port = "8081"
 rs.state = "inservice"
 rs.minCon = None
 rs.maxCon = None
@@ -45,5 +45,5 @@ print "||===  Remove Probe From Server Farm  =======||"
 print "||===  Add RServer To Server Farm  ==========||"
 #print driver.addRServerToSF(test_context, sf,  rs)
 print "||===  Delete RServer To Server Farm  =======||"
-print driver.deleteRServerFromSF(test_context, sf,  rs)
+#print driver.deleteRServerFromSF(test_context, sf,  rs)
 print "||=============  Test Complite  =============||"
