@@ -20,7 +20,13 @@ import re
 import sys
 import os
 import shutil
-
+from balancer.loadbalancers.loadbalancer import *
+from openstack.common import exception
+from balancer.devices.device import LBDevice
+from balancer.core.configuration import Configuration
+from balancer.loadbalancers.probe import *
+from balancer.loadbalancers.realserver import RealServer 
+logger = logging.getLogger(__name__)
 
   
 class HaproxyConfigFile:
@@ -37,6 +43,7 @@ class HaproxyConfigFile:
             if  not line.strip(): continue
             if line.find('listen' ) == 0 and  line.find(ListenBlockName) > 0:
                 block_start = True
+                logger.debug("Block starting = %s" % block_start)
                 continue
             elif line.find('listen' ) == -1 and block_start == True:
                 continue
