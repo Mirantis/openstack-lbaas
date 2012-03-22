@@ -46,32 +46,45 @@ class ServerFarm(object):
         self._created = None
         self._updated = None
 
-    def loadFromRow(self, row):
-        msg = 'LoadBalancer create from row. Id: %s' % row[0]
+#    def loadFromRow(self, row):
+#        msg = 'LoadBalancer create from row. Id: %s' % row[0]
+#        logger.debug(msg)
+#        self._id = row[0]
+#        self._lb_id = row[1]
+#        self._name = row[2]
+#        self._type = row[3]
+#        self._description = row[4]
+#        self._failAction = row[5]
+#        self._inbandHealthCheck = row[6]
+#        self._connFailureThreshCount = row[7]
+#        self._resetTimeout = row[8]
+#        self._resumeService = row[9]
+#        self._transparent = row[10]
+#        self._dynamicWorkloadScale = row[11]
+#        self._vmProbeName = row[12]
+#        self._failOnAll = row[13]
+#        self._partialThreshPercentage = row[14]
+#        self._backInservice = row[15]
+#        self._probes = row[16]
+#        self._rservers = row[17]
+#        self._predictor = row[18]
+#        self._retcodeMap = row[19]
+#        self._status = row[20]
+#        self._created = row[21]
+#        self._updated = row[22]
+
+    def loadFromRow(self, dict):
+        msg = 'ServerFarm create from row. Id: %s' % dict[0]
         logger.debug(msg)
-        self._id = row[0]
-        self._lb_id = row[1]
-        self._name = row[2]
-        self._type = row[3]
-        self._description = row[4]
-        self._failAction = row[5]
-        self._inbandHealthCheck = row[6]
-        self._connFailureThreshCount = row[7]
-        self._resetTimeout = row[8]
-        self._resumeService = row[9]
-        self._transparent = row[10]
-        self._dynamicWorkloadScale = row[11]
-        self._vmProbeName = row[12]
-        self._failOnAll = row[13]
-        self._partialThreshPercentage = row[14]
-        self._backInservice = row[15]
-        self._probes = row[16]
-        self._rservers = row[17]
-        self._predictor = row[18]
-        self._retcodeMap = row[19]
-        self._status = row[20]
-        self._created = row[21]
-        self._updated = row[22]
+        for attr in dict.keys():
+            if hasattr(self, '_'+attr): setattr(self, '_'+attr, dict[attr])
+        pass
+        
+    def convertToDict(self):
+        dict = {}
+        for key in self.__dict__.keys():
+            dict.update({key[1:]:self.__dict__[key]})            
+        return dict
 
     @property
     def id(self):

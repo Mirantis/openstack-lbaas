@@ -24,6 +24,8 @@ from balancer.core.configuration import Configuration
 from balancer.loadbalancers.probe import *
 from balancer.loadbalancers.realserver import RealServer 
 from balancer.loadbalancers.predictor import *
+from balancer.loadbalancers.serverfarm import ServerFarm
+from balancer.loadbalancers.virtualserver import VirtualServer
 logger = logging.getLogger(__name__)
 
 
@@ -163,7 +165,56 @@ class Reader(object):
             prd.loadFromRow(row)
             list.append(prd)
         return list 
-        
+
+    def getServerFarmById(self, id):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM serverfarms WHERE id = %s' % id)
+        row = cursor.fetchone()
+        if row == None:
+            raise exception.NotFound()
+        sf = ServerFarm()
+        sf.loadFromRow(row)
+        return sf     
+
+    def getServerFarms(self):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM serverfarms')
+        rows = cursor.fetchall()
+        if rows == None:
+             raise exception.NotFound()
+        list = []
+        for row in rows:
+            sf = ServerFarm()
+            sf.loadFromRow(row)
+            list.append(sf)
+        return list 
+
+    def getVirtualServerById(self, id):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM vips WHERE id = %s' % id)
+        row = cursor.fetchone()
+        if row == None:
+            raise exception.NotFound()
+        vs = VirtualServer()
+        vs.loadFromRow(row)
+        return vs     
+
+    def getVirtualServers(self):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM vips')
+        rows = cursor.fetchall()
+        if rows == None:
+             raise exception.NotFound()
+        list = []
+        for row in rows:
+            vs = VirtualServer()
+            vs.loadFromRow(row)
+            list.append(vs)
+        return list 
 
 class Writer(object):
     def __init__(self,  db):
@@ -220,8 +271,70 @@ class Writer(object):
          logger.debug(msg)
          cursor.execute(command)
          self._con.commit()        
-       
-        
+
+    def writePredictor(self, prd):
+        logger.debug("Saving Predictor instance in DB.")
+        cursor = self._con.cursor()
+        dict = prd.convertToDict()
+        command1 = "INSERT INTO predictors ("
+        command2 = ""
+        i=0
+        for key in dict.keys():
+            if i < len(dict)-1:
+                command1 += key +','
+                command2 +=str(dict[key]) + ","
+            else:
+                command1 += key + ") VALUES("
+                command2 +=str(dict[key]) + ");"
+            i+=1
+        command = command1+command2
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()
+
+    def writeServerFarm(self, sf):
+        logger.debug("Saving ServerFarm instance in DB.")
+        cursor = self._con.cursor()
+        dict = sf.convertToDict()
+        command1 = "INSERT INTO serverfarms ("
+        command2 = ""
+        i=0
+        for key in dict.keys():
+            if i < len(dict)-1:
+                command1 += key +','
+                command2 +=str(dict[key]) + ","
+            else:
+                command1 += key + ") VALUES("
+                command2 +=str(dict[key]) + ");"
+            i+=1
+        command = command1+command2
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()        
+
+    def writeVirtualServer(self, vs):
+        logger.debug("Saving VirtualServer instance in DB.")
+        cursor = self._con.cursor()
+        dict = vs.convertToDict()
+        command1 = "INSERT INTO vips ("
+        command2 = ""
+        i=0
+        for key in dict.keys():
+            if i < len(dict)-1:
+                command1 += key +','
+                command2 +=str(dict[key]) + ","
+            else:
+                command1 += key + ") VALUES("
+                command2 +=str(dict[key]) + ");"
+            i+=1
+        command = command1+command2
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit() 
+
 class Storage(object):
     def __init__(self,  conf=None):
          db = None

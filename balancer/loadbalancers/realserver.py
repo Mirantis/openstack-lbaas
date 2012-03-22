@@ -43,7 +43,7 @@ class RealServer(object):
         self._updated = None
 
     def loadFromRow(self, row):
-        msg = 'LoadBalancer create from row. Id: %s' % row[0]
+        msg = 'RealServer create from row. Id: %s' % row[0]
         logger.debug(msg)
         self._id = row[0]
         self._sf_id = row[1]
