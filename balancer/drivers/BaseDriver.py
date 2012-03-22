@@ -34,6 +34,9 @@ class BaseDriver(object):
     def attachProbeToSF(self,  context,  serverfarm,  probe):
         pass
     
+    def deleteProbeFromSF(self,  context,  serverfarm,  probe):
+        pass
+    
     def createVIP(self,  context,  vip):
         pass
         
