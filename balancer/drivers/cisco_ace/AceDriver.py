@@ -129,7 +129,7 @@ class AceDriver(BaseDriver):
                 XMLstr = XMLstr + "  <passdetect count='" + str(probe.passDetectCount) + "'/>\r\n"
             
             if bool(probe.failDetect):
-                XMLstr = XMLstr + "  <faildetect retry-count='" + probe.failDetect + "'/>\r\n"
+                XMLstr = XMLstr + "  <faildetect retry-count='" + str(probe.failDetect) + "'/>\r\n"
             
             if bool(probe.receiveTimeout):
                 XMLstr = XMLstr + "  <receive timeout='" + str(probe.receiveTimeout) + "'/>\r\n"
@@ -151,14 +151,14 @@ class AceDriver(BaseDriver):
             
             if ((type == 'echo-udp') or (type == 'echo-tcp') or (type == 'finger')):
                 if bool(probe.sendData):
-                    XMLstr = XMLstr + "  <send-data data='" + probe.sendData + "'/>"
+                    XMLstr = XMLstr + "  <send-data data='" + probe.sendData + "'/>\r\n"
 
             if ((type == 'echo-tcp') or (type == 'finger') or (type == 'tcp')  or (type == 'rtsp')
                 or (type == 'http') or (type == 'https') or (type == 'imap') or (type == 'pop')):
                     if bool(probe.openTimeout):
                         XMLstr = XMLstr + "  <open timeout='" + str(probe.openTimeout) + "'/>"
                     if bool(probe.tcpConnTerm):
-                        XMLstr = XMLstr + "  <connection_term term='forced'/>"
+                        XMLstr = XMLstr + "  <connection_term term='forced'/>\r\n"
 
             if ((type == 'http') or (type == 'https') or (type == 'imap') 
                 or (type == 'pop') or (type == "radius")):
