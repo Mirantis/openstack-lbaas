@@ -30,8 +30,8 @@ logger = logging.getLogger(__name__)
 
   
 class HaproxyConfigFile:
-    def __init__(self, haproxy_config_file_path = '/tmp/haproxy.cfg',  test_config='./balancer/tests/unit/testfiles/haproxy.cfg'):
-        shutil.copyfile (test_config, "/tmp/haproxy.cfg")
+    def __init__(self, haproxy_config_file_path = '/tmp/haproxy.cfg',  test_config=''):
+        if test_config != '':  shutil.copyfile (test_config, "/tmp/haproxy.cfg")
         self.haproxy_config_file_path = haproxy_config_file_path
     def GetHAproxyConfigFileName(self):
         return self.haproxy_config_file_path

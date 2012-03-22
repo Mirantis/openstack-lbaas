@@ -12,10 +12,10 @@ class HAproxyDriverTestCase (unittest.TestCase):
         shutil.copyfile ('./balancer/tests/unit/testfiles/haproxy.cfg',  "/tmp/haproxy.cfg")
         
     def test_FileName(self):
-        filename = HaproxyConfigFile("/tmp/haproxy.cfg")
+        filename = HaproxyConfigFile("/tmp/haproxy.cfg", './balancer/tests/unit/testfiles/haproxy.cfg')
         self.assertEqual(filename.GetHAproxyConfigFileName(),  "/tmp/haproxy.cfg")
     def test_DeleteListenBlock (self):
-        test = HaproxyConfigFile("/tmp/haproxy.cfg")
+        test = HaproxyConfigFile("/tmp/haproxy.cfg", './balancer/tests/unit/testfiles/haproxy.cfg')
         test.DeleteListenBlock("appli2-insert")
         self.assertTrue(filecmp.cmp("/tmp/haproxy.cfg", "./balancer/tests/unit/testfiles/haproxy_without_appli2-insert.cfg"))
  

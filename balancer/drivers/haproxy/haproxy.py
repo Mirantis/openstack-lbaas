@@ -20,6 +20,7 @@
 
 from BaseDriver import BaseDriver
 from context import Context
+from haproxy_config_file_editor import HaproxyConfigFile
 
 from balancer.loadbalancers.loadbalancer import *
 from openstack.common import exception
@@ -31,11 +32,13 @@ logger = logging.getLogger(__name__)
 
 class HaproxyDriver(BaseDriver):
     def __init__(self):
+        
         pass
 
     def createRServer(self, context, rserver):
         if not bool(rserver.name): 
             return 'RSERVER NAME ERROR'
+        config_file 
         pass
     
     
