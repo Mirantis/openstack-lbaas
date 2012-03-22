@@ -27,3 +27,11 @@ CREATE TABLE vlans(id   INT, description   TEXT, intType   TEXT, IPaddr   TEXT, 
         ipv6PeerLinkLocalAddr   TEXT, enableICMPguard   TEXT, enableDHCPrelay   TEXT, RPF   TEXT, reassemblyTimeout   TEXT, maxFragChainsAllowed   TEXT, minFragMTUvalue   TEXT, 
         MTU   TEXT, actionForIPheaderOptions   TEXT, enableMACAddrAutogen   TEXT, minTTLipHeaderValue   TEXT, enableSynCookieThreshValue   TEXT, actionForDBfit   TEXT, 
         ARPinspectType   TEXT, UDPconfigCommands   TEXT, secondaryIPgroups   TEXT, inputPolicies   TEXT, inputAccessGroup   TEXT, outputAccessGroup   TEXT);
+
+CREATE TABLE probes(type  TEXT, id  INT, name  TEXT, description  TEXT, probeInterval  TEXT, passDetectInterval  TEXT, failDetect  TEXT, passDetectCount  TEXT,
+        receiveTimeout  TEXT, isRouted  TEXT, port  TEXT, 
+        domainName TEXT, sendData TEXT, destIP TEXT, tcpConnTerm TEXT, openTimeout TEXT, requestMethodType TEXT, requestHTTPurl TEXT, appendPortHostTag TEXT,
+        userName TEXT, password TEXT, confPassword TEXT, expectRegExp TEXT, expectRegExpOffset TEXT, hash TEXT, hashString TEXT, cipher TEXT, SSLversion TEXT,
+        maibox TEXT, requestCommand TEXT,  userSecret TEXT, NASIPaddr TEXT, requareHeaderValue TEXT, proxyRequareHeaderValue TEXT, requestURL TEXT, 
+        scriptName TEXT, scriptArgv TEXT,  copied TEXT,  proto TEXT,  sourceFileName TEXT,  SNMPComm TEXT,  SNMPver TEXT,  maxCPUburstThresh TEXT, minCPUburstThresh TEXT,
+        maxMemBurstThresh TEXT, minMemBurstThresh TEXT, VMControllerName TEXT);

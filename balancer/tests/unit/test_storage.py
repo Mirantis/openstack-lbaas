@@ -22,6 +22,8 @@ from balancer.storage.storage import *
 from balancer.loadbalancers.loadbalancer import LoadBalancer
 from openstack.common import exception
 from balancer.devices.device import LBDevice
+from balancer.loadbalancers.probe import *
+
 class StorageTestCase(unittest.TestCase):
     
     def test_device_save(self):

@@ -77,7 +77,24 @@ class Reader(object):
             lb.loadFromRow(row)
             list.append(lb)
         return list
-        
+
+    def getProbeById(self, id):
+        probeDict={'DNSprobe':probe.DNSprobe(), 'ECHOTCPprobe':probe.ECHOTCPprobe(), 'ECHOUDPprobe':probe.ECHOUDPprobe(), 
+        'FINGERprobe':probe.FINGERprobe(), 'FTPprobe':probe.FTPprobe(), 'HTTPSprobe':probe.HTTPSprobe(), 'HTTPprobe':probe.HTTPprobe(), 'ICMPprobe':probe.ICMPprobe(), 
+        'IMAPprobe':probe.IMAPprobe(), 'POPprobe':probe.POPprobe(), 'RADIUSprobe':probe.RADIUSprobe(), 'RTSPprobe':probe.RTSPprobe(), 'SCRIPTEDprobe':probe.SCRIPTEDprobe(), 
+        'SIPTCPprobe':probe.SIPTCPprobe(), 'SIPUDPprobe':probe.SIPUDPprobe(), 'SMTPprobe':probe.SMTPprobe(), 'SNMPprobe':probe.SNMPprobe(), 
+        'TCPprobe':probe.TCPprobe(), 'TELNETprobe':probe.TELNETprobe(), 'UDPprobe':probe.UDPprobe(), 'VMprobe':probe.VMprobe()}
+
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM probes WHERE id = %s' % id)
+        row = cursor.fetchone()
+        if row == None:
+            raise exception.NotFound()
+        prb = probeDict[row[0]]
+        prb.loadFromRow(row)
+        return prb        
+
 
 class Writer(object):
     def __init__(self,  db):
@@ -104,7 +121,30 @@ class Writer(object):
          cursor.execute(command)
          self._con.commit()
         
-        
+    def writeProbe(self, prb):
+        logger.debug("Saving Probe instance in DB.")
+        cursor = self._con.cursor()
+        dict = prb.convertToDict()
+        command = "INSERT INTO probes ("
+        i=0
+        for key in dict.keys():
+            if i < len(dict)-1:
+                command = command + key+','
+            else:
+                command = command + key
+            i+=1
+        command += ") VALUES("
+        i=0
+        for val in dict.values():
+            if i < len(dict)-1:
+                command +=str(val) + ","
+            else:
+                command +=str(val) + ");"
+            i+=1
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()            
          
         
        
