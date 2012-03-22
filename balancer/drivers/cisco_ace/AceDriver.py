@@ -26,7 +26,7 @@ class AceDriver(BaseDriver):
     
     def createRServer(self, context, rserver):
         if not bool(rserver.name): 
-            return 'ERROR'
+            return 'RSERVER NAME ERROR'
 
         XMLstr = "<rserver type='" + rserver.type.lower() + "' name='" + rserver.name + "'>\r\n"
         
@@ -34,7 +34,12 @@ class AceDriver(BaseDriver):
             XMLstr = XMLstr + "  <description descr-string='" + rserver.description + "'/>\r\n"
             
         if bool(rserver.IP):
-            XMLstr = XMLstr + "  <ip_address node='address' ipv4-address='" + rserver.IP + "'/>\r\n"
+            XMLstr = XMLstr + "  <ip_address node='address' "
+            if (rserver.ipType.lower() == 'ipv4'):
+                XMLstr = XMLstr + "ipv4-address='" 
+            else:
+                XMLstr = XMLstr + "ipv6-address='"
+            XMLstr = XMLstr + rserver.IP + "'/>\r\n"
             
         XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + "' min='" + str(rserver.minCon) + "'/>\r\n"
         
@@ -67,7 +72,7 @@ class AceDriver(BaseDriver):
 
     def createServerFarm(self,  context,  serverfarm):
         if not bool(serverfarm.name):
-            return "ERROR"
+            return "SERVER FARM NAME ERROR"
         
         XMLstr = "<serverfarm type='" + serverfarm.type.lower() + "' name='" + serverfarm.name + "'>\r\n"
         
@@ -119,12 +124,16 @@ class AceDriver(BaseDriver):
         TMP=TMP+"<//serverfarm>\n"
         return TMP
     
-    def createProbe(self,  context,  probe): #Now, correct only  for ICMP and partially dor HTTP
+    def createProbe(self,  context,  probe):
         if not bool(probe.name): 
-            return 'ERROR'
+            return 'PROBE NAME ERROR'
     
-        if (probe.type.lower() == 'http'):
-            XMLstr = "<probe_http type='http' name='" + probe.name + "'>\r\n"
+        if ((probe.type.lower() == 'http') or (probe.type.lower() == 'https')):
+            if (probe.type.lower() == 'http'):
+                XMLstr = "<probe_http type='http' "
+            else:
+                XMLstr = "<probe_https type='https' "
+            XMLstr = XMLstr + "name='" + probe.name + "'>\r\n"
 
             if bool(probe.description): 
                 XMLstr = XMLstr + "  <description descr-string='" + probe.description + "'/>\r\n"
@@ -141,6 +150,9 @@ class AceDriver(BaseDriver):
             if bool(probe.probeInterval):
                 XMLstr = XMLstr + "  <interval value='" + str(probe.probeInterval) + "'/>\r\n"
                 
+            if bool(probe.failDetect):
+                XMLstr = XMLstr + "  <faildetect retry-count='" + probe.failDetect + "'/>\r\n"
+                
             if bool(probe.passDetectInterval):
                 XMLstr = XMLstr + "  <passdetect interval='" + str(probe.passDetectInterval) + "'/>\r\n"
                 
@@ -150,15 +162,20 @@ class AceDriver(BaseDriver):
             if bool(probe.receiveTimeout):
                 XMLstr = XMLstr + "  <receive timeout='" + str(probe.receiveTimeout) + "'/>\r\n"
                 
+            if (probe.type.lower() == 'https'):
+                if bool(probe.cipher):
+                    XMLstr = XMLstr + "  <ssl cipher='" + probe.cipher + "'/>\r\n"
+                if bool(probe.SSLversion):
+                    XMLstr = XMLstr + "  <ssl version='" + probe.SSLversion + "'/>\r\n"
+                
             if (bool(probe.userName) and bool(probe.password)):
                 XMLstr = XMLstr + "  <credentials username='" + probe.userName + "' password='" + probe.password + "'/>\r\n"
             
             if bool(probe.requestMethodType):
                 XMLstr = XMLstr + "  <request method='" + probe.requestMethodType + "' url='" + probe.requestHTTPurl + "'/>\r\n"
             
-            if (bool(probe.expectStatusCodeMin) and bool(probe.expectStatusCodeMax)):
-                XMLstr = XMLstr + "  <expect_status status_min='" + str(probe.expectStatusCodeMin) + "' status_max='" + str(probe.expectStatusCodeMax) + "'/>\r\n"
-            
+            #if (bool(probe.expectStatusCodeMin) and bool(probe.expectStatusCodeMax)):
+            #    XMLstr = XMLstr + "  <expect_status status_min='" + str(probe.expectStatusCodeMin) + "' status_max='" + str(probe.expectStatusCodeMax) + "'/>\r\n"
             # headers is not presented in Probe class and Ace Driver not configured this parameter too
             
             if bool(probe.appendPortHostTag):
@@ -182,6 +199,35 @@ class AceDriver(BaseDriver):
                     XMLstr = XMLstr + " offset='" + probe.expectRegExpOffset + "'"
                 XMLstr = XMLstr + "/>\r\n"
         
+        elif (probe.type.lower() == "icmp"):
+            XMLstr = "<probe_icmp type='icmp' name='" + probe.name + "'>\r\n"
+
+            if bool(probe.description): 
+                XMLstr = XMLstr + "  <description descr-string='" + probe.description + "'/>\r\n"
+                
+            if bool(probe.destIPv4v6):
+                XMLstr = XMLstr + "  <ip_address address='" + probe.destIPv4v6 + "'"
+                if bool(probe.isRouted):
+                    XMLstr = XMLstr + " routing-option='routed'"
+                XMLstr = XMLstr + "/>\r\n"
+                
+            if bool(probe.probeInterval):
+                XMLstr = XMLstr + "  <interval value='" + str(probe.probeInterval) + "'/>\r\n"
+                
+            if bool(probe.failDetect):
+                XMLstr = XMLstr + "  <faildetect retry-count='" + probe.failDetect + "'/>\r\n"
+                
+            if bool(probe.passDetectInterval):
+                XMLstr = XMLstr + "  <passdetect interval='" + str(probe.passDetectInterval) + "'/>\r\n"
+                
+            if bool(probe.passDetectCount):
+                XMLstr = XMLstr + "  <passdetect count='" + str(probe.passDetectCount) + "'/>\r\n"
+                
+            if bool(probe.receiveTimeout):
+                XMLstr = XMLstr + "  <receive timeout='" + str(probe.receiveTimeout) + "'/>\r\n"
+        else:
+            return "PROBE TYPE ERROR"
+            
         s = XmlSender(context)
         return s.deployConfig(context, XMLstr)  
 
@@ -214,7 +260,7 @@ class AceDriver(BaseDriver):
 
     def deleteRServer(self, context, rserver):
         if not bool(rserver.name): 
-            return 'ERROR'
+            return 'RSERVER NAME ERROR'
             
         XMLstr = "<rserver sense='no' name='" + rserver.name + "'></rserver>"
         
@@ -225,7 +271,7 @@ class AceDriver(BaseDriver):
         
     def deleteServerFarm(self,  context,  serverfarm):
         if not bool(serverfarm.name): 
-            return 'ERROR'
+            return 'SERVER FARM NAME ERROR'
 
         XMLstr = "<serverfarm sense='no' name='" + serverfarm.name + "'></serverfarm>"
         
@@ -236,7 +282,7 @@ class AceDriver(BaseDriver):
         
     def activateRServer(self,  context,  serverfarm,  rserver):
         if not bool(rserver.name): 
-            return 'ERROR'
+            return 'RSERVER NAME ERROR'
 
         XMLstr = "<rserver name='" + rserver.name + "'>\r\n  <inservice/>\r\n</rserver>"
         
@@ -247,7 +293,7 @@ class AceDriver(BaseDriver):
         
     def suspendRServer(self,  context,  serverfarm,  rserver):
         if not bool(rserver.name): 
-            return 'ERROR'
+            return 'RSERVER NAME ERROR'
 
         XMLstr = "<rserver name='" + rserver.name + "'>\r\n  <inservice sense='no'/>\r\n</rserver>"
         
