@@ -23,6 +23,7 @@ from balancer.devices.device import LBDevice
 from balancer.core.configuration import Configuration
 from balancer.loadbalancers.probe import *
 from balancer.loadbalancers.realserver import RealServer 
+from balancer.loadbalancers.predictor import *
 logger = logging.getLogger(__name__)
 
 
@@ -36,7 +37,10 @@ class Reader(object):
         'IMAPprobe':probe.IMAPprobe(), 'POPprobe':probe.POPprobe(), 'RADIUSprobe':probe.RADIUSprobe(), 'RTSPprobe':probe.RTSPprobe(), 'SCRIPTEDprobe':probe.SCRIPTEDprobe(), 
         'SIPTCPprobe':probe.SIPTCPprobe(), 'SIPUDPprobe':probe.SIPUDPprobe(), 'SMTPprobe':probe.SMTPprobe(), 'SNMPprobe':probe.SNMPprobe(), 
         'TCPprobe':probe.TCPprobe(), 'TELNETprobe':probe.TELNETprobe(), 'UDPprobe':probe.UDPprobe(), 'VMprobe':probe.VMprobe()}
-    
+        self._predictDict={'HashAddrPredictor':predictor.HashAddrPredictor(), 'HashContent':predictor.HashContent(), 'HashCookie':predictor.HashCookie(), 'HashHeader':predictor.HashHeader(),
+            'HashLayer4':predictor.HashLayer4(), 'HashURL':predictor.HashURL(), 'LeastBandwidth':predictor.LeastBandwidth(), 'LeastConn':predictor.LeastConn(), 
+            'LeastLoaded':predictor.LeastLoaded(), 'Response':predictor.Response(), 'RoundRobin':predictor.RoundRobin()}
+
     def getLoadBalancers(self):
         cursor = self._con.cursor()
         cursor.execute('SELECT * FROM loadbalancers')
@@ -134,6 +138,31 @@ class Reader(object):
             rs.loadFromRow(row)
             list.append(rs)
         return list
+        
+    def getPreditorById(self, id):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM predictors WHERE id = %s' % id)
+        row = cursor.fetchone()
+        if row == None:
+            raise exception.NotFound()
+        prd = self._predictDict[row[0]]
+        prd.loadFromRow(row)
+        return prd     
+
+    def getPredictors(self):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM predictors')
+        rows = cursor.fetchall()
+        if rows == None:
+             raise exception.NotFound()
+        list = []
+        for row in rows:
+            prd = self._predictDict[row[0]]
+            prd.loadFromRow(row)
+            list.append(prd)
+        return list 
         
 
 class Writer(object):
