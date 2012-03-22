@@ -207,6 +207,10 @@ class HTTPprobe(Probe):
         self._expectRegExpOffset = ""
         self._hash = None
         self._hashString = ""
+        self._headerName = ""
+        self._headerValue = ""
+        self._minExpectStatus = ""
+        self._maxExpectStatus = ""
     
     @property
     def requestMethodType(self):
@@ -280,7 +284,30 @@ class HTTPprobe(Probe):
     @hashString.setter
     def hashString(self, value):
         self._hashString = value
-        
+    @property
+    def headerName(self):
+        return self._headerName
+    @headerName.setter
+    def headerName(self, value):
+        self._headerName = value
+    @property
+    def headerValue(self):
+        return self._headerValue
+    @headerValue.setter
+    def headerValue(self, value):
+        self._headerValue = value
+    @property
+    def minExpectStatus(self):
+        return self._minExpectStatus
+    @minExpectStatus.setter
+    def minExpectStatus(self, value):
+        self._minExpectStatus = value
+    @property
+    def maxExpectStatus(self):
+        return self._maxExpectStatus
+    @maxExpectStatus.setter
+    def maxExpectStatus(self, value):
+        self._maxExpectStatus = value
 
 class HTTPSprobe(HTTPprobe):
     def __init__(self):
