@@ -1,11 +1,13 @@
 CREATE TABLE loadbalancers(id TEXT, name TEXT, algorithm TEXT, status TEXT, created TEXT, updated TEXT);
 
-CREATE TABLE serverfarms(id INT, lb_id INT,  name TEXT,
+CREATE TABLE serverfarms(id TEXT, lb_id TEXT,  name TEXT,
          type TEXT,  description TEXT, failAction TEXT, inbandHealthCheck TEXT, connFailureThreshCount TEXT,  resetTimeout TEXT,   resumeService TEXT,  transparent TEXT, 
          dynamicWorkloadScale TEXT,  vmProbeName TEXT, failOnAll TEXT,  partialThreshPercentage TEXT,   backInservice TEXT, probes TEXT , rservers TEXT, predictor_id INT,  
          retcodeMap TEXT,   status TEXT,    created TEXT,  updated TEXT);
 
-CREATE TABLE predictors( id TEXT, name TEXT, type TEXT);
+CREATE TABLE predictors( type TEXT, id TEXT, name TEXT, maskType TEXT, ipNetmask TEXT, ipv6Prefix TEXT, beginPattern TEXT, endPattern TEXT, length TEXT, offsetBytes TEXT,
+        cookieName TEXT, customHeader TEXT, definedHeader TEXT, accessTime TEXT, samples TEXT, slowStartDur TEXT, snmpProbe TEXT, autoAdjust TEXT, weightConn TEXT,
+        responseType TEXT);
 
 CREATE TABLE rservers(id TEXT, sf_id TEXT, name TEXT,
          type TEXT, webHostRedir TEXT,   ipType TEXT,   IP TEXT,  port TEXT,  state TEXT,   opstate TEXT,    description TEXT,   failOnAll TEXT,   minCon INT,  maxCon INT, 
@@ -31,7 +33,7 @@ CREATE TABLE vlans(id   TEXT, description   TEXT, intType   TEXT, IPaddr   TEXT,
 CREATE TABLE probes(type  TEXT, id  TEXT, name  TEXT, description  TEXT, probeInterval  TEXT, passDetectInterval  TEXT, failDetect  TEXT, passDetectCount  TEXT,
         receiveTimeout  TEXT, isRouted  TEXT, port  TEXT, 
         domainName TEXT, sendData TEXT, destIP TEXT, tcpConnTerm TEXT, openTimeout TEXT, requestMethodType TEXT, requestHTTPurl TEXT, appendPortHostTag TEXT,
-        userName TEXT, password TEXT, confPassword TEXT, expectRegExp TEXT, expectRegExpOffset TEXT, hash TEXT, hashString TEXT, cipher TEXT, SSLversion TEXT,
+        userName TEXT, password TEXT, expectRegExp TEXT, expectRegExpOffset TEXT, hash TEXT, hashString TEXT, cipher TEXT, SSLversion TEXT,
         maibox TEXT, requestCommand TEXT,  userSecret TEXT, NASIPaddr TEXT, requareHeaderValue TEXT, proxyRequareHeaderValue TEXT, requestURL TEXT, 
         scriptName TEXT, scriptArgv TEXT,  copied TEXT,  proto TEXT,  sourceFileName TEXT,  SNMPComm TEXT,  SNMPver TEXT,  maxCPUburstThresh TEXT, minCPUburstThresh TEXT,
         maxMemBurstThresh TEXT, minMemBurstThresh TEXT, VMControllerName TEXT);
