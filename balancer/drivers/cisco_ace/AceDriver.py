@@ -98,112 +98,143 @@ class AceDriver(BaseDriver):
         return s.deployConfig(context, XMLstr)
     
     
+    
+    
     def createProbe(self,  context,  probe):
         if not bool(probe.name): 
             return 'PROBE NAME ERROR'
-    
-        if ((probe.type.lower() == 'http') or (probe.type.lower() == 'https')):
-            if (probe.type.lower() == 'http'):
-                XMLstr = "<probe_http type='http' "
-            else:
-                XMLstr = "<probe_https type='https' "
-            XMLstr = XMLstr + "name='" + probe.name + "'>\r\n"
+        type = probe.type.lower()
 
-            if bool(probe.description): 
-                XMLstr = XMLstr + "  <description descr-string='" + probe.description + "'/>\r\n"
-                
-            if bool(probe.destIPv4v6):
-                XMLstr = XMLstr + "  <ip_address address='" + probe.destIPv4v6 + "'"
-                if bool(probe.isRouted):
-                    XMLstr = XMLstr + " routing-option='routed'"
-                XMLstr = XMLstr + "/>\r\n"
-                
-            if bool(probe.port):
-                XMLstr = XMLstr + "  <port value='" + str(probe.port) + "'/>\r\n"
-        
-            if bool(probe.probeInterval):
-                XMLstr = XMLstr + "  <interval value='" + str(probe.probeInterval) + "'/>\r\n"
-                
-            if bool(probe.failDetect):
-                XMLstr = XMLstr + "  <faildetect retry-count='" + probe.failDetect + "'/>\r\n"
-                
-            if bool(probe.passDetectInterval):
-                XMLstr = XMLstr + "  <passdetect interval='" + str(probe.passDetectInterval) + "'/>\r\n"
-                
-            if bool(probe.passDetectCount):
-                XMLstr = XMLstr + "  <passdetect count='" + str(probe.passDetectCount) + "'/>\r\n"
-                
-            if bool(probe.receiveTimeout):
-                XMLstr = XMLstr + "  <receive timeout='" + str(probe.receiveTimeout) + "'/>\r\n"
-                
-            if (probe.type.lower() == 'https'):
-                if bool(probe.cipher):
-                    XMLstr = XMLstr + "  <ssl cipher='" + probe.cipher + "'/>\r\n"
-                if bool(probe.SSLversion):
-                    XMLstr = XMLstr + "  <ssl version='" + probe.SSLversion + "'/>\r\n"
-                
-            if (bool(probe.userName) and bool(probe.password)):
-                XMLstr = XMLstr + "  <credentials username='" + probe.userName + "' password='" + probe.password + "'/>\r\n"
-            
-            if bool(probe.requestMethodType):
-                XMLstr = XMLstr + "  <request method='" + probe.requestMethodType + "' url='" + probe.requestHTTPurl + "'/>\r\n"
-            
-            #if (bool(probe.expectStatusCodeMin) and bool(probe.expectStatusCodeMax)):
-            #    XMLstr = XMLstr + "  <expect_status status_min='" + str(probe.expectStatusCodeMin) + "' status_max='" + str(probe.expectStatusCodeMax) + "'/>\r\n"
-            # headers is not presented in Probe class and Ace Driver not configured this parameter too
-            
-            if bool(probe.appendPortHostTag):
-                XMLstr = XMLstr + "  <append-port-hosttag/>\r\n"
-            
-            if bool(probe.hash):
-                XMLstr = XMLstr + "  <hash"
-                if bool(probe.hashString):
-                    XMLstr = XMLstr + " hash-string='" + probe.hashString + "'"
-                XMLstr = XMLstr + "/>\r\n"
-                
-            if bool(probe.tcpConnTerm):
-                XMLstr = XMLstr + "  <connection_term term='forced'/>\r\n"
-                
-            if bool(probe.openTimeout):
-                XMLstr = XMLstr + "  <open timeout='" + str(probe.openTimeout) + "'/>\r\n"
-            
-            if bool(probe.expectRegExp):
-                XMLstr = XMLstr + "  <expect_regex regex='" + probe.expectRegExp + "'"
-                if bool(probe.expectRegExpOffset):
-                    XMLstr = XMLstr + " offset='" + probe.expectRegExpOffset + "'"
-                XMLstr = XMLstr + "/>\r\n"
-        
-        elif (probe.type.lower() == "icmp"):
-            XMLstr = "<probe_icmp type='icmp' name='" + probe.name + "'>\r\n"
-
-            if bool(probe.description): 
-                XMLstr = XMLstr + "  <description descr-string='" + probe.description + "'/>\r\n"
-                
-            if bool(probe.destIPv4v6):
-                XMLstr = XMLstr + "  <ip_address address='" + probe.destIPv4v6 + "'"
-                if bool(probe.isRouted):
-                    XMLstr = XMLstr + " routing-option='routed'"
-                XMLstr = XMLstr + "/>\r\n"
-                
-            if bool(probe.probeInterval):
-                XMLstr = XMLstr + "  <interval value='" + str(probe.probeInterval) + "'/>\r\n"
-                
-            if bool(probe.failDetect):
-                XMLstr = XMLstr + "  <faildetect retry-count='" + probe.failDetect + "'/>\r\n"
-                
-            if bool(probe.passDetectInterval):
-                XMLstr = XMLstr + "  <passdetect interval='" + str(probe.passDetectInterval) + "'/>\r\n"
-                
-            if bool(probe.passDetectCount):
-                XMLstr = XMLstr + "  <passdetect count='" + str(probe.passDetectCount) + "'/>\r\n"
-                
-            if bool(probe.receiveTimeout):
-                XMLstr = XMLstr + "  <receive timeout='" + str(probe.receiveTimeout) + "'/>\r\n"
+        if ((type != 'echo-tcp') and (type != 'echo-udp')):
+            XMLstr = "<probe_" + type + " type='"  + type + "' name='" + probe.name + "'>\r\n"
         else:
-            return "PROBE TYPE ERROR"
+            XMLstr = "<probe_echo type='echo' conn-type='"
+            if (type == 'echo-tcp'):
+                XMLstr = XMLstr + "tcp' name='"
+            else:
+                XMLstr = XMLstr + "udp' name='"
+            XMLstr = XMLstr + probe.name + "'>\r\n"
+    
+        if bool(probe.description): 
+            XMLstr = XMLstr + "  <description descr-string='" + probe.description + "'/>\r\n"
+                
+        if bool(probe.probeInterval):
+            XMLstr = XMLstr + "  <interval value='" + str(probe.probeInterval) + "'/>\r\n"
+        
+        if (type != 'vm'):
+            if bool(probe.passDetectInterval):
+                XMLstr = XMLstr + "  <passdetect interval='" + str(probe.passDetectInterval) + "'/>\r\n"
+                
+            if bool(probe.passDetectCount):
+                XMLstr = XMLstr + "  <passdetect count='" + str(probe.passDetectCount) + "'/>\r\n"
+            
+            if bool(probe.failDetect):
+                XMLstr = XMLstr + "  <faildetect retry-count='" + probe.failDetect + "'/>\r\n"
+            
+            if bool(probe.receiveTimeout):
+                XMLstr = XMLstr + "  <receive timeout='" + str(probe.receiveTimeout) + "'/>\r\n"
+            
+            if ((type != 'icmp') and bool(probe.port)):
+                XMLstr = XMLstr + "  <port value='" + str(probe.port) + "'/>\r\n"
+
+            if (type != 'scripted'):
+                if (bool(probe.destIPv4v6)):
+                    XMLstr = XMLstr + "  <ip_address address='" + probe.destIPv4v6 + "'"
+                    if ((type != 'rtsp') and (type != 'sip-tcp') and (type != 'sip-udp')):
+                        if bool(probe.isRouted):
+                            XMLstr = XMLstr + " routing-option='routed'"
+                    XMLstr = XMLstr + "/>\r\n"
+                
+            if (type == "dns"):
+                if bool(probe.domainName):
+                    XMLstr = XMLstr + "  <domain domain-name='" + probe.domainName + "'/>\r\n"
+            
+            if ((type == 'echo-udp') or (type == 'echo-tcp') or (type == 'finger')):
+                if bool(probe.sendData):
+                    XMLstr = XMLstr + "  <send-data data='" + probe.sendData + "'/>"
+
+            if ((type == 'echo-tcp') or (type == 'finger') or (type == 'tcp')  or (type == 'rtsp')
+                or (type == 'http') or (type == 'https') or (type == 'imap') or (type == 'pop')):
+                    if bool(probe.openTimeout):
+                        XMLstr = XMLstr + "  <open timeout='" + str(probe.openTimeout) + "'/>"
+                    if bool(probe.tcpConnTerm):
+                        XMLstr = XMLstr + "  <connection_term term='forced'/>"
+
+            if ((type == 'http') or (type == 'https') or (type == 'imap') 
+                or (type == 'pop') or (type == "radius")):
+                    if (bool(probe.userName) and bool(probe.password)):
+                        XMLstr = XMLstr + "  <credentials username='" + probe.userName + "' password='" + probe.password
+                        if (type == 'radius'):
+                            if bool(probe.userSecret):
+                                XMLstr = XMLstr + "' secret='" + probe.userSecret
+                        XMLstr = XMLstr + "'/>\r\n"
+
+            if ((type == 'http') or (type == 'https')):
+                if bool(probe.requestMethodType):
+                    XMLstr = XMLstr + "  <request method='" + probe.requestMethodType + "' url='" + probe.requestHTTPurl + "'/>\r\n"
+                    
+                if bool(probe.appendPortHostTag):
+                    XMLstr = XMLstr + "  <append-port-hosttag/>\r\n"
+                
+                if bool(probe.expectRegExp):
+                    XMLstr = XMLstr + "  <expect_regex regex='" + probe.expectRegExp + "'"
+                    if bool(probe.expectRegExpOffset):
+                        XMLstr = XMLstr + " offset='" + str(probe.expectRegExpOffset) + "'"
+                    XMLstr = XMLstr + "/>\r\n"
+                    
+                if bool(probe.hash):
+                    XMLstr = XMLstr + "  <hash"
+                    if bool(probe.hashString):
+                        XMLstr = XMLstr + " hash-string='" + probe.hashString + "'"
+                    XMLstr = XMLstr + "/>\r\n"
+
+                if (type == 'https'):
+                    if bool(probe.cipher):
+                        XMLstr = XMLstr + "  <ssl cipher='" + probe.cipher + "'/>\r\n"
+                    if bool(probe.SSLversion):
+                        XMLstr = XMLstr + "  <ssl version='" + probe.SSLversion + "'/>\r\n"
+                        
+            if ((type == 'pop') or (type == 'imap')):
+                if bool(probe.requestCommand):
+                    XMLstr = XMLstr + "  <request command='" + probe.requestCommand + "'/>\r\n"
+                if (type == 'imap'):
+                    if bool(probe.maibox):
+                        XMLstr = XMLstr + "  <credentials mailbox='" + probe.maibox + "'/>\r\n"
+
+            if (type == 'radius'):
+                if bool(probe.NASIPaddr):
+                    XMLstr = XMLstr + "  <nas ip_address='" + probe.NASIPaddr + "'/>\r\n"
+                    
+            if (type == 'rtsp'):
+                if bool(probe.requareHeaderValue):
+                    XMLstr = XMLstr + "  <header header-name='Require' header-value='" + probe.requareHeaderValue + "'/>\r\n"
+                    
+                if bool(probe.proxyRequareHeaderValue):
+                    XMLstr = XMLstr + "  <header header-name='Proxy-Require' header-value='" + probe.proxyRequareHeaderValue + "'/>\r\n"
+                    
+                if bool(probe.requestURL):
+                    XMLstr = XMLstr + "  <request "
+                    if bool(probe.requestMethodType):
+                        XMLstr = XMLstr + "  method='" + probe.requestMethodType + "' "
+                    XMLstr = XMLstr + "url='" + probe.requestURL + "'/>\r\n"
+            
+            # Need add download script section for this type
+            if (type == 'scripted'):
+                if bool(probe.scriptName):
+                    XMLstr = XMLstr + "  <script_elem script-name='" + probe.scriptName
+                    if bool(probe.scriptArgv):
+                       XMLstr = XMLstr + "' script-arguments='" + probe.scriptArgv
+                    XMLstr = XMLstr + "'/>\r\n"
+                    
+            # Need add sip-tcp, sip-udp, smtp, snmp, tcp, telnet, udp, vm
+
+
             
         s = XmlSender(context)
         return s.deployConfig(context, XMLstr)
+        
+        
+        
     
     
     def deleteProbe(self,  context,  probe):
