@@ -37,6 +37,7 @@ class RealServer(object):
         self._probes = []
         self._rateBandwidth = ""
         self._rateConn = ""
+        self._backupRS = ""
         self._created = None
         self._updated = None
 
@@ -61,8 +62,9 @@ class RealServer(object):
         self._probes = row[15]
         self._rateBandwidth = row[16]
         self._rateConn = row[17]
-        self._created = row[18]
-        self._updated = row[19]        
+        self._backupRS = row[18]
+        self._created = row[19]
+        self._updated = row[20]        
 
     @property
     def id(self):
@@ -199,7 +201,12 @@ class RealServer(object):
     @rateConn.setter
     def rateConn(self, value):
         self._rateConn = value
-        
+    @property
+    def backupRS(self):
+        return self._backupRS
+    @backupRS.setter
+    def backupRS(self, value):
+        self._backupRS = value
     @property
     def  created():
         return self._created

@@ -29,6 +29,11 @@ class Reader(object):
     def __init__(self,  db):
         logger.debug("Reader: connecting to db: %s" % db)
         self._con = sqlite3.connect(db)
+        self._probeDict={'DNSprobe':probe.DNSprobe(), 'ECHOTCPprobe':probe.ECHOTCPprobe(), 'ECHOUDPprobe':probe.ECHOUDPprobe(), 
+        'FINGERprobe':probe.FINGERprobe(), 'FTPprobe':probe.FTPprobe(), 'HTTPSprobe':probe.HTTPSprobe(), 'HTTPprobe':probe.HTTPprobe(), 'ICMPprobe':probe.ICMPprobe(), 
+        'IMAPprobe':probe.IMAPprobe(), 'POPprobe':probe.POPprobe(), 'RADIUSprobe':probe.RADIUSprobe(), 'RTSPprobe':probe.RTSPprobe(), 'SCRIPTEDprobe':probe.SCRIPTEDprobe(), 
+        'SIPTCPprobe':probe.SIPTCPprobe(), 'SIPUDPprobe':probe.SIPUDPprobe(), 'SMTPprobe':probe.SMTPprobe(), 'SNMPprobe':probe.SNMPprobe(), 
+        'TCPprobe':probe.TCPprobe(), 'TELNETprobe':probe.TELNETprobe(), 'UDPprobe':probe.UDPprobe(), 'VMprobe':probe.VMprobe()}
     
     def getLoadBalancers(self):
         cursor = self._con.cursor()
@@ -65,7 +70,7 @@ class Reader(object):
          lb.loadFromRow(row)
          return lb
 
-    def getDevices(self,):
+    def getDevices(self):
         cursor = self._con.cursor()
         cursor.execute('SELECT * FROM devices')
         rows = cursor.fetchall()
@@ -79,22 +84,29 @@ class Reader(object):
         return list
 
     def getProbeById(self, id):
-        probeDict={'DNSprobe':probe.DNSprobe(), 'ECHOTCPprobe':probe.ECHOTCPprobe(), 'ECHOUDPprobe':probe.ECHOUDPprobe(), 
-        'FINGERprobe':probe.FINGERprobe(), 'FTPprobe':probe.FTPprobe(), 'HTTPSprobe':probe.HTTPSprobe(), 'HTTPprobe':probe.HTTPprobe(), 'ICMPprobe':probe.ICMPprobe(), 
-        'IMAPprobe':probe.IMAPprobe(), 'POPprobe':probe.POPprobe(), 'RADIUSprobe':probe.RADIUSprobe(), 'RTSPprobe':probe.RTSPprobe(), 'SCRIPTEDprobe':probe.SCRIPTEDprobe(), 
-        'SIPTCPprobe':probe.SIPTCPprobe(), 'SIPUDPprobe':probe.SIPUDPprobe(), 'SMTPprobe':probe.SMTPprobe(), 'SNMPprobe':probe.SNMPprobe(), 
-        'TCPprobe':probe.TCPprobe(), 'TELNETprobe':probe.TELNETprobe(), 'UDPprobe':probe.UDPprobe(), 'VMprobe':probe.VMprobe()}
-
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
         cursor.execute('SELECT * FROM probes WHERE id = %s' % id)
         row = cursor.fetchone()
         if row == None:
             raise exception.NotFound()
-        prb = probeDict[row[0]]
+        prb = self._probeDict[row[0]]
         prb.loadFromRow(row)
-        return prb        
+        return prb     
 
+    def getProbes(self):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM probes')
+        rows = cursor.fetchall()
+        if rows == None:
+             raise exception.NotFound()
+        list = []
+        for row in rows:
+            prb = self._probeDict[row[0]]
+            prb.loadFromRow(row)
+            list.append(prb)
+        return list        
 
 class Writer(object):
     def __init__(self,  db):
