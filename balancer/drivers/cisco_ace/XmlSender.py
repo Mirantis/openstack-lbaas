@@ -45,7 +45,7 @@ class XmlSender:
             s = message.read()
             
             #this line enable the debug mode
-            #print s
+            print s
             
             if (s.find('XML_CMD_SUCCESS') > 0):
                 return 'OK'

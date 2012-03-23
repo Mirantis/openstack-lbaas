@@ -155,7 +155,8 @@ class AceDriver(BaseDriver):
                     XMLstr = XMLstr + "  <send-data data='" + probe.sendData + "'/>\r\n"
 
             if ((type == 'echo-tcp') or (type == 'finger') or (type == 'tcp')  or (type == 'rtsp')
-                or (type == 'http') or (type == 'https') or (type == 'imap') or (type == 'pop')):
+                or (type == 'http') or (type == 'https') or (type == 'imap') or (type == 'pop')
+                or (type == 'sip-tcp') or (type == 'smtp') or (type == 'tcp') or (type == 'telnet')):
                     if bool(probe.openTimeout):
                         XMLstr = XMLstr + "  <open timeout='" + str(probe.openTimeout) + "'/>"
                     if bool(probe.tcpConnTerm):
@@ -170,18 +171,20 @@ class AceDriver(BaseDriver):
                                 XMLstr = XMLstr + "' secret='" + probe.userSecret
                         XMLstr = XMLstr + "'/>\r\n"
 
+            if ((type == 'http') or (type == 'https') or (type == 'sip-tcp') 
+                or (type == 'sip-udp') or (type == 'tcp') or (type == 'udp')):
+                    if bool(probe.expectRegExp):
+                        XMLstr = XMLstr + "  <expect_regex regex='" + probe.expectRegExp + "'"
+                        if bool(probe.expectRegExpOffset):
+                            XMLstr = XMLstr + " offset='" + str(probe.expectRegExpOffset) + "'"
+                        XMLstr = XMLstr + "/>\r\n"
+
             if ((type == 'http') or (type == 'https')):
                 if bool(probe.requestMethodType):
                     XMLstr = XMLstr + "  <request method='" + probe.requestMethodType + "' url='" + probe.requestHTTPurl + "'/>\r\n"
                     
                 if bool(probe.appendPortHostTag):
                     XMLstr = XMLstr + "  <append-port-hosttag/>\r\n"
-                
-                if bool(probe.expectRegExp):
-                    XMLstr = XMLstr + "  <expect_regex regex='" + probe.expectRegExp + "'"
-                    if bool(probe.expectRegExpOffset):
-                        XMLstr = XMLstr + " offset='" + str(probe.expectRegExpOffset) + "'"
-                    XMLstr = XMLstr + "/>\r\n"
                     
                 if bool(probe.hash):
                     XMLstr = XMLstr + "  <hash"
@@ -227,8 +230,38 @@ class AceDriver(BaseDriver):
                        XMLstr = XMLstr + "' script-arguments='" + probe.scriptArgv
                     XMLstr = XMLstr + "'/>\r\n"
                     
-            # Need add sip-tcp, sip-udp, smtp, snmp, tcp, telnet, udp, vm
-
+            # Need add tcp, telnet, udp, vm
+            
+            # Rport need to add for SIP-UDP Probe
+            if ((type == 'sip-udp') and bool(probe.Rport)):
+                XMLstr = XMLstr + "  <rport type='enable'/>\r\n"
+                
+            if (type == 'snmp'):
+                if bool(probe.SNMPver):
+                    XMLstr = XMLstr + "  <version value='" + probe.SNMPver + "'/>\r\n"
+                    if bool(probe.SNMPComm):
+                        XMLstr = XMLstr + "  <community community-string='" + probe.SNMPComm + "'/>\r\n"
+            
+            # sendData need to add for TCP Probe
+            if (((type == 'tcp') or (type == 'udp')) and bool(probe.sendData)):
+                XMLstr = XMLstr + "  <send-data data='" + probe.sendData + "'/>\r\n"
+        
+        else:   # for type == vm
+            if bool(probe.VMControllerName):
+                XMLstr = XMLstr + "  <vm-controller name='" + probe.VMControllerName + "'/>\r\n"
+                if (bool(probe.maxCPUburstThresh) or bool(probe.minCPUburstThresh)):
+                    XMLstr = XMLstr + "  <load type='cpu' param='burst-threshold'"
+                    if bool(probe.maxCPUburstThresh):
+                        XMLstr = XMLstr + " max='" + probe.maxCPUburstThresh + "'"
+                    if bool(probe.minCPUburstThresh):
+                        XMLstr = XMLstr + " min='" + probe.minCPUburstThresh + "'"
+                    XMLstr = XMLstr + "/>\r\n"
+                if (bool(probe.maxMemBurstThresh) or bool(probe.minMemBurstThresh)):
+                    XMLstr = XMLstr + "  <load type='mem' param='burst-threshold'"
+                    if bool(probe.maxMemBurstThresh):
+                        XMLstr = XMLstr + " max='" + probe.maxMemBurstThresh + "'"
+                    if bool(probe.minMemBurstThresh):
+                        XMLstr = XMLstr + " min='" + probe.minMemBurstThresh + "'"
 
             
         s = XmlSender(context)
@@ -239,7 +272,23 @@ class AceDriver(BaseDriver):
     
     
     def deleteProbe(self,  context,  probe):
-        pass
+        if not bool(probe.name): 
+            return 'PROBE NAME ERROR'
+        type = probe.type.lower()
+
+        if ((type != 'echo-tcp') and (type != 'echo-udp')):
+            XMLstr = "<probe_" + type + " type='"  + type + "' name='" + probe.name + "' sense='no'>\r\n"
+        else:
+            XMLstr = "<probe_echo type='echo' conn-type='"
+            if (type == 'echo-tcp'):
+                XMLstr = XMLstr + "tcp' name='"
+            else:
+                XMLstr = XMLstr + "udp' name='"
+            XMLstr = XMLstr + probe.name + "' sense='no'>\r\n"
+            
+        s = XmlSender(context)
+        return s.deployConfig(context, XMLstr)
+        
     
     
     def createServerFarm(self,  context,  serverfarm):

@@ -29,6 +29,7 @@ from Context import Context
 from realserver import RealServer
 from serverfarm import ServerFarm
 from probe import Probe
+from XmlSender import XmlSender
 
 rs = RealServer()
 rs.name = 'abc_RS_Host2'
