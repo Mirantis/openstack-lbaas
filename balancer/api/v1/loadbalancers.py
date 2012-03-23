@@ -18,7 +18,7 @@
 import logging
 import sys
 
-import  balancer.loadbalancers
+import  balancer.loadbalancers.loadbalancer
 
 from openstack.common import exception
 from openstack.common import wsgi
@@ -55,7 +55,7 @@ class Controller(object):
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'task_id' : task.id}
+                return {'loadbalancers' : task.id}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
@@ -73,6 +73,10 @@ class Controller(object):
             logger.debug(msg)
             task = self._service_controller.createTask()
             mapper =LBActionMapper()
+            #here we need to decide which device should be used
+            params = args['body']
+            # We need to create LB object and return its id
+            params['lb'] = balancer.loadbalancers.loadbalancer.LoadBalancer()
             worker = mapper.getWorker(task, "create" )
             if worker.type ==  SYNCHRONOUS_WORKER:
                 result = worker.run()
@@ -81,7 +85,7 @@ class Controller(object):
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'task_id' : task.id}
+                return {'loadbalancers' : task.id}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id

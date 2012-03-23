@@ -33,6 +33,8 @@ import routes.middleware
 import webob.dec
 import webob.exc
 
+from balancer.core.serializeable import Serializeable
+
 from openstack.common import exception
 
 logger = logging.getLogger('openstack.common.wsgi')
@@ -270,6 +272,8 @@ class JSONResponseSerializer(object):
         def sanitizer(obj):
             if isinstance(obj, datetime.datetime):
                 return obj.isoformat()
+            if isinstance(obj,  Serializeable):
+                return obj.toDict()
             return obj
 
         return json.dumps(data, default=sanitizer)

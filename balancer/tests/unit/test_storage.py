@@ -110,6 +110,6 @@ class StorageTestCase(unittest.TestCase):
         wr.writeProbe(prb)
         read  = stor.getReader()
         newprb = read.getProbeById(1234)
-        self.assertEquals(prb.name,  "testDNSProbe")
+        self.assertEquals(prb.name,  "testProbe")
     
     

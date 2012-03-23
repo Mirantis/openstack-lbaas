@@ -24,6 +24,8 @@ from balancer.core.Worker import *
 from balancer.storage.storage import *
 from balancer.core.ServiceController import *
 
+logger =  logging.getLogger(__name__)
+
 class DeviceGetIndexWorker(SyncronousWorker):
     def __init__(self,  task):
          super(DeviceGetIndexWorker,  self).__init__(task)
@@ -45,17 +47,8 @@ class DeviceCreateWorker(SyncronousWorker):
       self._task.status = STATUS_PROGRESS
       params = self._task.parameters
       dev = LBDevice()
-      dev.name = params['name']
-      dev.type = params['type']
-      dev.version =  params['version']
-      dev.supports_IPv6 =  params['supports_IPv6']
-      dev.require_VIP_IP =  params['requires_VIP_IP']
-      dev.has_ACL =  params['has_ACL']
-      dev.supports_VLAN =  params['supports_VLAN']
-      dev.ip =  params['ip']
-      dev.port =  params['port']
-      dev.user =  params['user']
-      dev.password =  params['password']
+      dev.loadFromDict(params)
+      
       store = Storage()
       writer = store.getWriter()
       writer.writeDevice(dev)
@@ -65,7 +58,20 @@ class DeviceCreateWorker(SyncronousWorker):
       self._task.status = STATUS_DONE
       return 'OK'
       
-      
+class DeviceInfoWorker(SyncronousWorker):
+    def __init__(self,  task):
+        super(DeviceInfoWorker, self).__init__(task)
+        
+    def run(self):
+         self._task.status = STATUS_PROGRESS
+         params = self._task.parameters
+         query = params['query_params']
+         msg = "DeviceInfoWorker start with Params: %s Query: %s" %(params,  query)
+         logger.debug(msg)
+         self._task.status = STATUS_DONE
+         return 'OK'
+         
+         
       
 class DeviceActionMapper(object):
     def getWorker(self, task,  action,  params=None):
@@ -73,5 +79,7 @@ class DeviceActionMapper(object):
             return DeviceGetIndexWorker(task)
         if action == "create":
             return DeviceCreateWorker(task)
+        if action == "info":
+            return DeviceInfoWorker(task)
               
        

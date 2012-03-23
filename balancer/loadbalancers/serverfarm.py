@@ -20,252 +20,34 @@ import predictor
 import probe
 import realserver
 
-class ServerFarm(object):
+from balancer.core.serializeable import Serializeable
+from balancer.core.uniqueobject import UniqueObject
+
+class ServerFarm(Serializeable,  UniqueObject):
     def __init__(self):
-        self._id = None
-        self._lb_id = None
-        self._name = ""
-        self._type = "Host"
-        self._description = ""
-        self._failAction = None
-        self._inbandHealthCheck = None
-        self._connFailureThreshCount = ""
-        self._resetTimeout = ""
-        self._resumeService = ""
-        self._transparent = None
-        self._dynamicWorkloadScale = None
-        self._vmProbeName = ""
-        self._failOnAll = None
-        self._partialThreshPercentage = 0
-        self._backInservice = 0
-        self._probes = []
-        self._rservers = []
-        self._predictor = predictor.RoundRobin()
-        self._retcodeMap = ""
-        self._status = "ACTIVE"
-        self._created = None
-        self._updated = None
-
-#    def loadFromRow(self, row):
-#        msg = 'LoadBalancer create from row. Id: %s' % row[0]
-#        logger.debug(msg)
-#        self._id = row[0]
-#        self._lb_id = row[1]
-#        self._name = row[2]
-#        self._type = row[3]
-#        self._description = row[4]
-#        self._failAction = row[5]
-#        self._inbandHealthCheck = row[6]
-#        self._connFailureThreshCount = row[7]
-#        self._resetTimeout = row[8]
-#        self._resumeService = row[9]
-#        self._transparent = row[10]
-#        self._dynamicWorkloadScale = row[11]
-#        self._vmProbeName = row[12]
-#        self._failOnAll = row[13]
-#        self._partialThreshPercentage = row[14]
-#        self._backInservice = row[15]
-#        self._probes = row[16]
-#        self._rservers = row[17]
-#        self._predictor = row[18]
-#        self._retcodeMap = row[19]
-#        self._status = row[20]
-#        self._created = row[21]
-#        self._updated = row[22]
-
-    def loadFromRow(self, dict):
-        msg = 'ServerFarm create from row. Id: %s' % dict[0]
-        logger.debug(msg)
-        for attr in dict.keys():
-            if hasattr(self, '_'+attr): setattr(self, '_'+attr, dict[attr])
-        pass
         
-    def convertToDict(self):
-        dict = {}
-        for key in self.__dict__.keys():
-            dict.update({key[1:]:self.__dict__[key]})            
-        return dict
-
-    @property
-    def id(self):
-        return self._id
+        Serializeable.__init__(self)
+        UniqueObject.__init__(self)
         
-    @id.setter
-    def id(self,  value):
-        self._id = value
-    
-    @property
-    def lb_id(self):
-        return self._lb_id
-        
-    @lb_id.setter
-    def lb_id(self, value):
-        self._lb_id = value
-        
-    @property
-    def name(self):
-        return self._name
-    
-    @name.setter
-    def name(self, value):
-        self._name = value
-    
-    @property
-    def type(self):
-        return self._type
-    
-    @type.setter
-    def type(self, value):
-        self._type = value
-        
-    @property
-    def description(self):
-        return self._description
-        
-    @description.setter
-    def description(self, value):
-        self._description = value
-        
-    @property
-    def failAction(self):
-        return self._failAction
-    
-    @failAction.setter
-    def failAction(self, value):
-        self._failAction = value
-        
-    @property
-    def inbandHealthCheck(self):
-        return self._inbandHealthCheck
-    
-    @inbandHealthCheck.setter
-    def inbandHealthCheck(self, value):
-        self._inbandHealthCheck = value
-        
-    @property
-    def connFailureThreshCount(self):
-        return self._connFailureThreshCount
-        
-    @connFailureThreshCount.setter
-    def connFailureThreshCount(self, value):
-        self._connFailureThreshCount = value
-
-    @property
-    def resetTimeout(self):
-        return self._resetTimeout
-        
-    @resetTimeout.setter
-    def resetTimeout(self, value):
-        self._resetTimeout = value
-        
-    @property
-    def resumeService(self):
-        return self._resumeService
-        
-    @resumeService.setter
-    def resumeService(self, value):
-        self._resumeService = value
-        
-    @property
-    def transparent(self):
-        return self._transparent
-        
-    @transparent.setter
-    def transparent(self, value):
-        self._transparent = value
-        
-    @property
-    def dynamicWorkloadScale(self):
-        return self._dynamicWorkloadScale
-    
-    @dynamicWorkloadScale.setter
-    def dynamicWorkloadScale(self, value):
-        self._dynamicWorkloadScale = value
-    
-    @property
-    def vmProbeName(self):
-        return self._vmProbeName
-    
-    @vmProbeName.setter
-    def vmProbeName(self, value):
-        self._vmProbeName = value
-    
-    @property
-    def failOnAll(self):
-        return self._failOnAll
-    
-    @failOnAll.setter
-    def failOnAll(self, value):
-        self._failOnAll = value
-        
-    @property
-    def partialThreshPercentage(self):
-        return self._partialThreshPercentage
-    
-    @partialThreshPercentage.setter
-    def partialThreshPercentage(self, value):
-        self._partialThreshPercentage = value
-    
-    @property
-    def backInservice(self):
-        return self._backInservice
-    
-    @backInservice.setter
-    def backInservice(self, value):
-        self._backInservice
-    
-    @property
-    def probes(self):
-        return self._probes
-    
-    @probes.setter
-    def probes(self, value):
-        self._probes = value
-        
-    @property
-    def rservers(self):
-        return self._rservers
-    
-    @rservers.setter
-    def rservers(self, value):
-        self._rservers = value
-    
-    @property
-    def predictor(self):
-        return self._predictor
-    
-    @predictor.setter
-    def predictor(self, value):
-        self._predictor = value
-        
-    @property
-    def retcodeMap(self):
-        return self._retcodeMap
-    
-    @retcodeMap.setter
-    def retcodeMap(self, value):
-        self._retcodeMap = value
-        
-    @property
-    def status(self):
-        return self._status
-    
-    @status.setter
-    def status(self, value):
-        self._status = value
-    
-    @property
-    def created(self):
-        return self._created
-    
-    @created.setter
-    def created(self, value):
-        self._created = value
-    
-    @property
-    def updated(self):
-        return self._updated
-    
-    @updated.setter
-    def updated(self, value):
-        self._updated = value    
+        self.lb_id = None
+        self.name = ""
+        self.type = "Host"
+        self.description = ""
+        self.failAction = None
+        self.inbandHealthCheck = None
+        self.connFailureThreshCount = ""
+        self.resetTimeout = ""
+        self.resumeService = ""
+        self.transparent = None
+        self.dynamicWorkloadScale = None
+        self.vmProbeName = ""
+        self.failOnAll = None
+        self.partialThreshPercentage = 0
+        self.backInservice = 0
+        self.probes = []
+        self.rservers = []
+        self.predictor = predictor.RoundRobin()
+        self.retcodeMap = ""
+        self.status = "ACTIVE"
+        self.created = None
+        self.updated = None

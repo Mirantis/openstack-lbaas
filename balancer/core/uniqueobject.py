@@ -1,3 +1,5 @@
+# vim: tabstop=4 shiftwidth=4 softtabstop=4
+
 # Copyright 2012 OpenStack LLC.
 # All Rights Reserved.
 #
@@ -13,23 +15,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
-import sys
-import unittest
+import uuid
 
-from balancer.devices.device import LBDevice
-
-class DeviceTestCase(unittest.TestCase):
-    
-    def test_device_defaults(self):
-        device = LBDevice()
-        device.name = "test"
-        self.assertEquals(device.name,  "test")
+class UniqueObject(object):
+    def __init__(self):
+        self.id = uuid.uuid1().hex
         
-    def test_device_load(self):
-        device = LBDevice()
-        params = {'name':"test",  'ip': '10.10.10.10'}
-        device.loadFromDict(params)
-        self.assertEqual(device.name,  "test")
-
-    
+    def createSame(self):
+        return type(self)()

@@ -35,16 +35,17 @@ class Reader(object):
     def __init__(self,  db):
         logger.debug("Reader: connecting to db: %s" % db)
         self._con = sqlite3.connect(db)
-        self._probeDict={'DNSprobe':probe.DNSprobe(), 'ECHOTCPprobe':probe.ECHOTCPprobe(), 'ECHOUDPprobe':probe.ECHOUDPprobe(), 
-        'FINGERprobe':probe.FINGERprobe(), 'FTPprobe':probe.FTPprobe(), 'HTTPSprobe':probe.HTTPSprobe(), 'HTTPprobe':probe.HTTPprobe(), 'ICMPprobe':probe.ICMPprobe(), 
-        'IMAPprobe':probe.IMAPprobe(), 'POPprobe':probe.POPprobe(), 'RADIUSprobe':probe.RADIUSprobe(), 'RTSPprobe':probe.RTSPprobe(), 'SCRIPTEDprobe':probe.SCRIPTEDprobe(), 
-        'SIPTCPprobe':probe.SIPTCPprobe(), 'SIPUDPprobe':probe.SIPUDPprobe(), 'SMTPprobe':probe.SMTPprobe(), 'SNMPprobe':probe.SNMPprobe(), 
-        'TCPprobe':probe.TCPprobe(), 'TELNETprobe':probe.TELNETprobe(), 'UDPprobe':probe.UDPprobe(), 'VMprobe':probe.VMprobe()}
-        self._predictDict={'HashAddrPredictor':predictor.HashAddrPredictor(), 'HashContent':predictor.HashContent(), 'HashCookie':predictor.HashCookie(), 'HashHeader':predictor.HashHeader(),
-            'HashLayer4':predictor.HashLayer4(), 'HashURL':predictor.HashURL(), 'LeastBandwidth':predictor.LeastBandwidth(), 'LeastConn':predictor.LeastConn(), 
-            'LeastLoaded':predictor.LeastLoaded(), 'Response':predictor.Response(), 'RoundRobin':predictor.RoundRobin()}
+        self._probeDict={'DNSprobe':DNSprobe(), 'ECHOTCPprobe':ECHOTCPprobe(), 'ECHOUDPprobe':ECHOUDPprobe(), 
+        'FINGERprobe':FINGERprobe(), 'FTPprobe':FTPprobe(), 'HTTPSprobe':HTTPSprobe(), 'HTTPprobe':HTTPprobe(), 'ICMPprobe':ICMPprobe(), 
+        'IMAPprobe':IMAPprobe(), 'POPprobe':POPprobe(), 'RADIUSprobe':RADIUSprobe(), 'RTSPprobe':RTSPprobe(), 'SCRIPTEDprobe':SCRIPTEDprobe(), 
+        'SIPTCPprobe':SIPTCPprobe(), 'SIPUDPprobe':SIPUDPprobe(), 'SMTPprobe':SMTPprobe(), 'SNMPprobe':SNMPprobe(), 
+        'TCPprobe':TCPprobe(), 'TELNETprobe':TELNETprobe(), 'UDPprobe':UDPprobe(), 'VMprobe':VMprobe()}
+        self._predictDict={'HashAddrPredictor':HashAddrPredictor(), 'HashContent':HashContent(), 'HashCookie':HashCookie(), 'HashHeader':HashHeader(),
+            'HashLayer4':HashLayer4(), 'HashURL':HashURL(), 'LeastBandwidth':LeastBandwidth(), 'LeastConn':LeastConn(), 
+            'LeastLoaded':LeastLoaded(), 'Response':Response(), 'RoundRobin':RoundRobin()}
 
     def getLoadBalancers(self):
+        self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
         cursor.execute('SELECT * FROM loadbalancers')
         rows = cursor.fetchall()
@@ -53,21 +54,23 @@ class Reader(object):
         list = []
         for row in rows:
             lb = LoadBalancer()
-            lb.loadFromRow(row)
+            lb.loadFromDict(row)
             list.append(lb)
         return list
     
     def getLoadBalancerById(self,  id):
+         self._con.row_factory = sqlite3.Row
          cursor = self._con.cursor()
          cursor.execute('SELECT * FROM loadbalancers WHERE id = %s' % id)
          row = cursor.fetchone()
          if row == None:
              raise exception.NotFound()
          lb = LoadBalancer()
-         lb.loadFromRow(row)
+         lb.loadFromDict(row)
          return lb
     
     def getDeviceById(self,  id):
+         self._con.row_factory = sqlite3.Row
          cursor = self._con.cursor()
          if id == None:
              raise exception.NotFound("Empty device id.")
@@ -76,10 +79,11 @@ class Reader(object):
          if row == None:
              raise exception.NotFound()
          lb = LBDevice()
-         lb.loadFromRow(row)
+         lb.loadFromDict(row)
          return lb
 
     def getDevices(self):
+        self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
         cursor.execute('SELECT * FROM devices')
         rows = cursor.fetchall()
@@ -88,7 +92,7 @@ class Reader(object):
         list = []
         for row in rows:
             lb = LBDevice()
-            lb.loadFromRow(row)
+            lb.loadFromDict(row)
             list.append(lb)
         return list
 
@@ -99,8 +103,8 @@ class Reader(object):
         row = cursor.fetchone()
         if row == None:
             raise exception.NotFound()
-        prb = self._probeDict[row[0]]
-        prb.loadFromRow(row)
+        prb = self._probeDict[row['type']]
+        prb.loadFromDict(row)
         return prb     
 
     def getProbes(self):
@@ -112,8 +116,8 @@ class Reader(object):
              raise exception.NotFound()
         list = []
         for row in rows:
-            prb = self._probeDict[row[0]]
-            prb.loadFromRow(row)
+            prb = self._probeDict[row['type']]
+            prb.loadFromDict(row)
             list.append(prb)
         return list        
 
@@ -126,7 +130,7 @@ class Reader(object):
          if row == None:
              raise exception.NotFound()
          rs = RealServer()
-         rs.loadFromRow(row)
+         rs.loadFromDict(row)
          return rs
 
     def getRServers(self):
@@ -138,7 +142,7 @@ class Reader(object):
         list = []
         for row in rows:
             rs = RealServer()
-            rs.loadFromRow(row)
+            rs.loadFromDict(row)
             list.append(rs)
         return list
         
@@ -149,8 +153,8 @@ class Reader(object):
         row = cursor.fetchone()
         if row == None:
             raise exception.NotFound()
-        prd = self._predictDict[row[0]]
-        prd.loadFromRow(row)
+        prd = self._predictDict[row['type']]
+        prd.loadFromDict(row)
         return prd     
 
     def getPredictors(self):
@@ -162,8 +166,8 @@ class Reader(object):
              raise exception.NotFound()
         list = []
         for row in rows:
-            prd = self._predictDict[row[0]]
-            prd.loadFromRow(row)
+            prd = self._predictDict[row['type']]
+            prd.loadFromDict(row)
             list.append(prd)
         return list 
 
@@ -175,7 +179,7 @@ class Reader(object):
         if row == None:
             raise exception.NotFound()
         sf = ServerFarm()
-        sf.loadFromRow(row)
+        sf.loadFromDict(row)
         return sf     
 
     def getServerFarms(self):
@@ -188,7 +192,7 @@ class Reader(object):
         list = []
         for row in rows:
             sf = ServerFarm()
-            sf.loadFromRow(row)
+            sf.loadFromDict(row)
             list.append(sf)
         return list 
 
@@ -200,7 +204,7 @@ class Reader(object):
         if row == None:
             raise exception.NotFound()
         vs = VirtualServer()
-        vs.loadFromRow(row)
+        vs.loadFromDict(row)
         return vs     
 
     def getVirtualServers(self):
@@ -213,7 +217,7 @@ class Reader(object):
         list = []
         for row in rows:
             vs = VirtualServer()
-            vs.loadFromRow(row)
+            vs.loadFromDict(row)
             list.append(vs)
         return list 
 
@@ -227,7 +231,7 @@ class Reader(object):
         list = []
         for row in rows:
             sf = ServerFarm()
-            sf.loadFromRow(row)
+            sf.loadFromDict(row)
             list.append(sf)
         return list 
 
@@ -239,7 +243,7 @@ class Reader(object):
         if row == None:
             raise exception.NotFound()
         vlan = VLAN()
-        vlan.loadFromRow(row)
+        vlan.loadFromDict(row)
         return vlan     
 
     def getVLANs(self):
@@ -252,7 +256,7 @@ class Reader(object):
         list = []
         for row in rows:
             vlan = VLAN()
-            vlan.loadFromRow(row)
+            vlan.loadFromDict(row)
             list.append(vlan)
         return list 
 
@@ -273,9 +277,9 @@ class Writer(object):
     def writeDevice(self,  device):
          logger.debug("Saving Device instance in DB.")
          cursor = self._con.cursor()
-         command = "INSERT INTO devices (id,  name, type, version, supports_IPv6, require_VIP_IP, has_ACL, supports_VLAN, ip, port, user, pass ) VALUES('%s','%s','%s','%s',%d, %d, %d, %d,'%s','%s','%s','%s');"  % (device.id,  device.name,  
-                                                                                                                                                                                                device.type,  device.version,  device.supports_IPv6,  device.require_VIP_IP, device.has_ACL,  device.supports_VLAN,  
-                                                                                                                                                                                                device.ip,  device.port,  device.user,  device.password )
+         command = "INSERT INTO devices (id,  name, type, version, supports_ipv6, requires_vip_ip, has_acl, supports_vlan, ip, port, user, password, vip_vlan ) VALUES('%s','%s','%s','%s',%d, %d, %d, %d,'%s','%s','%s','%s', '%s');"  % (device.id,  device.name,  
+                                                                                                                                                                                                device.type,  device.version,  device.supports_ipv6,  device.requires_vip_ip, device.has_acl,  device.supports_vlan,  
+                                                                                                                                                                                                device.ip,  device.port,  device.user,  device.password,  device.vip_vlan )
          msg = "Executing command: %s" % command
          logger.debug(msg)
          cursor.execute(command)
@@ -291,10 +295,10 @@ class Writer(object):
         for key in dict.keys():
             if i < len(dict)-1:
                 command1 += key +','
-                command2 +=str(dict[key]) + ","
+                command2 +="'"+str(dict[key])+"'" + ","
             else:
                 command1 += key + ") VALUES("
-                command2 +=str(dict[key]) + ");"
+                command2 +="'"+str(dict[key])+"'" + ");"
             i+=1
         command = command1+command2
         msg = "Executing command: %s" % command
@@ -322,10 +326,10 @@ class Writer(object):
         for key in dict.keys():
             if i < len(dict)-1:
                 command1 += key +','
-                command2 +=str(dict[key]) + ","
+                command2 +="'"+str(dict[key])+"'" + ","
             else:
                 command1 += key + ") VALUES("
-                command2 +=str(dict[key]) + ");"
+                command2 +="'"+str(dict[key])+"'" + ");"
             i+=1
         command = command1+command2
         msg = "Executing command: %s" % command
@@ -343,10 +347,10 @@ class Writer(object):
         for key in dict.keys():
             if i < len(dict)-1:
                 command1 += key +','
-                command2 +=str(dict[key]) + ","
+                command2 +="'"+str(dict[key])+"'" + ","
             else:
                 command1 += key + ") VALUES("
-                command2 +=str(dict[key]) + ");"
+                command2 +="'"+str(dict[key])+"'" + ");"
             i+=1
         command = command1+command2
         msg = "Executing command: %s" % command
@@ -364,10 +368,10 @@ class Writer(object):
         for key in dict.keys():
             if i < len(dict)-1:
                 command1 += key +','
-                command2 +=str(dict[key]) + ","
+                command2 +="'"+str(dict[key]) +"'"+ ","
             else:
                 command1 += key + ") VALUES("
-                command2 +=str(dict[key]) + ");"
+                command2 +="'"+str(dict[key])+"'" + ");"
             i+=1
         command = command1+command2
         msg = "Executing command: %s" % command

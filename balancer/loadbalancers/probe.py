@@ -17,149 +17,48 @@
 
 import logging
 
-class Probe(object):
+from balancer.core.serializeable import Serializeable
+from balancer.core.uniqueobject import UniqueObject
+
+
+class Probe(Serializeable,  UniqueObject):
     def __init__(self):
-        self._id = ""
-        self._name = ""
-        self._type = ""
-        self._description = ""
-        self._probeInterval = 15
-        self._passDetectInterval = 60
-        self._failDetect = 3
+        Serializeable.__init__(self)
+        UniqueObject.__init__(self)
+        self.name = ""
+        self.type = ""
+        self.description = ""
+        self.probeInterval = 15
+        self.passDetectInterval = 60
+        self.failDetect = 3
+        
+        self.delay = 15
+        self.attemptsBeforeDeactivation = 3
+        self.timeout = 60
     
     #more settings fields
-        self._passDetectCount = 3
-        self._receiveTimeout = 10
-        self._isRouted = None
-        self._port = ""
-        
-    def loadFromRow(self, dict):
-        for attr in dict.keys():
-            if hasattr(self, '_'+attr): setattr(self, '_'+attr, dict[attr])
-        pass
-    def convertToDict(self):
-        dict = {}
-        for key in self.__dict__.keys():
-            dict.update({key[1:]:self.__dict__[key]})            
-        return dict
-
-    @property
-    def id(self):
-        return self._id
-    @id.setter
-    def id(self, value):
-        self._id = value
-    @property
-    def name(self):
-        return self._name
-    @name.setter
-    def name(self, value):
-        self._name = value
-    @property
-    def type(self):
-        return self._type_failDetect
-    @type.setter
-    def type(self, value):
-        self._type = value
-    @property
-    def description(self):
-        return self._description
-    @description.setter
-    def description(self, value):
-        self._description = value
-    @property
-    def probeInterval(self):
-        return self._probeInterval
-    @probeInterval.setter
-    def probeInterval(self, value):
-        self._probeInterval = value
-    @property
-    def passDetectInterval(self):
-        return self._passDetectInterval
-    @passDetectInterval.setter
-    def passDetectInterval(self, value):
-        self._passDetectInterval = value
-    @property
-    def failDetect(self):
-        return self._failDetect
-    @failDetect.setter
-    def failDetect(self, value):
-        self._failDetect = value
-    @property
-    def passDetectCount(self, value):
-        return self._passDetectCount
-    @passDetectCount.setter
-    def passDetectCount(self, value):
-        self._passDetectCount = value
-    @property
-    def receiveTimeout(self):
-        return self._receiveTimeout
-    @receiveTimeout.setter
-    def receiveTimeout(self, value):
-        self._receiveTimeout = value
-    @property
-    def isRouted(self):
-        return self._isRouted
-    @isRouted.setter
-    def isRouted(self, value):
-        self._isRouted = value
-    @property
-    def port(self):
-        return self._port
-    @port.setter
-    def port(self, value):
-        self._port = value
+        self.passDetectCount = 3
+        self.receiveTimeout = 10
+        self.isRouted = None
+        self.port = ""
 
 class DNSprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
-        self._domainName = ""
+        self.domainName = ""
         
-    
-    @property
-    def domainName(self):
-        return self._domainName
-    @domainName.setter
-    def domainName(self, value):
-        self._domainName = value
 
 class ECHOUDPprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
-        self._sendData = ""
-        self._destIP = ""
-    
-    @property
-    def sendData(self):
-        return self._sendData
-    @sendData.setter
-    def sendData(self, value):
-        self._sendData = value
-    @property
-    def destIP(self):
-        return self._destIP
-    @destIP.setter
-    def destIP(self, value):
-        sellf._destIP = value
+        self.sendData = ""
+        self.destIP = ""
 
 class ECHOTCPprobe(ECHOUDPprobe):
     def __init__(self):
         ECHOUDPprobe.__init__(self)
-        self._tcpConnTerm = None
-        self._openTimeout = 1
-    
-    @property
-    def tcpConnTerm(self):
-        return self._tcpConnTerm
-    @tcpConnTerm.setter
-    def tcpConnTerm(self, value):
-        self._tcpConnTerm = value
-    @property
-    def openTimeout(self):
-        return self._openTimeout
-    @openTimeout.setter
-    def openTimeout(self, value):
-        self._openTimeout = value
+        self.tcpConnTerm = None
+        self.openTimeout = 1
     
 class FINGERprobe(ECHOUDPprobe):
     def __init__(self):
@@ -169,550 +68,131 @@ class FINGERprobe(ECHOUDPprobe):
 class FTPprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
-        self._destIP = ""
-        self._tcpConnTerm = None
-        self._openTimeout = 1
-    
-    @property
-    def destIP(self):
-        return self._destIP
-    @destIP.setter
-    def destIP(self, value):
-        sellf._destIP = value    
-    @property
-    def tcpConnTerm(self):
-        return self._tcpConnTerm
-    @tcpConnTerm.setter
-    def tcpConnTerm(self, value):
-        self._tcpConnTerm = value
-    @property
-    def openTimeout(self):
-        return self._openTimeout
-    @openTimeout.setter
-    def openTimeout(self, value):
-        self._openTimeout = value    
+        self.destIP = ""
+        self.tcpConnTerm = None
+        self.openTimeout = 1
 
 class HTTPprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
-        self._requestMethodType = "GET"    
-        self._requestHTTPurl = "/"
-        self._appendPortHostTag = None
-        self._destIPv4v6 = ""
-        self._tcpConnTerm = None
-        self._openTimeout = 1
-        self._userName = ""
-        self._password = ""
-        self._expectRegExp = ""
-        self._expectRegExpOffset = ""
-        self._hash = None
-        self._hashString = ""
-        self._headerName = ""
-        self._headerValue = ""
-        self._minExpectStatus = ""
-        self._maxExpectStatus = ""
+        self.requestMethodType = "GET"    
+        self.requestHTTPurl = "/"
+        self.appendPortHostTag = None
+        self.destIPv4v6 = ""
+        self.tcpConnTerm = None
+        self.openTimeout = 1
+        self.userName = ""
+        self.password = ""
+        self.expectRegExp = ""
+        self.expectRegExpOffset = ""
+        self.hash = None
+        self.hashString = ""
+        self.headerName = ""
+        self.headerValue = ""
+        self.minExpectStatus = ""
+        self.maxExpectStatus = ""
     
-    @property
-    def requestMethodType(self):
-        return self._requestMethodType
-    @requestMethodType.setter
-    def requestMethodType(self, value):
-        self._requestMethodType = value
-    @property
-    def requestHTTPurl(self):
-        return self._requestHTTPurl
-    @requestHTTPurl.setter
-    def requestHTTPurl(self, value):
-        self._requestHTTPurl = value
-    @property
-    def appendPortHostTag(self):
-        return self._appendPortHostTag
-    @appendPortHostTag.setter
-    def appendPortHostTag(self, value):
-        self._appendPortHostTag = value
-    @property
-    def destIPv4v6(self):
-        return self._destIPv4v6
-    @destIPv4v6.setter
-    def destIPv4v6(self, value):
-        self._destIPv4v6 = value
-    @property
-    def tcpConnTerm(self):
-        return self._tcpConnTerm
-    @tcpConnTerm.setter
-    def tcpConnTerm(self, value):
-        self._tcpConnTerm = value
-    @property
-    def openTimeout(self):
-        return self._openTimeout
-    @openTimeout.setter
-    def openTimeout(self, value):
-        self._openTimeout = value
-    @property
-    def userName(self):
-        return self._userName
-    @userName.setter
-    def userName(self, value):
-        self._userName = value
-    @property
-    def password(self):
-        return self._password
-    @password.setter
-    def password(self, value):
-        self._password = value
-    @property
-    def expectRegExp(self):
-        return self._expectRegExp
-    @expectRegExp.setter
-    def expectRegExp(self, value):
-        self._expectRegExp = value
-    @property
-    def expectRegExpOffset(self):
-        return self._expectRegExpOffset
-    @expectRegExpOffset.setter
-    def expectRegExpOffset(self, value):
-        self._expectRegExpOffset = value
-    @property
-    def hash(self):
-        return self._hash
-    @hash.setter        
-    def hash(self, value):
-        self._hash = value
-    @property
-    def hashString(self):
-        return self._hashString
-    @hashString.setter
-    def hashString(self, value):
-        self._hashString = value
-    @property
-    def headerName(self):
-        return self._headerName
-    @headerName.setter
-    def headerName(self, value):
-        self._headerName = value
-    @property
-    def headerValue(self):
-        return self._headerValue
-    @headerValue.setter
-    def headerValue(self, value):
-        self._headerValue = value
-    @property
-    def minExpectStatus(self):
-        return self._minExpectStatus
-    @minExpectStatus.setter
-    def minExpectStatus(self, value):
-        self._minExpectStatus = value
-    @property
-    def maxExpectStatus(self):
-        return self._maxExpectStatus
-    @maxExpectStatus.setter
-    def maxExpectStatus(self, value):
-        self._maxExpectStatus = value
-
 class HTTPSprobe(HTTPprobe):
     def __init__(self):
         HTTPprobe.__init__(self)
-        self._cipher = None
-        self._SSLversion = None
-    
-    @property
-    def cipher(self):
-        return self._cipher
-    @cipher.setter
-    def cipher(self, value):
-        self._cipher = value
-    @property
-    def SSLversion(self):
-        return self._SSLversion
-    @SSLversion.setter
-    def SSLversion(self, value):
-        self._SSLversion = value
+        self.cipher = None
+        self.SSLversion = None
 
 class ICMPprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
     pass
+    
 class IMAPprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
-        self._userName = ""
-        self._password = ""
-        self._destIP = ""
-        self._tcpConnTerm = None
-        self._openTimeout = 1
-        self._maibox = ""
-        self._requestCommand = ""
-        
-    @property
-    def userName(self):
-        return self._userName
-    @userName.setter
-    def userName(self, value):
-        self._userName = value
-    @property
-    def password(self):
-        return self._password
-    @password.setter
-    def password(self, value):
-        self._password = value
-    @property
-    def destIP(self):
-        return self._destIP
-    @destIP.setter
-    def destIP(self, value):
-        self._destIP = value
-    @property
-    def tcpConnTerm(self):
-        return self._tcpConnTerm
-    @tcpConnTerm.setter
-    def tcpConnTerm(self, value):
-        self._tcpConnTerm = value
-    @property
-    def openTimeout(self):
-        return self._openTimeout
-    @openTimeout.setter
-    def openTimeout(self, value):
-        self._openTimeout = value
-    @property
-    def maibox(self):
-        return self._maibox
-    @maibox.setter
-    def maibox(self, value):
-        self._maibox = value
-    @property
-    def requestCommand(self):
-        return self._requestCommand
-    @requestCommand.setter
-    def requestCommand(self, value):
-        self._requestCommand = value
+        self.userName = ""
+        self.password = ""
+        self.destIP = ""
+        self.tcpConnTerm = None
+        self.openTimeout = 1
+        self.maibox = ""
+        self.requestCommand = ""
 
 class POPprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
-        self._userName = ""
-        self._password = ""
-        self._destIP = ""
-        self._tcpConnTerm = None
-        self._openTimeout = 1
-        self._requestCommand = ""        
-    @property
-    def userName(self):
-        return self._userName
-    @userName.setter
-    def userName(self, value):
-        self._userName = value
-    @property
-    def password(self):
-        return self._password
-    @password.setter
-    def password(self, value):
-        self._password = value
-    @property
-    def destIP(self):
-        return self._destIP
-    @destIP.setter
-    def destIP(self, value):
-        self._destIP = value
-    @property
-    def tcpConnTerm(self):
-        return self._tcpConnTerm
-    @tcpConnTerm.setter
-    def tcpConnTerm(self, value):
-        self._tcpConnTerm = value
-    @property
-    def openTimeout(self):
-        return self._openTimeout
-    @openTimeout.setter
-    def openTimeout(self, value):
-        self._openTimeout = value
-    @property
-    def requestCommand(self):
-        return self._requestCommand
-    @requestCommand.setter
-    def requestCommand(self, value):
-        self._requestCommand = value
+        self.userName = ""
+        self.password = ""
+        self.destIP = ""
+        self.tcpConnTerm = None
+        self.openTimeout = 1
+        self.requestCommand = ""        
 
 class RADIUSprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
-        self._userName = ""
-        self._password = ""
-        self._userSecret = ""
-        self._destIP = ""
-        self._NASIPaddr = ""
-    @property
-    def userName(self):
-        return self._userName
-    @userName.setter
-    def userName(self, value):
-        self._userName = value
-    @property
-    def password(self):
-        return self._password
-    @password.setter
-    def password(self, value):
-        self._password = value
-    @property
-    def userSecret(self):
-        return self._userSecret
-    @userSecret.setter
-    def userSecret(self, value):
-        self._userSecret = value
-    @property
-    def destIP(self):
-        return self._destIP
-    @destIP.setter
-    def destIP(self, value):
-        self._destIP = value
-    @property
-    def NASIPaddr(self):
-        return self._NASIPaddr
-    @NASIPaddr.setter
-    def NASIPaddr(self, value):
-        self._NASIPaddr = value
+        self.userName = ""
+        self.password = ""
+        self.userSecret = ""
+        self.destIP = ""
+        self.NASIPaddr = ""
 
 class RTSPprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
-        self._requareHeaderValue = ""
-        self._proxyRequareHeaderValue = ""
-        self._requestMethodType = None
-        self._requestURL = ""
-        self._destIP = ""
-        self._tcpConnTerm = None
-        self._openTimeout = 1      
-    
-    @property
-    def requareHeaderValue(self):
-        return self._requareHeaderValue
-    @requareHeaderValue.setter
-    def requareHeaderValue(self, value):
-        self._requareHeaderValue = value
-    @property
-    def proxyRequareHeaderValue(self):
-        return self._proxyRequareHeaderValue
-    @proxyRequareHeaderValue.setter
-    def proxyRequareHeaderValue(self, value):
-        self._proxyRequareHeaderValue = value
-    @property
-    def requestMethodType(self):
-        return self._requestMethodType
-    @requestMethodType.setter
-    def requestMethodType(self, value):
-        self._requestMethodType = value
-    @property
-    def requestURL(self):
-        return self._requestURL
-    @requestURL.setter
-    def requestURL(self, value):
-        self._requestURL = value
-    @property
-    def destIP(self):
-        return self._destIP
-    @destIP.setter
-    def destIP(self, value):
-        self._destIP = value
-    @property
-    def tcpConnTerm(self):
-        return self._tcpConnTerm
-    @tcpConnTerm.setter
-    def tcpConnTerm(self, value):
-        self._tcpConnTerm = value
-    @property
-    def openTimeout(self):
-        return self._openTimeout
-    @openTimeout.setter
-    def openTimeout(self, value):
-        self._openTimeout = value
+        self.requareHeaderValue = ""
+        self.proxyRequareHeaderValue = ""
+        self.requestMethodType = None
+        self.requestURL = ""
+        self.destIP = ""
+        self.tcpConnTerm = None
+        self.openTimeout = 1      
 
 class SCRIPTEDprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
-        self._scriptName = ""
-        self._scriptArgv = ""
-        self._copied = None
-        self._proto = None
-        self._userName = ""
-        self._password = ""
-        self._sourceFileName = ""
+        self.scriptName = ""
+        self.scriptArgv = ""
+        self.copied = None
+        self.proto = None
+        self.userName = ""
+        self.password = ""
+        self.sourceFileName = ""
     
-    @property
-    def scriptName(self):
-        return self._scriptName
-    @scriptName.setter
-    def scriptName(self, value):
-        self.__scriptName = value
-    @property
-    def scriptArgv(self):
-        return self._scriptArgv
-    @scriptArgv.setter
-    def scriptArgv(self, value):
-        self._scriptArgv = value
-    @property
-    def copied(self):
-        return self._copied
-    @copied.setter
-    def copied(self, value):
-        self._copied = value
-    @property
-    def proto(self):
-        return self._proto
-    @proto.setter
-    def proto(self, value):
-        self._proto = value
-    @property
-    def userName(self):
-        return self._userName
-    @userName.setter
-    def userName(self, value):
-        self._userName = value
-    @property
-    def password(self):
-        return self._password
-    @password.setter
-    def password(self, value):
-        self._password = value  
-    @property
-    def sourceFileName(self):
-        return self._sourceFileName
-    @sourceFileName.setter
-    def sourceFileName(self, value):
-        self._sourceFileName = value
-
+    
 class SIPUDPprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
-        self._destIP = ""
-        self._expectRegExp = ""
-        self._expectRegExpOffset = ""
-    @property
-    def destIP(self):
-        return self._destIP
-    @destIP.setter
-    def destIP(self, value):
-        self._destIP = value
-    @property
-    def expectRegExp(self):
-        return self._expectRegExp
-    @expectRegExp.setter
-    def expectRegExp(self, value):
-        self._expectRegExp = value
-    @property
-    def expectRegExpOffset(self):
-        return self._expectRegExpOffset
-    @expectRegExpOffset.setter
-    def expectRegExpOffset(self, value):
-        self._expectRegExpOffset = value
+        self.destIP = ""
+        self.expectRegExp = ""
+        self.expectRegExpOffset = ""
         
 class SIPTCPprobe(SIPUDPprobe):
     def __init__(self):
         SIPUDPprobe.__init__(self)
-        self._tcpConnTerm = None
-        self._openTimeout = 1
+        self.tcpConnTerm = None
+        self.openTimeout = 1
         
-    @property
-    def tcpConnTerm(self):
-        return self._tcpConnTerm
-    @tcpConnTerm.setter
-    def tcpConnTerm(self, value):
-        self._tcpConnTerm = value
-    @property
-    def openTimeout(self):
-        return self._openTimeout
-    @openTimeout.setter
-    def openTimeout(self, value):
-        self._openTimeout = value
 
 class SMTPprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
-        self._destIP = ""
-        self._tcpConnTerm = None
-        self._openTimeout = 1
-    @property
-    def destIP(self):
-        return self._destIP
-    @destIP.setter
-    def destIP(self, value):
-        self._destIP = value    
-    @property
-    def tcpConnTerm(self):
-        return self._tcpConnTerm
-    @tcpConnTerm.setter
-    def tcpConnTerm(self, value):
-        self._tcpConnTerm = value
-    @property
-    def openTimeout(self):
-        return self._openTimeout
-    @openTimeout.setter
-    def openTimeout(self, value):
-        self._openTimeout = value
+        self.destIP = ""
+        self.tcpConnTerm = None
+        self.openTimeout = 1
     
 class SNMPprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
-        self._destIP = ""
-        self._SNMPComm = ""
-        self._SNMPver = None
+        self.destIP = ""
+        self.SNMPComm = ""
+        self.SNMPver = None
         
-    @property
-    def destIP(self):
-        return self._destIP
-    @destIP.setter
-    def destIP(self, value):
-        self._destIP = value 
-    @property
-    def SNMPComm(self):
-        return self._SNMPComm
-    @SNMPComm.setter
-    def SNMPComm(self, value):
-        self._SNMPComm = value
-    @property
-    def SNMPver(self):
-        return self._SNMPver
-    @SNMPver.setter
-    def SNMPver(self, value):
-        self._SNMPver = value
 
 class TCPprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
-        self._destIPv4v6 = ""
-        self._tcpConnTerm = None
-        self._openTimeout = 1
-        self._expectRegExp = ""
-        self._expectRegExpOffset = ""      
-
-    @property
-    def destIPv4v6(self):
-        return self._destIPv4v6
-    @destIPv4v6.setter
-    def destIPv4v6(self, value):
-        self._destIPv4v6 = value
-    @property
-    def tcpConnTerm(self):
-        return self._tcpConnTerm
-    @tcpConnTerm.setter
-    def tcpConnTerm(self, value):
-        self._tcpConnTerm = value
-    @property
-    def openTimeout(self):
-        return self._openTimeout
-    @openTimeout.setter
-    def openTimeout(self, value):
-        self._openTimeout = value
-    @property
-    def expectRegExp(self):
-        return self._expectRegExp
-    @expectRegExp.setter
-    def expectRegExp(self, value):
-        self._expectRegExp = value
-    @property
-    def expectRegExpOffset(self):
-        return self._expectRegExpOffset
-    @expectRegExpOffset.setter
-    def expectRegExpOffset(self, value):
-        self._expectRegExpOffset = value
+        self.destIPv4v6 = ""
+        self.tcpConnTerm = None
+        self.openTimeout = 1
+        self.expectRegExp = ""
+        self.expectRegExpOffset = ""      
 
 class TELNETprobe(SMTPprobe):
     def __init__(self):
@@ -722,91 +202,21 @@ class TELNETprobe(SMTPprobe):
 class UDPprobe(ECHOUDPprobe):
     def __init__(self):
         ECHOUDPprobe.__init__(self)
-        self._expectRegExp = ""
-        self._expectRegExpOffset = ""   
-    @property
-    def expectRegExp(self):
-        return self._expectRegExp
-    @expectRegExp.setter
-    def expectRegExp(self, value):
-        self._expectRegExp = value
-    @property
-    def expectRegExpOffset(self):
-        return self._expectRegExpOffset
-    @expectRegExpOffset.setter
-    def expectRegExpOffset(self, value):
-        self._expectRegExpOffset = value
+        self.expectRegExp = ""
+        self.expectRegExpOffset = ""   
 
 class VMprobe(object):
     def __init__(self):
-        self._id = None
-        self._name = ""
-        self._type = None
-        self._description = ""
-        self._probeInterval = 300
-        self._maxCPUburstThresh = 99
-        self._minCPUburstThresh = 99
-        self._maxMemBurstThresh = 99
-        self._minMemBurstThresh = 99
-        self._VMControllerName = None
+        self.id = None
+        self.name = ""
+        self.type = None
+        self.description = ""
+        self.probeInterval = 300
+        self.maxCPUburstThresh = 99
+        self.minCPUburstThresh = 99
+        self.maxMemBurstThresh = 99
+        self.minMemBurstThresh = 99
+        self.VMControllerName = None
         
-    @property
-    def id(self):
-        return self._id
-    @id.setter
-    def id(self, value):
-        self._id = value
-    @property
-    def name(self):
-        return self._name
-    @name.setter
-    def name(self, value):
-        self._name = value
-    @property
-    def type(self):
-        return self._type_failDetect
-    @type.setter
-    def type(self, value):
-        self._type = value
-    @property
-    def description(self):
-        return self._description
-    @description.setter
-    def description(self, value):
-        self._description = value
-    @property
-    def probeInterval(self):
-        return self._probeInterval
-    @probeInterval.setter
-    def probeInterval(self, value):
-        self._probeInterval = value
-    @property
-    def maxCPUburstThresh(self):
-        return self._maxCPUburstThresh
-    @maxCPUburstThresh.setter
-    def maxCPUburstThresh(self, value):
-        self._maxCPUburstThresh = value
-    @property
-    def minCPUburstThresh(self):
-        return self._maxCPUburstThresh
-    @minCPUburstThresh.setter
-    def minCPUburstThresh(self, value):
-        self._minCPUburstThresh = value
-    @property
-    def maxMemBurstThresh(self):
-        return self._maxMemBurstThresh
-    @maxMemBurstThresh.setter
-    def maxMemBurstThresh(self, value):
-        self._maxMemBurstThresh = value
-    @property
-    def minMemBurstThresh(self):
-        return self._minMemBurstThresh
-    @minMemBurstThresh.setter
-    def minMemBurstThresh(self, value):
-        self._minMemBurstThresh = value    
-    @property
-    def VMControllerName(self):
-        return self._VMControllerName
-    @VMControllerName.setter
-    def VMControllerName(self, value):
-        self._VMControllerName = value
+
+

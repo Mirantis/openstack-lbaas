@@ -97,8 +97,62 @@ class Controller(object):
             raise webob.exc.HTTPForbidden(msg)        
         return {'devices': list}
         
-    def device_data(self,  req):
-        pass
+    def show(self,  req,  **args):
+        msg = "Got device data request. Request: %s Arguments: %s" % (req,  args)
+        logger.debug(msg)
+        try:
+            
+            return {"list": "OK"}
+            logger.debug(msg)
+            self._validate_params(params)
+            task = self._service_controller.createTask()
+            task.parameters = params
+            mapper = DeviceActionMapper()
+            worker = mapper.getWorker(task, "show" )
+            if worker.type ==  SYNCHRONOUS_WORKER:
+                result = worker.run()
+                
+                return {'devices': result}
+            
+            if worker.type == ASYNCHRONOUS_WORKER:
+                task.worker = worker
+                self._service_controller.addTask(task)
+                return {'task_id' : task.id}            
+        except exception.NotFound:
+            msg = "Image with identifier %s not found" % image_id
+            logger.debug(msg)
+            raise webob.exc.HTTPNotFound(msg)
+        except exception.NotAuthorized:
+            msg = _("Unauthorized image access")
+            logger.debug(msg)
+            raise webob.exc.HTTPForbidden(msg)        
+        return {'devices': list}
+        
+    def device_info(self,  req,  **args):
+        try:       
+            task = self._service_controller.createTask()
+            task.parameters = args
+            task.parameters['query_params'] = req.GET
+            mapper = DeviceActionMapper()
+            worker = mapper.getWorker(task, "info" )
+            if worker.type ==  SYNCHRONOUS_WORKER:
+                result = worker.run()
+                
+                return {'devices': result}
+            
+            if worker.type == ASYNCHRONOUS_WORKER:
+                task.worker = worker
+                self._service_controller.addTask(task)
+                return {'task_id' : task.id}            
+        except exception.NotFound:
+            msg = "Image with identifier %s not found" % image_id
+            logger.debug(msg)
+            raise webob.exc.HTTPNotFound(msg)
+        except exception.NotAuthorized:
+            msg = _("Unauthorized image access")
+            logger.debug(msg)
+            raise webob.exc.HTTPForbidden(msg)        
+        return {'devices': list}
         
     def _validate_params(self,  params):
         pass

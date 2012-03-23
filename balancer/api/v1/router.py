@@ -39,7 +39,7 @@ class API(wsgi.Router):
 
         lb_resource = loadbalancers.create_resource(self.conf)
 
-        mapper.resource("loadbalancers", "loadbalancers", controller=lb_resource,
+        mapper.resource("loadbalancer", "loadbalancers", controller=lb_resource,
                         collection={'detail': 'GET'})
                         
         mapper.connect("/loadbalancers/", controller=lb_resource, action="index")
@@ -53,13 +53,15 @@ class API(wsgi.Router):
                        conditions=dict(method=["POST"]))
         device_resource = devices.create_resource(self.conf)
         
-        mapper.resource("devices", "devices", controller=device_resource,
+        mapper.resource("device", "devices", controller=device_resource,
                         collection={'detail': 'GET'})
         
         mapper.connect("/devices/", controller=device_resource, action="index")
         
         mapper.connect("/devices/{id}", controller=device_resource,
-                       action="device_data", conditions=dict(method=["GET"]))
+                       action="device_data")
+        mapper.connect("/devices/{id}/{info}", controller=device_resource,
+                       action="device_info")
                        
         mapper.connect("/devices/",
                        controller=device_resource,
