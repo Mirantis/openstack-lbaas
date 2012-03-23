@@ -43,9 +43,12 @@ class XmlSender:
         try:
             message = urllib2.urlopen(request, data)
             s = message.read()
-            print s
-            if s.find('XML_CMD_SUCCESS'):
-                return 'OK' 
+            
+            #this line enable the debug mode
+            #print s
+            
+            if (s.find('XML_CMD_SUCCESS') > 0):
+                return 'OK'
             else:
                 return 'ERROR'
         except:

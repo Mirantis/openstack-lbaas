@@ -41,7 +41,8 @@ class AceDriver(BaseDriver):
                 XMLstr = XMLstr + "ipv6-address='"
             XMLstr = XMLstr + rserver.IP + "'/>\r\n"
             
-        XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + "' min='" + str(rserver.minCon) + "'/>\r\n"
+        if (bool(rserver.maxCon) and bool(rserver.minCon)):
+            XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + "' min='" + str(rserver.minCon) + "'/>\r\n"
         
         if bool(rserver.rateConn):
             XMLstr = XMLstr + "  <rate-limit type='connection' value='" + str(rserver.rateConn) + "'/>\r\n"
