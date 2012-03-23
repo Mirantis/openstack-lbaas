@@ -105,7 +105,15 @@ class AceDriver(BaseDriver):
         if not bool(probe.name): 
             return 'PROBE NAME ERROR'
         type = probe.type.lower()
-
+        
+        # Rport need to add for SIP-UDP Probe
+        # sendData need to add for TCP Probe
+        
+        probes_with_send_data = ['echo-udp',  'echo-tcp',  'finger',  'tcp',  'udp']
+        probes_with_timeout = ['echo-tcp',  'finger',  'tcp',  'rtsp',  'http',  'https',  'imap',  'pop',  'sip-tcp',  'smtp',  'telnet']
+        probes_with_credentials = ['http',  'https',  'imap',  'pop',  'radius']
+        probes_with_regex = ['http',  'https',  'sip-tcp',  'sup-udp',  'tcp',  'udp']
+        
         if ((type != 'echo-tcp') and (type != 'echo-udp')):
             XMLstr = "<probe_" + type + " type='"  + type + "' name='" + probe.name + "'>\r\n"
         else:
@@ -150,29 +158,25 @@ class AceDriver(BaseDriver):
                 if bool(probe.domainName):
                     XMLstr = XMLstr + "  <domain domain-name='" + probe.domainName + "'/>\r\n"
             
-            if ((type == 'echo-udp') or (type == 'echo-tcp') or (type == 'finger')):
+            if (probes_with_send_data.count(type) > 0):
                 if bool(probe.sendData):
                     XMLstr = XMLstr + "  <send-data data='" + probe.sendData + "'/>\r\n"
 
-            if ((type == 'echo-tcp') or (type == 'finger') or (type == 'tcp')  or (type == 'rtsp')
-                or (type == 'http') or (type == 'https') or (type == 'imap') or (type == 'pop')
-                or (type == 'sip-tcp') or (type == 'smtp') or (type == 'tcp') or (type == 'telnet')):
-                    if bool(probe.openTimeout):
-                        XMLstr = XMLstr + "  <open timeout='" + str(probe.openTimeout) + "'/>"
-                    if bool(probe.tcpConnTerm):
-                        XMLstr = XMLstr + "  <connection_term term='forced'/>\r\n"
+            if (probes_with_timeout.count(type) > 0):
+                if bool(probe.openTimeout):
+                    XMLstr = XMLstr + "  <open timeout='" + str(probe.openTimeout) + "'/>"
+                if bool(probe.tcpConnTerm):
+                    XMLstr = XMLstr + "  <connection_term term='forced'/>\r\n"
 
-            if ((type == 'http') or (type == 'https') or (type == 'imap') 
-                or (type == 'pop') or (type == "radius")):
-                    if (bool(probe.userName) and bool(probe.password)):
-                        XMLstr = XMLstr + "  <credentials username='" + probe.userName + "' password='" + probe.password
-                        if (type == 'radius'):
-                            if bool(probe.userSecret):
-                                XMLstr = XMLstr + "' secret='" + probe.userSecret
-                        XMLstr = XMLstr + "'/>\r\n"
+            if (probes_with_credentials.count(type) > 0):
+                if (bool(probe.userName) and bool(probe.password)):
+                    XMLstr = XMLstr + "  <credentials username='" + probe.userName + "' password='" + probe.password
+                    if (type == 'radius'):
+                        if bool(probe.userSecret):
+                            XMLstr = XMLstr + "' secret='" + probe.userSecret
+                    XMLstr = XMLstr + "'/>\r\n"
 
-            if ((type == 'http') or (type == 'https') or (type == 'sip-tcp') 
-                or (type == 'sip-udp') or (type == 'tcp') or (type == 'udp')):
+            if (probes_with_regex.count(type) > 0):
                     if bool(probe.expectRegExp):
                         XMLstr = XMLstr + "  <expect_regex regex='" + probe.expectRegExp + "'"
                         if bool(probe.expectRegExpOffset):
@@ -229,10 +233,7 @@ class AceDriver(BaseDriver):
                     if bool(probe.scriptArgv):
                        XMLstr = XMLstr + "' script-arguments='" + probe.scriptArgv
                     XMLstr = XMLstr + "'/>\r\n"
-                    
-            # Need add tcp, telnet, udp, vm
             
-            # Rport need to add for SIP-UDP Probe
             if ((type == 'sip-udp') and bool(probe.Rport)):
                 XMLstr = XMLstr + "  <rport type='enable'/>\r\n"
                 
@@ -242,10 +243,6 @@ class AceDriver(BaseDriver):
                     if bool(probe.SNMPComm):
                         XMLstr = XMLstr + "  <community community-string='" + probe.SNMPComm + "'/>\r\n"
             
-            # sendData need to add for TCP Probe
-            if (((type == 'tcp') or (type == 'udp')) and bool(probe.sendData)):
-                XMLstr = XMLstr + "  <send-data data='" + probe.sendData + "'/>\r\n"
-        
         else:   # for type == vm
             if bool(probe.VMControllerName):
                 XMLstr = XMLstr + "  <vm-controller name='" + probe.VMControllerName + "'/>\r\n"
@@ -262,7 +259,6 @@ class AceDriver(BaseDriver):
                         XMLstr = XMLstr + " max='" + probe.maxMemBurstThresh + "'"
                     if bool(probe.minMemBurstThresh):
                         XMLstr = XMLstr + " min='" + probe.minMemBurstThresh + "'"
-
             
         s = XmlSender(context)
         return s.deployConfig(context, XMLstr)
