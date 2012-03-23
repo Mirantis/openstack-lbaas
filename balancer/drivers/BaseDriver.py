@@ -21,51 +21,56 @@ class BaseDriver(object):
 
     def createRServer(self,  context,  rserver):
         pass
-    
-    def createServerFarm(self,  context,  serverfarm):
-        pass
         
-    def addRServerToSF(self,  context,  serverfarm,  rserver):
+    def deleteRServer(self,  context,  rserver):
         pass
+    
+    def activateRServer(self,  context,  serverfarm,  rserver):
+        pass
+    
+    def suspendRServer(self,  context,  serverfarm,  rserver):
+        pass
+    
     
     def createProbe(self,  context,  probe):
         pass
     
-    def attachProbeToSF(self,  context,  serverfarm,  probe):
+    def deleteProbe(self,  context,  probe):
+        pass
+    
+    
+    def createServerFarm(self,  context,  serverfarm):
+        pass
+    
+    def deleteServerFarm(self,  context,  serverfarm):
+        pass
+    
+    def addRServerToSF(self,  context,  serverfarm,  rserver):
+        pass
+    
+    def deleteRServerFromSF(self, context,  serverfarm,  rserver):
+        pass
+    
+    def addProbeToSF(self,  context,  serverfarm,  probe):
         pass
     
     def deleteProbeFromSF(self,  context,  serverfarm,  probe):
         pass
     
-    def createVIP(self,  context,  vip):
-        pass
-        
-    def deleteRServerFromSF(self, context,  serverfarm,  rserver):
-        pass
-        
-    def deleteRServer(self,  context,  rserver):
-        pass
-        
-    def deleteServerFarm(self,  context,  serverfarm):
-        pass
-        
-    def deleteVIP(self,  context,  vip):
-        pass
-        
-    def deleteProbe(self,  context,  probe):
-        pass
-        
-    def activateRServer(self,  context,  serverfarm,  rserver):
-        pass
-        
-    def suspendRServer(self,  context,  serverfarm,  rserver):
-        pass
-        
+    
     def createStickiness(self,  context,  vip,  sticky):
         pass
-        
+    
     def deleteStickiness(self,  context,  vip,  sticky):
         pass
+    
+    
+    def createVIP(self,  context,  vip,  sfarm):
+        pass
+
+    def deleteVIP(self,  context,  vip):
+        pass
+    
 
 class BaseContext(object):
     def __init__(self):
