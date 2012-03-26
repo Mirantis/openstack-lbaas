@@ -268,7 +268,7 @@ class Writer(object):
     def writeLoadBalancer(self,  lb):
          logger.debug("Saving LoadBalancer instance in DB.")
          cursor = self._con.cursor()
-         command = "INSERT INTO loadbalancers (id, name, algorithm , status , created , updated ) VALUES(%d,'%s','%s','%s','%s','%s');"  % (lb.id,  lb.name,  lb.algorithm,  lb.status,  lb.created,  lb.updated)
+         command = "INSERT INTO loadbalancers (id, name, algorithm , status , created , updated ) VALUES('%s','%s','%s','%s','%s','%s');"  % (lb.id,  lb.name,  lb.algorithm,  lb.status,  lb.created,  lb.updated)
          msg = "Executing command: %s" % command
          logger.debug(msg)
          cursor.execute(command)
