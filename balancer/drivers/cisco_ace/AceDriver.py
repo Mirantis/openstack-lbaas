@@ -41,19 +41,19 @@ class AceDriver(BaseDriver):
         if bool(rserver.port): 
             XMLstr = XMLstr + "  <port value='" + rserver.port + "'/>\r\n"
             
-        if bool(rserver.IP):
+        if bool(rserver.address):
             XMLstr = XMLstr + "  <ip_address node='address' "
             if (rserver.ipType.lower() == 'ipv4'):
                 XMLstr = XMLstr + "ipv4-address='" 
             else:
                 XMLstr = XMLstr + "ipv6-address='"
-            XMLstr = XMLstr + rserver.IP + "'/>\r\n"
+            XMLstr = XMLstr + rserver.address + "'/>\r\n"
             
         if (bool(rserver.maxCon) and bool(rserver.minCon)):
             XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + "' min='" + str(rserver.minCon) + "'/>\r\n"
         
-        if bool(rserver.rateConn):
-            XMLstr = XMLstr + "  <rate-limit type='connection' value='" + str(rserver.rateConn) + "'/>\r\n"
+        if bool(rserver.rateConnection):
+            XMLstr = XMLstr + "  <rate-limit type='connection' value='" + str(rserver.rateConnection) + "'/>\r\n"
             
         if bool(rserver.rateBandwidth):
             XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + str(rserver.rateBandwidth) + "'/>\r\n"        
@@ -113,7 +113,8 @@ class AceDriver(BaseDriver):
         if not bool(probe.name): 
             return 'PROBE NAME ERROR'
         type = probe.type.lower()
-        
+        if type == "connect":
+            type = "tcp"
         # Rport need to add for SIP-UDP Probe
         # sendData need to add for TCP Probe
         
@@ -308,10 +309,10 @@ class AceDriver(BaseDriver):
         if bool(serverfarm.failAction):
             XMLstr = XMLstr + "<failaction failaction-type='" + serverfarm.failAction + "'/>\r\n"
         
-        if bool(serverfarm.predictor): #Some predictors are may include additional parameters !
+        if bool(serverfarm._predictor): #Some predictors are may include additional parameters !
             XMLstr = XMLstr + "<predictor predictor-method='" + serverfarm.predictor + "'/>\r\n"
         
-        for i in range(len(serverfarm.probes)):
+        for i in range(len(serverfarm._probes)):
             XMLstr = XMLstr + "<probe_sfarm probe-name='" + serverfarm.probes[i] + "'/>\r\n"
         
         if serverfarm.type.lower() == "host":
