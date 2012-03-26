@@ -156,8 +156,8 @@ class AceDriver(BaseDriver):
                 XMLstr = XMLstr + "  <port value='" + str(probe.port) + "'/>\r\n"
 
             if (type != 'scripted'):
-                if (bool(probe.destIPv4v6)):
-                    XMLstr = XMLstr + "  <ip_address address='" + probe.destIPv4v6 + "'"
+                if (bool(probe.destIP)):
+                    XMLstr = XMLstr + "  <ip_address address='" + probe.destIP + "'"
                     if ((type != 'rtsp') and (type != 'sip-tcp') and (type != 'sip-udp')):
                         if bool(probe.isRouted):
                             XMLstr = XMLstr + " routing-option='routed'"
