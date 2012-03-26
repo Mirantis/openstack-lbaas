@@ -275,14 +275,9 @@ class AceDriver(BaseDriver):
                     XMLstr = XMLstr + "/>\r\n"
             
         if ((type != 'echo-tcp') and (type != 'echo-udp')):
-            XMLstr = "</probe_" + type + " type='"  + type + "' name='" + probe.name + "'>\r\n"
+            XMLstr =XMLstr + "</probe_" + type+">\r\n"
         else:
-            XMLstr = "</probe_echo type='echo' conn-type='"
-            if (type == 'echo-tcp'):
-                XMLstr = XMLstr + "tcp' name='"
-            else:
-                XMLstr = XMLstr + "udp' name='"
-            XMLstr = XMLstr + probe.name + "'>"
+            XMLstr = XMLstr + "</probe_echo>"
             
         s = XmlSender(context)
         return s.deployConfig(context, XMLstr)
