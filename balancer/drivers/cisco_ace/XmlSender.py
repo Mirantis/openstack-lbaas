@@ -23,7 +23,7 @@ from balancer.drivers.cisco_ace.Context import Context
 
 class XmlSender:
     def __init__(self,  context):
-        self.url = "https://%s/bin/xml_agent" % (context.ip)
+        self.url = "https://%s:443/bin/xml_agent" % (context.ip)
 
     def getParam(self, name):
         return self._params.get(name,  None)
@@ -44,7 +44,7 @@ class XmlSender:
             s = message.read()
             
             #this line enable the debug mode
-            #print s
+            print s
             
             if (s.find('XML_CMD_SUCCESS') > 0):
                 return 'OK'
