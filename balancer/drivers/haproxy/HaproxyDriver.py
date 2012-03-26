@@ -20,9 +20,13 @@ import re
 import sys
 import os
 import shutil
+import logging
+
 
 from balancer.drivers.BaseDriver import BaseDriver
-from  balancer.drivers.haproxy.Context import Context
+#from balancer.drivers.haproxy.Context import Context
+
+logger = logging.getLogger(__name__)
 
 class HaproxyDriver(BaseDriver):
     def __init__(self):
@@ -61,7 +65,7 @@ class HaproxyFronted:
         self.bind_address = ""
         self.bind_port= ""
         self.default_backend = ""
-        self.mode = ""
+        self.mode = "http"
 
 class HaproxyBackend:
     def __init__(self):
@@ -111,7 +115,6 @@ class HaproxyConfigFile:
             if  not line.strip(): continue
             if line.find('listen' ) == 0 and  line.find(ListenBlockName) > 0:
                 block_start = True
-                logger.debug("Block starting = %s" % block_start)
                 continue
             elif line.find('listen' ) == -1 and block_start == True:
                 continue
@@ -187,41 +190,59 @@ class HaproxyConfigFile:
         self.haproxy_config_file.close()
         return ListenBlockName
     
-    def AddFronted(self,  FrontendName, VIPServerIP,  VIPServerPort ):
-        self.frontend = HaproxyFronted()
-        self.frontend.name = FrontendName
-        self.frontend.bind_address = VIPServerIP
-        self.frontend.bind_port = VIP
-        #frontend.
+    def AddFronted(self,  HaproxyFronted):
+        """
+            Add frontend section to haproxy config file
+        """
+        if HaproxyFronted.name =="":
+            logger.error("Empty fronted name")
+            return "FRONTEND NAME ERROR"
+        if HaproxyFronted.bind_address =="" or HaproxyFronted.bind_port == "":
+            logger.error("Empty  bind adrress or port")
+            return "FRONTEND ADDRESS OR PORT ERROR"
+        logger.debug("Adding frontend")
         self.haproxy_config_file = open (self.haproxy_config_file_path,  "r")
         new_config_file = []
         for line in  self.haproxy_config_file :
             if  not line.strip(): continue
             new_config_file.append(line.rstrip())
         self.haproxy_config_file.close()
-        new_config_file.append("frontend %s" % FrontendName )
-        new_config_file.append("\tbind %s:%s" % (VIPServerIP,  VIPServerPort))
-        new_config_file.append("\tmode http")
-        new_config_file.append("\toption httpclose")
+        new_config_file.append("frontend %s" % HaproxyFronted.name )
+        new_config_file.append("\tbind %s:%s" % (HaproxyFronted.bind_address,  HaproxyFronted.bind_port))
+        #new_config_file.append("\tdefault_backend %s" % HaproxyFronted.default_backend)
+        new_config_file.append("\tmode %s" % HaproxyFronted.mode)
+        self.haproxy_config_file  = open (self.haproxy_config_file_path,  "w")
         for out_line in new_config_file:
             self.haproxy_config_file.write("%s\n" % out_line)
         self.haproxy_config_file.close()
-        return FrontedName        
+        return  HaproxyFronted.name     
     
-    def  AddBackend(self, BackendName):
+    def AddBackend(self,  HaproxyBackend):
+        """
+            Add backend section to haproxy config file
+        """
+        if HaproxyBackend.name =="":
+            logger.error("Empty backend name")
+            return "BACKEND NAME ERROR"
+        if HaproxyFronted.bind_address =="" or HaproxyFronted.bind_port == "":
+            logger.error("Empty  bind adrress or port")
+            return "FRONTEND ADDRESS OR PORT ERROR"
+        logger.debug("Adding frontend")
         self.haproxy_config_file = open (self.haproxy_config_file_path,  "r")
         new_config_file = []
         for line in  self.haproxy_config_file :
             if  not line.strip(): continue
             new_config_file.append(line.rstrip())
         self.haproxy_config_file.close()
-        new_config_file.append("frontend %s" % BackendName )
-        new_config_file.append("\tbind %s:%s" % (VIPServerIP,  VIPServerPort))
-        new_config_file.append("\tbalance roundrobin")
+        new_config_file.append("frontend %s" % HaproxyFronted.name )
+        new_config_file.append("\tbind %s:%s" % (HaproxyFronted.bind_address,  HaproxyFronted.bind_port))
+        #new_config_file.append("\tdefault_backend %s" % HaproxyFronted.default_backend)
+        new_config_file.append("\tmode %s" % HaproxyFronted.mode)
+        self.haproxy_config_file  = open (self.haproxy_config_file_path,  "w")
         for out_line in new_config_file:
             self.haproxy_config_file.write("%s\n" % out_line)
         self.haproxy_config_file.close()
-        return BackendName       
+        return  HaproxyFronted.name     
         
     def AddRServerToBackend (self,  BackendName, RServerName, RServerIP,  RServerPort):
         
