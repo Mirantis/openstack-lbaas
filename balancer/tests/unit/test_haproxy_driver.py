@@ -2,6 +2,8 @@
 
 from balancer.drivers.haproxy.HaproxyDriver import  HaproxyConfigFile
 from balancer.drivers.haproxy.HaproxyDriver import  HaproxyFronted
+from balancer.drivers.haproxy.HaproxyDriver import  HaproxyBackend
+
 import unittest
 import os
 import shutil
@@ -16,7 +18,9 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.frontend.bind_port='8080'
         self.frontend.default_backend='server_farm'
         self.frontend.name = 'test_frontend'
-        
+        self.backend = HaproxyBackend()
+        self.backend.name = 'test_backend'
+        self.backend.balance = 'source'
         
     def test_FileName(self):
         filename = HaproxyConfigFile("/tmp/haproxy.cfg", './balancer/tests/unit/testfiles/haproxy.cfg')
@@ -28,6 +32,7 @@ class HAproxyDriverTestCase (unittest.TestCase):
     def test_Temp(self):
         test = HaproxyConfigFile("/tmp/haproxy.cfg", './balancer/tests/unit/testfiles/haproxy.cfg')
         test.AddFronted(self.frontend)
+        test.AddBackend(self.backend)
         self.assertTrue(True)
  
 

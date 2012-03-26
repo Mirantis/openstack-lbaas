@@ -107,102 +107,62 @@ class HaproxyConfigFile:
         
     def GetHAproxyConfigFileName(self):
         return self.haproxy_config_file_path
-    def DeleteListenBlock (self,  ListenBlockName):
-        self.haproxy_config_file = open (self.haproxy_config_file_path,  "r")
-        block_start=False
-        new_config_file = []
-        for line in  self.haproxy_config_file :
-            if  not line.strip(): continue
-            if line.find('listen' ) == 0 and  line.find(ListenBlockName) > 0:
-                block_start = True
-                continue
-            elif line.find('listen' ) == -1 and block_start == True:
-                continue
-            elif  line.find('listen' ) == 0 and block_start == True:
-                block_start = False
-            new_config_file.append(line.rstrip())
-        self.haproxy_config_file.close()
-        self.haproxy_config_file = open (self.haproxy_config_file_path,  "w")
-        for out_line in new_config_file:
-            self.haproxy_config_file.write("%s\n" % out_line)
-        self.haproxy_config_file.close()
-        return ListenBlockName
- 
-    def DeleteRServerFromListenBlockName (self, ListenBlockName, RServerName):
-        self.haproxy_config_file = open (self.haproxy_config_file_path,  "r")
-        block_start=False
-        new_config_file = []
-        for line in  self.haproxy_config_file :
-            if  not line.strip(): continue
-            if line.find('listen' ) == 0 and  line.find(ListenBlockName) > 0:
-                block_start = True
-                new_config_file.append(line.rstrip())
-                continue
-            elif line.find('server') >= 0 and block_start == True and line.find(RServerName) > 0:
-                continue
-            elif  line.find('listen' ) == 0 and block_start == True:
-                block_start = False
-            new_config_file.append(line.rstrip())
-            #print  line.rstrip()
-        self.haproxy_config_file.close()
-        self.haproxy_config_file  = open (self.haproxy_config_file_path,  "w")
-        for out_line in new_config_file:
-            self.haproxy_config_file.write("%s\n" % out_line)
-        self.haproxy_config_file.close()
-        return ListenBlockName
-    
-    def AddRServerToListenBlockName (self,  ListenBlockName, RServerName, RServerIP,  RServerPort):
-        self.haproxy_config_file = open (self.haproxy_config_file_path,  "r")
-        block_start=False
-        new_config_file = []
-        for line in  self.haproxy_config_file :
-            if  not line.strip(): continue
-            if line.find('listen' ) == 0 and  line.find(ListenBlockName) > 0:
-                block_start = True
-                new_config_file.append(line.rstrip())
-                continue
-            elif  line.find('listen' ) == 0 and block_start == True:
-                new_config_file.append("\tserver\t%s %s:%s check inter 2000 rise 2 fall 5" % (RServerName, RServerIP,  RServerPort) )
-                block_start = False
-            new_config_file.append(line.rstrip())
-            #print  line.rstrip()
-        self.haproxy_config_file.close()
-        self.haproxy_config_file  = open (self.haproxy_config_file_path,  "w")
-        for out_line in new_config_file:
-            self.haproxy_config_file.write("%s\n" % out_line)
-        self.haproxy_config_file.close()
-        return ListenBlockName       
-        
-    def AddListenBlock(self,  ListenBlockName,  VIPServerIP,  VIPServerPort):
-        self.haproxy_config_file = open (self.haproxy_config_file_path,  "r")
-        new_config_file = []
-        for line in  self.haproxy_config_file :
-            if  not line.strip(): continue
-            new_config_file.append(line.rstrip())
-        self.haproxy_config_file.close()
-        new_config_file.append("listen %s %s:%s" % (ListenBlockName, VIPServerIP,  VIPServerPort))
-        new_config_file.append("\tmode http")
-        new_config_file.append("\tbalance roundrobin")
-        new_config_file.append("\toption httpclose")
-        self.haproxy_config_file  = open (self.haproxy_config_file_path,  "w")
-        for out_line in new_config_file:
-            self.haproxy_config_file.write("%s\n" % out_line)
-        self.haproxy_config_file.close()
-        return ListenBlockName
-    
+ #============ New code =========================   
     def _ReadConfigFile(self):
         self.haproxy_config_file = open (self.haproxy_config_file_path,  "r")
-        config_file = []
+        config_file = {}
+        block_name = ''
+        current_block = []
+        logger.debug ('global')
         for line in  self.haproxy_config_file :
             if  not line.strip(): continue
-            config_file.append(line.rstrip())
+            tmp_line = line.strip()
+            if tmp_line.find('global' )  == 0:  
+                config_file [block_name] = current_block
+                block_name=line.rstrip()
+                current_block = []
+                continue
+            elif tmp_line.find('defaults' )  == 0:
+                config_file [block_name] = current_block
+                block_name=line.rstrip()
+                current_block = []
+                continue              
+            elif tmp_line.find('listen' )  == 0:
+                config_file [block_name] = current_block
+                block_name=line.rstrip()
+                current_block = []
+                continue
+            elif tmp_line.find('backend')  == 0:
+                config_file [block_name] = current_block
+                block_name=line.rstrip()
+                current_block = []
+                continue
+            elif tmp_line.find('frontend')  == 0:
+                config_file [block_name] = current_block
+                block_name=line.rstrip()
+                current_block = []
+                continue
+            else:
+                current_block.append(line.rstrip())
+        #Writing last block
+        config_file [block_name] = current_block       
         self.haproxy_config_file.close()
         return config_file
    
     def _WriteConfigFile(self, config_file):
         self.haproxy_config_file  = open (self.haproxy_config_file_path,  "w")
-        for out_line in config_file:
-            self.haproxy_config_file.write("%s\n" % out_line)
+        self.haproxy_config_file.write ("global\n")
+        for v  in config_file ['global'] :
+            self.haproxy_config_file.write ("%s\n" % v)
+        del  config_file ['global'] 
+        self.haproxy_config_file.write ("defaults\n")
+        for v in config_file['defaults'] :
+            self.haproxy_config_file.write ("%s\n" % v)
+        del  config_file ['defaults'] 
+        for k, v in sorted(config_file.iteritems()):
+            self.haproxy_config_file.write ("%s\n" % k)
+            for out_line in v:
+                self.haproxy_config_file.write ("%s\n" % out_line)
         self.haproxy_config_file.close()
    
         
@@ -218,10 +178,10 @@ class HaproxyConfigFile:
             logger.error("Empty  bind adrress or port")
             return "FRONTEND ADDRESS OR PORT ERROR"
         logger.debug("Adding frontend")
-        new_config_file.append("frontend %s" % HaproxyFronted.name )
-        new_config_file.append("\tbind %s:%s" % (HaproxyFronted.bind_address,  HaproxyFronted.bind_port))
-        #new_config_file.append("\tdefault_backend %s" % HaproxyFronted.default_backend)
-        new_config_file.append("\tmode %s" % HaproxyFronted.mode)
+        new_config_block = []
+        new_config_block.append("\tbind %s:%s" % (HaproxyFronted.bind_address,  HaproxyFronted.bind_port))
+        new_config_block.append("\tmode %s" % HaproxyFronted.mode)
+        new_config_file [ "frontend %s" % HaproxyFronted.name ] =  new_config_block 
         self._WriteConfigFile(new_config_file)
         return  HaproxyFronted.name  
     
@@ -229,55 +189,17 @@ class HaproxyConfigFile:
         """
             Add backend section to haproxy config file
         """
+        new_config_file = self._ReadConfigFile()
         if HaproxyBackend.name =="":
             logger.error("Empty backend name")
             return "BACKEND NAME ERROR"
-        if HaproxyFronted.bind_address =="" or HaproxyFronted.bind_port == "":
-            logger.error("Empty  bind adrress or port")
-            return "FRONTEND ADDRESS OR PORT ERROR"
-        logger.debug("Adding frontend")
-        self.haproxy_config_file = open (self.haproxy_config_file_path,  "r")
-        new_config_file = []
-        for line in  self.haproxy_config_file :
-            if  not line.strip(): continue
-            new_config_file.append(line.rstrip())
-        self.haproxy_config_file.close()
-        new_config_file.append("frontend %s" % HaproxyFronted.name )
-        new_config_file.append("\tbind %s:%s" % (HaproxyFronted.bind_address,  HaproxyFronted.bind_port))
-        #new_config_file.append("\tdefault_backend %s" % HaproxyFronted.default_backend)
-        new_config_file.append("\tmode %s" % HaproxyFronted.mode)
-        self.haproxy_config_file  = open (self.haproxy_config_file_path,  "w")
-        for out_line in new_config_file:
-            self.haproxy_config_file.write("%s\n" % out_line)
-        self.haproxy_config_file.close()
-        return  HaproxyFronted.name     
-        
-    def AddRServerToBackend (self,  BackendName, RServerName, RServerIP,  RServerPort):
-        
-        self.haproxy_config_file = open (self.haproxy_config_file_path,  "r")
-        block_start=False
-        new_config_file = []
-        for line in  self.haproxy_config_file :
-            if  not line.strip(): continue
-            if line.find('backend' ) == 0 and  line.find(ListenBlockName) > 0:
-                block_start = True
-                new_config_file.append(line.rstrip())
-                continue
-            elif  line.find('listen' ) == 0 and block_start == True:
-                new_config_file.append("\tserver\t%s %s:%s check inter 2000 rise 2 fall 5" % (RServerName, RServerIP,  RServerPort) )
-                block_start = False
-            new_config_file.append(line.rstrip())
-        self.haproxy_config_file.close()
-        self.haproxy_config_file  = open (self.haproxy_config_file_path,  "w")
-        for out_line in new_config_file:
-            self.haproxy_config_file.write("%s\n" % out_line)
-        self.haproxy_config_file.close()
-        return ListenBlockName  
+        logger.debug("Adding backend")
+        new_config_block = []
+        new_config_block.append("\tbalance %s" % HaproxyBackend.balance )
+        new_config_file [ "backend %s" % HaproxyBackend.name ] =  new_config_block
+        self._WriteConfigFile(new_config_file)
+        return  HaproxyBackend.name     
         
 if __name__ == '__main__':
-    config = HaproxyConfigFile('/tmp/haproxy.cfg', '../../tests/unit/testfiles/haproxy.cfg')
-    config.DeleteListenBlock("appli2-insert")
+    pass
 
-    #config.DeleteRServer("appli1-rewrite", "app1_2" )
-    #config.AddRServer("appli1-rewrite", "new_server", "1.1.1.1", "80"  )
-    #config.AddListenBlock("new_block", "12.12.12.12", "80" )
