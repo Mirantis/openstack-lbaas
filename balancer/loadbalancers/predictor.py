@@ -54,7 +54,7 @@ class HashCookie(BasePredictor):
     def __init__(self):
         BasePredictor.__init__(self)
         self.cookieName = ""
-        slef.type = "HashCookie"
+        self.type = "HashCookie"
 
 class HashHeader(BasePredictor):
     def __init__(self):
