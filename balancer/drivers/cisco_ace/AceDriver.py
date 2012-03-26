@@ -16,21 +16,28 @@
 #    under the License.
 
 import md5
+import logging
 
 from balancer.drivers.BaseDriver import BaseDriver
 from balancer.drivers.cisco_ace.Context import Context
 from balancer.drivers.cisco_ace.XmlSender import XmlSender
+
+
+logger = logging.getLogger(__name__)
 
 class AceDriver(BaseDriver):
     def __init__(self):
         pass
     
     def getContext (self,  dev):
+        logger.debug("Creating conext with params: IP %s, Port: %s" %(dev.ip,  dev.port))
         con = Context(dev.ip, dev.port, dev.user,  dev.password)
         return con
     
     def createRServer(self, context, rserver):
+        logger.debug("Creating Rserver")
         if not bool(rserver.name): 
+            logger.error("Can't find rserver name")
             return 'RSERVER NAME ERROR'
 
         XMLstr = "<rserver type='" + rserver.type.lower() + "' name='" + rserver.name + "'>\r\n"

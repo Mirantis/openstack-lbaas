@@ -113,7 +113,8 @@ class Balancer():
             
     def deploy(self,  driver,  context):
         #Step 1. Deploy server farm
-        driver.createServerFarm(context,  self.sf)
+        if  driver.createServerFarm(context,  self.sf) != "OK":
+            raise exception.OpenstackException
         
         #Step 2. Create RServers and attach them to SF
         
