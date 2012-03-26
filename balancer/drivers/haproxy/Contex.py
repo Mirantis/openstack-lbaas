@@ -18,8 +18,9 @@
 from BaseDriver import BaseContext
 
 class Context(BaseContext):
-    def __init__(self, ip, port, login, password):
+    def __init__(self, ip, port, login, password, tmp_config):
         self.ip = ip
         self.port = port
         self.login = login
         self.password = password
+        self.tmp_config = tmp_config
