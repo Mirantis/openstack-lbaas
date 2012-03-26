@@ -17,6 +17,7 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.frontend.default_backend='server_farm'
         self.frontend.name = 'test_frontend'
         
+        
     def test_FileName(self):
         filename = HaproxyConfigFile("/tmp/haproxy.cfg", './balancer/tests/unit/testfiles/haproxy.cfg')
         self.assertEqual(filename.GetHAproxyConfigFileName(),  "/tmp/haproxy.cfg")

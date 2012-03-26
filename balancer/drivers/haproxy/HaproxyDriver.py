@@ -190,10 +190,27 @@ class HaproxyConfigFile:
         self.haproxy_config_file.close()
         return ListenBlockName
     
+    def _ReadConfigFile(self):
+        self.haproxy_config_file = open (self.haproxy_config_file_path,  "r")
+        config_file = []
+        for line in  self.haproxy_config_file :
+            if  not line.strip(): continue
+            config_file.append(line.rstrip())
+        self.haproxy_config_file.close()
+        return config_file
+   
+    def _WriteConfigFile(self, config_file):
+        self.haproxy_config_file  = open (self.haproxy_config_file_path,  "w")
+        for out_line in config_file:
+            self.haproxy_config_file.write("%s\n" % out_line)
+        self.haproxy_config_file.close()
+   
+        
     def AddFronted(self,  HaproxyFronted):
         """
             Add frontend section to haproxy config file
         """
+        new_config_file = self._ReadConfigFile()
         if HaproxyFronted.name =="":
             logger.error("Empty fronted name")
             return "FRONTEND NAME ERROR"
@@ -201,21 +218,12 @@ class HaproxyConfigFile:
             logger.error("Empty  bind adrress or port")
             return "FRONTEND ADDRESS OR PORT ERROR"
         logger.debug("Adding frontend")
-        self.haproxy_config_file = open (self.haproxy_config_file_path,  "r")
-        new_config_file = []
-        for line in  self.haproxy_config_file :
-            if  not line.strip(): continue
-            new_config_file.append(line.rstrip())
-        self.haproxy_config_file.close()
         new_config_file.append("frontend %s" % HaproxyFronted.name )
         new_config_file.append("\tbind %s:%s" % (HaproxyFronted.bind_address,  HaproxyFronted.bind_port))
         #new_config_file.append("\tdefault_backend %s" % HaproxyFronted.default_backend)
         new_config_file.append("\tmode %s" % HaproxyFronted.mode)
-        self.haproxy_config_file  = open (self.haproxy_config_file_path,  "w")
-        for out_line in new_config_file:
-            self.haproxy_config_file.write("%s\n" % out_line)
-        self.haproxy_config_file.close()
-        return  HaproxyFronted.name     
+        self._WriteConfigFile(new_config_file)
+        return  HaproxyFronted.name  
     
     def AddBackend(self,  HaproxyBackend):
         """
