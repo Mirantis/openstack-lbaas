@@ -46,9 +46,9 @@ class AceDriver(BaseDriver):
             XMLstr = XMLstr + "  <description descr-string='" + rserver.description + "'/>\r\n"
 
         if bool(rserver.address):
-            XMLstr = XMLstr + "  <ip_address mode='address' "
+            XMLstr = XMLstr + "  <ip_address  "
             if (rserver.ipType.lower() == 'ipv4'):
-                XMLstr = XMLstr + "ipv4-address='" 
+                XMLstr = XMLstr + "address='" 
             else:
                 XMLstr = XMLstr + "ipv6-address='"
             XMLstr = XMLstr + rserver.address + "'/>\r\n"
