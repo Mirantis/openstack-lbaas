@@ -24,6 +24,9 @@ import Queue
 from balancer.core.Worker import *
 from balancer.core.LBCommands import *
 from balancer.storage.storage import *
+from balancer.core.scheduller import Scheduller
+from balancer.devices.DeviceMap import DeviceMap
+from balancer.loadbalancers.vserver import Balancer
 
 class LBGetIndexWorker(SyncronousWorker):
     def __init__(self,  task):
@@ -39,7 +42,7 @@ class LBGetIndexWorker(SyncronousWorker):
       return list
        
 
-class CreateLBWorker(ASyncronousWorker):
+class CreateLBWorker(SyncronousWorker):
         def __init__(self,  task):
             super(CreateLBWorker, self).__init__(task)
             self._command_queue = Queue.LifoQueue()
@@ -47,48 +50,24 @@ class CreateLBWorker(ASyncronousWorker):
         def run(self):
             self._task.status = STATUS_PROGRESS
             params = self._task.parameters
-            driver = params['driver']
-            device = params['device']
+            sched = Scheduller()
+            device = sched.getDevice()
+            devmap = DeviceMap()
+            driver = devmap.getDriver(device)
             context = driver.getContext(device)
-
-            try:
-                nodes = params['nodes']
-                sf = params['serverfarm']
-                
-                
-                createSF = CreateSFCommand(driver)
-                createSF.execute(context, sf)
-                self._command_queue.put(createSF)
-                
-                for node in nodes:
-                    createRS = CreateRServerCommand(driver)
-                    createRS.execute(context, sf, node)
-                    self._command_queue.put(createRS)
-                
-                probes = params['probes']
-                
-                for probe in probes:
-                    createProbe = CreateProbeCommand(driver)
-                    createProbe.execute(context, probe)
-                    self._command_queue.put(createProbe)
-                    
-                    attachProbe = AttachProbeCommand(driver)
-                    attachProbe.execute(context, sf,  probe)
-                    self._command_queue.put(attachProbe)
-                
-                vserver = params['vserver']
-                
-                createVS = CreateVServerCommand(driver)
-                createVS.execute(context, sf, vip)
-                self._command_queue.put(createVS)
-            except exception:
-                while not self._command_queue.empty():
-                    command = self._command_queue.get()
-                    command.undo(context, params)
-                self._task.status = STATUS_ERROR
-                #TODO Do rollback. We need command pattern here
+            bal_deploy = Balancer()
+            
+            #Step 1. Parse parameters came from request
+            bal_deploy.parseParams(params)
+            
+            #Step 2. Save config in DB
+            bal_deploy.savetoDB()
+            
+            #Step 3. Deploy config to device
+            bal_deploy.deploy()
             
             self._task.status = STATUS_DONE
+            return "OK"
             
             
 

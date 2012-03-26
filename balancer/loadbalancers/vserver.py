@@ -46,7 +46,10 @@ class Balancer():
         
     def parseParams(self, params):
         
-        lb = loadbalancer.LoadBalancer()
+        if (params.has_key('lb')):
+            lb = params['lb']
+        else:
+            lb = loadbalancer.LoadBalancer()
         lb.loadFromDict(params)
         self.lb = lb
         nodes = params.get('nodes',  None)
@@ -107,6 +110,26 @@ class Balancer():
             
         for vip in self.vips:
             wr.writeVirtualServer(vip)
+            
+    def deploy(self,  driver,  context):
+        #Step 1. Deploy server farm
+        driver.createServerFarm(context,  self.sf)
+        
+        #Step 2. Create RServers and attach them to SF
+        
+        for rs in self.rs:
+            driver.createRServer(context,  rs)
+            driver.addRServerToSF(context,  self.sf,  rs)
+            
+        #Step 3. Create probes and attache them to SF
+        for pr in self.probes:
+            driver.createProbe(context,  pr)
+            driver.addProbeToSF(context,  self.sf,  pr)
+        #Step 4. Deploy vip
+        for vip in self.vips:
+            driver.createVIP(context,  vip,  self.sf)   
+        
+        
             
         
         

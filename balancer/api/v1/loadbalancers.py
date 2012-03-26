@@ -76,16 +76,18 @@ class Controller(object):
             #here we need to decide which device should be used
             params = args['body']
             # We need to create LB object and return its id
-            params['lb'] = balancer.loadbalancers.loadbalancer.LoadBalancer()
+            lb = balancer.loadbalancers.loadbalancer.LoadBalancer()
+            params['lb'] = lb
+            task.parameters = params
             worker = mapper.getWorker(task, "create" )
             if worker.type ==  SYNCHRONOUS_WORKER:
                 result = worker.run()
-                return {'loadbalancers': result}
+                return {'loadbalancers': {"id": lb.id}}
             
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'loadbalancers' : task.id}
+                return {'loadbalancers' : {'id':lb.id}}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
