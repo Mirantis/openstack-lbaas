@@ -19,12 +19,12 @@
 import urllib2
 import base64
 import re 
+import logging
 from balancer.drivers.cisco_ace.Context import Context
 
 class XmlSender:
     def __init__(self,  context):
         self.url = "https://%s:10443/bin/xml_agent" % (context.ip)
-        print self.url
 
     def getParam(self, name):
         return self._params.get(name,  None)
@@ -38,14 +38,14 @@ class XmlSender:
         
         request.add_header("Authorization", authheader)
         
-        data = """xml_cmd=<request_xml>\r\n%s\r\n</request_xml><request_row>copy running-config startup-config</request_row>""" % command
- 
+        data = """xml_cmd=<request_xml>\r\n%s\r\n</request_xml>""" % command
+        logger.debug("send data to ACE:\n" + data)
         try:
             message = urllib2.urlopen(request, data)
             s = message.read()
             
             #this line enable the debug mode
-            print s
+            logger.debug("data from ACE:\n" + s)
             
             if (s.find('XML_CMD_SUCCESS') > 0):
                 return 'OK'
