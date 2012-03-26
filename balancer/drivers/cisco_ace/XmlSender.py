@@ -22,8 +22,6 @@ import re
 import logging
 from balancer.drivers.cisco_ace.Context import Context
 
-logger = logging.getLogger(__name__)
-
 class XmlSender:
     def __init__(self,  context):
         self.url = "https://%s:10443/bin/xml_agent" % (context.ip)
@@ -40,7 +38,7 @@ class XmlSender:
         
         request.add_header("Authorization", authheader)
         
-        data = """xml_cmd="<request_xml>\r\n%s\r\n</request_xml>" """ % command
+        data = """xml_cmd=<request_xml>\r\n%s\r\n</request_xml>""" % command
         logger.debug("send data to ACE:\n" + data)
         try:
             message = urllib2.urlopen(request, data)
