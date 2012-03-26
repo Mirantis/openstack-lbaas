@@ -289,7 +289,14 @@ class Writer(object):
         logger.debug("Saving Probe instance in DB.")
         cursor = self._con.cursor()
         dict = prb.convertToDict()
-        command1 = "INSERT INTO probes ("
+        command = self.generateCommand(" INSERT INTO probes (", dict)
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()            
+
+    def generateCommand(self, start, dict):
+        command1 =start
         command2 = ""
         i=0
         for key in dict.keys():
@@ -301,16 +308,13 @@ class Writer(object):
                 command2 +="'"+str(dict[key])+"'" + ");"
             i+=1
         command = command1+command2
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        cursor.execute(command)
-        self._con.commit()            
+        return command
          
     def writeRServer(self,  rs):
          logger.debug("Saving RServer instance in DB.")
          cursor = self._con.cursor()
-         command = "INSERT INTO rservers (id, sf_id, name, type,webHostRedir,ipType,address,port,state,opstate, description, failOnAll, minCon,  maxCon, weight,  probes, rateBandwidth,   rateConnection,    backupRS,  backupRSport,  created,  updated)  VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s', '%s', '%s','%s','%s','%s','%s','%s','%s','%s');"  % (rs.id,  
-                                rs.sf_id,  rs.name,  rs.type,  rs.webHostRedir,  rs.ipType, rs.address, rs.port,  rs.state,  rs.opstate, rs.description, rs.failOnAll, rs.minCon, rs.maxCon,  rs.weight,  rs.probes, rs.rateBandwidth,  rs.rateConnection,  rs.backupRS,  rs.backupRSport,  rs.created,  rs.updated )
+         dict = rs.convertToDict()
+         command =self.generateCommand(" INSERT INTO rservers (", dict)
          msg = "Executing command: %s" % command
          logger.debug(msg)
          cursor.execute(command)
@@ -320,18 +324,7 @@ class Writer(object):
         logger.debug("Saving Predictor instance in DB.")
         cursor = self._con.cursor()
         dict = prd.convertToDict()
-        command1 = "INSERT INTO predictors ("
-        command2 = ""
-        i=0
-        for key in dict.keys():
-            if i < len(dict)-1:
-                command1 += key +','
-                command2 +="'"+str(dict[key])+"'" + ","
-            else:
-                command1 += key + ") VALUES("
-                command2 +="'"+str(dict[key])+"'" + ");"
-            i+=1
-        command = command1+command2
+        command = self.generateCommand("INSERT INTO predictors (", dict)
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
@@ -341,18 +334,7 @@ class Writer(object):
         logger.debug("Saving ServerFarm instance in DB.")
         cursor = self._con.cursor()
         dict = sf.convertToDict()
-        command1 = "INSERT INTO serverfarms ("
-        command2 = ""
-        i=0
-        for key in dict.keys():
-            if i < len(dict)-1:
-                command1 += key +','
-                command2 +="'"+str(dict[key])+"'" + ","
-            else:
-                command1 += key + ") VALUES("
-                command2 +="'"+str(dict[key])+"'" + ");"
-            i+=1
-        command = command1+command2
+        command = self.generateCommand("INSERT INTO serverfarms (", dict)
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
@@ -362,18 +344,7 @@ class Writer(object):
         logger.debug("Saving VirtualServer instance in DB.")
         cursor = self._con.cursor()
         dict = vs.convertToDict()
-        command1 = "INSERT INTO vips ("
-        command2 = ""
-        i=0
-        for key in dict.keys():
-            if i < len(dict)-1:
-                command1 += key +','
-                command2 +="'"+str(dict[key]) +"'"+ ","
-            else:
-                command1 += key + ") VALUES("
-                command2 +="'"+str(dict[key])+"'" + ");"
-            i+=1
-        command = command1+command2
+        command = self.generateCommand("INSERT INTO vips (", dict)
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
@@ -383,18 +354,7 @@ class Writer(object):
         logger.debug("Saving VLAN instance in DB.")
         cursor = self._con.cursor()
         dict = vlan.convertToDict()
-        command1 = "INSERT INTO vlans ("
-        command2 = ""
-        i=0
-        for key in dict.keys():
-            if i < len(dict)-1:
-                command1 += key +','
-                command2 +=str(dict[key]) + ","
-            else:
-                command1 += key + ") VALUES("
-                command2 +=str(dict[key]) + ");"
-            i+=1
-        command = command1+command2
+        command = self.generateCommand("INSERT INTO vlans (", dict)
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)

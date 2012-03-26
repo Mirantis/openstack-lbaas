@@ -47,4 +47,5 @@ class RealServer(Serializeable,  UniqueObject):
         self.created = None
         self.updated = None
         self.status = None
+        self.cookieStr = None
         self.condition = "ENABLED"
