@@ -34,33 +34,39 @@ class HashAddrPredictor(BasePredictor):
         self.maskType = None
         self.ipNetmask = ""
         self.ipv6Prefix = ""
+        self.type = "HashAddrPredictor"
 
 class HashURL(BasePredictor):
     def __init__(self):
         BasePredictor.__init__(self)
         self.beginPattern = ""
         self.endPattern = ""
+        self.type = "HashURL"
 
 class HashContent(HashURL):
     def __init__(self):
         HashURL.__init__(self)
         self.length = ""
         self.offsetBytes = ""
+        self.type = "HashContent"
 
 class HashCookie(BasePredictor):
     def __init__(self):
         BasePredictor.__init__(self)
         self.cookieName = ""
+        slef.type = "HashCookie"
 
 class HashHeader(BasePredictor):
     def __init__(self):
         BasePredictor.__init__(self)
         self.customHeader = ""
         self.definedHeader = None
+        self.type = "HashHeader"
 
 class HashLayer4(HashContent):
     def __init__(self):
         HashContent.__init__(self)
+        self.type = "HashLayer4"
     pass
 
 class LeastBandwidth(BasePredictor):
@@ -68,11 +74,13 @@ class LeastBandwidth(BasePredictor):
         BasePredictor.__init__(self)
         self.accessTime = None
         self.samples = None
+        self.type = "LeastBandwidth"
 
 class LeastConn(BasePredictor):
     def __init__(self):
         BasePredictor.__init__(self)
         self.slowStartDur = None
+        self.type = "LeastConn"
 
 class LeastLoaded(BasePredictor):
     def __init__(self):
@@ -80,6 +88,7 @@ class LeastLoaded(BasePredictor):
         self.snmpProbe = ""
         self.autoAdjust = None
         self.weightConn = None
+        self.type = "LeastLoaded"
 
 class Response(BasePredictor):
     def __init__(self):
@@ -87,8 +96,10 @@ class Response(BasePredictor):
         self.responseType = ""
         self.samples = ""
         self.weightConn = None
+        self.type = "Response"
 
 class RoundRobin(BasePredictor):
     def __init__(self):
         BasePredictor.__init__(self)
+        self.type = "RoundRobin"
     pass
