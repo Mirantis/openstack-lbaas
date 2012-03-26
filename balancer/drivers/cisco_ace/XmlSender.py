@@ -24,8 +24,8 @@ from balancer.drivers.cisco_ace.Context import Context
 class XmlSender:
     def __init__(self,  context):
         self.url = "https://%s:10443/bin/xml_agent" % (context.ip)
+        print self.url
 
-    print self.url
     def getParam(self, name):
         return self._params.get(name,  None)
     
