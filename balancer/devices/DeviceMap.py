@@ -23,9 +23,9 @@ class DeviceMap(object):
         self._map = {}
     
     def getDriver(self,  lbdevice):
-        if lbdevice.Type  == "ACE":
+        if lbdevice.type  == "ACE":
             return AceDriver()
-        if lbdevice.Type == "HAPROXY":
+        if lbdevice.type == "HAPROXY":
             return None
         return None
     
