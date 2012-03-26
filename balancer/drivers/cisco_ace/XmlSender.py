@@ -22,6 +22,8 @@ import re
 import logging
 from balancer.drivers.cisco_ace.Context import Context
 
+logger = logging.getLogger(__name__)
+
 class XmlSender:
     def __init__(self,  context):
         self.url = "https://%s:10443/bin/xml_agent" % (context.ip)
