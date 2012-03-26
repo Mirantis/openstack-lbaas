@@ -1,0 +1,15 @@
+{
+ "name": "ACEDEV001",
+ "type": "ACE",
+ "version": "A422",
+ "supports_ipv6": 1,
+ "requires_vip_ip": 1,
+ "has_acl": 1,
+ "supports_vlan": 1,
+ "ip": "10.10.10.10",
+ "port": "222",
+ "user": "admin",
+ "password": "cisco123",
+ "vip_vlan": "200"
+ 
+}
