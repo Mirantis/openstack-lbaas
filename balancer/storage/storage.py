@@ -309,7 +309,7 @@ class Writer(object):
     def writeRServer(self,  rs):
          logger.debug("Saving RServer instance in DB.")
          cursor = self._con.cursor()
-         command = "INSERT INTO rservers (id, sf_id, name, type,webHostRedir,ipType,address,port,state,opstate, description, failOnAll, minCon,  maxCon, weight,  probes, rateBandwidth,   rateConnection,    backupRS,  backupRSport,  created,  updated) ) VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s', '%s', '%s','%s','%s','%s','%s','%s','%s','%s');"  % (rs.id,  
+         command = "INSERT INTO rservers (id, sf_id, name, type,webHostRedir,ipType,address,port,state,opstate, description, failOnAll, minCon,  maxCon, weight,  probes, rateBandwidth,   rateConnection,    backupRS,  backupRSport,  created,  updated)  VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s', '%s', '%s','%s','%s','%s','%s','%s','%s','%s');"  % (rs.id,  
                                 rs.sf_id,  rs.name,  rs.type,  rs.webHostRedir,  rs.ipType, rs.address, rs.port,  rs.state,  rs.opstate, rs.description, rs.failOnAll, rs.minCon, rs.maxCon,  rs.weight,  rs.probes, rs.rateBandwidth,  rs.rateConnection,  rs.backupRS,  rs.backupRSport,  rs.created,  rs.updated )
          msg = "Executing command: %s" % command
          logger.debug(msg)
