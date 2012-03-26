@@ -44,10 +44,7 @@ class AceDriver(BaseDriver):
         
         if bool(rserver.description): 
             XMLstr = XMLstr + "  <description descr-string='" + rserver.description + "'/>\r\n"
-            
-        if bool(rserver.port): 
-            XMLstr = XMLstr + "  <port value='" + rserver.port + "'/>\r\n"
-            
+
         if bool(rserver.address):
             XMLstr = XMLstr + "  <ip_address node='address' "
             if (rserver.ipType.lower() == 'ipv4'):
