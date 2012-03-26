@@ -46,7 +46,7 @@ class AceDriver(BaseDriver):
             XMLstr = XMLstr + "  <description descr-string='" + rserver.description + "'/>\r\n"
 
         if bool(rserver.address):
-            XMLstr = XMLstr + "  <ip_address node='address' "
+            XMLstr = XMLstr + "  <ip_address mode='address' "
             if (rserver.ipType.lower() == 'ipv4'):
                 XMLstr = XMLstr + "ipv4-address='" 
             else:
@@ -56,11 +56,11 @@ class AceDriver(BaseDriver):
         if (bool(rserver.maxCon) and bool(rserver.minCon)):
             XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + "' min='" + str(rserver.minCon) + "'/>\r\n"
         
-        if bool(rserver.rateConnection):
-            XMLstr = XMLstr + "  <rate-limit type='connection' value='" + str(rserver.rateConnection) + "'/>\r\n"
+        #if bool(rserver.rateConnection):
+        #    XMLstr = XMLstr + "  <rate-limit type='connection' value='" + str(rserver.rateConnection) + "'/>\r\n"
             
-        if bool(rserver.rateBandwidth):
-            XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + str(rserver.rateBandwidth) + "'/>\r\n"        
+        #if bool(rserver.rateBandwidth):
+        #    XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + str(rserver.rateBandwidth) + "'/>\r\n"        
 
         if bool(rserver.failOnAll):
             XMLstr = XMLstr + "  <fail-on-all/>\r\n"
