@@ -444,7 +444,7 @@ class AceDriver(BaseDriver):
     
     
     def createVIP(self,  context, vip,  sfarm): 
-        if not bool(vip.name) or not bool(vip.name) or not bool(vip.address) or not bool(vip.serverFarm):
+        if not bool(vip.name) or not bool(vip.name) or not bool(vip.address) :
             return "ERROR"
         
         sn = "2"
