@@ -64,7 +64,7 @@ class CreateLBWorker(SyncronousWorker):
             bal_deploy.savetoDB()
             
             #Step 3. Deploy config to device
-            bal_deploy.deploy()
+            bal_deploy.deploy(driver, context)
             
             self._task.status = STATUS_DONE
             return "OK"
