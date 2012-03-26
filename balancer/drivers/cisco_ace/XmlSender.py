@@ -38,14 +38,13 @@ class XmlSender:
         request.add_header("Authorization", authheader)
         
         data = """xml_cmd=<request_xml>\r\n%s\r\n</request_xml><request_row>copy running-config startup-config</request_row>""" % command
-        data = """xml_cmd=<request_row>show running-config policy-map int-c8ebb17bc81f62400a2af08f5e50c4bf</request_row>"""
-        
+ 
         try:
             message = urllib2.urlopen(request, data)
             s = message.read()
             
             #this line enable the debug mode
-            print s
+            #print s
             
             if (s.find('XML_CMD_SUCCESS') > 0):
                 return 'OK'
