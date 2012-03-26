@@ -193,7 +193,8 @@ class TCPprobe(Probe):
         self.tcpConnTerm = None
         self.openTimeout = 1
         self.expectRegExp = ""
-        self.expectRegExpOffset = ""      
+        self.expectRegExpOffset = ""
+        self.sendData = None
 
 class TELNETprobe(SMTPprobe):
     def __init__(self):
