@@ -25,6 +25,9 @@ class AceDriver(BaseDriver):
     def __init__(self):
         pass
     
+    def getContext (self,  dev):
+        con = Context(dev.ip, dev.port, dev.user,  dev.password)
+        return con
     
     def createRServer(self, context, rserver):
         if not bool(rserver.name): 
@@ -435,7 +438,7 @@ class AceDriver(BaseDriver):
         pass
     
     
-    def createVIP(self,  context, vip): 
+    def createVIP(self,  context, vip,  sfarm): 
         if not bool(vip.name) or not bool(vip.name) or not bool(vip.ip) or not bool(vip.serverFarm):
             return "ERROR"
         
@@ -451,11 +454,13 @@ class AceDriver(BaseDriver):
             m = md5.new(s).hexdigest()
             pmap=pmap+m
         
+        tmp=""
+        res = XmlSender(context)
         #! Before create we must perform a check for the presentce  access-list vip-acl remark... and its participation in vlan.
         #<access-list id='vip-acl' config-type='remark' comment='Created to permit IP traffic to VIP.'/>
         
         # 1) Add a access-list
-        XMLstr="<access-list id='vip-acl' line='"+vip.id+"' config-type='extended' perm-value='permit' protocol-name='ip' src-type='any' host_dest-addr='"+vip.ip+"'/>\r\n"
+        XMLstr="<access-list id='vip-acl' config-type='extended' perm-value='permit' protocol-name='ip' src-type='any' host_dest-addr='"+vip.ip+"'/>\r\n"
         
         #2) Add a policy-map
         if vip.appProto.lower() == "other" or vip.appProto.lower() == "http":
@@ -465,7 +470,7 @@ class AceDriver(BaseDriver):
         
         XMLstr=XMLstr+"<policy-map_lb type='loadbalance"+vip.appProto+"' match-type='first-match' pmap-name='"+vip.name+"-l7slb'>\r\n"
         XMLstr=XMLstr+"<class_pmap_lb match-cmap-default='class-default'>\r\n"
-        XMLstr=XMLstr+"<serverfarm_pmap sfarm-name='"+vip.serverFarm+"'"
+        XMLstr=XMLstr+"<serverfarm_pmap sfarm-name='"+sfarm.name+"'"
         if bool(vip.backupServerFarm):
             XMLstr=XMLstr+" backup-name='"+vip.backupServerFarm+"'"
         XMLstr=XMLstr+"/>\r\n"
@@ -481,7 +486,7 @@ class AceDriver(BaseDriver):
         XMLstr=XMLstr+"/>\r\n"
         XMLstr=XMLstr+"</class-map>\r\n"
         
-        #4)Add a policy policy-map multi-match
+        #4)Add a policy-map (multimatch) with class-map
         XMLstr=XMLstr+"<policy-map_multimatch match-type='multi-match' pmap-name='"+pmap+"'>\r\n"
         XMLstr=XMLstr+"<class cmap-name='"+vip.name+"'>\r\n"
         if bool(vip.status):
@@ -490,20 +495,84 @@ class AceDriver(BaseDriver):
         XMLstr=XMLstr+"</class>\r\n"
         XMLstr=XMLstr+"</policy-map_multimatch>\r\n"
         
-        #5)Add policy-map (multimatch) for necessary vlans
+        tmp = tmp+res.deployConfig(context, XMLstr)
+        
+        #5)Add service-policy for necessary vlans
         if bool(vip.allVLANs):
-            XMLstr=XMLstr+"<service-policy type='input' name='"+pmap+"'/>"
+            XMLstr="<service-policy type='input' name='"+pmap+"'/>"
         else:
+            XMLstr=""
             for i in vip.VLAN:
                 XMLstr=XMLstr+"<interface type='vlan' number='"+str(i)+"'>\r\n"
-                XMLstr=XMLstr+"<access-group access-type='input' name='vip-acl'/>\r\n"
                 XMLstr=XMLstr+"<service-policy type='input' name='"+pmap+"'/>\r\n"
                 XMLstr=XMLstr+"</interface>"
         
-        res = XmlSender(context)
-        return res.deployConfig(context, XMLstr)
-        #return XMLstr
+        tmp = tmp+res.deployConfig(context, XMLstr)
+        
+        #6)Add vip-acl to each VLANs (Appear error during repeated deploy)
+        if bool(vip.allVLANs):
+            pass
+        else:
+            XMLstr=""
+            for i in vip.VLAN:
+                XMLstr=XMLstr+"<interface type='vlan' number='"+str(i)+"'>\r\n"
+                XMLstr=XMLstr+"<access-group access-type='input' name='vip-acl'/>\r\n"
+                XMLstr=XMLstr+"</interface>"
+                res.deployConfig(context, XMLstr)
+        
+        return tmp
     
     def deleteVIP(self,  context,  vip):
-        pass
+        if bool(vip.allVLANs):
+            pmap="global"
+        else:
+            vip.VLAN.sort()
+            pmap="int-"
+            s=""
+            for i in vip.VLAN:
+                s=s+str(i)+"-"
+            m = md5.new(s).hexdigest()
+            pmap=pmap+m
+        
+        tmp = ""
+        res = XmlSender(context)
+        # 1)Remove service-policy from VLANs (Perform if deleted last VIP with it service-policy)
+        #if bool(vip.allVLANs):
+        #    XMLstr="<service-policy sense='no' type='input' name='"+pmap+"'/>"
+        #else:
+            #XMLstr=""
+            #for i in vip.VLAN:
+                #XMLstr=XMLstr+"<interface type='vlan' number='"+str(i)+"'>\r\n"
+                #XMLstr=XMLstr+"<service-policy sense='no' type='input' name='"+pmap+"'/>\r\n"
+                #XMLstr=XMLstr+"</interface>"
+        #tmp = tmp+res.deployConfig(context, XMLstr)
+        
+        #2) Delete class-map from policy-map
+        #If last class in policy-map that remove all policy-map
+        #XMLstr="<policy-map_multimatch sense='no' match-type='multi-match' pmap-name='"+pmap+"'>\r\n"
+        #XMLstr=XMLstr+"</policy-map_multimatch>\r\n"
+        
+        XMLstr="<policy-map_multimatch match-type='multi-match' pmap-name='"+pmap+"'>\r\n"
+        XMLstr=XMLstr+"<class sense='no' cmap-name='"+vip.name+"'>\r\n"
+        XMLstr=XMLstr+"</class>\r\n"
+        XMLstr=XMLstr+"</policy-map_multimatch>\r\n"
+        
+        tmp = tmp+res.deployConfig(context, XMLstr)
+        
+        #3) Delete policy-map, class-map and access-list
+        if vip.appProto.lower() == "other" or vip.appProto.lower() == "http":
+            vip.appProto = ""
+        else:
+            vip.appProto = "_"+vip.appProto.lower()
+        XMLstr="<policy-map_lb sense='no' type='loadbalance"+vip.appProto+"' match-type='first-match' pmap-name='"+vip.name+"-l7slb'>\r\n"
+        XMLstr=XMLstr+"</policy-map_lb>\r\n"
+        
+        
+        XMLstr=XMLstr+"<class-map sense='no' match-type='match-all' name='"+vip.name+"'>\r\n"
+        XMLstr=XMLstr+"</class-map>\r\n"
+        
+        XMLstr=XMLstr+"<access-list sense='no' id='vip-acl' config-type='extended' perm-value='permit' protocol-name='ip' src-type='any' host_dest-addr='"+vip.ip+"'/>\r\n"
+        
+        tmp = tmp+res.deployConfig(context, XMLstr)
+        return tmp
     
