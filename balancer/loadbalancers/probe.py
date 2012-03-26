@@ -78,7 +78,7 @@ class HTTPprobe(Probe):
         self.requestMethodType = "GET"    
         self.requestHTTPurl = "/"
         self.appendPortHostTag = None
-        self.destIPv4v6 = ""
+        self.destIP = ""
         self.tcpConnTerm = None
         self.openTimeout = 1
         self.userName = ""
@@ -188,7 +188,7 @@ class SNMPprobe(Probe):
 class TCPprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
-        self.destIPv4v6 = ""
+        self.destIP = ""
         self.tcpConnTerm = None
         self.openTimeout = 1
         self.expectRegExp = ""
