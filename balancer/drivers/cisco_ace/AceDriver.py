@@ -564,19 +564,21 @@ class AceDriver(BaseDriver):
         
         tmp = res.deployConfig(context, XMLstr)
 
-        # 1)Remove service-policy from VLANs (Perform if deleted last VIP with it service-policy)
-        #if bool(vip.allVLANs):
-        #    XMLstr="<service-policy sense='no' type='input' name='"+pmap+"'/>"
-        #else:
-            #XMLstr=""
-            #for i in vip.VLAN:
-                #XMLstr=XMLstr+"<interface type='vlan' number='"+str(i)+"'>\r\n"
-                #XMLstr=XMLstr+"<service-policy sense='no' type='input' name='"+pmap+"'/>\r\n"
-                #XMLstr=XMLstr+"</interface>"
-        #tmp = tmp+res.deployConfig(context, XMLstr)
+        last_policy_map = ''
+        if (last_policy_map == 'YES'):
+            # Remove service-policy from VLANs (Perform if deleted last VIP with it service-policy)
+            if bool(vip.allVLANs):
+                XMLstr = "<service-policy sense='no' type='input' name='" + pmap + "'/>"
+            else:
+                XMLstr = ""
+                for i in vip.VLAN:
+                    XMLstr = XMLstr + "<interface type='vlan' number='" + str(i) + "'>\r\n"
+                    XMLstr = XMLstr + "<service-policy sense='no' type='input' name='" + pmap + "'/>\r\n"
+                    XMLstr = XMLstr + "</interface>"
+            tmp = res.deployConfig(context, XMLstr)
 
-        # Delete class-map from policy-map
-        XMLstr = "<policy-map_multimatch sense='no' match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
-        XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
-        tmp = res.deployConfig(context, XMLstr)
+            # Delete class-map from policy-map
+            XMLstr = "<policy-map_multimatch sense='no' match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
+            XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
+            tmp = res.deployConfig(context, XMLstr)
     
