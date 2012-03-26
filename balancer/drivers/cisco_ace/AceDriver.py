@@ -485,7 +485,7 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "<match_virtual-addr seq-num='" + sn + "' addr-type='virtual-address' ipv4-address='" + vip.address + "' net-mask='" + str(vip.mask) + "'"
         XMLstr = XMLstr + " protocol-type='" + vip.proto.lower() + "'"
         if vip.proto.lower() != "any":
-            XMLstr = XMLstr + " operator='eq' port-" + vip.proto.lower() + "-name='" + str(vip.Port) + "'"
+            XMLstr = XMLstr + " operator='eq' port-" + vip.proto.lower() + "-name='" + str(vip.port) + "'"
         XMLstr = XMLstr + "/>\r\n"
         XMLstr = XMLstr + "</class-map>\r\n"
         
