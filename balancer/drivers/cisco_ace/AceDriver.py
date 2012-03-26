@@ -444,7 +444,7 @@ class AceDriver(BaseDriver):
     
     
     def createVIP(self,  context, vip,  sfarm): 
-        if not bool(vip.name) or not bool(vip.name) or not bool(vip.ip) or not bool(vip.serverFarm):
+        if not bool(vip.name) or not bool(vip.name) or not bool(vip.address) or not bool(vip.serverFarm):
             return "ERROR"
         
         sn = "2"
@@ -484,7 +484,7 @@ class AceDriver(BaseDriver):
         
         #3)Add a class-map
         XMLstr = XMLstr + "<class-map match-type='match-all' name='" + vip.name + "'>\r\n"
-        XMLstr = XMLstr + "<match_virtual-addr seq-num='" + sn + "' addr-type='virtual-address' ipv4-address='" + vip.ip + "' net-mask='" + str(vip.mask) + "'"
+        XMLstr = XMLstr + "<match_virtual-addr seq-num='" + sn + "' addr-type='virtual-address' ipv4-address='" + vip.address + "' net-mask='" + str(vip.mask) + "'"
         XMLstr = XMLstr + " protocol-type='" + vip.proto.lower() + "'"
         if vip.proto.lower() != "any":
             XMLstr = XMLstr + " operator='eq' port-" + vip.proto.lower() + "-name='" + str(vip.Port) + "'"
