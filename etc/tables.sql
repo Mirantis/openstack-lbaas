@@ -11,7 +11,7 @@ CREATE TABLE predictors( type TEXT, id TEXT, name TEXT, maskType TEXT, ipNetmask
 
 CREATE TABLE rservers(id TEXT, sf_id TEXT, name TEXT,
          type TEXT, webHostRedir TEXT,   ipType TEXT,   address TEXT,  port TEXT,  state TEXT,   opstate TEXT,    description TEXT,   failOnAll TEXT,   minCon INT,  maxCon INT, 
-         weight INT,  probes TEXT, rateBandwidth INT,   rateConnection INT,    backupRS TEXT,  backupRSport TEXT,  created TEXT,  updated TEXT, cookieStr TEXT, status TEXT);
+         weight INT,  probes TEXT, rateBandwidth INT,   rateConnection INT,    backupRS TEXT,  backupRSport TEXT,  created TEXT,  updated TEXT, cookieStr TEXT, status TEXT, condition TEXT);
 
 
 CREATE TABLE transactions (id TEXT, status TEXT, action TEXT, params TEXT);
