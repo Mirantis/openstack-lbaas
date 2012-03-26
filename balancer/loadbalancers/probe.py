@@ -101,6 +101,7 @@ class HTTPSprobe(HTTPprobe):
 class ICMPprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
+        self.destIP = None
     pass
     
 class IMAPprobe(Probe):
