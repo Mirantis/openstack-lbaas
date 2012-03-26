@@ -2,7 +2,7 @@ CREATE TABLE loadbalancers(id TEXT, name TEXT, algorithm TEXT, status TEXT, crea
 
 CREATE TABLE serverfarms(id TEXT, lb_id TEXT,  name TEXT,
          type TEXT,  description TEXT, failAction TEXT, inbandHealthCheck TEXT, connFailureThreshCount TEXT,  resetTimeout TEXT,   resumeService TEXT,  transparent TEXT, 
-         dynamicWorkloadScale TEXT,  vmProbeName TEXT, failOnAll TEXT,  partialThreshPercentage TEXT,   backInservice TEXT, probes TEXT , rservers TEXT, predictor_id INT,  
+         dynamicWorkloadScale TEXT,  vmProbeName TEXT, failOnAll TEXT,  partialThreshPercentage TEXT,   backInservice TEXT,   
          retcodeMap TEXT,   status TEXT,    created TEXT,  updated TEXT);
 
 CREATE TABLE predictors( type TEXT, id TEXT, name TEXT, maskType TEXT, ipNetmask TEXT, ipv6Prefix TEXT, beginPattern TEXT, endPattern TEXT, length TEXT, offsetBytes TEXT,

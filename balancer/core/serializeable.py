@@ -36,7 +36,8 @@ class Serializeable(object):
     def convertToDict(self):
         dict = {}
         for key in self.__dict__.keys():
-            dict.update({key:self.__dict__[key]})            
+            if not key.startswith('_'):
+                dict.update({key:self.__dict__[key]})            
         return dict
       
       
