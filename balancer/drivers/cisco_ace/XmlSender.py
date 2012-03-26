@@ -19,7 +19,7 @@
 import urllib2
 import base64
 import re 
-import Context
+from balancer.drivers.cisco_ace.Context import Context
 
 class XmlSender:
     def __init__(self,  context):

@@ -15,7 +15,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from BaseDriver import BaseContext
+from balancer.drivers.BaseDriver import BaseDriver
+from balancer.drivers.BaseDriver import BaseContext
 
 class Context(BaseContext):
     def __init__(self, ip, port, login, password):

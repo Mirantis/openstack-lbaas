@@ -15,9 +15,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from BaseDriver import BaseDriver
-from Context import Context
-from XmlSender import XmlSender
+import md5
+
+from balancer.drivers.BaseDriver import BaseDriver
+from balancer.drivers.cisco_ace.Context import Context
+from balancer.drivers.cisco_ace.XmlSender import XmlSender
 
 class AceDriver(BaseDriver):
     def __init__(self):
@@ -441,7 +443,13 @@ class AceDriver(BaseDriver):
         if bool(vip.allVLANs):
             pmap="global"
         else:
-            pmap="int"
+            vip.VLAN.sort()
+            pmap="int-"
+            s=""
+            for i in vip.VLAN:
+                s=s+str(i)+"-"
+            m = md5.new(s).hexdigest()
+            pmap=pmap+m
         
         #! Before create we must perform a check for the presentce  access-list vip-acl remark... and its participation in vlan.
         #<access-list id='vip-acl' config-type='remark' comment='Created to permit IP traffic to VIP.'/>
@@ -466,7 +474,7 @@ class AceDriver(BaseDriver):
         
         #3)Add a class-map
         XMLstr=XMLstr+"<class-map match-type='match-all' name='"+vip.name+"'>\r\n"
-        XMLstr=XMLstr+"<match_virtual-addr seq-num='"+sn+"' addr-type='virtual-address' ipv4-address='"+vip.ip+"' net-mask='"+str(vip.virtIPmask)+"'"
+        XMLstr=XMLstr+"<match_virtual-addr seq-num='"+sn+"' addr-type='virtual-address' ipv4-address='"+vip.ip+"' net-mask='"+str(vip.mask)+"'"
         XMLstr=XMLstr+" protocol-type='"+vip.proto.lower()+"'"
         if vip.proto.lower() != "any":
             XMLstr=XMLstr+" operator='eq' port-"+vip.proto.lower()+"-name='"+str(vip.Port)+"'"
