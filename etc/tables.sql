@@ -30,7 +30,7 @@ CREATE TABLE vlans(id   TEXT, description   TEXT, intType   TEXT, IPaddr   TEXT,
         MTU   TEXT, actionForIPheaderOptions   TEXT, enableMACAddrAutogen   TEXT, minTTLipHeaderValue   TEXT, enableSynCookieThreshValue   TEXT, actionForDBfit   TEXT, 
         ARPinspectType   TEXT, UDPconfigCommands   TEXT, secondaryIPgroups   TEXT, inputPolicies   TEXT, inputAccessGroup   TEXT, outputAccessGroup   TEXT);
 
-CREATE TABLE probes(delay TEXT,attemptsBeforeDeactivation TEXT,timeout TEXT, type  TEXT, id  TEXT, name  TEXT, description  TEXT, probeInterval  TEXT, passDetectInterval  TEXT, failDetect  TEXT, passDetectCount  TEXT,
+CREATE TABLE probes(sf_id TEXT,delay TEXT,attemptsBeforeDeactivation TEXT,timeout TEXT, type  TEXT, id  TEXT, name  TEXT, description  TEXT, probeInterval  TEXT, passDetectInterval  TEXT, failDetect  TEXT, passDetectCount  TEXT,
         receiveTimeout  TEXT, isRouted  TEXT, port  TEXT, 
         domainName TEXT, sendData TEXT, destIP TEXT, tcpConnTerm TEXT, openTimeout TEXT, requestMethodType TEXT, requestHTTPurl TEXT, appendPortHostTag TEXT,
         userName TEXT, password TEXT, expectRegExp TEXT, expectRegExpOffset TEXT, hash TEXT, hashString TEXT, headerName TEXT, headerValue TEXT,minExpectStatus TEXT, 
