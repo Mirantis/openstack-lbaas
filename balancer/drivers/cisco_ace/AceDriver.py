@@ -451,11 +451,9 @@ class AceDriver(BaseDriver):
         if bool(vip.allVLANs):
             pmap = "global"
         else:
-            vip.VLAN.sort()
+            #vip.VLAN.sort()
             pmap = "int-"
-            s = ""
-            for i in vip.VLAN:
-                s = s + str(i) + "-"
+            s = vip.VLAN
             m = md5.new(s).hexdigest()
             pmap = pmap + m
         
@@ -531,11 +529,9 @@ class AceDriver(BaseDriver):
         if bool(vip.allVLANs):
             pmap = "global"
         else:
-            vip.VLAN.sort()
+            #vip.VLAN.sort()
             pmap = "int-"
-            s = ""
-            for i in vip.VLAN:
-                s = s + str(i) + "-"
+            s = vip.VLAN
             m = md5.new(s).hexdigest()
             pmap = pmap + m
         
