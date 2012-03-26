@@ -463,7 +463,7 @@ class AceDriver(BaseDriver):
         #<access-list id='vip-acl' config-type='remark' comment='Created to permit IP traffic to VIP.'/>
         
         # 1) Add a access-list
-        XMLstr = "<access-list id='vip-acl' config-type='extended' perm-value='permit' protocol-name='ip' src-type='any' host_dest-addr='" + vip.ip + "'/>\r\n"
+        XMLstr = "<access-list id='vip-acl' config-type='extended' perm-value='permit' protocol-name='ip' src-type='any' host_dest-addr='" + vip.address + "'/>\r\n"
         
         #2) Add a policy-map
         if vip.appProto.lower() == "other" or vip.appProto.lower() == "http":
@@ -557,7 +557,7 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "</class-map>\r\n"
         
         XMLstr = XMLstr + "<access-list sense='no' id='vip-acl' config-type='extended' perm-value='permit' " 
-        XMLstr = XMLstr + "protocol-name='ip' src-type='any' host_dest-addr='" + vip.ip + "'/>\r\n"
+        XMLstr = XMLstr + "protocol-name='ip' src-type='any' host_dest-addr='" + vip.address + "'/>\r\n"
         
         tmp = res.deployConfig(context, XMLstr)
 
