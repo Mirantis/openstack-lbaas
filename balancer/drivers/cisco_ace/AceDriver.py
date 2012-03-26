@@ -313,7 +313,7 @@ class AceDriver(BaseDriver):
             XMLstr = XMLstr + "<predictor predictor-method='" + serverfarm._predictor.type + "'/>\r\n"
         
         for probe in serverfarm._probes:
-            XMLstr = XMLstr + "<probe_sfarm probe-name='" + probes.name + "'/>\r\n"
+            XMLstr = XMLstr + "<probe_sfarm probe-name='" + probe.name + "'/>\r\n"
         
         if serverfarm.type.lower() == "host":
             if bool(serverfarm.failOnAll): 
