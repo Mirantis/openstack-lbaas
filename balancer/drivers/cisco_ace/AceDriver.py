@@ -317,7 +317,7 @@ class AceDriver(BaseDriver):
             XMLstr = XMLstr + "<failaction failaction-type='" + serverfarm.failAction + "'/>\r\n"
         
         if bool(serverfarm._predictor): #Some predictors are may include additional parameters !
-            XMLstr = XMLstr + "<predictor predictor-method='" + serverfarm._predictor.type + "'/>\r\n"
+            XMLstr = XMLstr + "<predictor predictor-method='" + serverfarm._predictor.type.lower() + "'/>\r\n"
         
         for probe in serverfarm._probes:
             XMLstr = XMLstr + "<probe_sfarm probe-name='" + probe.name + "'/>\r\n"
