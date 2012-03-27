@@ -33,26 +33,13 @@ class HaproxyDriver(BaseDriver):
         pass
 
     def createRServer(self, vserver, rserver,  context):
-        if not bool(rserver.name): 
-            return 'RSERVER NAME ERROR'
-        if rserver.port == 'any':
-            rserver.port = ''
-        config_file  =  HaproxyConfigFile(context.tmp_config)
-        config_file.AddRServer(vserver.name,  rserver.name,  rserver.address,  rserver.port)
-        return True
-
+        pass
     
     def deleteRServer(self, vserver,  context, rserver):
-        if not bool(rserver.name): 
-            return 'RSERVER NAME ERROR'
-        config_file  = HaproxyConfigFile(context.tmp_config)
-        config_file.DeleteRServer (vserver.name,  rserver.name)
-
+        pass
     
     def createVIP(self,  context, vip,  sfarm): 
         pass
-        
-    
     
     def deleteVIP(self,  context,  vip):
         pass
@@ -61,7 +48,7 @@ class HaproxyDriver(BaseDriver):
         if not bool(serverfarm.name):
             logger.error ("Serverfarm name is empty")
             return "SERVERFARM FARM NAME ERROR"
-        haproxy_serverfarm = HaproxyBackend
+        haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
         config_file = HaproxyConfigFile()
         config_file.AddBackend(haproxy_serverfarm)
@@ -70,7 +57,7 @@ class HaproxyDriver(BaseDriver):
         if not bool(serverfarm.name):
             logger.error ("Serverfarm name is empty")
             return "SERVER FARM NAME ERROR"
-        haproxy_serverfarm = HaproxyBackend
+        haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
         config_file = HaproxyConfigFile()
         config_file.DeleteBlock(haproxy_serverfarm)       
