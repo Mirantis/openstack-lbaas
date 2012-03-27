@@ -519,6 +519,7 @@ class AceDriver(BaseDriver):
         else:
             XMLstr = ""
             for i in vip.VLAN:
+                print i + " VLAN \n"
                 XMLstr = XMLstr + "<interface type='vlan' number='" + str(i) + "'>\r\n"
                 XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
                 XMLstr = XMLstr + "</interface>"
