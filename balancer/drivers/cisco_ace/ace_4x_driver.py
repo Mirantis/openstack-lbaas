@@ -494,7 +494,7 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "<policy-map_multimatch match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
         XMLstr = XMLstr + "<class match-cmap='" + vip.name + "'>\r\n"
         if bool(vip.status):
-            XMLstr = XMLstr + "<loadbalance vip_config-type='" + vip.status.lower() + "'/>\r\n"
+            XMLstr = XMLstr + "<loadbalance type='" + vip.status.lower() + "'/>\r\n"
         XMLstr = XMLstr + "<loadbalance policy='" + vip.name + "-l7slb'/>\r\n"
         XMLstr = XMLstr + "</class>\r\n"
         XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
