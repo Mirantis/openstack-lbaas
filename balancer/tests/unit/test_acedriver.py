@@ -19,102 +19,91 @@ import unittest
 from balancer.core.serializeable import Serializeable
 from balancer.core.uniqueobject import UniqueObject
 
-from balancer.drivers.cisco_ace.AceDriver import AceDriver
+from balancer.drivers.cisco_ace.ace_5x_driver import AceDriver
 from balancer.drivers.cisco_ace.Context import Context
 from balancer.drivers.cisco_ace.XmlSender import XmlSender
 from balancer.loadbalancers.realserver import RealServer
 from balancer.loadbalancers.serverfarm import ServerFarm
-from balancer.loadbalancers.probe import Probe
+from balancer.loadbalancers.probe import *
 from balancer.loadbalancers.virtualserver import VirtualServer
 
+test_context = Context('10.4.15.30', '10443', 'admin', 'cisco123')
+driver = AceDriver()
+
 rs = RealServer()
-rs.name = 'abc_RS_Host2'
-rs.IP = '10.1.1.1'
-rs.port = "8081"
-rs.state = "inservice"
-rs.minCon = None
-rs.maxCon = None
+rs.name = 'LB_test_rs01'
+rs.address = '172.250.250.250'
+rs.description = "RS for test"
+rs.rateBandwidth = '1000'
+rs.rateConnection = '101'
+
+probe = HTTPprobe()
+probe.name = "LB_test_ProbeHTTP"
+probe.type="HTTP"
+probe.requestHTTPurl = "cisco.com" #Change default value in Probe class !
+probe.probeInterval = 16
+probe.passDetectInterval = 61
+probe.failDetect = 4
+probe.passDetectCount = 5
+probe.receiveTimeout = 11
+probe.isRouted = True
+probe.tcpConnTerm = True
+probe.appendPortHostTag = True
+probe.openTimeout = 2
+probe.userName = "uzver"
+probe.password = "password"
+
 
 sf = ServerFarm()
-sf.name = "1"
+sf.name = "LB_test_sfarm01"
 sf.predictor = "roundrobin"
 sf.description = "description"
 
 vs = VirtualServer()
+vs.name = "LB_test_VIP1"
+vs.ip = "10.250.250.250"
 vs.VLAN=[2]
-vs.id = "60"
-vs.name = "aaa_VIP"
-vs.ip = "15.16.17.19"
-vs.serverFarm = "1"
-vs.status="inservice"
-vs.Port = 80
+vs.port="80"
 
-probe = Probe()
-probe.name = "HTTP"
+class Ace_5x_DriverTestCase(unittest.TestCase):
+    def test_createRServer(self):
+        print driver.createRServer(test_context, rs)
+    
+    def test_createProbe(self):
+        driver.createProbe(test_context, probe)
+    
+    def test_createServerFarm(self):
+        driver.createServerFarm(test_context, sf)
+    
+    def test_addRServerToSF(self):
+        driver.addRServerToSF(test_context, sf,  rs)
+    
+    def test_addProbeToSF(self):
+        driver.addProbeToSF(test_context, sf,  probe)
+    
+    def test_createVIP(self):
+        driver.createVIP(test_context, vs)
+    
+    def test_suspendRServer(self):
+        driver.suspendRServer(test_context, sf, rs)
+    
+    def test_activateRServer(self):
+        driver.activateRServer(test_context, sf, rs)
+    
+    def test_deleteVIP(self):
+        driver.deleteVIP(test_context, vs)
 
-test_context = Context('10.4.15.30', '10443', 'admin', 'cisco123')
-driver = AceDriver()
-f="""
-s = "  Creation The Real Server ...................... "
-if (driver.createRServer(test_context, rs) == 'OK'):
-    print s + '\x1b[32m OK \x1b[0m'
-else:
-    print s + '\x1b[31m ERROR \x1b[0m'
-
-s = "  Deletion The Real Server ...................... "
-if (driver.deleteRServer(test_context, rs) == 'OK'):
-    print s + '\x1b[32m OK \x1b[0m'
-else:
-    print s + '\x1b[31m ERROR \x1b[0m'
-
-s = "  Activation The Real Server .................... "
-if (driver.activateRServer(test_context, sf, rs) == 'OK'):
-    print s + '\x1b[32m OK \x1b[0m'
-else:
-    print s + '\x1b[31m ERROR \x1b[0m'
-
-s = "  Suspend The Real Server ....................... "
-if (driver.suspendRServer(test_context, sf, rs) == 'OK'):
-    print s + '\x1b[32m OK \x1b[0m'
-else:
-    print s + '\x1b[31m ERROR \x1b[0m'
-
-s = "  Creation The Server Farm ...................... "
-if (driver.createServerFarm(test_context, sf) == 'OK'):
-    print s + '\x1b[32m OK \x1b[0m'
-else:
-    print s + '\x1b[31m ERROR \x1b[0m'
-
-s = "  Add Probe To Server Farm ...................... "
-if (driver.addProbeToSF(test_context, sf,  probe) == 'OK'):
-    print s + '\x1b[32m OK \x1b[0m'
-else:
-    print s + '\x1b[31m ERROR \x1b[0m'
-
-s = "  Remove Probe From Server Farm ................. "
-if (driver.deleteProbeFromSF(test_context, sf,  probe) == 'OK'):
-    print s + '\x1b[32m OK \x1b[0m'
-else:
-    print s + '\x1b[31m ERROR \x1b[0m'
-
-s = "  Add RServer To Server Farm .................... "
-if (driver.addRServerToSF(test_context, sf,  rs) == 'OK'):
-    print s + '\x1b[32m OK \x1b[0m'
-else:
-    print s + '\x1b[31m ERROR \x1b[0m'
-
-s = "  Delete RServer To Server Farm ................. "
-if (driver.deleteRServerFromSF(test_context, sf,  rs) == 'OK'):
-    print s + '\x1b[32m OK \x1b[0m'
-else:
-    print s + '\x1b[31m ERROR \x1b[0m'
-"""
-class test_virtualserver(unittest.TestCase):
-    def test_acedriver(self):
-        s =  "||===  Creation The Virtual server ==========||"
-        #if (driver.createVIP(test_context, vs) != 'OK'):
-            #self.fail("VIp.sf_id does not point to SF id")
-        s = "||===  Deletion The Virtual server ==========||"
-        if (driver.deleteVIP(test_context, vs) != 'OK'):
-            self.fail("VIp.sf_id does not point to SF id")
-
+    def test_deleteProbeFromSF(self):
+        driver.deleteProbeFromSF(test_context, sf,  probe)
+    
+    def test_deleteRServerFromSF(self):
+        driver.deleteRServerFromSF(test_context, sf,  rs)
+    
+    def test_deleteServerFarm(self):
+        driver.deleteServerFarm(test_context, sf)
+    
+    def test_deleteProbe(self):
+        driver.deleteProbe(test_context, probe)
+    
+    def test_deleteRServer(self):
+        driver.deleteRServer(test_context, rs)
