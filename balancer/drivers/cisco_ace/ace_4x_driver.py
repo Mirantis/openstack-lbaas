@@ -515,7 +515,9 @@ class AceDriver(BaseDriver):
             XMLstr = XMLstr + "</interface>"
         
         tmp = res.deployConfig(context, XMLstr)
-        
+        if (tmp != 'OK'):
+            raise openstack.common.exception.Invalid(tmp)
+            
         #6)Add vip-acl to each VLANs (Appear error during repeated deploy)
         if bool(vip.allVLANs):
             pass

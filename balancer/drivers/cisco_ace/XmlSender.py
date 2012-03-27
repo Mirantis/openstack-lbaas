@@ -55,6 +55,6 @@ class XmlSender:
         if (s.find('XML_CMD_SUCCESS') > 0):
                return 'OK'
         else:
-               raise openstack.common.exception.Invalid(s)
+               return openstack.common.exception.Invalid(s)
                 
 
