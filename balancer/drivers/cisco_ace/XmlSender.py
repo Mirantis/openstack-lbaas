@@ -41,12 +41,13 @@ class XmlSender:
         request.add_header("Authorization", authheader)
         
         data = """xml_cmd=<request_xml>\r\n%s\r\n</request_xml>""" % command
+        
         logger.debug("send data to ACE:\n" + data)
+        
         try:
             message = urllib2.urlopen(request, data)
             s = message.read()
             
-            #this line enable the debug mode
             logger.debug("data from ACE:\n" + s)
             
             if (s.find('XML_CMD_SUCCESS') > 0):
@@ -54,4 +55,5 @@ class XmlSender:
             else:
                 return 'ERROR'
         except:
+            logger.debug("\n Device error \n")
             return 'DEVICE ERROR'

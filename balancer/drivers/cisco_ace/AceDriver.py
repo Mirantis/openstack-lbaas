@@ -30,12 +30,11 @@ class AceDriver(BaseDriver):
         pass
     
     def getContext (self,  dev):
-        logger.debug("Creating conext with params: IP %s, Port: %s" %(dev.ip,  dev.port))
-        con = Context(dev.ip, dev.port, dev.user,  dev.password)
-        return con
+        logger.debug("Creating context with params: IP %s, Port: %s" % (dev.ip,  dev.port))
+        return Context(dev.ip, dev.port, dev.user,  dev.password)
     
     def createRServer(self, context, rserver):
-        logger.debug("Creating Rserver")
+        logger.debug("Creating the Real Server\n")
         if not bool(rserver.name): 
             logger.error("Can't find rserver name")
             return 'RSERVER NAME ERROR'
@@ -460,16 +459,9 @@ class AceDriver(BaseDriver):
         if bool(vip.allVLANs):
             pmap = "global"
         else:
-            #vip.VLAN.sort()
-            pmap = "int-"
-            s = vip.VLAN
-            m = md5.new(s).hexdigest()
-            pmap = pmap + m
+            pmap = "int-" + md5.new(vip.VLAN).hexdigest()
         
-        tmp = ""
         res = XmlSender(context)
-        #! Before create we must perform a check for the presentce  access-list vip-acl remark... and its participation in vlan.
-        #<access-list id='vip-acl' config-type='remark' comment='Created to permit IP traffic to VIP.'/>
         
         # 1) Add a access-list
         XMLstr = "<access-list id='vip-acl' config-type='extended' perm-value='permit' protocol-name='ip' src-type='any' host_dest-addr='" + vip.address + "'/>\r\n"
@@ -507,7 +499,7 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "</class>\r\n"
         XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
         
-        tmp = tmp + res.deployConfig(context, XMLstr)
+        tmp = res.deployConfig(context, XMLstr)
         
         #5)Add service-policy for necessary vlans
         if bool(vip.allVLANs):
@@ -519,7 +511,7 @@ class AceDriver(BaseDriver):
                 XMLstr = XMLstr + "<service-policy type='input' name='" + pmap + "'/>\r\n"
                 XMLstr = XMLstr + "</interface>"
         
-        tmp = tmp + res.deployConfig(context, XMLstr)
+        tmp = res.deployConfig(context, XMLstr)
         
         #6)Add vip-acl to each VLANs (Appear error during repeated deploy)
         if bool(vip.allVLANs):
@@ -538,11 +530,7 @@ class AceDriver(BaseDriver):
         if bool(vip.allVLANs):
             pmap = "global"
         else:
-            #vip.VLAN.sort()
-            pmap = "int-"
-            s = vip.VLAN
-            m = md5.new(s).hexdigest()
-            pmap = pmap + m
+            pmap = "int-" + md5.new(s).hexdigest()
         
         res = XmlSender(context)
         
