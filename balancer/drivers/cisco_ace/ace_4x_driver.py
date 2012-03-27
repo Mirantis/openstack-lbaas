@@ -55,11 +55,11 @@ class AceDriver(BaseDriver):
         if (bool(rserver.maxCon) and bool(rserver.minCon)):
             XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + "' min='" + str(rserver.minCon) + "'/>\r\n"
         
-        #if bool(rserver.rateConnection):
-        #    XMLstr = XMLstr + "  <rate-limit type='connection' value='" + str(rserver.rateConnection) + "'/>\r\n"
+        if bool(rserver.rateConnection):
+            XMLstr = XMLstr + "  <rate-limit type='connection' value='" + str(rserver.rateConnection) + "'/>\r\n"
             
-        #if bool(rserver.rateBandwidth):
-        #    XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + str(rserver.rateBandwidth) + "'/>\r\n"        
+        if bool(rserver.rateBandwidth):
+            XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + str(rserver.rateBandwidth) + "'/>\r\n"        
 
         if bool(rserver.failOnAll):
             XMLstr = XMLstr + "  <fail-on-all/>\r\n"

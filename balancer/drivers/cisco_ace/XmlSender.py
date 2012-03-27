@@ -44,18 +44,17 @@ class XmlSender:
         data = """xml_cmd=<request_xml>\r\n%s\r\n</request_xml>""" % command
         
         logger.debug("send data to ACE:\n" + data)
-        
         try:
-            message = urllib2.urlopen(request, data)
-            s = message.read()
-            
-            logger.debug("data from ACE:\n" + s)
-            
-            if (s.find('XML_CMD_SUCCESS') > 0):
-                return 'OK'
-            else:
-                raise openstack.common.exception.Invalid(s)
-                
+          message = urllib2.urlopen(request, data)
+          s = message.read()
         except:
-            logger.debug("\n Device error \n")
-            return 'DEVICE ERROR'
+            raise openstack.common.exception.Error()
+            
+        logger.debug("data from ACE:\n" + s)
+            
+        if (s.find('XML_CMD_SUCCESS') > 0):
+               return 'OK'
+        else:
+               raise openstack.common.exception.Invalid(s)
+                
+
