@@ -38,42 +38,38 @@ class AceDriver(BaseDriver):
         if not bool(rserver.name): 
             logger.error("Can't find rserver name")
             return 'RSERVER NAME ERROR'
-
+        
         XMLstr = "<rserver type='" + rserver.type.lower() + "' name='" + rserver.name + "'>\r\n"
+        
+        if (rserver.type.lower() == "host"):
+            if bool(rserver.address):
+                XMLstr = XMLstr + "  <ip_address node='address' "+rserver.ipType.lower()+"-address='"+str(rserver.address)+"'/>\r\n"
+            if bool(rserver.failOnAll):
+                XMLstr = XMLstr + "  <fail-on-all/>\r\n"
+            if bool(rserver.weight):
+                XMLstr = XMLstr + "  <weight value='" + str(rserver.weight) + "'/>\r\n"
+        
+        if (rserver.type.lower() == "redirect"):
+            if bool(rserver.webHostRedir):
+                XMLstr = XMLstr + "  <webhost-redirection relocation-string='" + rserver.webHostRedir + "'" 
+                XMLstr = XMLstr +" redirection-code='301'" # without parameter  redirection-code
+                XMLstr = XMLstr +"/>\r\n"
         
         if bool(rserver.description): 
             XMLstr = XMLstr + "  <description descr-string='" + rserver.description + "'/>\r\n"
-
-        if bool(rserver.address):
-            XMLstr = XMLstr + "  <ip_address  "
-            if (rserver.ipType.lower() == 'ipv4'):
-                XMLstr = XMLstr + "address='" 
-            else:
-                XMLstr = XMLstr + "ipv6-address='"
-            XMLstr = XMLstr + rserver.address + "'/>\r\n"
-            
+        
         if (bool(rserver.maxCon) and bool(rserver.minCon)):
             XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + "' min='" + str(rserver.minCon) + "'/>\r\n"
         
-        #if bool(rserver.rateConnection):
-        #    XMLstr = XMLstr + "  <rate-limit type='connection' value='" + str(rserver.rateConnection) + "'/>\r\n"
-            
-        #if bool(rserver.rateBandwidth):
-        #    XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + str(rserver.rateBandwidth) + "'/>\r\n"        
-
-        if bool(rserver.failOnAll):
-            XMLstr = XMLstr + "  <fail-on-all/>\r\n"
-
-        if (rserver.type.lower() == "host"):
-            XMLstr = XMLstr + "  <weight value='" + str(rserver.weight) + "'/>\r\n"
-            
-        if bool(rserver.webHostRedir):
-            XMLstr = XMLstr + "  <webhost-redirection relocation-string='" + rserver.webHostRedir + "'/>\r\n" 
-            # without parameter  redirection-code=
-
-        if (rserver.state == "In Service"):
-            XMLstr = XMLstr + "  <inservice/>\r\n"
-            
+        if bool(rserver.rateConnection):
+            XMLstr = XMLstr + "  <rate-limit type='connection' value='" + str(rserver.rateConnection) + "'/>\r\n"
+        
+        if bool(rserver.rateBandwidth):
+            XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + str(rserver.rateBandwidth) + "'/>\r\n"        
+        
+        if bool(rserver.state):
+            XMLstr = XMLstr + "  <"+rserver.state.lower()+"/>\r\n"
+        
         XMLstr = XMLstr + "</rserver>"
         
         s = XmlSender(context)
@@ -84,17 +80,21 @@ class AceDriver(BaseDriver):
         if not bool(rserver.name): 
             return 'RSERVER NAME ERROR'
         
-        XMLstr = "<rserver sense='no' name='" + rserver.name + "'></rserver>"
+        XMLstr = "<rserver sense='no' type='"+rserver.type.lower()+"' name='"+rserver.name+"'></rserver>"
         
         s = XmlSender(context)
         return s.deployConfig(context, XMLstr)  
     
     
     def activateRServer(self,  context,  serverfarm,  rserver):
-        if not bool(rserver.name): 
-            return 'RSERVER NAME ERROR'
-
-        XMLstr = "<rserver name='" + rserver.name + "'>\r\n  <inservice/>\r\n</rserver>"
+        if not bool(rserver.name) or not bool(serverfarm.name): 
+            return 'RSERVER or SERVERFARM NAME ERROR'
+        
+        XMLstr = "<serverfarm type='"+serverfarm.type.lower()+"' name='"+serverfarm.name+"'>"
+        XMLstr = XMLstr+"<rserver name='" + rserver.name + "'>\r\n  </rserver>"
+        XMLstr = XMLstr+"<inservice/>\r\n"
+        XMLstr = XMLstr+"</rserver_sfarm>\r\n"
+        XMLstr = XMLstr+"</serverfarm>"
         
         s = XmlSender(context)
         return s.deployConfig(context, XMLstr)
@@ -103,13 +103,18 @@ class AceDriver(BaseDriver):
     def suspendRServer(self,  context,  serverfarm,  rserver):
         if not bool(rserver.name): 
             return 'RSERVER NAME ERROR'
-
-        XMLstr = "<rserver name='" + rserver.name + "'>\r\n  <inservice sense='no'/>\r\n</rserver>"
+        
+        if not bool(rserver.name) or not bool(serverfarm.name): 
+            return 'RSERVER or SERVERFARM NAME ERROR'
+        
+        XMLstr = "<serverfarm type='"+serverfarm.type.lower()+"' name='"+serverfarm.name+"'>"
+        XMLstr = XMLstr+"<rserver name='" + rserver.name + "'>\r\n  </rserver>"
+        XMLstr = XMLstr+"<inservice sense='no'/>\r\n"
+        XMLstr = XMLstr+"</rserver_sfarm>\r\n"
+        XMLstr = XMLstr+"</serverfarm>"
         
         s = XmlSender(context)
         return s.deployConfig(context, XMLstr)
-    
-    
     
     
     def createProbe(self,  context,  probe):
@@ -127,7 +132,7 @@ class AceDriver(BaseDriver):
         probes_with_regex = ['http',  'https',  'sip-tcp',  'sup-udp',  'tcp',  'udp']
         
         if ((type != 'echo-tcp') and (type != 'echo-udp')):
-            XMLstr = "<probe_" + type + " type='"  + type + "' name='" + probe.name + "'>\r\n"
+            XMLstr = "<probe_" + type+ " type='"  + type + "' name='" + probe.name + "'>\r\n"
         else:
             XMLstr = "<probe_echo type='echo' conn-type='"
             if (type == 'echo-tcp'):
@@ -176,7 +181,7 @@ class AceDriver(BaseDriver):
 
             if (probes_with_timeout.count(type) > 0):
                 if bool(probe.openTimeout):
-                    XMLstr = XMLstr + "  <open timeout='" + str(probe.openTimeout) + "'/>"
+                    XMLstr = XMLstr + "  <open timeout='" + str(probe.openTimeout) + "'/>\r\n"
                 if bool(probe.tcpConnTerm):
                     XMLstr = XMLstr + "  <connection_term term='forced'/>\r\n"
 
@@ -196,8 +201,8 @@ class AceDriver(BaseDriver):
                         XMLstr = XMLstr + "/>\r\n"
 
             if ((type == 'http') or (type == 'https')):
-                if bool(probe.requestMethodType):
-                    XMLstr = XMLstr + "  <request method='" + probe.requestMethodType + "' url='" + probe.requestHTTPurl + "'/>\r\n"
+                if bool(probe.requestHTTPurl):
+                    XMLstr = XMLstr + "  <request method='" + probe.requestMethodType.lower() + "' url='" + probe.requestHTTPurl + "'/>\r\n"
                     
                 if bool(probe.appendPortHostTag):
                     XMLstr = XMLstr + "  <append-port-hosttag/>\r\n"
@@ -274,15 +279,12 @@ class AceDriver(BaseDriver):
                     XMLstr = XMLstr + "/>\r\n"
             
         if ((type != 'echo-tcp') and (type != 'echo-udp')):
-            XMLstr =XMLstr + "</probe_" + type+">\r\n"
+            XMLstr =XMLstr + "</probe_"+type+">\r\n"
         else:
             XMLstr = XMLstr + "</probe_echo>"
             
         s = XmlSender(context)
         return s.deployConfig(context, XMLstr)
-        
-        
-        
     
     
     def deleteProbe(self,  context,  probe):
@@ -291,18 +293,17 @@ class AceDriver(BaseDriver):
         type = probe.type.lower()
 
         if ((type != 'echo-tcp') and (type != 'echo-udp')):
-            XMLstr = "<probe_" + type + " type='"  + type + "' name='" + probe.name + "' sense='no'>\r\n"
+            XMLstr = "<probe_" + type + " type='"  + type + "' name='" + probe.name + "' sense='no'/>\r\n"
         else:
             XMLstr = "<probe_echo type='echo' conn-type='"
             if (type == 'echo-tcp'):
                 XMLstr = XMLstr + "tcp' name='"
             else:
                 XMLstr = XMLstr + "udp' name='"
-            XMLstr = XMLstr + probe.name + "' sense='no'>\r\n"
+            XMLstr = XMLstr + probe.name + "' sense='no'/>\r\n"
             
         s = XmlSender(context)
         return s.deployConfig(context, XMLstr)
-        
     
     
     def createServerFarm(self,  context,  serverfarm):
@@ -321,7 +322,7 @@ class AceDriver(BaseDriver):
             XMLstr = XMLstr + "<predictor predictor-method='" + serverfarm._predictor.type.lower() + "'/>\r\n"
         
         #for probe in serverfarm._probes:
-         #   XMLstr = XMLstr + "<probe_sfarm probe-name='" + probe.name + "'/>\r\n"
+        #   XMLstr = XMLstr + "<probe_sfarm probe-name='" + probe.name + "'/>\r\n"
         
         if serverfarm.type.lower() == "host":
             if bool(serverfarm.failOnAll): 
