@@ -15,7 +15,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from balancer.drivers.cisco_ace.AceDriver import AceDriver
+import balancer.drivers.cisco_ace.ace_4x_driver
+import balancer.drivers.cisco_ace.ace_5x_driver
 
 
 class DeviceMap(object):
@@ -24,7 +25,10 @@ class DeviceMap(object):
     
     def getDriver(self,  lbdevice):
         if lbdevice.type  == "ACE":
-            return AceDriver()
+            if lbdevice.version.lower().startswith('a4'):
+                return  balancer.drivers.cisco_ace.ace_4x_driver.AceDriver()
+            else:
+                return  balancer.drivers.cisco_ace.ace_5x_driver.AceDriver()
         if lbdevice.type == "HAPROXY":
             return None
         return None
