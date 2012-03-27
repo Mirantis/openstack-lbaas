@@ -197,7 +197,7 @@ class AceDriver(BaseDriver):
 
             if ((type == 'http') or (type == 'https')):
                 if bool(probe.requestMethodType):
-                    XMLstr = XMLstr + "  <request method='" + probe.requestMethodType + "' url='" + probe.requestHTTPurl + "'/>\r\n"
+                    XMLstr = XMLstr + "  <request method='" + probe.requestMethodType.lower() + "' url='" + probe.requestHTTPurl.lower() + "'/>\r\n"
                     
                 if bool(probe.appendPortHostTag):
                     XMLstr = XMLstr + "  <append-port-hosttag/>\r\n"
