@@ -59,21 +59,33 @@ class HaproxyDriver(BaseDriver):
         pass
         
         
-class HaproxyFronted:
+class HaproxyConfigBlock:
     def __init__(self):
         self.name = ""
+        self.type = ""
+        
+class HaproxyFronted(HaproxyConfigBlock):
+    def __init__(self):
+        self.type="frontend"
         self.bind_address = ""
         self.bind_port= ""
         self.default_backend = ""
         self.mode = "http"
 
-class HaproxyBackend:
+class HaproxyBackend(HaproxyConfigBlock):
     def __init__(self):
+        self.type="backend"
+        self.mode = ""
+        self.balance = "source"
+        
+class HaproxyListen(HaproxyConfigBlock):
+    def __init__(self):
+        self.type="listen"
         self.name = ""
         self.mode = ""
         self.balance = "source"
    
-class HaproxyRserver:
+class HaproxyRserver():
     def __init__(self):
         self.name = ""
         self.address = ""
@@ -101,13 +113,61 @@ class HaproxyRserver:
         self.weight = 1
         
 class HaproxyConfigFile:
-    def __init__(self, haproxy_config_file_path = '/tmp/haproxy.cfg',  test_config=''):
-        if test_config != '':  shutil.copyfile (test_config, "/tmp/haproxy.cfg")
+    def __init__(self, haproxy_config_file_path = '/tmp/haproxy.cfg'):
         self.haproxy_config_file_path = haproxy_config_file_path
         
     def GetHAproxyConfigFileName(self):
         return self.haproxy_config_file_path
  #============ New code =========================   
+    def AddFronted(self,  HaproxyFronted):
+        """
+            Add frontend section to haproxy config file
+        """
+        new_config_file = self._ReadConfigFile()
+        if HaproxyFronted.name =="":
+            logger.error("Empty fronted name")
+            return "FRONTEND NAME ERROR"
+        if HaproxyFronted.bind_address =="" or HaproxyFronted.bind_port == "":
+            logger.error("Empty  bind adrress or port")
+            return "FRONTEND ADDRESS OR PORT ERROR"
+        logger.debug("Adding frontend %s"  % HaproxyFronted.name  )
+        new_config_block = []
+        new_config_block.append("\tbind %s:%s" % (HaproxyFronted.bind_address,  HaproxyFronted.bind_port))
+        new_config_block.append("\tmode %s" % HaproxyFronted.mode)
+        new_config_file [ "frontend %s" % HaproxyFronted.name ] =  new_config_block 
+        self._WriteConfigFile(new_config_file)
+        return  HaproxyFronted.name  
+
+    def DeleteBlock (self, HaproxyBlock):
+        """
+            Delete fronend section from haproxy config file
+        """
+        new_config_file = self._ReadConfigFile()
+        if HaproxyBlock.name =="":
+            logger.error("Empty block name")
+            return "BLOCK NAME ERROR"
+        logger.debug("Deleting block %s %s"  % (HaproxyBlock.type,  HaproxyBlock.name))
+        for i in new_config_file.keys():
+            if i.find(HaproxyBlock.type) == 0 and i.find('%s' % HaproxyBlock.name) >= 0:
+                del new_config_file[i]
+        self._WriteConfigFile(new_config_file)
+
+    def AddBackend(self,  HaproxyBackend):
+        """
+            Add backend section to haproxy config file
+        """
+        new_config_file = self._ReadConfigFile()
+        if HaproxyBackend.name =="":
+            logger.error("Empty backend name")
+            return "BACKEND NAME ERROR"
+        logger.debug("Adding backend")
+        new_config_block = []
+        new_config_block.append("\tbalance %s" % HaproxyBackend.balance )
+        new_config_file [ "backend %s" % HaproxyBackend.name ] =  new_config_block
+        self._WriteConfigFile(new_config_file)
+        return  HaproxyBackend.name    
+       
+       
     def _ReadConfigFile(self):
         self.haproxy_config_file = open (self.haproxy_config_file_path,  "r")
         config_file = {}
@@ -164,42 +224,6 @@ class HaproxyConfigFile:
             for out_line in v:
                 self.haproxy_config_file.write ("%s\n" % out_line)
         self.haproxy_config_file.close()
-   
-        
-    def AddFronted(self,  HaproxyFronted):
-        """
-            Add frontend section to haproxy config file
-        """
-        new_config_file = self._ReadConfigFile()
-        if HaproxyFronted.name =="":
-            logger.error("Empty fronted name")
-            return "FRONTEND NAME ERROR"
-        if HaproxyFronted.bind_address =="" or HaproxyFronted.bind_port == "":
-            logger.error("Empty  bind adrress or port")
-            return "FRONTEND ADDRESS OR PORT ERROR"
-        logger.debug("Adding frontend")
-        new_config_block = []
-        new_config_block.append("\tbind %s:%s" % (HaproxyFronted.bind_address,  HaproxyFronted.bind_port))
-        new_config_block.append("\tmode %s" % HaproxyFronted.mode)
-        new_config_file [ "frontend %s" % HaproxyFronted.name ] =  new_config_block 
-        self._WriteConfigFile(new_config_file)
-        return  HaproxyFronted.name  
-    
-    def AddBackend(self,  HaproxyBackend):
-        """
-            Add backend section to haproxy config file
-        """
-        new_config_file = self._ReadConfigFile()
-        if HaproxyBackend.name =="":
-            logger.error("Empty backend name")
-            return "BACKEND NAME ERROR"
-        logger.debug("Adding backend")
-        new_config_block = []
-        new_config_block.append("\tbalance %s" % HaproxyBackend.balance )
-        new_config_file [ "backend %s" % HaproxyBackend.name ] =  new_config_block
-        self._WriteConfigFile(new_config_file)
-        return  HaproxyBackend.name     
-        
 if __name__ == '__main__':
     pass
 
