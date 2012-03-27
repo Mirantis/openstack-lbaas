@@ -4,7 +4,8 @@ from balancer.drivers.haproxy.HaproxyDriver import  HaproxyConfigFile
 from balancer.drivers.haproxy.HaproxyDriver import  HaproxyFronted
 from balancer.drivers.haproxy.HaproxyDriver import  HaproxyBackend
 from balancer.drivers.haproxy.HaproxyDriver import  HaproxyListen
-
+from balancer.drivers.haproxy.HaproxyDriver import  HaproxyDriver
+from balancer.loadbalancers.serverfarm import ServerFarm
 import unittest
 import os
 import shutil
@@ -40,6 +41,12 @@ class HAproxyDriverTestCase (unittest.TestCase):
         test = HaproxyConfigFile("/tmp/haproxy.cfg")
         test.DeleteBlock(self.block_for_delete)
         self.assertTrue(True)
+    def test_createServerFarm(self):
+        server_farm = ServerFarm
+        driver = HaproxyDriver
+        driver.createServerFarm(server_farm)
+        self.assertTrue(True)
+        
 
 
 if __name__ == "__main__":

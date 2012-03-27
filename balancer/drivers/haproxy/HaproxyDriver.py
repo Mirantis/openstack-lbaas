@@ -16,10 +16,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License
 
-import re
+
 import sys
 import os
-import shutil
 import logging
 
 
@@ -57,8 +56,25 @@ class HaproxyDriver(BaseDriver):
     
     def deleteVIP(self,  context,  vip):
         pass
-        
-        
+
+    def createServerFarm(self,  context,  serverfarm):
+        if not bool(serverfarm.name):
+            logger.error ("Serverfarm name is empty")
+            return "SERVERFARM FARM NAME ERROR"
+        haproxy_serverfarm = HaproxyBackend
+        haproxy_serverfarm.name = serverfarm.name
+        config_file = HaproxyConfigFile()
+        config_file.AddBackend(haproxy_serverfarm)
+
+    def deleteServerFarm(self,  context,  serverfarm):
+        if not bool(serverfarm.name):
+            logger.error ("Serverfarm name is empty")
+            return "SERVER FARM NAME ERROR"
+        haproxy_serverfarm = HaproxyBackend
+        haproxy_serverfarm.name = serverfarm.name
+        config_file = HaproxyConfigFile()
+        config_file.DeleteBlock(haproxy_serverfarm)       
+
 class HaproxyConfigBlock:
     def __init__(self):
         self.name = ""
@@ -111,7 +127,9 @@ class HaproxyRserver():
         self.source_max_port = ""
         self.track = ""
         self.weight = 1
-        
+
+
+
 class HaproxyConfigFile:
     def __init__(self, haproxy_config_file_path = '/tmp/haproxy.cfg'):
         self.haproxy_config_file_path = haproxy_config_file_path
