@@ -506,10 +506,13 @@ class AceDriver(BaseDriver):
             XMLstr = "<service-policy type='input' name='" + pmap + "'/>"
         else:
             XMLstr = ""
-            for i in vip.VLAN:
-                XMLstr = XMLstr + "<interface type='vlan' number='" + str(i) + "'>\r\n"
-                XMLstr = XMLstr + "<service-policy type='input' name='" + pmap + "'/>\r\n"
-                XMLstr = XMLstr + "</interface>"
+            #for i in vip.VLAN:
+            #    XMLstr = XMLstr + "<interface type='vlan' number='" + str(i) + "'>\r\n"
+            #    XMLstr = XMLstr + "<service-policy type='input' name='" + pmap + "'/>\r\n"
+            #    XMLstr = XMLstr + "</interface>"
+            XMLstr = XMLstr + "<interface type='vlan' number='" + str(vip.VLAN) + "'>\r\n"
+            XMLstr = XMLstr + "<service-policy type='input' name='" + pmap + "'/>\r\n"
+            XMLstr = XMLstr + "</interface>"
         
         tmp = res.deployConfig(context, XMLstr)
         
@@ -519,7 +522,6 @@ class AceDriver(BaseDriver):
         else:
             XMLstr = ""
             for i in vip.VLAN:
-                print i + " VLAN \n"
                 XMLstr = XMLstr + "<interface type='vlan' number='" + str(i) + "'>\r\n"
                 XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
                 XMLstr = XMLstr + "</interface>"
