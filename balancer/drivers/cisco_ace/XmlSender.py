@@ -21,6 +21,7 @@ import base64
 import re 
 import logging
 from balancer.drivers.cisco_ace.Context import Context
+import openstack.common.exception
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,8 @@ class XmlSender:
             if (s.find('XML_CMD_SUCCESS') > 0):
                 return 'OK'
             else:
-                return 'ERROR'
+                raise openstack.common.exception.Invalid(s)
+                
         except:
             logger.debug("\n Device error \n")
             return 'DEVICE ERROR'
