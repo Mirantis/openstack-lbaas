@@ -84,7 +84,7 @@ class AceDriver(BaseDriver):
             
         XMLstr = XMLstr + "</rserver>"
         
-        return send_data(context,  XMLstr)
+        return self.send_data(context,  XMLstr)
     
     
     def deleteRServer(self, context, rserver):
@@ -93,7 +93,7 @@ class AceDriver(BaseDriver):
         
         XMLstr = "<rserver sense='no' type='" + rserver.type.lower() + "' name='" + rserver.name + "'></rserver>"
         
-        return send_data(context,  XMLstr)
+        return self.send_data(context,  XMLstr)
     
     
     def activateRServer(self,  context,  serverfarm,  rserver):
@@ -106,7 +106,7 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "</rserver_sfarm>\r\n"
         XMLstr = XMLstr + "</serverfarm>"
         
-        return send_data(context,  XMLstr)
+        return self.send_data(context,  XMLstr)
 
     
     def suspendRServer(self,  context,  serverfarm,  rserver):
@@ -119,7 +119,7 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr+"</rserver_sfarm>\r\n"
         XMLstr = XMLstr+"</serverfarm>"
         
-        return send_data(context,  XMLstr)
+        return self.send_data(context,  XMLstr)
 
     
     def createProbe(self,  context,  probe):
@@ -288,7 +288,7 @@ class AceDriver(BaseDriver):
         else:
             XMLstr = XMLstr + "</probe_echo>"
             
-        return send_data(context,  XMLstr)
+        return self.send_data(context,  XMLstr)
         
     
     
@@ -309,7 +309,7 @@ class AceDriver(BaseDriver):
                 XMLstr = XMLstr + "udp' name='"
             XMLstr = XMLstr + probe.name + "' sense='no'>\r\n"
             
-        return send_data(context,  XMLstr)
+        return self.send_data(context,  XMLstr)
         
     
     
@@ -355,7 +355,7 @@ class AceDriver(BaseDriver):
         
         XMLstr = XMLstr + "</serverfarm>"
         
-        return send_data(context,  XMLstr)
+        return self.send_data(context,  XMLstr)
     
     
     def deleteServerFarm(self,  context,  serverfarm):
@@ -364,7 +364,7 @@ class AceDriver(BaseDriver):
 
         XMLstr = "<serverfarm sense='no' name='" + serverfarm.name + "'></serverfarm>"
         
-        return send_data(context,  XMLstr)
+        return self.send_data(context,  XMLstr)
     
     
     def addRServerToSF(self,  context,  serverfarm,  rserver): #rserver in sfarm may include many parameters !
@@ -408,7 +408,7 @@ class AceDriver(BaseDriver):
         XMLstr=XMLstr+"</rserver_sfarm>\r\n"
         XMLstr=XMLstr+"</serverfarm>"
         
-        return send_data(context,  XMLstr)
+        return self.send_data(context,  XMLstr)
     
     
     def deleteRServerFromSF(self,  context,  serverfarm,  rserver):
@@ -423,7 +423,7 @@ class AceDriver(BaseDriver):
         XMLstr=XMLstr+"</rserver_sfarm>\r\n"
         XMLstr=XMLstr+"</serverfarm>"
         
-        return send_data(context,  XMLstr)
+        return self.send_data(context,  XMLstr)
     
     
     def addProbeToSF(self,  context,  serverfarm,  probe):
@@ -434,7 +434,7 @@ class AceDriver(BaseDriver):
         XMLstr=XMLstr+" <probe_sfarm probe-name='"+probe.name+"'/>\r\n"
         XMLstr=XMLstr+"</serverfarm>"
         
-        return send_data(context,  XMLstr)
+        return self.send_data(context,  XMLstr)
     
     
     def deleteProbeFromSF (elf,  context,  serverfarm,  probe):
@@ -445,7 +445,7 @@ class AceDriver(BaseDriver):
         XMLstr=XMLstr+" <probe_sfarm sense='no' probe-name='"+probe.name+"'/>\r\n"
         XMLstr=XMLstr+"</serverfarm>"
         
-        return send_data(context,  XMLstr)
+        return self.send_data(context,  XMLstr)
     
     
     def createStickiness(self,  context,  vip,  sticky):
