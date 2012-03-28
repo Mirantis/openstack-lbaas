@@ -385,10 +385,10 @@ class AceDriver(BaseDriver):
         if bool(rserver.maxCon) and bool(rserver.minCon):
             XMLstr=XMLstr+"    <conn-limit max='"+str(rserver.maxCon)+"' min='"+str(rserver.minCon)+"'/>\r\n"
             
-        if bool(rserver.rateConnection):
-            XMLstr=XMLstr+"    <rate-limit value='"+str(rserver.rateConnection)+"'/>\r\n"
-        if bool(rserver.rateBandwidth):
-           XMLstr=XMLstr+"    <rate-limit limit='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>\r\n"
+        #if bool(rserver.rateConnection):
+        #    XMLstr=XMLstr+"    <rate-limit value='"+str(rserver.rateConnection)+"'/>\r\n"
+        #if bool(rserver.rateBandwidth):
+        #   XMLstr=XMLstr+"    <rate-limit limit='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>\r\n"
         
         if bool(rserver.cookieStr):
             XMLstr=XMLstr+"    <cookie-string string='"+rserver.cookieStr+"'/>\r\n"
