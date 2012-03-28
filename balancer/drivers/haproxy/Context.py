@@ -15,13 +15,21 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from balancer.drivers.BaseDriver import BaseDriver
-from balancer.drivers.BaseDriver import BaseContext
+#from balancer.drivers.BaseDriver import BaseDriver
+#from balancer.drivers.BaseDriver import BaseContext
+from BaseDriver import BaseDriver,  BaseContext
+from HaproxyDriver import HaproxyFronted
 
 class Context(BaseContext):
-    def __init__(self, ip, port, login, password, tmp_config):
+    def __init__(self, ip, port, login, password, localpath, localname, remotepath, remotename, interface,  haproxyfrontend):
         self.ip = ip
         self.port = port
         self.login = login
         self.password = password
-        self.tmp_config = tmp_config
+        self.localpath = localpath
+        self.remotepath = remotepath
+        self.localname = localname
+        self.remotename = remotename
+        self.interface = interface
+        self.rsIP =  haproxyfrontend.bind_address 
+        
