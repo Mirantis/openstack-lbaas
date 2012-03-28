@@ -42,19 +42,19 @@ class XmlSender:
         request.add_header("Authorization", authheader)
         
         data = """xml_cmd=<request_xml>\r\n%s\r\n</request_xml>""" % command
-        
         logger.debug("send data to ACE:\n" + data)
+        
         try:
           message = urllib2.urlopen(request, data)
           s = message.read()
-        except:
-            raise openstack.common.exception.Error()
+        except (Exception):
+            raise openstack.common.exception.Error(Exception)
             
         logger.debug("data from ACE:\n" + s)
             
         if (s.find('XML_CMD_SUCCESS') > 0):
                return 'OK'
         else:
-               return openstack.common.exception.Invalid(s)
+               return s
                 
 

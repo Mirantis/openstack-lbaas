@@ -44,14 +44,24 @@ class AceDriver(BaseDriver):
         if bool(rserver.description): 
             XMLstr = XMLstr + "  <description descr-string='" + rserver.description + "'/>\r\n"
 
-        if bool(rserver.address):
-            XMLstr = XMLstr + "  <ip_address  "
-            if (rserver.ipType.lower() == 'ipv4'):
-                XMLstr = XMLstr + "address='" 
-            else:
-                XMLstr = XMLstr + "ipv6-address='"
-            XMLstr = XMLstr + rserver.address + "'/>\r\n"
+        if (rserver.type.lower() == "host"):
+            if bool(rserver.address):
+                XMLstr = XMLstr + "  <ip_address  "
+                if (rserver.ipType.lower() == 'ipv4'):
+                    XMLstr = XMLstr + "address='" 
+                else:
+                    XMLstr = XMLstr + "ipv6-address='"
+                XMLstr = XMLstr + rserver.address + "'/>\r\n"
+                
+            if bool(rserver.failOnAll):
+                XMLstr = XMLstr + "  <fail-on-all/>\r\n"
             
+            XMLstr = XMLstr + "  <weight value='" + str(rserver.weight) + "'/>\r\n"
+        else:
+            if bool(rserver.webHostRedir):
+                XMLstr = XMLstr + "  <webhost-redirection relocation-string='" + rserver.webHostRedir + "'/>\r\n" 
+                # without parameter  redirection-code=
+
         if (bool(rserver.maxCon) and bool(rserver.minCon)):
             XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + "' min='" + str(rserver.minCon) + "'/>\r\n"
         
@@ -60,57 +70,69 @@ class AceDriver(BaseDriver):
             
         if bool(rserver.rateBandwidth):
             XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + str(rserver.rateBandwidth) + "'/>\r\n"        
-
-        if bool(rserver.failOnAll):
-            XMLstr = XMLstr + "  <fail-on-all/>\r\n"
-
-        if (rserver.type.lower() == "host"):
-            XMLstr = XMLstr + "  <weight value='" + str(rserver.weight) + "'/>\r\n"
             
-        if bool(rserver.webHostRedir):
-            XMLstr = XMLstr + "  <webhost-redirection relocation-string='" + rserver.webHostRedir + "'/>\r\n" 
-            # without parameter  redirection-code=
-
         if (rserver.state == "In Service"):
             XMLstr = XMLstr + "  <inservice/>\r\n"
             
         XMLstr = XMLstr + "</rserver>"
         
         s = XmlSender(context)
-        return s.deployConfig(context, XMLstr)    
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
     
     
     def deleteRServer(self, context, rserver):
         if not bool(rserver.name): 
             return 'RSERVER NAME ERROR'
         
-        XMLstr = "<rserver sense='no' name='" + rserver.name + "'></rserver>"
+        XMLstr = "<rserver sense='no' type='" + rserver.type.lower() + "' name='" + rserver.name + "'></rserver>"
         
         s = XmlSender(context)
-        return s.deployConfig(context, XMLstr)  
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
     
     
     def activateRServer(self,  context,  serverfarm,  rserver):
         if not bool(rserver.name): 
             return 'RSERVER NAME ERROR'
 
-        XMLstr = "<rserver name='" + rserver.name + "'>\r\n  <inservice/>\r\n</rserver>"
+        XMLstr = "<serverfarm type='" + serverfarm.type.lower() + "' name='" + serverfarm.name + "'>"
+        XMLstr = XMLstr + "<rserver name='" + rserver.name + "'>\r\n  </rserver>"
+        XMLstr = XMLstr + "<inservice/>\r\n"
+        XMLstr = XMLstr + "</rserver_sfarm>\r\n"
+        XMLstr = XMLstr + "</serverfarm>"
         
         s = XmlSender(context)
-        return s.deployConfig(context, XMLstr)
-    
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
+
     
     def suspendRServer(self,  context,  serverfarm,  rserver):
         if not bool(rserver.name): 
             return 'RSERVER NAME ERROR'
 
-        XMLstr = "<rserver name='" + rserver.name + "'>\r\n  <inservice sense='no'/>\r\n</rserver>"
+        XMLstr = "<serverfarm type='"+serverfarm.type.lower()+"' name='"+serverfarm.name+"'>"
+        XMLstr = XMLstr+"<rserver name='" + rserver.name + "'>\r\n  </rserver>"
+        XMLstr = XMLstr+"<inservice sense='no'/>\r\n"
+        XMLstr = XMLstr+"</rserver_sfarm>\r\n"
+        XMLstr = XMLstr+"</serverfarm>"
         
         s = XmlSender(context)
-        return s.deployConfig(context, XMLstr)
-    
-    
-    
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
+
     
     def createProbe(self,  context,  probe):
         if not bool(probe.name): 
@@ -279,9 +301,11 @@ class AceDriver(BaseDriver):
             XMLstr = XMLstr + "</probe_echo>"
             
         s = XmlSender(context)
-        return s.deployConfig(context, XMLstr)
-        
-        
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
         
     
     
@@ -289,6 +313,8 @@ class AceDriver(BaseDriver):
         if not bool(probe.name): 
             return 'PROBE NAME ERROR'
         type = probe.type.lower()
+        if type == "connect":
+            type = "tcp"
 
         if ((type != 'echo-tcp') and (type != 'echo-udp')):
             XMLstr = "<probe_" + type + " type='"  + type + "' name='" + probe.name + "' sense='no'>\r\n"
@@ -301,7 +327,11 @@ class AceDriver(BaseDriver):
             XMLstr = XMLstr + probe.name + "' sense='no'>\r\n"
             
         s = XmlSender(context)
-        return s.deployConfig(context, XMLstr)
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
         
     
     
@@ -321,7 +351,7 @@ class AceDriver(BaseDriver):
             XMLstr = XMLstr + "<predictor predictor-method='" + serverfarm._predictor.type.lower() + "'/>\r\n"
         
         #for probe in serverfarm._probes:
-         #   XMLstr = XMLstr + "<probe_sfarm probe-name='" + probe.name + "'/>\r\n"
+        #   XMLstr = XMLstr + "<probe_sfarm probe-name='" + probe.name + "'/>\r\n"
         
         if serverfarm.type.lower() == "host":
             if bool(serverfarm.failOnAll): 
@@ -347,8 +377,12 @@ class AceDriver(BaseDriver):
         
         XMLstr = XMLstr + "</serverfarm>"
         
-        res = XmlSender(context)
-        return res.deployConfig(context, XMLstr) 
+        s = XmlSender(context)
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
     
     
     def deleteServerFarm(self,  context,  serverfarm):
@@ -358,7 +392,11 @@ class AceDriver(BaseDriver):
         XMLstr = "<serverfarm sense='no' name='" + serverfarm.name + "'></serverfarm>"
         
         s = XmlSender(context)
-        return s.deployConfig(context, XMLstr) 
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
     
     
     def addRServerToSF(self,  context,  serverfarm,  rserver): #rserver in sfarm may include many parameters !
@@ -399,8 +437,12 @@ class AceDriver(BaseDriver):
         XMLstr=XMLstr+"</rserver_sfarm>\r\n"
         XMLstr=XMLstr+"</serverfarm>"
         
-        res = XmlSender(context)
-        return res.deployConfig(context, XMLstr)
+        s = XmlSender(context)
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
     
     
     def deleteRServerFromSF(self,  context,  serverfarm,  rserver):
@@ -415,8 +457,12 @@ class AceDriver(BaseDriver):
         XMLstr=XMLstr+"</rserver_sfarm>\r\n"
         XMLstr=XMLstr+"</serverfarm>"
         
-        res = XmlSender(context)
-        return res.deployConfig(context, XMLstr)
+        s = XmlSender(context)
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
     
     
     def addProbeToSF(self,  context,  serverfarm,  probe):
@@ -427,8 +473,12 @@ class AceDriver(BaseDriver):
         XMLstr=XMLstr+" <probe_sfarm probe-name='"+probe.name+"'/>\r\n"
         XMLstr=XMLstr+"</serverfarm>"
         
-        res = XmlSender(context)
-        return res.deployConfig(context, XMLstr)
+        s = XmlSender(context)
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
     
     
     def deleteProbeFromSF (elf,  context,  serverfarm,  probe):
@@ -439,8 +489,12 @@ class AceDriver(BaseDriver):
         XMLstr=XMLstr+" <probe_sfarm sense='no' probe-name='"+probe.name+"'/>\r\n"
         XMLstr=XMLstr+"</serverfarm>"
         
-        res = XmlSender(context)
-        return res.deployConfig(context, XMLstr)
+        s = XmlSender(context)
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
     
     
     def createStickiness(self,  context,  vip,  sticky):
@@ -461,12 +515,10 @@ class AceDriver(BaseDriver):
         else:
             pmap = "int-" + md5.new(vip.VLAN).hexdigest()
         
-        res = XmlSender(context)
-        
-        # 1) Add a access-list
+        #  Add a access-list
         XMLstr = "<access-list id='vip-acl' config-type='extended' perm-value='permit' protocol-name='ip' src-type='any' host_dest-addr='" + vip.address + "'/>\r\n"
         
-        #2) Add a policy-map
+        # Add a policy-map
         if vip.appProto.lower() == "other" or vip.appProto.lower() == "http":
             vip.appProto = ""
         else:
@@ -481,7 +533,7 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "</class_pmap_lb>\r\n"
         XMLstr = XMLstr + "</policy-map_lb>\r\n"
         
-        #3)Add a class-map
+        # Add a class-map
         XMLstr = XMLstr + "<class-map match-type='match-all' name='" + vip.name + "'>\r\n"
         XMLstr = XMLstr + "<match_virtual-addr seq-num='" + sn + "' virtual-address='" + vip.address + "' net-mask='" + str(vip.mask) + "'"
         XMLstr = XMLstr + " protocol-type='" + vip.proto.lower() + "'"
@@ -489,45 +541,42 @@ class AceDriver(BaseDriver):
             XMLstr = XMLstr + " operator='eq' port-1='" + str(vip.port) + "'"
         XMLstr = XMLstr + "/>\r\n"
         XMLstr = XMLstr + "</class-map>\r\n"
-        # vip_config-type
-        #4)Add a policy-map (multimatch) with class-map
+
+        #  Add a policy-map (multimatch) with class-map
         XMLstr = XMLstr + "<policy-map_multimatch match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
         XMLstr = XMLstr + "<class match-cmap='" + vip.name + "'>\r\n"
+        
+        # it does not work
         #if bool(vip.status):
-        #    XMLstr = XMLstr + "<loadbalance vip-config-type='" + vip.status.lower() + "'/>\r\n"
+        #    XMLstr = XMLstr + "<loadbalance vip_config-type='" + vip.status.lower() + "'/>\r\n"
+        
         XMLstr = XMLstr + "<loadbalance policy='" + vip.name + "-l7slb'/>\r\n"
         XMLstr = XMLstr + "</class>\r\n"
         XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
         
-        tmp = res.deployConfig(context, XMLstr)
+        s = XmlSender(context)
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
         
-        #5)Add service-policy for necessary vlans
         if bool(vip.allVLANs):
             XMLstr = "<service-policy type='input' name='" + pmap + "'/>"
         else:
-            XMLstr = ""
-            #for i in vip.VLAN:
-            #    XMLstr = XMLstr + "<interface type='vlan' number='" + str(i) + "'>\r\n"
-            #    XMLstr = XMLstr + "<service-policy type='input' name='" + pmap + "'/>\r\n"
-            #    XMLstr = XMLstr + "</interface>"
-            XMLstr = XMLstr + "<interface type='vlan' number='" + str(vip.VLAN) + "'>\r\n"
-            XMLstr = XMLstr + "<service-policy type='input' name='" + pmap + "'/>\r\n"
-            XMLstr = XMLstr + "</interface>"
-        
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-            
-        #6)Add vip-acl to each VLANs (Appear error during repeated deploy)
-        if bool(vip.allVLANs):
-            pass
-        else:
-            XMLstr = ""
+            #  Add service-policy for necessary vlans
             for i in vip.VLAN:
-                XMLstr = XMLstr + "<interface type='vlan' number='" + str(i) + "'>\r\n"
+                XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
+                XMLstr = XMLstr + "<service-policy type='input' name='" + pmap + "'/>\r\n"
+                XMLstr = XMLstr + "</interface>"
+                tmp = s.deployConfig(context, XMLstr)    
+                
+            # Add vip-acl to each VLANs 
+            for i in vip.VLAN:
+                XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
                 XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
                 XMLstr = XMLstr + "</interface>"
-                res.deployConfig(context, XMLstr)
+                tmp = s.deployConfig(context, XMLstr)    
         
         return tmp
     
@@ -537,14 +586,17 @@ class AceDriver(BaseDriver):
         else:
             pmap = "int-" + md5.new(s).hexdigest()
         
-        res = XmlSender(context)
-        
         XMLstr = "<policy-map_multimatch match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
         XMLstr = XMLstr + "<class sense='no' cmap-name='" + vip.name + "'>\r\n"
         XMLstr = XMLstr + "</class>\r\n"
         XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
         
-        tmp = res.deployConfig(context, XMLstr)
+        s = XmlSender(context)
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)  
         
         #3) Delete policy-map, class-map and access-list
         if vip.appProto.lower() == "other" or vip.appProto.lower() == "http":
@@ -561,7 +613,12 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "<access-list sense='no' id='vip-acl' config-type='extended' perm-value='permit' " 
         XMLstr = XMLstr + "protocol-name='ip' src-type='any' host_dest-addr='" + vip.address + "'/>\r\n"
         
-        tmp = res.deployConfig(context, XMLstr)
+        s = XmlSender(context)
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
 
         last_policy_map = ''
         if (last_policy_map == 'YES'):
@@ -569,15 +626,18 @@ class AceDriver(BaseDriver):
             if bool(vip.allVLANs):
                 XMLstr = "<service-policy sense='no' type='input' name='" + pmap + "'/>"
             else:
-                XMLstr = ""
+                #  Add service-policy for necessary vlans
                 for i in vip.VLAN:
-                    XMLstr = XMLstr + "<interface type='vlan' number='" + str(i) + "'>\r\n"
+                    XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
                     XMLstr = XMLstr + "<service-policy sense='no' type='input' name='" + pmap + "'/>\r\n"
                     XMLstr = XMLstr + "</interface>"
-            tmp = res.deployConfig(context, XMLstr)
-
-            # Delete class-map from policy-map
-            XMLstr = "<policy-map_multimatch sense='no' match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
-            XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
-            tmp = res.deployConfig(context, XMLstr)
+                    tmp = s.deployConfig(context, XMLstr)    
+                    
+                # Add vip-acl to each VLANs 
+                for i in vip.VLAN:
+                    XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
+                    XMLstr = XMLstr + "<access-group sense='no' access-type='input' name='vip-acl'/>\r\n"
+                    XMLstr = XMLstr + "</interface>"
+                    tmp = s.deployConfig(context, XMLstr)    
+        
     
