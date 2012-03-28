@@ -24,6 +24,9 @@ import logging
 
 from balancer.drivers.BaseDriver import BaseDriver
 from balancer.drivers.haproxy.Context import Context
+from balancer.drivers.haproxy.transfer import RemoteConfig
+from balancer.drivers.haproxy.transfer import RemoteService
+from balancer.drivers.haproxy.transfer import  RemoteInterface
 
 logger = logging.getLogger(__name__)
 

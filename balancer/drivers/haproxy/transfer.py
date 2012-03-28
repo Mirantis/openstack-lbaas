@@ -1,9 +1,10 @@
 
 from fabric.api import env, sudo, get, put, run
 from fabric.network import disconnect_all
-from Context import Context
 
-class Config(object):
+from balancer.drivers.haproxy.Context import Context
+
+class RemoteConfig(object):
     def __init__(self, context):
         env.user = context.login
         env.hosts = []
@@ -28,7 +29,7 @@ class Config(object):
         env.warn_only = True
         return (run('haproxy -c -f  %s' % self.remotepath+self.remotename) == 'Configuration file is valid')
 
-class service(object):
+class RemoteService(object):
     def __init__(self, context):
         env.user = context.login
         env.hosts = []
@@ -48,7 +49,7 @@ class service(object):
         sudo('service haproxy restart')
         disconnect_all()
 
-class interface(object):
+class RemoteInterface(object):
     def __init__(self, context):
         env.user = context.login
         env.hosts = []
