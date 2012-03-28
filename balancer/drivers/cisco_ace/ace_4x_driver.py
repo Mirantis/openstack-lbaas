@@ -73,11 +73,10 @@ class AceDriver(BaseDriver):
         if (bool(rserver.maxCon) and bool(rserver.minCon)):
             XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + "' min='" + str(rserver.minCon) + "'/>\r\n"
         
-        # it does not work
-        #if bool(rserver.rateConnection):
-        #    XMLstr = XMLstr + "  <rate-limit type='connection' value='" + str(rserver.rateConnection) + "'/>\r\n"
-        #if bool(rserver.rateBandwidth):
-        #    XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + str(rserver.rateBandwidth) + "'/>\r\n"        
+        if bool(rserver.rateConnection):
+            XMLstr = XMLstr + "  <rate-limit type='connection' value='" + str(rserver.rateConnection) + "'/>\r\n"
+        if bool(rserver.rateBandwidth):
+            XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + str(rserver.rateBandwidth) + "'/>\r\n"        
             
         if (rserver.state == "In Service"):
             XMLstr = XMLstr + "  <inservice/>\r\n"
@@ -386,14 +385,13 @@ class AceDriver(BaseDriver):
         if bool(rserver.maxCon) and bool(rserver.minCon):
             XMLstr=XMLstr+"<conn-limit max='"+str(rserver.maxCon)+"' min='"+str(rserver.minCon)+"'/>\r\n"
             
-        # it does not work
-        #if bool(rserver.rateConnection):
-        #    XMLstr=XMLstr+"<rate-limit type='connection' value='"+str(rserver.rateConnection)+"'/>\r\n"
-        #if bool(rserver.rateBandwidth):
-        #   XMLstr=XMLstr+"<rate-limit type='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>\r\n"
+        if bool(rserver.rateConnection):
+            XMLstr=XMLstr+"<rate-limit type='connection' value='"+str(rserver.rateConnection)+"'/>\r\n"
+        if bool(rserver.rateBandwidth):
+           XMLstr=XMLstr+"<rate-limit type='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>\r\n"
         
         if bool(rserver.cookieStr):
-            XMLstr=XMLstr+"<cookie-string value='"+rserver.cookieStr+"'/>\r\n"
+            XMLstr=XMLstr+"<cookie-string string='"+rserver.cookieStr+"'/>\r\n"
         for i in range(len(rserver.probes)):
             XMLstr=XMLstr+"<probe_sfarm probe-name='"+rserver.probes[i]+"'/>\r\n"
         if bool(rserver.failOnAll):
