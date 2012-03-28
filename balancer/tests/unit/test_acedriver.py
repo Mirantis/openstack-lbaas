@@ -34,8 +34,16 @@ rs = RealServer()
 rs.name = 'LB_test_rs01'
 rs.address = '172.250.250.250'
 rs.description = "RS for test"
-rs.rateBandwidth = '1000'
-rs.rateConnection = '101'
+rs.weight = 7
+#rs.rateBandwidth = 500
+#rs.rateConnection = 50
+#Next var for AddRStoSFarm
+rs.port = "80"
+rs.backupRS = ""
+rs.backupRSport = ""
+#rs.cookieStr = "stringcookie"
+#rs.failOnAll = True
+rs.probes = ["icmp"]
 
 probe = HTTPprobe()
 probe.name = "LB_test_ProbeHTTP"
@@ -53,57 +61,68 @@ probe.openTimeout = 2
 probe.userName = "uzver"
 probe.password = "password"
 
-
 sf = ServerFarm()
+sf.type = "Host"
 sf.name = "LB_test_sfarm01"
-sf.predictor = "roundrobin"
 sf.description = "description"
+sf.predictor = "roundrobin"
+sf.failAction = "purge"
+sf.inbandHealthCheck = "Remove"
+sf.connFailureThreshCount = 5
+sf.resetTimeout = 200
+sf.resumeService = 40
+#sf.failOnAll = True
+sf._probes = ["ICMP"]
+sf.transparent = True
+sf.dynamicWorkloadScale = "Local"
+sf.partialThreshPercentage = 11
+sf.backInservice = 22
 
 vs = VirtualServer()
 vs.name = "LB_test_VIP1"
-vs.ip = "10.250.250.250"
+vs.address = "10.250.250.250"
 vs.VLAN=[2]
 vs.port="80"
 
 class Ace_5x_DriverTestCase(unittest.TestCase):
-    def test_createRServer(self):
+    """def test_01_createRServer(self):
         print driver.createRServer(test_context, rs)
     
-    def test_createProbe(self):
+    def test_02_createProbe(self):
         driver.createProbe(test_context, probe)
     
-    def test_createServerFarm(self):
+    def test_03_createServerFarm(self):
         driver.createServerFarm(test_context, sf)
     
-    def test_addRServerToSF(self):
+    def test_04_addRServerToSF(self):
         driver.addRServerToSF(test_context, sf,  rs)
     
-    def test_addProbeToSF(self):
-        driver.addProbeToSF(test_context, sf,  probe)
+    def test_05_addProbeToSF(self):
+        driver.addProbeToSF(test_context, sf,  probe)"""
     
-    def test_createVIP(self):
-        driver.createVIP(test_context, vs)
+    def test_06_createVIP(self):
+        driver.createVIP(test_context, vs,  sf)
     
-    def test_suspendRServer(self):
+    """def test_07_suspendRServer(self):
         driver.suspendRServer(test_context, sf, rs)
     
-    def test_activateRServer(self):
+    def test_08_activateRServer(self):
         driver.activateRServer(test_context, sf, rs)
     
-    def test_deleteVIP(self):
+    def test_09_deleteVIP(self):
         driver.deleteVIP(test_context, vs)
 
-    def test_deleteProbeFromSF(self):
+    def test_10_deleteProbeFromSF(self):
         driver.deleteProbeFromSF(test_context, sf,  probe)
     
-    def test_deleteRServerFromSF(self):
+    def test_11_deleteRServerFromSF(self):
         driver.deleteRServerFromSF(test_context, sf,  rs)
     
-    def test_deleteServerFarm(self):
+    def test_12_deleteServerFarm(self):
         driver.deleteServerFarm(test_context, sf)
     
-    def test_deleteProbe(self):
+    def test_13_deleteProbe(self):
         driver.deleteProbe(test_context, probe)
     
-    def test_deleteRServer(self):
-        driver.deleteRServer(test_context, rs)
+    def test_14_deleteRServer(self):
+        driver.deleteRServer(test_context, rs)"""
