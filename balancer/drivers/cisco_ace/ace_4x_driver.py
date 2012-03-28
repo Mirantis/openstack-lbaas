@@ -21,7 +21,7 @@ import logging
 from balancer.drivers.BaseDriver import BaseDriver
 from balancer.drivers.cisco_ace.Context import Context
 from balancer.drivers.cisco_ace.XmlSender import XmlSender
-
+import openstack.common.exception
 
 logger = logging.getLogger(__name__)
 
