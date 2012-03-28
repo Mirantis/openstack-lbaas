@@ -386,9 +386,9 @@ class AceDriver(BaseDriver):
             XMLstr=XMLstr+"<conn-limit max='"+str(rserver.maxCon)+"' min='"+str(rserver.minCon)+"'/>\r\n"
             
         if bool(rserver.rateConnection):
-            XMLstr=XMLstr+"<rate-limit type='connection' value='"+str(rserver.rateConnection)+"'/>\r\n"
+            XMLstr=XMLstr+"<rate-limit rate-type='connection' value='"+str(rserver.rateConnection)+"'/>\r\n"
         if bool(rserver.rateBandwidth):
-           XMLstr=XMLstr+"<rate-limit type='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>\r\n"
+           XMLstr=XMLstr+"<rate-limit rate-type='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>\r\n"
         
         if bool(rserver.cookieStr):
             XMLstr=XMLstr+"<cookie-string string='"+rserver.cookieStr+"'/>\r\n"
