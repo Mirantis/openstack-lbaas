@@ -29,21 +29,34 @@ logger = logging.getLogger(__name__)
 
 class HaproxyDriver(BaseDriver):
     def __init__(self):
-        
         pass
 
     def addRServerToSF(self,  context,  serverfarm,  rserver):
         haproxy_serverfarm = HaproxyBackend ()
         haproxy_serverfarm.name = serverfarm.name
-        haproxy_reserver = HaproxyRserver()
-        haproxy_reserver.name = rserver.name
+        haproxy_rserver = HaproxyRserver()
+        haproxy_rserver.name = rserver.name
+        haproxy_rserver.weight = rserver.weight
+        haproxy_rserver.address = rserver.address
+        haproxy_rserver.port = rserver.port
+        haproxy_rserver.maxconn = rserver.maxCon
+        config_file = HaproxyConfigFile()
+        logger.debug('[HAPROXY] Creating rserver %s in the backend block %s' % \
+                              (haproxy_rserver.name,  haproxy_serverfarm.name))
+        config_file.AddRserverToBackendBlock (haproxy_serverfarm, haproxy_rserver )
 
     
     def deleteRServerFromSF(self, context,  serverfarm,  rserver):
         haproxy_serverfarm = HaproxyBackend ()
         haproxy_serverfarm.name = serverfarm.name
-        haproxy_reserver = HaproxyRserver()
-        haproxy_reserver.name = rserver.name
+        haproxy_rserver = HaproxyRserver()
+        haproxy_rserver.name = rserver.name
+        config_file = HaproxyConfigFile()
+        logger.debug('[HAPROXY] Deleting rserver %s in the backend block %s' %  \
+                            (haproxy_rserver.name,  haproxy_serverfarm.name))
+        config_file.DelRserverFromBackendBlock(haproxy_serverfarm, haproxy_rserver)
+
+        
         
     
     def createVIP(self,  context, virtualserver): 

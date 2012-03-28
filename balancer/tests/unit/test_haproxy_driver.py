@@ -9,6 +9,7 @@ from balancer.drivers.haproxy.HaproxyDriver import  HaproxyDriver
 from balancer.drivers.haproxy.Context import  Context
 from balancer.loadbalancers.serverfarm import ServerFarm
 from balancer.loadbalancers.virtualserver import VirtualServer
+from balancer.loadbalancers.realserver import RealServer
 
 import unittest
 import os
@@ -18,7 +19,7 @@ import filecmp
 
 class HAproxyDriverTestCase (unittest.TestCase):
     def setUp (self):
-        #shutil.copyfile ('./balancer/tests/unit/testfiles/haproxy.cfg',  "/tmp/haproxy.cfg")
+        shutil.copyfile ('./balancer/tests/unit/testfiles/haproxy.cfg',  "/tmp/haproxy.cfg")
         self.contex = Context
         #
         self.frontend = HaproxyFronted()
@@ -52,9 +53,14 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.virtualserver.name = 'Virtual server'
         self.virtualserver.address = '115.115.115.115'
         self.virtualserver.port = '8080'
-        
-        
-        
+        #
+        self.rserver = RealServer()
+        self.rserver.name = 'test_real_server'
+        self.rserver.address = '123.123.123.123'
+        self.rserver.port = '9090'
+        self.rserver.weight = '8'
+        self.rserver.maxCon = 30000
+   
     def test_FileName(self):
         filename = HaproxyConfigFile("/tmp/haproxy.cfg")
         self.assertEqual(filename.GetHAproxyConfigFileName(),  "/tmp/haproxy.cfg")
@@ -70,6 +76,15 @@ class HAproxyDriverTestCase (unittest.TestCase):
         test = HaproxyConfigFile("/tmp/haproxy.cfg")
         test.DeleteBlock(self.block_for_delete)
         self.assertTrue(True)
+    def test_AddRserverToBackendBlock(self):
+        test = HaproxyConfigFile("/tmp/haproxy.cfg")
+        test.AddRserverToBackendBlock(self.backend,  self.haproxy_rserver)
+        test.AddRserverToBackendBlock(self.backend,  self.haproxy_rserver1)
+        self.assertTrue(True)
+    def test_DelRserverFromBackendBlock(self):
+        test = HaproxyConfigFile("/tmp/haproxy.cfg")
+        test.DelRserverFromBackendBlock(self.backend,  self.haproxy_rserver)
+        self.assertTrue(True)    
     def test_createServerFarm(self):
         driver = HaproxyDriver()
         driver.createServerFarm(self.contex,  self.server_farm)
@@ -86,15 +101,16 @@ class HAproxyDriverTestCase (unittest.TestCase):
         driver = HaproxyDriver()
         driver.deleteVIP(self.contex,  self.virtualserver)
         self.assertTrue(True)
-    def test_AddRserverToBackendBlock(self):
-        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-        test.AddRserverToBackendBlock(self.backend,  self.haproxy_rserver)
-        test.AddRserverToBackendBlock(self.backend,  self.haproxy_rserver1)
+    def test_addRServerToSF(self):
+        driver = HaproxyDriver()
+        driver.addRServerToSF(self.contex,  self.server_farm,  self.rserver)
         self.assertTrue(True)
-    def test_DelRserverFromBackendBlock(self):
-        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-        test.DelRserverFromBackendBlock(self.backend,  self.haproxy_rserver)
-        self.assertTrue(True)        
+    def test_deleteRServerFromSF(self):
+        driver = HaproxyDriver()
+        driver.deleteRServerFromSF (self.contex,  self.server_farm,  self.rserver)
+        self.assertTrue(True)
+    
+    
 
 if __name__ == "__main__":
 	unittest.main()
