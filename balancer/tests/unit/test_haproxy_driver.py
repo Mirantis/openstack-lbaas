@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import unittest
+import os
+import shutil
+import filecmp
+
 from balancer.drivers.haproxy.HaproxyDriver import  HaproxyConfigFile
 from balancer.drivers.haproxy.HaproxyDriver import  HaproxyFronted
 from balancer.drivers.haproxy.HaproxyDriver import  HaproxyBackend
@@ -11,10 +16,7 @@ from balancer.loadbalancers.serverfarm import ServerFarm
 from balancer.loadbalancers.virtualserver import VirtualServer
 from balancer.loadbalancers.realserver import RealServer
 
-import unittest
-import os
-import shutil
-import filecmp
+
 
 
 class HAproxyDriverTestCase (unittest.TestCase):
@@ -95,7 +97,7 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.assertTrue(True)    
     def test_createVirtualServer(self):
         driver = HaproxyDriver()
-        driver.createVIP(self.contex,  self.virtualserver)
+        driver.createVIP(self.contex,  self.virtualserver,  self.server_farm)
         self.assertTrue(True)
     def test_deleteVirtualServer(self):
         driver = HaproxyDriver()

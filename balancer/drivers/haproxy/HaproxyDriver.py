@@ -59,7 +59,7 @@ class HaproxyDriver(BaseDriver):
         
         
     
-    def createVIP(self,  context, virtualserver): 
+    def createVIP(self,  context, virtualserver,  serverfarm): 
         if not bool(virtualserver.name):
             logger.error ("Virtualserver name is empty")
             return "VIRTUALSERVER NAME ERROR"
@@ -67,8 +67,12 @@ class HaproxyDriver(BaseDriver):
         haproxy_virtualserver.name = virtualserver.name
         haproxy_virtualserver.bind_address = virtualserver.address
         haproxy_virtualserver.bind_port = virtualserver.port
+        haproxy_serverfarm = HaproxyBackend()
+        haproxy_serverfarm.name = serverfarm.name
         config_file = HaproxyConfigFile()
-        config_file.AddFronted(haproxy_virtualserver)        
+        config_file.AddFronted(haproxy_virtualserver,  haproxy_serverfarm)
+        
+        
 
     
     def deleteVIP(self,  context,  virtualserver):
@@ -194,7 +198,7 @@ class HaproxyConfigFile:
                     if j.find('server') >= 0 and j.find(HaproxyRserver.name) >= 0: new_config_file[i].remove(j)
         self._WriteConfigFile(new_config_file)
 
-    def AddFronted(self,  HaproxyFronted):
+    def AddFronted(self,  HaproxyFronted,  HaproxyBackend = None):
         """
             Add frontend section to haproxy config file
         """
@@ -209,6 +213,8 @@ class HaproxyConfigFile:
         new_config_block = []
         new_config_block.append("\tbind %s:%s" % (HaproxyFronted.bind_address,  HaproxyFronted.bind_port))
         new_config_block.append("\tmode %s" % HaproxyFronted.mode)
+        if HaproxyBackend is not None :
+            new_config_block.append("\tdefault_backend %s" % HaproxyBackend.name )
         new_config_file [ "frontend %s" % HaproxyFronted.name ] =  new_config_block 
         logger.debug (new_config_block)
         logger.debug(new_config_file.keys())
