@@ -29,6 +29,14 @@ class AceDriver(BaseDriver):
     def __init__(self):
         pass
     
+    def send_data(self,  context,  XMLstr):
+        s = XmlSender(context)
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
+    
     def getContext (self,  dev):
         logger.debug("Creating context with params: IP %s, Port: %s" % (dev.ip,  dev.port))
         return Context(dev.ip, dev.port, dev.user,  dev.password)
@@ -65,23 +73,18 @@ class AceDriver(BaseDriver):
         if (bool(rserver.maxCon) and bool(rserver.minCon)):
             XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + "' min='" + str(rserver.minCon) + "'/>\r\n"
         
-        if bool(rserver.rateConnection):
-            XMLstr = XMLstr + "  <rate-limit type='connection' value='" + str(rserver.rateConnection) + "'/>\r\n"
-            
-        if bool(rserver.rateBandwidth):
-            XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + str(rserver.rateBandwidth) + "'/>\r\n"        
+        # it does not work
+        #if bool(rserver.rateConnection):
+        #    XMLstr = XMLstr + "  <rate-limit type='connection' value='" + str(rserver.rateConnection) + "'/>\r\n"
+        #if bool(rserver.rateBandwidth):
+        #    XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + str(rserver.rateBandwidth) + "'/>\r\n"        
             
         if (rserver.state == "In Service"):
             XMLstr = XMLstr + "  <inservice/>\r\n"
             
         XMLstr = XMLstr + "</rserver>"
         
-        s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)    
-        if (tmp == 'OK'):
-            return tmp
-        else:
-            raise openstack.common.exception.Invalid(tmp)
+        return send_data(context,  XMLstr)
     
     
     def deleteRServer(self, context, rserver):
@@ -90,12 +93,7 @@ class AceDriver(BaseDriver):
         
         XMLstr = "<rserver sense='no' type='" + rserver.type.lower() + "' name='" + rserver.name + "'></rserver>"
         
-        s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)    
-        if (tmp == 'OK'):
-            return tmp
-        else:
-            raise openstack.common.exception.Invalid(tmp)
+        return send_data(context,  XMLstr)
     
     
     def activateRServer(self,  context,  serverfarm,  rserver):
@@ -108,12 +106,7 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "</rserver_sfarm>\r\n"
         XMLstr = XMLstr + "</serverfarm>"
         
-        s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)    
-        if (tmp == 'OK'):
-            return tmp
-        else:
-            raise openstack.common.exception.Invalid(tmp)
+        return send_data(context,  XMLstr)
 
     
     def suspendRServer(self,  context,  serverfarm,  rserver):
@@ -126,12 +119,7 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr+"</rserver_sfarm>\r\n"
         XMLstr = XMLstr+"</serverfarm>"
         
-        s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)    
-        if (tmp == 'OK'):
-            return tmp
-        else:
-            raise openstack.common.exception.Invalid(tmp)
+        return send_data(context,  XMLstr)
 
     
     def createProbe(self,  context,  probe):
@@ -300,12 +288,7 @@ class AceDriver(BaseDriver):
         else:
             XMLstr = XMLstr + "</probe_echo>"
             
-        s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)    
-        if (tmp == 'OK'):
-            return tmp
-        else:
-            raise openstack.common.exception.Invalid(tmp)
+        return send_data(context,  XMLstr)
         
     
     
@@ -326,12 +309,7 @@ class AceDriver(BaseDriver):
                 XMLstr = XMLstr + "udp' name='"
             XMLstr = XMLstr + probe.name + "' sense='no'>\r\n"
             
-        s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)    
-        if (tmp == 'OK'):
-            return tmp
-        else:
-            raise openstack.common.exception.Invalid(tmp)
+        return send_data(context,  XMLstr)
         
     
     
@@ -377,12 +355,7 @@ class AceDriver(BaseDriver):
         
         XMLstr = XMLstr + "</serverfarm>"
         
-        s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)    
-        if (tmp == 'OK'):
-            return tmp
-        else:
-            raise openstack.common.exception.Invalid(tmp)
+        return send_data(context,  XMLstr)
     
     
     def deleteServerFarm(self,  context,  serverfarm):
@@ -391,12 +364,7 @@ class AceDriver(BaseDriver):
 
         XMLstr = "<serverfarm sense='no' name='" + serverfarm.name + "'></serverfarm>"
         
-        s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)    
-        if (tmp == 'OK'):
-            return tmp
-        else:
-            raise openstack.common.exception.Invalid(tmp)
+        return send_data(context,  XMLstr)
     
     
     def addRServerToSF(self,  context,  serverfarm,  rserver): #rserver in sfarm may include many parameters !
@@ -417,10 +385,13 @@ class AceDriver(BaseDriver):
             XMLstr=XMLstr+"/>\r\n"
         if bool(rserver.maxCon) and bool(rserver.minCon):
             XMLstr=XMLstr+"<conn-limit max='"+str(rserver.maxCon)+"' min='"+str(rserver.minCon)+"'/>\r\n"
+            
+        # it does not work
         #if bool(rserver.rateConnection):
         #    XMLstr=XMLstr+"<rate-limit type='connection' value='"+str(rserver.rateConnection)+"'/>\r\n"
         #if bool(rserver.rateBandwidth):
         #   XMLstr=XMLstr+"<rate-limit type='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>\r\n"
+        
         if bool(rserver.cookieStr):
             XMLstr=XMLstr+"<cookie-string value='"+rserver.cookieStr+"'/>\r\n"
         for i in range(len(rserver.probes)):
@@ -437,12 +408,7 @@ class AceDriver(BaseDriver):
         XMLstr=XMLstr+"</rserver_sfarm>\r\n"
         XMLstr=XMLstr+"</serverfarm>"
         
-        s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)    
-        if (tmp == 'OK'):
-            return tmp
-        else:
-            raise openstack.common.exception.Invalid(tmp)
+        return send_data(context,  XMLstr)
     
     
     def deleteRServerFromSF(self,  context,  serverfarm,  rserver):
@@ -457,12 +423,7 @@ class AceDriver(BaseDriver):
         XMLstr=XMLstr+"</rserver_sfarm>\r\n"
         XMLstr=XMLstr+"</serverfarm>"
         
-        s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)    
-        if (tmp == 'OK'):
-            return tmp
-        else:
-            raise openstack.common.exception.Invalid(tmp)
+        return send_data(context,  XMLstr)
     
     
     def addProbeToSF(self,  context,  serverfarm,  probe):
@@ -473,12 +434,7 @@ class AceDriver(BaseDriver):
         XMLstr=XMLstr+" <probe_sfarm probe-name='"+probe.name+"'/>\r\n"
         XMLstr=XMLstr+"</serverfarm>"
         
-        s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)    
-        if (tmp == 'OK'):
-            return tmp
-        else:
-            raise openstack.common.exception.Invalid(tmp)
+        return send_data(context,  XMLstr)
     
     
     def deleteProbeFromSF (elf,  context,  serverfarm,  probe):
@@ -489,12 +445,7 @@ class AceDriver(BaseDriver):
         XMLstr=XMLstr+" <probe_sfarm sense='no' probe-name='"+probe.name+"'/>\r\n"
         XMLstr=XMLstr+"</serverfarm>"
         
-        s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)    
-        if (tmp == 'OK'):
-            return tmp
-        else:
-            raise openstack.common.exception.Invalid(tmp)
+        return send_data(context,  XMLstr)
     
     
     def createStickiness(self,  context,  vip,  sticky):
@@ -556,9 +507,7 @@ class AceDriver(BaseDriver):
         
         s = XmlSender(context)
         tmp = s.deployConfig(context, XMLstr)    
-        if (tmp == 'OK'):
-            return tmp
-        else:
+        if (tmp != 'OK'):
             raise openstack.common.exception.Invalid(tmp)
         
         if bool(vip.allVLANs):
@@ -578,8 +527,10 @@ class AceDriver(BaseDriver):
                 XMLstr = XMLstr + "</interface>"
                 tmp = s.deployConfig(context, XMLstr)    
         
-        return tmp
+        return 'OK'
     
+    
+
     def deleteVIP(self,  context,  vip):
         if bool(vip.allVLANs):
             pmap = "global"
@@ -593,10 +544,8 @@ class AceDriver(BaseDriver):
         
         s = XmlSender(context)
         tmp = s.deployConfig(context, XMLstr)    
-        if (tmp == 'OK'):
-            return tmp
-        else:
-            raise openstack.common.exception.Invalid(tmp)  
+        if (tmp != 'OK'):
+            raise openstack.common.exception.Invalid(tmp)
         
         #3) Delete policy-map, class-map and access-list
         if vip.appProto.lower() == "other" or vip.appProto.lower() == "http":
@@ -615,9 +564,7 @@ class AceDriver(BaseDriver):
         
         s = XmlSender(context)
         tmp = s.deployConfig(context, XMLstr)    
-        if (tmp == 'OK'):
-            return tmp
-        else:
+        if (tmp != 'OK'):
             raise openstack.common.exception.Invalid(tmp)
 
         last_policy_map = ''
