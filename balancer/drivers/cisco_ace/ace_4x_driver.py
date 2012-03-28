@@ -371,39 +371,39 @@ class AceDriver(BaseDriver):
             return "ERROR"
         
         XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
-        XMLstr=XMLstr+" <rserver_sfarm name='"+rserver.name+"'"
+        XMLstr=XMLstr+"  <rserver_sfarm name='"+rserver.name+"'"
         if bool(rserver.port):
             XMLstr=XMLstr+" port='"+rserver.port+"'"
         XMLstr=XMLstr+">\r\n"
         if bool(rserver.weight):
-            XMLstr=XMLstr+"<weight value='"+str(rserver.weight)+"'/>\r\n"
+            XMLstr=XMLstr+"    <weight value='"+str(rserver.weight)+"'/>\r\n"
         if bool(rserver.backupRS):
-            XMLstr=XMLstr+"<backup-rserver rserver-name='"+rserver.backupRS+"'"
+            XMLstr=XMLstr+"    <backup-rserver rserver-name='"+rserver.backupRS+"'"
             if bool(rserver.backupRSport):
                 XMLstr=XMLstr+" port='"+rserver.backupRSport+"'"
             XMLstr=XMLstr+"/>\r\n"
         if bool(rserver.maxCon) and bool(rserver.minCon):
-            XMLstr=XMLstr+"<conn-limit max='"+str(rserver.maxCon)+"' min='"+str(rserver.minCon)+"'/>\r\n"
+            XMLstr=XMLstr+"    <conn-limit max='"+str(rserver.maxCon)+"' min='"+str(rserver.minCon)+"'/>\r\n"
             
         if bool(rserver.rateConnection):
-            XMLstr=XMLstr+"<rate-limit limit-type='connection' value='"+str(rserver.rateConnection)+"'/>\r\n"
+            XMLstr=XMLstr+"    <rate-limit value='"+str(rserver.rateConnection)+"'/>\r\n"
         if bool(rserver.rateBandwidth):
-           XMLstr=XMLstr+"<rate-limit limit-type='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>\r\n"
+           XMLstr=XMLstr+"    <rate-limit limit='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>\r\n"
         
         if bool(rserver.cookieStr):
-            XMLstr=XMLstr+"<cookie-string string='"+rserver.cookieStr+"'/>\r\n"
+            XMLstr=XMLstr+"    <cookie-string string='"+rserver.cookieStr+"'/>\r\n"
         for i in range(len(rserver.probes)):
-            XMLstr=XMLstr+"<probe_sfarm probe-name='"+rserver.probes[i]+"'/>\r\n"
+            XMLstr=XMLstr+"    <probe_sfarm probe-name='"+rserver.probes[i]+"'/>\r\n"
         if bool(rserver.failOnAll):
-            XMLstr=XMLstr+"<probe_sfarm probe-name='fail-on-all'/>"
+            XMLstr=XMLstr+"    <probe_sfarm probe-name='fail-on-all'/>"
         if bool(rserver.state):
             if rserver.state.lower() == "inservice":
-                XMLstr=XMLstr+"<inservice/>\r\n"
+                XMLstr=XMLstr+"    <inservice/>\r\n"
             if rserver.state.lower() == "standby":
-                XMLstr=XMLstr+"<inservice mode='"+rserver.state.lower()+"'/>\r\n"
+                XMLstr=XMLstr+"    <inservice mode='"+rserver.state.lower()+"'/>\r\n"
             if rserver.state.lower() == "outofservice":
-                XMLstr=XMLstr+"<inservice sense='no'/>\r\n"
-        XMLstr=XMLstr+"</rserver_sfarm>\r\n"
+                XMLstr=XMLstr+"    <inservice sense='no'/>\r\n"
+        XMLstr=XMLstr+"  </rserver_sfarm>\r\n"
         XMLstr=XMLstr+"</serverfarm>"
         
         return self.send_data(context,  XMLstr)
