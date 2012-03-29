@@ -365,7 +365,55 @@ class Deleter(object):
         logger.debug("Deleter: connecting to db: %s" % db)
         self._con = sqlite3.connect(db)
     
+    def deleteRSbyID(self, id):
+        cursor = self._con.cursor()
+        command = "DELETE from rservers where id = '%s'" %id
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit() 
+        
+    def deleteRSsBySFid(self, id):
+        cursor = self._con.cursor()
+        command = "DELETE from rservers where  sf_id = '%s'" %id
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit() 
+        
+    def deleteVSbyName(self, name):
+        cursor = self._con.cursor()
+        command = "DELETE from vips where name = '%s'" %name
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit() 
 
+    def deleteVSsBySFid(self,  id):
+        cursor = self._con.cursor()
+        command = "DELETE from vips where  sf_id = '%s'" %id
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit() 
+        
+    def deleteProbesBySFid(self, id):
+        cursor = self._con.cursor()
+        command = "DELETE from probes where probes.sf_id = '%s'" %id
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()   
+        
+    def deleteLBbyID(self):
+        cursor = self._con.cursor()
+        command = "DELETE from loadbalancers where id = '%s'" %id
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()  
+        
+        
 class Storage(object):
     def __init__(self,  conf=None):
          db = None
