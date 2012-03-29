@@ -360,6 +360,12 @@ class Writer(object):
         cursor.execute(command)
         self._con.commit() 
 
+class Deleter(object):
+    def __init__(self,  db):
+        logger.debug("Deleter: connecting to db: %s" % db)
+        self._con = sqlite3.connect(db)
+    
+
 class Storage(object):
     def __init__(self,  conf=None):
          db = None
@@ -378,6 +384,7 @@ class Storage(object):
     def getWriter(self):
         return self._writer
         
-
+    def getDeleter(self):
+        return Deleter(self._db)
 
 

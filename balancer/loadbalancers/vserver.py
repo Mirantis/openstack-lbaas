@@ -112,33 +112,59 @@ class Balancer():
         for vip in self.vips:
             wr.writeVirtualServer(vip)
             
-    def deploy(self,  driver,  context):
-        #Step 1. Deploy server farm
-        if  driver.createServerFarm(context,  self.sf) != "OK":
-            raise exception.OpenstackException
+    def loadFromDB(self,  id):
+        pass
         
-        #Step 2. Create RServers and attach them to SF
+
+#    def deploy(self,  driver,  context):
+#        #Step 1. Deploy server farm
+#        if  driver.createServerFarm(context,  self.sf) != "OK":
+#            raise exception.OpenstackException
+#        
+#        #Step 2. Create RServers and attach them to SF
+#        
+#        for rs in self.rs:
+#            driver.createRServer(context,  rs)
+#            driver.addRServerToSF(context,  self.sf,  rs)
+#            
+#        #Step 3. Create probes and attache them to SF
+#        for pr in self.probes:
+#            driver.createProbe(context,  pr)
+#            driver.addProbeToSF(context,  self.sf,  pr)
+#        #Step 4. Deploy vip
+#        for vip in self.vips:
+#            driver.createVIP(context,  vip,  self.sf)   
         
-        for rs in self.rs:
-            driver.createRServer(context,  rs)
-            driver.addRServerToSF(context,  self.sf,  rs)
-            
-        #Step 3. Create probes and attache them to SF
-        for pr in self.probes:
-            driver.createProbe(context,  pr)
-            driver.addProbeToSF(context,  self.sf,  pr)
-        #Step 4. Deploy vip
-        for vip in self.vips:
-            driver.createVIP(context,  vip,  self.sf)   
         
-        
+def makeCreateLBCommandChain(bal,  driver,  context):
+    list = []
+    list.append(CreateServerFarmCommand(driver, context,  bal.sf))
+    for rs in bal.rs:
+        list.append(CreateRServerCommand(driver,  context, rs))
+        list.append(AddRServerToSFCommand(driver, context, bal.sf,  rs))
+    
+    for pr in bal.probes:
+        list.append(CreateProbeCommand(driver,  context,  pr))
+        list.append(AddProbeToSFCommand(driver,  context,  bal.sf,  pr))
+    for vip in bal.vips:
+        list.append(CreateVIPCommand(driver,  context,  vip,  bal.sf))
+    return list
 
 class Deployer(object):
     def __init__(self):
         self.commands = []
     
     def execute(self):
-        pass
+        for index in range(len(self.commands)):
+            current_command = self.commands[index]
+            try:
+                current_command.execute()
+            except:
+                i = index
+                for k in range(index):
+                    command = self.commands[index - k]
+                    command.undo()
+                raise exception.Error()
                 
                 
     
@@ -150,7 +176,9 @@ class CreateRServerCommand(object):
     
     def execute(self):
          self._driver.createRServer(self._context,  self._rs)
-        
+    
+    def undo(self):
+        self._driver.deleteRServer(self._context,  self._rs)
 
 class CreateServerFarmCommand(object):
     def __init__(self,  driver,  context,  sf):

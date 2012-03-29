@@ -27,6 +27,9 @@ from balancer.storage.storage import *
 from balancer.core.scheduller import Scheduller
 from balancer.devices.DeviceMap import DeviceMap
 from balancer.loadbalancers.vserver import Balancer
+from balancer.loadbalancers.vserver import makeCreateLBCommandChain
+from balancer.loadbalancers.vserver import Deployer
+
 
 class LBGetIndexWorker(SyncronousWorker):
     def __init__(self,  task):
@@ -64,7 +67,10 @@ class CreateLBWorker(SyncronousWorker):
             bal_deploy.savetoDB()
             
             #Step 3. Deploy config to device
-            bal_deploy.deploy(driver, context)
+            commands = makeCreateLBCommandChain(bal_deploy,  driver,  contex)
+            deploy = Deployer()
+            deploy.commands = commands
+            deploy.execute()
             
             self._task.status = STATUS_DONE
             return "OK"

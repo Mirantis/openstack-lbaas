@@ -71,7 +71,24 @@ class DeviceInfoWorker(SyncronousWorker):
          self._task.status = STATUS_DONE
          return 'OK'
          
-         
+class DeviceDeleteWorker(SyncronousWorker):
+    def __init__(self,  task):
+          super(DeviceDeleteWorker, self).__init__(task)
+    
+    def run(self):
+      self._task.status = STATUS_PROGRESS
+      params = self._task.parameters
+      dev = LBDevice()
+      dev.loadFromDict(params)
+      
+      store = Storage()
+      writer = store.getWriter()
+      writer.writeDevice(dev)
+      sc = ServiceController.Instance()
+      sched = sc.scheduller
+      sched.addDevice(dev)
+      self._task.status = STATUS_DONE
+      return 'OK'         
       
 class DeviceActionMapper(object):
     def getWorker(self, task,  action,  params=None):
@@ -80,6 +97,6 @@ class DeviceActionMapper(object):
         if action == "create":
             return DeviceCreateWorker(task)
         if action == "info":
-            return DeviceInfoWorker(task)
-              
-       
+            return DeviceInfoWorker(task)              
+        if action == "delete":
+            return DeviceDeleteWorker(task)
