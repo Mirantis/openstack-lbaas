@@ -21,6 +21,7 @@ import logging
 
 
 from openstack.common import exception
+from balancer.loadbalancers.command import BaseCommand
 import balancer.storage.storage 
 
 import loadbalancer
@@ -131,12 +132,75 @@ class Balancer():
             driver.createVIP(context,  vip,  self.sf)   
         
         
-            
+
+class Deployer(object):
+    def __init__(self):
+        self.commands = []
+    
+    def execute(self):
+        pass
+                
+                
+    
+class CreateRServerCommand(object): 
+    def __init__(self,  driver,  contex,  rs):
+        self._driver = driver
+        self._context = contex
+        self._rs = rs
+    
+    def execute(self):
+         self._driver.createRServer(self._context,  self._rs)
         
+
+class CreateServerFarmCommand(object):
+    def __init__(self,  driver,  context,  sf):
+        self._driver = driver
+        self._context = contex
+        self._sf = sf
+    
+    def execute(self):
+        self._driver.createServerFarm(self._context,  self._sf)
         
 
+class AddRServerToSFCommand(object):
+    def __init__(self,  driver,  context,  sf, rs):
+        self._driver = driver
+        self._context = contex
+        self._sf = sf      
+        self._rs = rs
+        
+    def execute(self):
+        self._driver.addRServerToSF(self._context,  self._sf,  self._rs)
 
+class CreateProbeCommand(object):
+    def __init_(self,  driver,  context,  probe):
+        self._driver = driver
+        self._context = contex
+        self._probe = probe
+    
+    def execute(self):
+        self._driver.createProbe(self._context, self._probe)
 
+class AddProbeToSFCommand(object):
+    def __init__(self,  driver,  context,  sf,  probe):
+        self._driver = driver
+        self._context = contex
+        self._probe = probe
+        self._sf = sf
+    
+    def execute(self):
+        self._driver.addProbeToSF(self._context,  self._sf,  self._probe)
+        
+
+class CreateVIPCommand(object):
+    def __init__(self,  driver,  context,  vip,  sf):
+        self._driver = driver
+        self._context = contex
+        self._vip = vip
+        self._sf = sf       
+        
+    def execute(self):
+        self._driver.createVIP(self._context,  self._vip,  self._sf)
 
 def createProbe(probe_type):
     probeDict={'DNS':probe.DNSprobe(), 'ECHOTCP':probe.ECHOTCPprobe(), 'ECHOUDP':probe.ECHOUDPprobe(), 
