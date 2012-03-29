@@ -47,10 +47,11 @@ class HaproxyDriver(BaseDriver):
         haproxy_rserver.address = rserver.address
         haproxy_rserver.port = rserver.port
         haproxy_rserver.maxconn = rserver.maxCon
+        #Modify remote config file, check and restart remote haproxy
         config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  context.configfilename))
+        remote = RemoteConfig(context)
         logger.debug('[HAPROXY] Creating rserver %s in the backend block %s' % \
                               (haproxy_rserver.name,  haproxy_serverfarm.name))
-        remote = RemoteConfig(context)
         remote.getConfig()
         config_file.AddRserverToBackendBlock (haproxy_serverfarm, haproxy_rserver )
         remote.putConfig()
@@ -60,10 +61,14 @@ class HaproxyDriver(BaseDriver):
         haproxy_serverfarm.name = serverfarm.name
         haproxy_rserver = HaproxyRserver()
         haproxy_rserver.name = rserver.name
-        config_file = HaproxyConfigFile()
+        #Modify remote config file, check and restart remote haproxy
+        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  context.configfilename))
+        remote = RemoteConfig(context)
         logger.debug('[HAPROXY] Deleting rserver %s in the backend block %s' %  \
                             (haproxy_rserver.name,  haproxy_serverfarm.name))
+        remote.getConfig()        
         config_file.DelRserverFromBackendBlock(haproxy_serverfarm, haproxy_rserver)
+        remote.putConfig()
     
     def createVIP(self,  context, virtualserver,  serverfarm): 
         if not bool(virtualserver.name):
@@ -75,13 +80,13 @@ class HaproxyDriver(BaseDriver):
         haproxy_virtualserver.bind_port = virtualserver.port
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
-        config_file = HaproxyConfigFile()
-        config_file.AddFronted(haproxy_virtualserver,  haproxy_serverfarm)
+        #Add new IP address
         remote_interface = RemoteInterface(context, haproxy_virtualserver )
         remote_interface.addIP()
-        remote_control = RemoteService(context)
-        remote_control.restart()
-        
+        #Modify remote config file, check and restart remote haproxy
+        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  context.configfilename))
+        remote = RemoteConfig(context)
+
     
     def deleteVIP(self,  context,  virtualserver):
         if not bool(virtualserver.name):
@@ -90,16 +95,19 @@ class HaproxyDriver(BaseDriver):
         haproxy_virtualserver = HaproxyFronted()
         haproxy_virtualserver.name = virtualserver.name
         haproxy_virtualserver.bind_address = virtualserver.address
-        config_file = HaproxyConfigFile()
-        config_file.DeleteBlock(haproxy_virtualserver) 
+        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  context.configfilename))
+        remote = RemoteConfig(context)
         #Check ip for using in the another frontend
         if  not config_file.FindStringInTheBlock ('frontend',  haproxy_virtualserver.bind_address ):
             logger.debug('[HAPROXY] ip %s does not using in the othe frontend, delete it from remote interface' % \
                          haproxy_virtualserver.bind_address )
             remote_interface = RemoteInterface(context, haproxy_virtualserver )
             remote_interface.delIP ()
-            remote_control = RemoteService(context)
-            remote_control.restart()
+        remote.getConfig() 
+        config_file.DeleteBlock(haproxy_virtualserver) 
+        remote.putConfig()
+        
+
 
     def createServerFarm(self,  context,  serverfarm):
         if not bool(serverfarm.name):
@@ -107,8 +115,11 @@ class HaproxyDriver(BaseDriver):
             return 'SERVERFARM FARM NAME ERROR'
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
-        config_file = HaproxyConfigFile()
+        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  context.configfilename))
+        remote = RemoteConfig(context)
+        remote.getConfig() 
         config_file.AddBackend(haproxy_serverfarm)
+        remote.putConfig()
 
     def deleteServerFarm(self,  context,  serverfarm):
         if not bool(serverfarm.name):
@@ -116,8 +127,11 @@ class HaproxyDriver(BaseDriver):
             return 'SERVER FARM NAME ERROR'
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
-        config_file = HaproxyConfigFile()
+        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  context.configfilename))
+        remote = RemoteConfig(context)
+        remote.getConfig()
         config_file.DeleteBlock(haproxy_serverfarm)       
+        remote.putConfig()
 
 class HaproxyConfigBlock:
     def __init__(self):

@@ -12,9 +12,9 @@ from balancer.drivers.haproxy.HaproxyDriver import  HaproxyRserver
 from balancer.drivers.haproxy.HaproxyDriver import  HaproxyListen
 from balancer.drivers.haproxy.HaproxyDriver import  HaproxyDriver
 from balancer.drivers.haproxy.Context import  Context
-from balancer.drivers.haproxy.transfer import RemoteConfig
-from balancer.drivers.haproxy.transfer import RemoteService
-from balancer.drivers.haproxy.transfer import RemoteInterface
+from balancer.drivers.haproxy.RemoteControl import RemoteConfig
+from balancer.drivers.haproxy.RemoteControl import RemoteService
+from balancer.drivers.haproxy.RemoteControl import RemoteInterface
 from balancer.loadbalancers.serverfarm import ServerFarm
 from balancer.loadbalancers.virtualserver import VirtualServer
 from balancer.loadbalancers.realserver import RealServer
@@ -59,10 +59,10 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.haproxy_rserver1.fall = '11'
         #
         self.server_farm = ServerFarm()
-        self.server_farm.name = 'SF name'
+        self.server_farm.name = 'SFname'
         #
         self.virtualserver = VirtualServer()
-        self.virtualserver.name = 'Virtual server'
+        self.virtualserver.name = 'VirtualServer'
         self.virtualserver.address = '115.115.115.115'
         self.virtualserver.port = '8080'
         #
