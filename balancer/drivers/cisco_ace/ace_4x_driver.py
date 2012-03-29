@@ -496,6 +496,9 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "<policy-map_multimatch match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
         XMLstr = XMLstr + "<class match-cmap='" + vip.name + "'>\r\n"
         
+        if bool(vip.status):
+            XMLstr = XMLstr + "<loadbalance vip_config-type='" + vip.status.lower() + "'/>\r\n"
+        
         XMLstr = XMLstr + "<loadbalance policy='" + vip.name + "-l7slb'/>\r\n"
         XMLstr = XMLstr + "</class>\r\n"
         XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
@@ -505,20 +508,7 @@ class AceDriver(BaseDriver):
         if (tmp != 'OK'):
             raise openstack.common.exception.Invalid(tmp)
             
-            
-        XMLstr = "<policy-map_multimatch match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
-        XMLstr = XMLstr + "<class match-cmap='" + vip.name + "'>\r\n"
         
-        if bool(vip.status):
-            XMLstr = XMLstr + "<loadbalance vip_config-type='" + vip.status.lower() + "'/>\r\n"
-        
-        XMLstr = XMLstr + "</class>\r\n"
-        XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
-        
-        s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)    
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
 
         
         if bool(vip.allVLANs):

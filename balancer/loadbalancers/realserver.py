@@ -32,8 +32,8 @@ class RealServer(Serializeable,  UniqueObject):
         self.ipType = "IPv4"
         self.address = ""
         self.port = ""
-        self.state= "InService" #StandBy, OutOfService
-        self.opstate = "InService"
+        self.state= "inservice" #standby, outofservice
+        self.opstate = "inservice"
         self.description = ""
         self.failOnAll = None
         self.minCon = 4000000

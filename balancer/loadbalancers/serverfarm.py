@@ -31,7 +31,7 @@ class ServerFarm(Serializeable,  UniqueObject):
         
         self.lb_id = None
         self.name = ""
-        self.type = "Host"
+        self.type = "host"
         self.description = ""
         self.failAction = None
         self.inbandHealthCheck = None

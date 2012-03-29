@@ -535,8 +535,10 @@ class AceDriver(BaseDriver):
         #4)Add a policy-map (multimatch) with class-map
         XMLstr = XMLstr +"<policy-map_multimatch match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
         XMLstr = XMLstr + "<class cmap-name='" + vip.name + "'>\r\n"
-        #if bool(vip.status):               #NOT WORK !
-            #XMLstr = XMLstr + "<loadbalance vip_config-type='" + vip.status.lower() + "'/>\r\n"
+        
+        if bool(vip.status):
+            XMLstr = XMLstr + "<loadbalance vip_config-type='" + vip.status.lower() + "'/>\r\n"
+            
         XMLstr = XMLstr + "<loadbalance policy='" + vip.name + "-l7slb'/>\r\n"
         XMLstr = XMLstr + "</class>\r\n"
         XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
@@ -545,34 +547,26 @@ class AceDriver(BaseDriver):
         tmp = res.deployConfig(context, XMLstr)
         if (tmp != 'OK'):
             raise openstack.common.exception.Invalid(tmp)
-        return tmp
         
-        #5)Add service-policy for necessary vlans
+
         if bool(vip.allVLANs):
             XMLstr = "<service-policy type='input' name='" + pmap + "'/>"
         else:
-            XMLstr = ""
+            #  Add service-policy for necessary vlans
             for i in vip.VLAN:
-                XMLstr = XMLstr + "<interface type='vlan' number='" + str(i) + "'>\r\n"
+                XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
                 XMLstr = XMLstr + "<service-policy type='input' name='" + pmap + "'/>\r\n"
                 XMLstr = XMLstr + "</interface>"
-        
-        tmp = res.deployConfig(context, XMLstr)
-        
-        #6)Add vip-acl to each VLANs (Appear error during repeated deploy)
-        if bool(vip.allVLANs):
-            pass
-        else:
-            XMLstr = ""
+                tmp = s.deployConfig(context, XMLstr)    
+                
+            # Add vip-acl to each VLANs 
             for i in vip.VLAN:
-                XMLstr = XMLstr + "<interface type='vlan' number='" + str(i) + "'>\r\n"
+                XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
                 XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
                 XMLstr = XMLstr + "</interface>"
-                res.deployConfig(context, XMLstr)
+                tmp = s.deployConfig(context, XMLstr)    
         
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
+        return 'OK'
         
     
     def deleteVIP(self,  context,  vip):
