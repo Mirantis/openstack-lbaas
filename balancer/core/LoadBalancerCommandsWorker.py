@@ -75,7 +75,35 @@ class CreateLBWorker(SyncronousWorker):
             self._task.status = STATUS_DONE
             return "OK"
             
+class DeleteLBWorker(SyncronousWorker):            
+        def __init__(self,  task):
+            super(DeleteLBWorker, self).__init__(task)
+            self._command_queue = Queue.LifoQueue()
+        
+        def run(self):
+            self._task.status = STATUS_PROGRESS
+            #params = self._task.parameters
+            sched = Scheduller()
+            device = sched.getDevice()
+            devmap = DeviceMap()
+            driver = devmap.getDriver(device)
+            context = driver.getContext(device)
+            bal_deploy = Balancer()
             
+            #Step 1. Parse parameters came from request
+            bal_deploy.parseParams(params)
+            
+            #Step 2. Save config in DB
+            bal_deploy.savetoDB()
+            
+            #Step 3. Deploy config to device
+            commands = makeCreateLBCommandChain(bal_deploy,  driver,  contex)
+            deploy = Deployer()
+            deploy.commands = commands
+            deploy.execute()
+            
+            self._task.status = STATUS_DONE
+            return "OK"
 
 class LBActionMapper(object):
     def getWorker(self, task,  action,  params=None):
@@ -83,4 +111,5 @@ class LBActionMapper(object):
             return LBGetIndexWorker(task)
         if action == "create":
             return CreateLBWorker(task)
-              
+        if action == "delete":
+            return DeleteLBWorker(task)
