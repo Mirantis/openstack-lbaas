@@ -385,14 +385,13 @@ class AceDriver(BaseDriver):
         if bool(rserver.maxCon) and bool(rserver.minCon):
             XMLstr=XMLstr+"    <conn-limit max='"+str(rserver.maxCon)+"' min='"+str(rserver.minCon)+"'/>\r\n"
             
+        # this parameters does not work
         #if bool(rserver.rateConnection):
         #    XMLstr=XMLstr+"    <rate-limit value='"+str(rserver.rateConnection)+"'/>\r\n"
         #if bool(rserver.rateBandwidth):
         #   XMLstr=XMLstr+"    <rate-limit limit='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>\r\n"
-        
         #if bool(rserver.cookieStr):
         #    XMLstr=XMLstr+"    <cookie-string string='"+rserver.cookieStr+"'/>\r\n"
-            
             
         for i in range(len(rserver.probes)):
             XMLstr=XMLstr+"    <probe_sfarm probe-name='"+rserver.probes[i]+"'/>\r\n"
@@ -497,10 +496,6 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "<policy-map_multimatch match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
         XMLstr = XMLstr + "<class match-cmap='" + vip.name + "'>\r\n"
         
-        # it does not work
-        #if bool(vip.status):
-        #    XMLstr = XMLstr + "<loadbalance vip_config-type='" + vip.status.lower() + "'/>\r\n"
-        
         XMLstr = XMLstr + "<loadbalance policy='" + vip.name + "-l7slb'/>\r\n"
         XMLstr = XMLstr + "</class>\r\n"
         XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
@@ -509,6 +504,22 @@ class AceDriver(BaseDriver):
         tmp = s.deployConfig(context, XMLstr)    
         if (tmp != 'OK'):
             raise openstack.common.exception.Invalid(tmp)
+            
+            
+        XMLstr = "<policy-map_multimatch match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
+        XMLstr = XMLstr + "<class match-cmap='" + vip.name + "'>\r\n"
+        
+        if bool(vip.status):
+            XMLstr = XMLstr + "<loadbalance vip_config-type='" + vip.status.lower() + "'/>\r\n"
+        
+        XMLstr = XMLstr + "</class>\r\n"
+        XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
+        
+        s = XmlSender(context)
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp != 'OK'):
+            raise openstack.common.exception.Invalid(tmp)
+
         
         if bool(vip.allVLANs):
             XMLstr = "<service-policy type='input' name='" + pmap + "'/>"
