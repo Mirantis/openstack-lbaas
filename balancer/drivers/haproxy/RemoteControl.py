@@ -16,21 +16,20 @@ class RemoteConfig(object):
         env.host_string = context.ip
         self.localpath = context.localpath
         self.remotepath = context.remotepath
-        self.localname = context.localname
-        self.remotename = context.remotename
-        
+        self.configfilename = context.configfilename
+
     def getConfig(self):
-        get(self.remotepath + self.remotename, self.localpath + self.localname)
+        get('%s/%s' % (self.remotepath,  self.configfilename), '%s/%s' % (self.localpath,  self.configfilename))
         disconnect_all()
 
     def putConfig(self):
-        put(self.localpath+self.localname, '/tmp/'+self.remotename)
-        sudo('mv /tmp/'+self.remotename + " "+ self.remotepath)
+        put(self.localpath+self.configfilename, '/tmp/'+self.configfilename)
+        sudo('mv /tmp/'+self.configfilename + " "+ self.remotepath)
         disconnect_all()
 
     def validationConfig(self): 
         env.warn_only = True
-        return (run('haproxy -c -f  %s/%s' % (self.remotepath,  self.remotename)) == 'Configuration file is valid')
+        return (run('haproxy -c -f  %s/%s' % (self.remotepath,  self.configfilename)) == 'Configuration file is valid')
 
 class RemoteService(object):
     def __init__(self, context):

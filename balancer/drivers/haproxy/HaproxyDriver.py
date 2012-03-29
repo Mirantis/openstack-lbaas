@@ -24,9 +24,9 @@ import logging
 
 from balancer.drivers.BaseDriver import BaseDriver
 from balancer.drivers.haproxy.Context import Context
-from balancer.drivers.haproxy.transfer import RemoteConfig
-from balancer.drivers.haproxy.transfer import RemoteService
-from balancer.drivers.haproxy.transfer import RemoteInterface
+from balancer.drivers.haproxy.RemoteControl import RemoteConfig
+from balancer.drivers.haproxy.RemoteControl import RemoteService
+from balancer.drivers.haproxy.RemoteControl import RemoteInterface
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +35,8 @@ class HaproxyDriver(BaseDriver):
         pass
 
     def getContext (self,  dev):
-        logger.debug('[HAPROXY] Creating context with params: IP %s, Port: %s' % (dev.ip,  dev.port))
-        return Context(dev.ip , dev.port , dev.login , dev.password, dev.localpath, dev.localname, \
-                       dev.remotepath, dev.remotename, dev.interface,  dev.haproxyfrontend)
+        return Context(dev.ip , dev.port , dev.login , dev.password, dev.localpath, dev.configfilepath, \
+                       dev.remotepath, dev.interface )
 
     def addRServerToSF(self,  context,  serverfarm,  rserver):
         haproxy_serverfarm = HaproxyBackend ()
@@ -48,10 +47,13 @@ class HaproxyDriver(BaseDriver):
         haproxy_rserver.address = rserver.address
         haproxy_rserver.port = rserver.port
         haproxy_rserver.maxconn = rserver.maxCon
-        config_file = HaproxyConfigFile()
+        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  context.configfilename))
         logger.debug('[HAPROXY] Creating rserver %s in the backend block %s' % \
                               (haproxy_rserver.name,  haproxy_serverfarm.name))
+        remote = RemoteConfig(context)
+        remote.getConfig()
         config_file.AddRserverToBackendBlock (haproxy_serverfarm, haproxy_rserver )
+        remote.putConfig()
 
     def deleteRServerFromSF(self, context,  serverfarm,  rserver):
         haproxy_serverfarm = HaproxyBackend ()
@@ -273,7 +275,6 @@ class HaproxyConfigFile:
         new_config_file [ 'backend %s' % HaproxyBackend.name ] =  new_config_block
         self._WriteConfigFile(new_config_file)
         return  HaproxyBackend.name    
-       
        
     def _ReadConfigFile(self):
         haproxy_config_file = open (self.haproxy_config_file_path,  'r')
