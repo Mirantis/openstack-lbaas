@@ -20,7 +20,8 @@ from balancer.drivers.BaseDriver import BaseContext
 
 
 class Context(BaseContext):
-    def __init__(self, ip, port, login, password, localpath, localname, remotepath, remotename, interface,  haproxyfrontend):
+    def __init__(self, ip = '', port='', login='', password='', localpath='', localname='', remotepath='', \
+                  remotename ='', interface =''):
         self.ip = ip
         self.port = port
         self.login = login
@@ -30,5 +31,5 @@ class Context(BaseContext):
         self.localname = localname
         self.remotename = remotename
         self.interface = interface
-        self.rsIP =  haproxyfrontend.bind_address 
+
         

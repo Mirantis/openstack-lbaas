@@ -12,6 +12,9 @@ from balancer.drivers.haproxy.HaproxyDriver import  HaproxyRserver
 from balancer.drivers.haproxy.HaproxyDriver import  HaproxyListen
 from balancer.drivers.haproxy.HaproxyDriver import  HaproxyDriver
 from balancer.drivers.haproxy.Context import  Context
+from balancer.drivers.haproxy.transfer import RemoteConfig
+from balancer.drivers.haproxy.transfer import RemoteService
+from balancer.drivers.haproxy.transfer import RemoteInterface
 from balancer.loadbalancers.serverfarm import ServerFarm
 from balancer.loadbalancers.virtualserver import VirtualServer
 from balancer.loadbalancers.realserver import RealServer
@@ -20,9 +23,16 @@ from balancer.loadbalancers.realserver import RealServer
 
 
 class HAproxyDriverTestCase (unittest.TestCase):
+
     def setUp (self):
         shutil.copyfile ('./balancer/tests/unit/testfiles/haproxy.cfg',  "/tmp/haproxy.cfg")
-        self.contex = Context
+        self.context = Context()
+        self.context.ip = '192.168.19.86'
+        self.context.login = 'user'
+        self.context.password = 'swordfish'
+        self.context.interface = 'eth0'
+        self.context.remotepath = '/etc/haproxy'
+        self.context.remotename = 'haproxy.cfg'
         #
         self.frontend = HaproxyFronted()
         self.frontend.bind_address='1.1.1.1'
@@ -62,6 +72,7 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.rserver.port = '9090'
         self.rserver.weight = '8'
         self.rserver.maxCon = 30000
+        #
    
     def test_FileName(self):
         filename = HaproxyConfigFile("/tmp/haproxy.cfg")
@@ -89,28 +100,31 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.assertTrue(True)    
     def test_createServerFarm(self):
         driver = HaproxyDriver()
-        driver.createServerFarm(self.contex,  self.server_farm)
+        driver.createServerFarm(self.context,  self.server_farm)
         self.assertTrue(True)
     def test_deleteServerFarm(self):
         driver = HaproxyDriver()
-        driver.deleteServerFarm(self.contex,  self.server_farm)
+        driver.deleteServerFarm(self.context,  self.server_farm)
         self.assertTrue(True)    
     def test_createVirtualServer(self):
         driver = HaproxyDriver()
-        driver.createVIP(self.contex,  self.virtualserver,  self.server_farm)
+        driver.createVIP(self.context,  self.virtualserver,  self.server_farm)
         self.assertTrue(True)
     def test_deleteVirtualServer(self):
         driver = HaproxyDriver()
-        driver.deleteVIP(self.contex,  self.virtualserver)
+        driver.deleteVIP(self.context,  self.virtualserver)
         self.assertTrue(True)
     def test_addRServerToSF(self):
         driver = HaproxyDriver()
-        driver.addRServerToSF(self.contex,  self.server_farm,  self.rserver)
+        driver.addRServerToSF(self.context,  self.server_farm,  self.rserver)
         self.assertTrue(True)
     def test_deleteRServerFromSF(self):
         driver = HaproxyDriver()
-        driver.deleteRServerFromSF (self.contex,  self.server_farm,  self.rserver)
+        driver.deleteRServerFromSF (self.context,  self.server_farm,  self.rserver)
         self.assertTrue(True)
+    def test_checkRemoteHaproxyConfig(self):
+        remote_config = RemoteConfig(self.context)
+        self.assertTrue(remote_config.validationConfig())
     
     
 

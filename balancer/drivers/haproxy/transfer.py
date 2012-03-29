@@ -1,8 +1,11 @@
+import logging
 
 from fabric.api import env, sudo, get, put, run
 from fabric.network import disconnect_all
 
 from balancer.drivers.haproxy.Context import Context
+
+logger = logging.getLogger(__name__)
 
 class RemoteConfig(object):
     def __init__(self, context):
@@ -27,7 +30,7 @@ class RemoteConfig(object):
 
     def validationConfig(self): 
         env.warn_only = True
-        return (run('haproxy -c -f  %s' % self.remotepath+self.remotename) == 'Configuration file is valid')
+        return (run('haproxy -c -f  %s/%s' % (self.remotepath,  self.remotename)) == 'Configuration file is valid')
 
 class RemoteService(object):
     def __init__(self, context):
@@ -50,23 +53,25 @@ class RemoteService(object):
         disconnect_all()
 
 class RemoteInterface(object):
-    def __init__(self, context):
+    def __init__(self, context,  frontend):
         env.user = context.login
         env.hosts = []
         env.hosts.append(context.ip)
         env.password = context.password
         env.host_string = context.ip
         self.interface = context.interface
-        self.IP = context.rsIP
+        self.IP = frontend.bind_address
         
     def changeIP(self, IP, netmask):
         sudo('ifconfig '+self.interface+ ' '+IP+' netmask '+netmask)
         disconnect_all()    
         
     def addIP(self):
-        sudo('ifconfig '+self.interface+ ' add '+self.IP)
+        logger.debug('[HAPROXY] remote add ip %s to inteface %s' % (self.IP,  self.interface))        
+        sudo('/sbin/ip addr add %s/32 dev %s'% (self.IP,  self.interface))
         disconnect_all()
         
     def delIP(self):
-        sudo('ifconfig '+self.interface+ ' del '+self.IP)
+        logger.debug('[HAPROXY] remote delete ip %s from inteface %s' % (self.IP,  self.interface))
+        sudo('/sbin/ip addr del %s/32 dev %s'% (self.IP,  self.interface))
         disconnect_all()
