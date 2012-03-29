@@ -390,8 +390,9 @@ class AceDriver(BaseDriver):
         #    XMLstr=XMLstr+"    <rate-limit value='"+str(rserver.rateConnection)+"'/>\r\n"
         #if bool(rserver.rateBandwidth):
         #   XMLstr=XMLstr+"    <rate-limit limit='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>\r\n"
-        #if bool(rserver.cookieStr):
-        #    XMLstr=XMLstr+"    <cookie-string string='"+rserver.cookieStr+"'/>\r\n"
+        
+        if bool(rserver.cookieStr):
+            XMLstr=XMLstr+"    <cookie-string cookie-value='"+rserver.cookieStr+"'/>\r\n"
             
         for i in range(len(rserver.probes)):
             XMLstr=XMLstr+"    <probe_sfarm probe-name='"+rserver.probes[i]+"'/>\r\n"
@@ -507,8 +508,6 @@ class AceDriver(BaseDriver):
         tmp = s.deployConfig(context, XMLstr)    
         if (tmp != 'OK'):
             raise openstack.common.exception.Invalid(tmp)
-            
-        
 
         
         if bool(vip.allVLANs):
