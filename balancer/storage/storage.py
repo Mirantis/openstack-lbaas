@@ -422,7 +422,7 @@ class Storage(object):
             conf = conf_data.get()
             db = conf.db_path
          else:
-             db = conf.db_path
+             db = conf['db_path']
          self._db =db
          self._writer = Writer(self._db)
 
