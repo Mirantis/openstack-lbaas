@@ -65,7 +65,7 @@ class HaproxyDriver(BaseDriver):
     
     def createVIP(self,  context, virtualserver,  serverfarm): 
         if not bool(virtualserver.name):
-            logger.error ('Virtualserver name is empty')
+            logger.error ('[HAPROXY] Virtualserver name is empty')
             return 'VIRTUALSERVER NAME ERROR'
         haproxy_virtualserver = HaproxyFronted()
         haproxy_virtualserver.name = virtualserver.name
@@ -83,21 +83,25 @@ class HaproxyDriver(BaseDriver):
     
     def deleteVIP(self,  context,  virtualserver):
         if not bool(virtualserver.name):
-            logger.error ('Virtualserver name is empty')
+            logger.error ('[HAPROXY] Virtualserver name is empty')
             return 'VIRTUALSERVER NAME ERROR'
         haproxy_virtualserver = HaproxyFronted()
         haproxy_virtualserver.name = virtualserver.name
         haproxy_virtualserver.bind_address = virtualserver.address
         config_file = HaproxyConfigFile()
         config_file.DeleteBlock(haproxy_virtualserver) 
-        remote_interface = RemoteInterface(context, haproxy_virtualserver )
-        remote_interface.delIP ()
-        remote_control = RemoteService(context)
-        remote_control.restart()
+        #Check ip for using in the another frontend
+        if  not config_file.FindStringInTheBlock ('frontend',  haproxy_virtualserver.bind_address ):
+            logger.debug('[HAPROXY] ip %s does not using in the othe frontend, delete it from remote interface' % \
+                         haproxy_virtualserver.bind_address )
+            remote_interface = RemoteInterface(context, haproxy_virtualserver )
+            remote_interface.delIP ()
+            remote_control = RemoteService(context)
+            remote_control.restart()
 
     def createServerFarm(self,  context,  serverfarm):
         if not bool(serverfarm.name):
-            logger.error ('Serverfarm name is empty')
+            logger.error ('[HAPROXY] Serverfarm name is empty')
             return 'SERVERFARM FARM NAME ERROR'
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
@@ -106,7 +110,7 @@ class HaproxyDriver(BaseDriver):
 
     def deleteServerFarm(self,  context,  serverfarm):
         if not bool(serverfarm.name):
-            logger.error ('Serverfarm name is empty')
+            logger.error ('[HAPROXY] Serverfarm name is empty')
             return 'SERVER FARM NAME ERROR'
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
@@ -237,12 +241,24 @@ class HaproxyConfigFile:
         if HaproxyBlock.name =='':
             logger.error('[HAPROXY] Empty block name')
             return 'BLOCK NAME ERROR'
-        logger.debug('[HAPROXY] Deleting block %s %s'  % (HaproxyBlock.type,  HaproxyBlock.name))
+        logger.debug('[HAPROXY] Try to delete block %s %s'  % (HaproxyBlock.type,  HaproxyBlock.name))
         for i in new_config_file.keys():
             if i.find(HaproxyBlock.type) == 0 and i.find('%s' % HaproxyBlock.name) >= 0:
+                logger.debug('[HAPROXY] Delete block %s %s'  % (HaproxyBlock.type,  HaproxyBlock.name))
                 del new_config_file[i]
         self._WriteConfigFile(new_config_file)
-
+    
+    def FindStringInTheBlock(self,  block_type,  check_string):
+        """
+            Find string in the blocks
+        """
+        new_config_file = self._ReadConfigFile()
+        for i in new_config_file.keys():
+            if i.find(block_type) == 0 and new_config_file[i].find(check_string) >= 0 :
+                return True
+            else:
+                return False
+    
     def AddBackend(self,  HaproxyBackend):
         '''
             Add backend section to haproxy config file
