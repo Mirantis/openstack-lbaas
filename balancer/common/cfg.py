@@ -103,14 +103,14 @@ The config manager has a single CLI option defined by default, --config-file:
             self.register_cli_opt(self.config_file_opt)
 
 Option values are parsed from any supplied config files using SafeConfigParser.
-If none are specified, a default set is used e.g. glance-api.conf and
-glance-common.conf:
+If none are specified, a default set is used e.g. balancer-api.conf and
+balancer-common.conf:
 
-    glance-api.conf:
+    balancer-api.conf:
       [DEFAULT]
       bind_port = 9292
 
-    glance-common.conf:
+    balancer-common.conf:
       [DEFAULT]
       bind_host = 0.0.0.0
 
@@ -156,7 +156,7 @@ Options can be registered as belonging to a group:
 If no group is specified, options belong to the 'DEFAULT' section of config
 files:
 
-    glance-api.conf:
+    balancer-api.conf:
       [DEFAULT]
       bind_port = 9292
       ...
@@ -1093,6 +1093,7 @@ class CommonConfigOpts(ConfigOpts):
                 short='v',
                 default=False,
                 help='Print more verbose output'),
+        StrOpt('db_path')
         ]
 
     logging_cli_opts = [

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
+# Copyright 2010 United States Government as represented by the
+# Administrator of the National Aeronautics and Space Administration.
 # Copyright 2011 OpenStack LLC.
 # All Rights Reserved.
 #
@@ -17,10 +19,10 @@
 #    under the License.
 
 """
-Simple Skeleton API Server
+Glance API Server
 """
 
-import optparse
+import gettext
 import os
 import sys
 
@@ -32,38 +34,21 @@ possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
 if os.path.exists(os.path.join(possible_topdir, 'balancer', '__init__.py')):
     sys.path.insert(0, possible_topdir)
 
-from openstack.common import config
-from openstack.common import wsgi
-from balancer import version
-from balancer.core.configuration import Configuration
+gettext.install('balancer', unicode=1)
 
-
-def create_options(parser):
-    """
-    Sets up the CLI and config-file options that may be
-    parsed and program commands.
-
-    :param parser: The option parser
-    """
-    config.add_common_options(parser)
-    config.add_log_options(parser)
+from balancer.common import config
+from balancer.common import wsgi
 
 
 if __name__ == '__main__':
-    oparser = optparse.OptionParser(version='%%prog %s'
-                                    % version.version_string())
-    create_options(oparser)
-    (options, args) = config.parse_options(oparser)
-
     try:
-        conf, app = config.load_paste_app('balancer-api', options, args,
-                                          config_dir='balancer')
-        #TODO Add Configuration initialization
-        #balancer_config = Configuration.Instance()
-        #balancer_config.put(conf)
+        conf = config.balancerConfigOpts()
+        conf()
+
+        app = config.load_paste_app(conf)
 
         server = wsgi.Server()
-        server.start(app, int(conf['bind_port']), conf['bind_host'])
+        server.start(app, conf, default_port=9292)
         server.wait()
     except RuntimeError, e:
         sys.exit("ERROR: %s" % e)

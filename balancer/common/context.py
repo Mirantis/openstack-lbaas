@@ -15,9 +15,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from openstack.common import exception
-from openstack.common import utils
-from openstack.common import wsgi
+from balancer.common import cfg
+from balancer.common import exception
+from balancer.common import utils
+from balancer.common import wsgi
 
 
 class RequestContext(object):
@@ -54,7 +55,7 @@ class RequestContext(object):
 class ContextMiddleware(wsgi.Middleware):
 
     opts = [
-        
+        cfg.BoolOpt('owner_is_tenant', default=True),
         ]
 
     def __init__(self, app, conf, **local_conf):
@@ -93,7 +94,7 @@ class ContextMiddleware(wsgi.Middleware):
            tokenauth middleware would have rejected the request, so we must be
            using NoAuth. In that case, assume that is_admin=True.
         """
-        # TODO(sirp): should we be using the glance_tokeauth shim from
+        # TODO(sirp): should we be using the balancer_tokeauth shim from
         # Keystone here? If we do, we need to make sure it handles the NoAuth
         # case
         auth_tok = req.headers.get('X-Auth-Token',

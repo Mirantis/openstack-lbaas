@@ -247,6 +247,7 @@ def load_paste_config(app_name, options, args, config_dir=None):
         raise RuntimeError("Unable to locate any configuration file. "
                             "Cannot load application %s" % app_name)
     try:
+	app = wsgi.paste_deploy_app(conf_file, app_name, conf)
         conf = deploy.appconfig("config:%s" % conf_file, name=app_name)
         return conf_file, conf
     except Exception, e:

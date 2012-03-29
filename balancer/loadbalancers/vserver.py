@@ -21,7 +21,7 @@ import logging
 
 
 from openstack.common import exception
-from balancer.loadbalancers.command import BaseCommand
+#from balancer.loadbalancers.command import BaseCommand
 import balancer.storage.storage 
 
 import loadbalancer

@@ -41,8 +41,8 @@ import webob.dec
 import webob.exc
 
 from balancer.common import cfg
-from openstack.common import exception
-from openstack.common import utils
+from balancer.common import exception
+from balancer.common import utils
 
 
 bind_opts = [
