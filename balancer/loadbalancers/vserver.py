@@ -336,7 +336,7 @@ class CreateVIPCommand(object):
 class DeleteVIPCommand(object):
     def __init__(self,  driver,  context,  vip,  sf):
         self._driver = driver
-        self._context = contex
+        self._context = context
         self._vip = vip
         self._sf = sf       
 
