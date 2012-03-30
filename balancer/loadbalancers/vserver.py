@@ -212,7 +212,7 @@ class Destructor(object):
             try:
                 current_command.execute()
             except:
-                i = index
+
                 logger.error("Got exception during deleting.")
                 raise exception.Error()
 
