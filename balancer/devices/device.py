@@ -35,4 +35,8 @@ class LBDevice(Serializeable, UniqueObject):
         self.user = None
         self.password = None
         self.vip_vlan = 1
+        self.localpath = None
+        self.configfilepath = None
+        self.remotepath = None
+        self.interface = None
     

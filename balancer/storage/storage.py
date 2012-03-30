@@ -277,14 +277,13 @@ class Writer(object):
     def writeDevice(self,  device):
          logger.debug("Saving Device instance in DB.")
          cursor = self._con.cursor()
-         command = "INSERT INTO devices (id,  name, type, version, supports_ipv6, requires_vip_ip, has_acl, supports_vlan, ip, port, user, password, vip_vlan ) VALUES('%s','%s','%s','%s',%d, %d, %d, %d,'%s','%s','%s','%s', '%s');"  % (device.id,  device.name,  
-                                                                                                                                                                                                device.type,  device.version,  device.supports_ipv6,  device.requires_vip_ip, device.has_acl,  device.supports_vlan,  
-                                                                                                                                                                                                device.ip,  device.port,  device.user,  device.password,  device.vip_vlan )
+         dict = device.convertToDict()
+         command =self.generateCommand(" INSERT INTO devices (", dict)
          msg = "Executing command: %s" % command
          logger.debug(msg)
          cursor.execute(command)
-         self._con.commit()
-        
+         self._con.commit()    
+         
     def writeProbe(self, prb):
         logger.debug("Saving Probe instance in DB.")
         cursor = self._con.cursor()
