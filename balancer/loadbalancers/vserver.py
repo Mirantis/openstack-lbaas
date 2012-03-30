@@ -214,9 +214,9 @@ class Destructor(object):
                 raise exception.Error()
 
 class CreateRServerCommand(object): 
-    def __init__(self,  driver,  contex,  rs):
+    def __init__(self,  driver,  context,  rs):
         self._driver = driver
-        self._context = contex
+        self._context = context
         self._rs = rs
     
     def execute(self):
@@ -226,7 +226,7 @@ class CreateRServerCommand(object):
         self._driver.deleteRServer(self._context,  self._rs)
 
 class DeleteRServerCommand(object):
-    def __init__(self,  driver,  contex,  rs):
+    def __init__(self,  driver,  context,  rs):
         self._driver = driver
         self._context = context
         self._rs = rs
