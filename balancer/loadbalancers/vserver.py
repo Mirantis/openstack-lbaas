@@ -169,6 +169,20 @@ def makeCreateLBCommandChain(bal,  driver,  context):
         list.append(CreateVIPCommand(driver,  context,  vip,  bal.sf))
     return list
 
+def makeDeleteLBCommandChain(bal,  driver,  context):
+    list = []
+    for vip in bal.vips:
+        list.append(DeleteVIPCommand(driver,  context,  vip,  bal.sf))
+    for pr in bal.probes:
+        list.append(DeleteProbeFromSFCommand(driver,  context,  bal.sf,  pr))
+        list.append(DeleteProbeCommand(driver,  context,  pr))
+    for rs in bal.rs:
+        list.append(DeleteRServerFromSFCommand(driver, context, bal.sf,  rs))      
+        list.append(DeleteRServerCommand(driver,  context, rs))
+          
+    list.append(DeleteServerFarmCommand(driver, context,  bal.sf))
+    return list
+
 class Deployer(object):
     def __init__(self):
         self.commands = []
@@ -193,9 +207,9 @@ class Destructor(object):
         self.commands = []
     
     def execute(self):
-        for index in self.commands.reverse():
+        for index in self.commands:
             try:
-                index.undo()
+                index.execute()
             except:
                 raise exception.Error()
 
@@ -211,17 +225,15 @@ class CreateRServerCommand(object):
     def undo(self):
         self._driver.deleteRServer(self._context,  self._rs)
 
-#class DeleteRServerCommand(object):
-#    def __init__(self,  driver,  contex,  rs):
-#        self._driver = driver
-#        self._context = contex
-#        self._rs = rs
-#    
-#    def execute(self):
-#         self._driver.deleteRServer(self._context,  self._rs)
-#    
-#    def undo(self):
-#        self._driver.createRServer(self._context,  self._rs)
+class DeleteRServerCommand(object):
+    def __init__(self,  driver,  contex,  rs):
+        self._driver = driver
+        self._context = contex
+        self._rs = rs
+    
+    def execute(self):
+         self._driver.deleteRServer(self._context,  self._rs)
+
         
 class CreateServerFarmCommand(object):
     def __init__(self,  driver,  context,  sf):
@@ -235,14 +247,14 @@ class CreateServerFarmCommand(object):
     def undo(self):
         self._driver.deleteServerFarm(self._context,  self._sf)
         
-#class DeleteServerFarmCommand(object):
-#    def __init__(self,  driver,  context,  sf):
-#        self._driver = driver
-#        self._context = contex
-#        self._sf = sf
-#    
-#    def execute(self):
-#        self._driver.deleteServerFarm(self._context,  self._sf)
+class DeleteServerFarmCommand(object):
+    def __init__(self,  driver,  context,  sf):
+        self._driver = driver
+        self._context = contex
+        self._sf = sf
+    
+    def execute(self):
+        self._driver.deleteServerFarm(self._context,  self._sf)
         
 class AddRServerToSFCommand(object):
     def __init__(self,  driver,  context,  sf, rs):
@@ -256,15 +268,15 @@ class AddRServerToSFCommand(object):
     def undo(self):
         self._driver.deleteRServerFromSF(self._context,  self._sf,  self._rs)
 
-#class DeleteRServerFromSFCommand(object):
-#    def __init__(self,  driver,  context,  sf, rs):
-#        self._driver = driver
-#        self._context = contex
-#        self._sf = sf      
-#        self._rs = rs
-#        
-#    def execute(self):
-#        self._driver.deleteRServerFromSF(self._context,  self._sf,  self._rs)
+class DeleteRServerFromSFCommand(object):
+    def __init__(self,  driver,  context,  sf, rs):
+        self._driver = driver
+        self._context = contex
+        self._sf = sf      
+        self._rs = rs
+        
+    def execute(self):
+        self._driver.deleteRServerFromSF(self._context,  self._sf,  self._rs)
         
 class CreateProbeCommand(object):
     def __init__(self,  driver,  context,  probe):
@@ -277,14 +289,14 @@ class CreateProbeCommand(object):
     def undo(self):
         self._driver.deleteProbe(self._context, self._probe)
 
-#class DeleteProbeCommand(object):
-#    def __init_(self,  driver,  context,  probe):
-#        self._driver = driver
-#        self._context = contex
-#        self._probe = probe
-#    
-#    def execute(self):
-#        self._driver.deleteProbe(self._context, self._probe)
+class DeleteProbeCommand(object):
+    def __init_(self,  driver,  context,  probe):
+        self._driver = driver
+        self._context = contex
+        self._probe = probe
+    
+    def execute(self):
+        self._driver.deleteProbe(self._context, self._probe)
 
 class AddProbeToSFCommand(object):
     def __init__(self,  driver,  context,  sf,  probe):
@@ -298,15 +310,15 @@ class AddProbeToSFCommand(object):
     def undo(self):
         self._driver.deleteProbeFromSF(self._context,  self._sf,  self._probe)
 
-#class DeleteProbeFromSFCommand(object):
-#    def __init__(self,  driver,  context,  sf,  probe):
-#        self._driver = driver
-#        self._context = contex
-#        self._probe = probe
-#        self._sf = sf
-#    
-#    def execute(self):
-#        self._driver.deleteProbeFromSF(self._context,  self._sf,  self._probe)
+class DeleteProbeFromSFCommand(object):
+    def __init__(self,  driver,  context,  sf,  probe):
+        self._driver = driver
+        self._context = contex
+        self._probe = probe
+        self._sf = sf
+    
+    def execute(self):
+        self._driver.deleteProbeFromSF(self._context,  self._sf,  self._probe)
         
 
 class CreateVIPCommand(object):
@@ -321,15 +333,15 @@ class CreateVIPCommand(object):
     def undo(self):
         self._driver.deleteVIP(self._context,  self._vip,  self._sf)
 
-#class DeleteVIPCommand(object):
-#    def __init__(self,  driver,  context,  vip,  sf):
-#        self._driver = driver
-#        self._context = contex
-#        self._vip = vip
-#        self._sf = sf       
-#
-#    def execute(self):
-#        self._driver.deleteVIP(self._context,  self._vip,  self._sf)    
+class DeleteVIPCommand(object):
+    def __init__(self,  driver,  context,  vip,  sf):
+        self._driver = driver
+        self._context = contex
+        self._vip = vip
+        self._sf = sf       
+
+    def execute(self):
+        self._driver.deleteVIP(self._context,  self._vip,  self._sf)    
 
 def createProbe(probe_type):
     probeDict={'DNS':probe.DNSprobe(), 'ECHOTCP':probe.ECHOTCPprobe(), 'ECHOUDP':probe.ECHOUDPprobe(), 

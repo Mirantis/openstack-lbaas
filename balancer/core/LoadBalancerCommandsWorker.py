@@ -100,7 +100,7 @@ class DeleteLBWorker(SyncronousWorker):
             bal_deploy.removeFromDB()
             
             #Step 3. Destruct config at device
-            commands = makeCreateLBCommandChain(bal_deploy,  driver,  context)
+            commands = makeDeleteLBCommandChain(bal_deploy,  driver,  context)
             destruct = Destructor()
             destruct.commands = commands
             destruct.execute()
