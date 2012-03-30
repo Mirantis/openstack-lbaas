@@ -106,6 +106,8 @@ class Controller(object):
             mapper =LBActionMapper()
             #here we need to decide which device should be used
             #params = args['body']
+            msg = "Got args: %s" % args
+            logger.debug(msg)
             # We need to create LB object and return its id
             lb = balancer.loadbalancers.loadbalancer.LoadBalancer()
             params['lb'] = lb
