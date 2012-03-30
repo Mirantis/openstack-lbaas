@@ -17,6 +17,7 @@
 
 import balancer.drivers.cisco_ace.ace_4x_driver
 import balancer.drivers.cisco_ace.ace_5x_driver
+import balancer.drivers.haproxy.HaproxyDriver
 
 
 class DeviceMap(object):
@@ -24,13 +25,13 @@ class DeviceMap(object):
         self._map = {}
     
     def getDriver(self,  lbdevice):
-        if lbdevice.type  == "ACE":
+        if lbdevice.type.lower()  == "ace":
             if lbdevice.version.lower().startswith('a4'):
                 return  balancer.drivers.cisco_ace.ace_4x_driver.AceDriver()
             else:
                 return  balancer.drivers.cisco_ace.ace_5x_driver.AceDriver()
-        if lbdevice.type == "HAPROXY":
-            return None
+        if lbdevice.type.lower() == "haproxy":
+            return balancer.drivers.haproxy.HaproxyDriver.HaproxyDriver()
         return None
     
     

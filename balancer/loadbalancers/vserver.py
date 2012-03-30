@@ -221,7 +221,7 @@ class CreateRServerCommand(object):
 class CreateServerFarmCommand(object):
     def __init__(self,  driver,  context,  sf):
         self._driver = driver
-        self._context = contex
+        self._context = context
         self._sf = sf
     
     def execute(self):
@@ -242,7 +242,7 @@ class CreateServerFarmCommand(object):
 class AddRServerToSFCommand(object):
     def __init__(self,  driver,  context,  sf, rs):
         self._driver = driver
-        self._context = contex
+        self._context = context
         self._sf = sf      
         self._rs = rs
         
@@ -262,9 +262,9 @@ class AddRServerToSFCommand(object):
 #        self._driver.deleteRServerFromSF(self._context,  self._sf,  self._rs)
         
 class CreateProbeCommand(object):
-    def __init_(self,  driver,  context,  probe):
+    def __init__(self,  driver,  context,  probe):
         self._driver = driver
-        self._context = contex
+        self._context = context
         self._probe = probe
     
     def execute(self):
@@ -284,7 +284,7 @@ class CreateProbeCommand(object):
 class AddProbeToSFCommand(object):
     def __init__(self,  driver,  context,  sf,  probe):
         self._driver = driver
-        self._context = contex
+        self._context = context
         self._probe = probe
         self._sf = sf
     
@@ -307,7 +307,7 @@ class AddProbeToSFCommand(object):
 class CreateVIPCommand(object):
     def __init__(self,  driver,  context,  vip,  sf):
         self._driver = driver
-        self._context = contex
+        self._context = context
         self._vip = vip
         self._sf = sf       
         

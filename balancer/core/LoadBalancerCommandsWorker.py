@@ -67,7 +67,7 @@ class CreateLBWorker(SyncronousWorker):
             bal_deploy.savetoDB()
             
             #Step 3. Deploy config to device
-            commands = makeCreateLBCommandChain(bal_deploy,  driver,  contex)
+            commands = makeCreateLBCommandChain(bal_deploy,  driver,  context)
             deploy = Deployer()
             deploy.commands = commands
             deploy.execute()

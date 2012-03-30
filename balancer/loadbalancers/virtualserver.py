@@ -37,7 +37,7 @@ class VirtualServer(Serializeable,  UniqueObject):
         self.connParameterMap = None #need to describe in new module
         self.KALAPtagName = ""
         self.KALAPprimaryOutOfServ = None
-        self.ICMPreply = "None"
+        self.ICMPreply = None
         self.status = "inservice"
         
         self.protocolInspect = None #need to describe in new module

@@ -501,6 +501,8 @@ class AceDriver(BaseDriver):
             XMLstr = XMLstr + "<loadbalance vip_config-type='" + vip.status.lower() + "'/>\r\n"
         
         XMLstr = XMLstr + "<loadbalance policy='" + vip.name + "-l7slb'/>\r\n"
+        if bool(vip.ICMPreply):
+            XMLstr = XMLstr + "<loadbalance vip_config-type='icmp-reply'/>\r\n"
         XMLstr = XMLstr + "</class>\r\n"
         XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
         
