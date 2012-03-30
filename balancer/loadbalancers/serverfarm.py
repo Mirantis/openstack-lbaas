@@ -28,7 +28,7 @@ class ServerFarm(Serializeable,  UniqueObject):
         
         Serializeable.__init__(self)
         UniqueObject.__init__(self)
-        
+        self.id = None
         self.lb_id = None
         self.name = ""
         self.type = "host"

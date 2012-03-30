@@ -106,11 +106,7 @@ class Controller(object):
             mapper =LBActionMapper()
             #here we need to decide which device should be used
             #params = args['body']
-            msg = "Got args: %s" % args
-            logger.debug(msg)
-            # We need to create LB object and return its id
-            lb = balancer.loadbalancers.loadbalancer.LoadBalancer()
-            params['lb'] = lb
+            params = args['id']
             task.parameters = params
             worker = mapper.getWorker(task, "delete" )
             if worker.type ==  SYNCHRONOUS_WORKER:

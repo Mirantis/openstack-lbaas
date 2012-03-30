@@ -259,7 +259,61 @@ class Reader(object):
             vlan.loadFromDict(row)
             list.append(vlan)
         return list 
+        
+    def getSFByLBid(self,  id):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM loadbalancers WHERE id = %s' % id)
+        dict = cursor.fetchone()
+        cursor.execute('SELECT * FROM serverfarms WHERE lb_id = %s' % dict['id'])
+        row = cursor.fetchone()
+        sf = ServerFarm().loadFromDict(row)
+        return sf
 
+    def getRServersBySFid(self, id):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM rservers WHERE sf_id = %s' % id)
+        rows = cursor.fetchall()
+        list = []
+        for row in rows:
+            rs = RealServer()
+            list.append(rs.loadFromDict(row))
+        return list
+
+    def getProbesBySFid(self, id):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM probes WHERE sf_id = %s' % id)
+        rows = cursor.fetchall()
+        list = []
+        for row in rows:
+            pr = Probe()
+            list.append(pr.loadFromDict(row))
+        return list
+
+    def getPredictorsBySFid(self, id):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM predictors WHERE sf_id = %s' % id)
+        rows = cursor.fetchall()
+        list = []
+        for row in rows:
+            pred = Predictor()
+            list.append(pred.loadFromDict(row))
+        return list
+
+    def getVIPsBySFid(self, id):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM vips WHERE sf_id = %s' % id)
+        rows = cursor.fetchall()
+        list = []
+        for row in rows:
+            vs = VirtualServer()
+            list.append(vs.loadFromDict(row))
+        return list
+        
 class Writer(object):
     def __init__(self,  db):
         logger.debug("Writer: connecting to db: %s" % db)
@@ -436,6 +490,14 @@ class Deleter(object):
         cursor.execute(command)
         self._con.commit()  
 
+    def deletePredictorBySFid(self, id):
+        cursor = self._con.cursor()
+        command = "DELETE from predictors where sf_id = '%s'" %id
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()  
+        
     def deleteSFbyID(self, id):
         cursor = self._con.cursor()
         command = "DELETE from serverfarms where id = '%s'" %id
@@ -444,6 +506,14 @@ class Deleter(object):
         cursor.execute(command)
         self._con.commit()  
 
+    def deleteSFbyLBid(self, id):
+        cursor = self._con.cursor()
+        command = "DELETE from serverfarms where lb_id = '%s'" %id
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()  
+        
     def deleteVLANbyID(self,  id):
         cursor = self._con.cursor()
         command = "DELETE from vlans where id = '%s'" %id

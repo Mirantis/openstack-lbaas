@@ -112,25 +112,28 @@ class Balancer():
         for vip in self.vips:
             wr.writeVirtualServer(vip)
             
-    def loadFromDB(self):
-#        store = balancer.storage.storage.Storage()
-#        rd = store.getReader()
-#        rd.getLoadBalancerById(self.lb)
-#        rd.getServerFarmById(self.sf)
-#        rd.getDeviceById
-        pass
+    def loadFromDB(self, lb_id):
+        store = balancer.storage.storage.Storage()
+        rd = store.getReader()
+        self.lb = lb_id
+        self.sf = rd.getSFByLBid(lb_id)
+        sf_id = self.sf.id
+        self.rs = rd.getRServersBySFid(sf_id)
+        self.probes = rd.getProbesBySFid(sf_id)
+        self.vips = rd.getVIPsBySFid(sf_id)
         
-    def removeFromDB(self):
+    def removeFromDB(self, balancer):
         store = balancer.storage.storage.Storage()
         dl = store.getDeleter()
+        lb_id = balancer.lb
+        sf_id = balancer.sf
+        dl.deleteLBbyID(lb_id)
+        dl.deleteSFbyLBid(lb_id)
+        dl.deletePredictorBySFid(sf_id)
         
-        dl.deleteLBbyID(self.lb)
-        dl.deleteSFbyID(self.sf)
-        dl.deletePredictorByID(self.sf._predictor)
-        
-        dl.deleteRSsBySFid(self.sf)
-        dl.deleteProbesBySFid(self.sf)
-        dl.deleteVSsBySFid(self.sf)
+        dl.deleteRSsBySFid(sf_id)
+        dl.deleteProbesBySFid(sf_id)
+        dl.deleteVSsBySFid(sf_id)
 
 #    def deploy(self,  driver,  context):
 #        #Step 1. Deploy server farm

@@ -88,13 +88,15 @@ class DeleteLBWorker(SyncronousWorker):
             devmap = DeviceMap()
             driver = devmap.getDriver(device)
             context = driver.getContext(device)
-            bal_deploy = Balancer()
+            lb_id = params
+            bal_deploy = Balancer().loadFromDB(lb_id)
+            
             
             #Step 1. Parse parameters came from request
-            bal_deploy.parseParams(params)
+            #bal_deploy.parseParams(params)
             
             #Step 2. Delete config in DB
-            bal_deploy.removeFromDB()
+            bal_deploy.removeFromDB(bal_deploy)
             
             #Step 3. Destruct config at device
             commands = makeCreateLBCommandChain(bal_deploy,  driver,  context)
