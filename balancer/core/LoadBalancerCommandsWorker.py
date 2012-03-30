@@ -82,13 +82,12 @@ class DeleteLBWorker(SyncronousWorker):
         
         def run(self):
             self._task.status = STATUS_PROGRESS
-            params = self._task.parameters
+            lb_id = self._task.parameters
             sched = Scheduller()
-            device = sched.getDevice()
+            device = sched.getDeviceByLBid(lb_id)
             devmap = DeviceMap()
             driver = devmap.getDriver(device)
             context = driver.getContext(device)
-            lb_id = params
             bal_deploy = Balancer()
             bal_deploy.loadFromDB(lb_id)
             

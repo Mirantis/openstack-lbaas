@@ -82,6 +82,20 @@ class Reader(object):
          lb.loadFromDict(row)
          return lb
 
+    def getDeviceByLBid(self,  id):
+         self._con.row_factory = sqlite3.Row
+         cursor = self._con.cursor()
+         if id == None:
+             raise exception.NotFound("Empty device id.")
+         cursor.execute('SELECT * FROM loadbalancers WHERE id = "%s"' % id)
+         row = cursor.fetchone()
+         cursor.execute('SELECT * FROM devices WHERE id = "%s"' % row['device_id'])
+         dict = cursor.fetchone()
+         if dict == None:
+             raise exception.NotFound()
+         lb = LBDevice()
+         lb.loadFromDict(dict)
+
     def getDevices(self):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
