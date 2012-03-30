@@ -27,7 +27,7 @@ from balancer.storage.storage import *
 from balancer.core.scheduller import Scheduller
 from balancer.devices.DeviceMap import DeviceMap
 from balancer.loadbalancers.vserver import Balancer
-from balancer.loadbalancers.vserver import makeCreateLBCommandChain
+from balancer.loadbalancers.vserver import makeCreateLBCommandChain, makeDeleteLBCommandChain
 from balancer.loadbalancers.vserver import Deployer,  Destructor
 
 
