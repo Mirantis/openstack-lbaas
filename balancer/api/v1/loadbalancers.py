@@ -26,7 +26,7 @@ from openstack.common import wsgi
 from balancer.core.ServiceController import *
 from balancer.core.LoadBalancerCommandsWorker import *
 from balancer.core.Worker import *
-
+import webob
 
 logger = logging.getLogger('balancer.api.v1.loadbalancers')
 SUPPORTED_PARAMS = balancer.api.v1.SUPPORTED_PARAMS
