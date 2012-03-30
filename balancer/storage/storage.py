@@ -274,7 +274,7 @@ class Reader(object):
     def getRServersBySFid(self, id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM rservers WHERE sf_id = %s' % id)
+        cursor.execute('SELECT * FROM rservers WHERE sf_id = "%s"' % id)
         rows = cursor.fetchall()
         list = []
         for row in rows:
@@ -285,7 +285,7 @@ class Reader(object):
     def getProbesBySFid(self, id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM probes WHERE sf_id = %s' % id)
+        cursor.execute('SELECT * FROM probes WHERE sf_id = "%s"' % id)
         rows = cursor.fetchall()
         list = []
         for row in rows:
@@ -296,7 +296,7 @@ class Reader(object):
     def getPredictorsBySFid(self, id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM predictors WHERE sf_id = %s' % id)
+        cursor.execute('SELECT * FROM predictors WHERE sf_id = "%s"' % id)
         rows = cursor.fetchall()
         list = []
         for row in rows:
@@ -307,7 +307,7 @@ class Reader(object):
     def getVIPsBySFid(self, id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM vips WHERE sf_id = %s' % id)
+        cursor.execute('SELECT * FROM vips WHERE sf_id = "%s"' % id)
         rows = cursor.fetchall()
         list = []
         for row in rows:
