@@ -25,16 +25,18 @@ class RemoteConfig(object):
     def putConfig(self):
         put(self.localpath+self.configfilename, '/tmp/'+self.configfilename)
         config_check_status = run('haproxy -c -f  /tmp/%s' % self.configfilename)
-        if ( config_check_status  == 'Configuration file is valid'):
-            sudo('mv /tmp/'+self.configfilename + " "+ self.remotepath)
-            sudo('service haproxy restart')
-            disconnect_all()
-            return True
-        else:
-            logger.error('[HAPROXY] new config has errors')
-            logger.debug(config_check_status)
-            disconnect_all()
-            return False
+        sudo('mv /tmp/'+self.configfilename + " "+ self.remotepath)
+        sudo('service haproxy restart')
+#        if ( config_check_status  == 'Configuration file is valid'):
+#            sudo('mv /tmp/'+self.configfilename + " "+ self.remotepath)
+#            sudo('service haproxy restart')
+#            disconnect_all()
+#            return True
+#        else:
+#            logger.error('[HAPROXY] new config has errors')
+#            logger.debug(config_check_status)
+#            disconnect_all()
+#            return False
       
 
     def validationConfig(self): 
