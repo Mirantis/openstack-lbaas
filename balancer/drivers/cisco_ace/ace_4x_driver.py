@@ -18,7 +18,7 @@
 import md5
 import logging
 
-from balancer.drivers.BaseDriver import BaseDriver
+from balancer.drivers.BaseDriver import (BaseDriver,  is_sequence)
 from balancer.drivers.cisco_ace.Context import Context
 from balancer.drivers.cisco_ace.XmlSender import XmlSender
 import openstack.common.exception
@@ -514,18 +514,31 @@ class AceDriver(BaseDriver):
             XMLstr = "<service-policy type='input' name='" + pmap + "'/>"
         else:
             #  Add service-policy for necessary vlans
-            for i in vip.VLAN:
-                XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
-                XMLstr = XMLstr + "<service-policy type='input' name='" + pmap + "'/>\r\n"
-                XMLstr = XMLstr + "</interface>"
-                tmp = s.deployConfig(context, XMLstr)    
-                
-            # Add vip-acl to each VLANs 
-            for i in vip.VLAN:
-                XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
-                XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
-                XMLstr = XMLstr + "</interface>"
-                tmp = s.deployConfig(context, XMLstr)    
+            if is_sequence(vip.VLAN):
+                for i in vip.VLAN:
+                    XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
+                    XMLstr = XMLstr + "<service-policy type='input' name='" + pmap + "'/>\r\n"
+                    XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
+                    XMLstr = XMLstr + "</interface>"
+                    tmp = s.deployConfig(context, XMLstr)    
+                    
+                # Add vip-acl to each VLANs 
+#                for i in vip.VLAN:
+#                    XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
+#                    XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
+#                    XMLstr = XMLstr + "</interface>"
+#                    tmp = s.deployConfig(context, XMLstr)    
+            else:
+                    XMLstr = "<interface type='vlan' number='" + str(vip.VLAN) + "'>\r\n"
+                    XMLstr = XMLstr + "<service-policy type='input' name='" + pmap + "'/>\r\n"
+                    XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
+                    XMLstr = XMLstr + "</interface>"
+                    tmp = s.deployConfig(context, XMLstr)    
+#                    XMLstr = "<interface type='vlan' number='" + str(vip.VLAN) + "'>\r\n"
+#                    XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
+#                    XMLstr = XMLstr + "</interface>"
+#                    tmp = s.deployConfig(context, XMLstr)   
+
         
         return 'OK'
     
@@ -574,17 +587,24 @@ class AceDriver(BaseDriver):
                 XMLstr = "<service-policy sense='no' type='input' name='" + pmap + "'/>"
             else:
                 #  Add service-policy for necessary vlans
-                for i in vip.VLAN:
-                    XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
-                    XMLstr = XMLstr + "<service-policy sense='no' type='input' name='" + pmap + "'/>\r\n"
-                    XMLstr = XMLstr + "</interface>"
-                    tmp = s.deployConfig(context, XMLstr)    
-                    
-                # Add vip-acl to each VLANs 
-                for i in vip.VLAN:
-                    XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
-                    XMLstr = XMLstr + "<access-group sense='no' access-type='input' name='vip-acl'/>\r\n"
-                    XMLstr = XMLstr + "</interface>"
-                    tmp = s.deployConfig(context, XMLstr)    
+                if is_sequence(vip.VLAN):
+                    for i in vip.VLAN:
+                        XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
+                        XMLstr = XMLstr + "<service-policy sense='no' type='input' name='" + pmap + "'/>\r\n"
+                        XMLstr = XMLstr + "</interface>"
+                        tmp = s.deployConfig(context, XMLstr)    
+                        
+                    # Add vip-acl to each VLANs 
+                    for i in vip.VLAN:
+                        XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
+                        XMLstr = XMLstr + "<access-group sense='no' access-type='input' name='vip-acl'/>\r\n"
+                        XMLstr = XMLstr + "</interface>"
+                        tmp = s.deployConfig(context, XMLstr)    
+                else:
+                        XMLstr = "<interface type='vlan' number='" + str(vip.VLAN) + "'>\r\n"
+                        XMLstr = XMLstr + "<service-policy sense='no' type='input' name='" + pmap + "'/>\r\n"
+                        XMLstr = XMLstr + "<access-group sense='no' access-type='input' name='vip-acl'/>\r\n"                        
+                        XMLstr = XMLstr + "</interface>"
+                        tmp = s.deployConfig(context, XMLstr)   
         
     

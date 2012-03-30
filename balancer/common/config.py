@@ -34,8 +34,7 @@ from balancer import version
 paste_deploy_group = cfg.OptGroup('paste_deploy')
 paste_deploy_opts = [
     cfg.StrOpt('flavor'),
-    cfg.StrOpt('config_file'),
-    cfg.StrOpt('db_path')
+    cfg.StrOpt('config_file')
     ]
 
 
