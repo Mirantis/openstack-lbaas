@@ -88,7 +88,7 @@ class HaproxyDriver(BaseDriver):
         remote = RemoteConfig(context)
 
     
-    def deleteVIP(self,  context,  virtualserver):
+    def deleteVIP(self,  context,  virtualserver,  serverfarm):
         if not bool(virtualserver.name):
             logger.error ('[HAPROXY] Virtualserver name is empty')
             return 'VIRTUALSERVER NAME ERROR'
