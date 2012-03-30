@@ -71,7 +71,6 @@ class HaproxyDriver(BaseDriver):
         remote.putConfig()
     
     def createVIP(self,  context, virtualserver,  serverfarm): 
-        logger.debug('[HAPROXY] create VIP')
         if not bool(virtualserver.name):
             logger.error ('[HAPROXY] Virtualserver name is empty')
             return 'VIRTUALSERVER NAME ERROR'
@@ -81,6 +80,7 @@ class HaproxyDriver(BaseDriver):
         haproxy_virtualserver.bind_port = virtualserver.port
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
+        logger.debug('[HAPROXY] create VIP %s' haproxy_serverfarm() )
         #Add new IP address
         remote_interface = RemoteInterface(context, haproxy_virtualserver )
         remote_interface.addIP()
