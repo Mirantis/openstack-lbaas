@@ -51,10 +51,6 @@
                        "rateConnection": "1000", 
                        "status": "ONLINE",
                        "condition": "ENABLED"
-                    },                 
-                    {
-                       "type": "host",
-                       "description": "simple redirect real server for test"
                     }
                   ], 
     "healthMonitor": [
