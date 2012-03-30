@@ -114,7 +114,7 @@ class Controller(object):
                 return "OK"
 
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+            msg = "Image with identifier %s not found" % params
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
