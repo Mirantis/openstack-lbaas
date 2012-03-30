@@ -381,9 +381,9 @@ class Deleter(object):
         cursor.execute(command)
         self._con.commit() 
         
-    def deleteVSbyName(self, name):
+    def deleteVSbyID(self, id):
         cursor = self._con.cursor()
-        command = "DELETE from vips where name = '%s'" %name
+        command = "DELETE from vips where id = '%s'" %id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
@@ -396,7 +396,15 @@ class Deleter(object):
         logger.debug(msg)
         cursor.execute(command)
         self._con.commit() 
-        
+
+    def deleteProbeByID(self,  id):
+        cursor = self._con.cursor()
+        command = "DELETE from probes where id = '%s'" %id
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()           
+
     def deleteProbesBySFid(self, id):
         cursor = self._con.cursor()
         command = "DELETE from probes where probes.sf_id = '%s'" %id
@@ -405,14 +413,45 @@ class Deleter(object):
         cursor.execute(command)
         self._con.commit()   
         
-    def deleteLBbyID(self):
+    def deleteLBbyID(self,  id):
         cursor = self._con.cursor()
         command = "DELETE from loadbalancers where id = '%s'" %id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
         self._con.commit()  
-        
+
+    def deleteDeviceByID(self, id):
+        cursor = self._con.cursor()
+        command = "DELETE from devices where id = '%s'" %id
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()  
+
+    def deletePredictorByID(self, id):
+        cursor = self._con.cursor()
+        command = "DELETE from predictors where id = '%s'" %id
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()  
+
+    def deleteSFbyID(self, id):
+        cursor = self._con.cursor()
+        command = "DELETE from serverfarms where id = '%s'" %id
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()  
+
+    def deleteVLANbyID(self,  id):
+        cursor = self._con.cursor()
+        command = "DELETE from vlans where id = '%s'" %id
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()  
         
 class Storage(object):
     def __init__(self,  conf=None):
