@@ -38,7 +38,7 @@ class Scheduller(object):
         
         
     def getDevice(self):
-        return self._device_map['d78122007a5911e1a7840007e90f795c']
+        return self._device_map['17da1db07a6011e1a3290007e90f795c']
         
     def getDeviceByID(self,  id):
         dev = self._device_map.get(id,  None)

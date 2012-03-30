@@ -24,11 +24,27 @@ class Context(BaseContext):
                  remotepath='/etc/haproxy/',  interface =''):
         self.ip = ip
         self.port = port
+        if (localpath is None) or (localpath == "None"):
+                self.localpath = '/tmp/'
+        else:
+                self.localpath = localpath
+        
         self.login = login
         self.password = password
-        self.localpath = localpath
-        self.remotepath = remotepath
-        self.configfilename = configfilename
-        self.interface = interface
+        
+        if (remotepath is None) or (remotepath == "None"):
+                self.remotepath = '/etc/haproxy/'
+        else:
+                self.remotepath = remotepath
+        
+        if (configfilename is None) or (configfilename == "None"):
+                self.configfilename = 'haproxy.cfg'
+        else:
+                self.configfilename = configfilename
+
+        if (interface is None) or (interface == "None"):
+                self.interface = ''
+        else:
+                self.interface = interface
 
         

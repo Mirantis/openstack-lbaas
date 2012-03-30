@@ -35,7 +35,7 @@ class HaproxyDriver(BaseDriver):
         pass
 
     def getContext (self,  dev):
-        return Context(dev.ip , dev.port , dev.login , dev.password, dev.localpath, dev.configfilepath, \
+        return Context(dev.ip , dev.port , dev.user , dev.password, dev.localpath, dev.configfilepath, \
                        dev.remotepath, dev.interface )
 
     def addRServerToSF(self,  context,  serverfarm,  rserver):
