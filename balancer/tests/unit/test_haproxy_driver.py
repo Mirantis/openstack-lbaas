@@ -112,7 +112,7 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.assertTrue(True)
     def test_deleteVirtualServer(self):
         driver = HaproxyDriver()
-        driver.deleteVIP(self.context,  self.virtualserver)
+        driver.deleteVIP(self.context,  self.virtualserver,   self.server_farm)
         self.assertTrue(True)
     def test_addRServerToSF(self):
         driver = HaproxyDriver()
