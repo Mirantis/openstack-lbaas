@@ -26,7 +26,7 @@ class RemoteConfig(object):
         put(self.localpath+self.configfilename, '/tmp/'+self.configfilename)
         #config_check_status = run('haproxy -c -f  /tmp/%s' % self.configfilename)
         sudo('mv /tmp/'+self.configfilename + " "+ self.remotepath)
-        sudo('service haproxy restart')
+        #sudo('service haproxy restart')
 #        if ( config_check_status  == 'Configuration file is valid'):
 #            sudo('mv /tmp/'+self.configfilename + " "+ self.remotepath)
 #            sudo('service haproxy restart')
