@@ -263,7 +263,7 @@ class Reader(object):
     def getSFByLBid(self,  id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM loadbalancers WHERE id = %s' % id)
+        cursor.execute('SELECT * FROM loadbalancers WHERE id = '+str(id))
         dict = cursor.fetchone()
         cursor.execute('SELECT * FROM serverfarms WHERE lb_id = %s' % dict['id'])
         row = cursor.fetchone()
