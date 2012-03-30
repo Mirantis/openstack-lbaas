@@ -71,6 +71,7 @@ class HaproxyDriver(BaseDriver):
         remote.putConfig()
     
     def createVIP(self,  context, virtualserver,  serverfarm): 
+        logger.debug('[HAPROXY] create VIP')
         if not bool(virtualserver.name):
             logger.error ('[HAPROXY] Virtualserver name is empty')
             return 'VIRTUALSERVER NAME ERROR'
@@ -89,6 +90,7 @@ class HaproxyDriver(BaseDriver):
 
     
     def deleteVIP(self,  context,  virtualserver,  serverfarm):
+        logger.debug('[HAPROXY] delete VIP')
         if not bool(virtualserver.name):
             logger.error ('[HAPROXY] Virtualserver name is empty')
             return 'VIRTUALSERVER NAME ERROR'
