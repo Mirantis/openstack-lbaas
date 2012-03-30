@@ -32,7 +32,7 @@ import serverfarm
 import vlan
 import virtualserver
 
-
+logger = logging.getLogger(__name__)
 
 
 class Balancer():
@@ -177,6 +177,8 @@ class Deployer(object):
                 current_command.execute()
             except:
                 i = index
+                logger.error("Got exception during deploy. Rolling back changes.")
+                
                 for k in range(index):
                     command = self.commands[index - k]
                     command.undo()
