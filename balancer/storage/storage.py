@@ -61,7 +61,7 @@ class Reader(object):
     def getLoadBalancerById(self,  id):
          self._con.row_factory = sqlite3.Row
          cursor = self._con.cursor()
-         cursor.execute('SELECT * FROM loadbalancers WHERE id = %s' % id)
+         cursor.execute('SELECT * FROM loadbalancers WHERE id = "%s"' % id)
          row = cursor.fetchone()
          if row == None:
              raise exception.NotFound()
@@ -74,7 +74,7 @@ class Reader(object):
          cursor = self._con.cursor()
          if id == None:
              raise exception.NotFound("Empty device id.")
-         cursor.execute('SELECT * FROM devices WHERE id = %s' % id)
+         cursor.execute('SELECT * FROM devices WHERE id = "%s"' % id)
          row = cursor.fetchone()
          if row == None:
              raise exception.NotFound()
@@ -99,7 +99,7 @@ class Reader(object):
     def getProbeById(self, id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM probes WHERE id = %s' % id)
+        cursor.execute('SELECT * FROM probes WHERE id = "%s"' % id)
         row = cursor.fetchone()
         if row == None:
             raise exception.NotFound()
@@ -125,7 +125,7 @@ class Reader(object):
          cursor = self._con.cursor()
          if id == None:
              raise exception.NotFound("Empty device id.")
-         cursor.execute('SELECT * FROM rservers WHERE id = %s' % id)
+         cursor.execute('SELECT * FROM rservers WHERE id = "%s"' % id)
          row = cursor.fetchone()
          if row == None:
              raise exception.NotFound()
@@ -149,7 +149,7 @@ class Reader(object):
     def getPreditorById(self, id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM predictors WHERE id = %s' % id)
+        cursor.execute('SELECT * FROM predictors WHERE id = "%s"' % id)
         row = cursor.fetchone()
         if row == None:
             raise exception.NotFound()
@@ -174,7 +174,7 @@ class Reader(object):
     def getServerFarmById(self, id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM serverfarms WHERE id = %s' % id)
+        cursor.execute('SELECT * FROM serverfarms WHERE id = "%s"' % id)
         row = cursor.fetchone()
         if row == None:
             raise exception.NotFound()
@@ -199,7 +199,7 @@ class Reader(object):
     def getVirtualServerById(self, id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM vips WHERE id = %s' % id)
+        cursor.execute('SELECT * FROM vips WHERE id = "%s"' % id)
         row = cursor.fetchone()
         if row == None:
             raise exception.NotFound()
@@ -238,7 +238,7 @@ class Reader(object):
     def getVLANbyId(self, id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM vlans WHERE id = %s' % id)
+        cursor.execute('SELECT * FROM vlans WHERE id = "%s"' % id)
         row = cursor.fetchone()
         if row == None:
             raise exception.NotFound()
