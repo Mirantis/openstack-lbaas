@@ -19,10 +19,12 @@ class RemoteConfig(object):
         self.configfilename = context.configfilename
 
     def getConfig(self):
+        logger.debug ('[HAPROXY] get configuration to remote server')
         get('%s/%s' % (self.remotepath,  self.configfilename), '%s/%s' % (self.localpath,  self.configfilename))
         disconnect_all()
 
     def putConfig(self):
+        logger.debug ('[HAPROXY] put configuration to remote server')
         put(self.localpath+self.configfilename, '/tmp/'+self.configfilename)
         #config_check_status = run('haproxy -c -f  /tmp/%s' % self.configfilename)
         sudo('mv /tmp/'+self.configfilename + " "+ self.remotepath)
