@@ -207,10 +207,13 @@ class Destructor(object):
         self.commands = []
     
     def execute(self):
-        for index in self.commands:
+        for index in range(len(self.commands)):
+            current_command = self.commands[index]
             try:
-                index.execute()
+                current_command.execute()
             except:
+                i = index
+                logger.error("Got exception during deleting.")
                 raise exception.Error()
 
 class CreateRServerCommand(object): 
