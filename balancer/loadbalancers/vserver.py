@@ -115,18 +115,18 @@ class Balancer():
     def loadFromDB(self, lb_id):
         store = balancer.storage.storage.Storage()
         rd = store.getReader()
-        self.lb = lb_id
+        self.lb = rd.getLoadBalancerById(lb_id)
         self.sf = rd.getSFByLBid(lb_id)
         sf_id = self.sf.id
         self.rs = rd.getRServersBySFid(sf_id)
         self.probes = rd.getProbesBySFid(sf_id)
         self.vips = rd.getVIPsBySFid(sf_id)
         
-    def removeFromDB(self, balancer):
+    def removeFromDB(self):
         store = balancer.storage.storage.Storage()
         dl = store.getDeleter()
-        lb_id = balancer.lb
-        sf_id = balancer.sf
+        lb_id = self.lb.id
+        sf_id = self.sf.id
         dl.deleteLBbyID(lb_id)
         dl.deleteSFbyLBid(lb_id)
         dl.deletePredictorBySFid(sf_id)
