@@ -89,7 +89,7 @@ class DeleteLBWorker(SyncronousWorker):
             driver = devmap.getDriver(device)
             context = driver.getContext(device)
             lb_id = params
-            bal_deploy = Balancer().loadFromDB(lb_id)
+            bal_deploy = Balancer.loadFromDB(lb_id)
             
             
             #Step 1. Parse parameters came from request
