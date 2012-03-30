@@ -113,7 +113,7 @@ class Controller(object):
             worker = mapper.getWorker(task, "delete" )
             if worker.type ==  SYNCHRONOUS_WORKER:
                 result = worker.run()
-                return {'loadbalancers': {"id": lb.id}}
+                return "OK"
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
