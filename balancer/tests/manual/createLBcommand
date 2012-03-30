@@ -3,47 +3,57 @@
     "name": "testLB",
     "protocol": "HTTP",
     "transport": "TCP", 
-    "port": "83",
+    "port": "80",
     "algorithm": "ROUND_ROBIN",
     
     "virtualIps": [
                     {
-                      "address": "3ffe:1900:4545:3:200:f8ff:fe21:67cf",
-                      "type": "PUBLIC",
-                      "ipVersion": "IPV6", 
-                      "VLAN": "200"
-                    }, 
-                    {
-                      "address": "201.13.144.12",
+                      "address": "201.1.1.202",
                       "mask": "255.255.255.255", 
                       "type": "PUBLIC",
                       "ipVersion": "IPv4", 
-                      "VLAN": "201"
+                      "VLAN": "200",
+                      "port": "80"
+                    },
+                    {
+                      "address": "100.2.3.5",
+                      "mask": "255.0.0.0",
+                      "ipVersion": "IPv4",
+                      "VLAN": "2",
+                      "port": "1344"
                     }
                   ],
     "nodes":      [
                     {
-                       "address": "10.1.1.1",
+                       "address": "10.1.1.12",
+                       "type": "host",
                        "port": "80",
                        "weight": "2", 
-                       "minCon": "400000", 
-                       "maxCon": "40000", 
+                       "minCon": "300000", 
+                       "maxCon": "400000", 
                        "rateBandwidth": "12", 
                        "rateConnection": "1000", 
                        "status": "ONLINE",
-                       "condition": "ENABLED"
+                       "condition": "ENABLED",
+                       "cookieStr": "test-str"
                     }, 
                     {
-                       "address": "10.1.1.2",
-                       "port": "80",
-                       "weight": "2", 
+                       "address": "10.1.1.13",
+                       "type": "host",
+                       "port": "180",
+                       "description": "test server",
+                       "weight": "5", 
                        "minCon": "400000", 
-                       "maxCon": "40000", 
+                       "maxCon": "400000", 
                        "rateBandwidth": "12", 
                        "rateConnection": "1000", 
                        "status": "ONLINE",
                        "condition": "ENABLED"
-                    }                    
+                    },                 
+                    {
+                       "type": "host",
+                       "description": "simple redirect real server for test"
+                    }
                   ], 
     "healthMonitor": [
                       { 
@@ -52,18 +62,20 @@
                         "attemptsBeforeDeactivation": "5", 
                         "timeout": "10"
                       }, 
-                      { "type": "CONNECT", 
+                      { 
+                        "type": "CONNECT", 
                         "delay": "10", 
-                         "attemptsBeforeDeactivation": "5", 
-                         "timeout": "10"
+                        "attemptsBeforeDeactivation": "5", 
+                        "timeout": "10"
                       }, 
-                     {  "type": "HTTP", 
-                         "delay": "10", 
-                         "attemptsBeforeDeactivation": "5", 
-                         "timeout": "10", 
-                         "method":  "GET", 
-                         "path": "/index.html", 
-                         "expected": "200-204"
+                     {  
+                        "type": "HTTP", 
+                        "delay": "10", 
+                        "attemptsBeforeDeactivation": "5", 
+                        "timeout": "10", 
+                        "method":  "GET", 
+                        "path": "/index.html", 
+                        "expected": "200-204"
                       }
                       ]
     
