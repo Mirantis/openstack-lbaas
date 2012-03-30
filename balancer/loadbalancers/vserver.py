@@ -290,7 +290,7 @@ class CreateProbeCommand(object):
         self._driver.deleteProbe(self._context, self._probe)
 
 class DeleteProbeCommand(object):
-    def __init_(self,  driver,  context,  probe):
+    def __init__(self,  driver,  context,  probe):
         self._driver = driver
         self._context = context
         self._probe = probe
