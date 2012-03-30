@@ -112,7 +112,12 @@ class Balancer():
         for vip in self.vips:
             wr.writeVirtualServer(vip)
             
-    def loadFromDB(self,  id):
+    def loadFromDB(self):
+#        store = balancer.storage.storage.Storage()
+#        rd = store.getReader()
+#        rd.getLoadBalancerById(self.lb)
+#        rd.getServerFarmById(self.sf)
+#        rd.getDeviceById
         pass
         
     def removeFromDB(self):
