@@ -267,7 +267,8 @@ class Reader(object):
         dict = cursor.fetchone()
         cursor.execute('SELECT * FROM serverfarms WHERE lb_id = "%s"' % dict['id'])
         row = cursor.fetchone()
-        sf = ServerFarm().loadFromDict(row)
+        sf = ServerFarm()
+        sf.loadFromDict(row)
         return sf
 
     def getRServersBySFid(self, id):
