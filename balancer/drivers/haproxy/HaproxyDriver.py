@@ -82,7 +82,7 @@ class HaproxyDriver(BaseDriver):
         haproxy_serverfarm.name = serverfarm.name
         logger.debug('[HAPROXY] create VIP %s' % haproxy_serverfarm.name )
         #Add new IP address
-        remote_interface = RemoteInterface(context, haproxy_virtualserver.name)
+        remote_interface = RemoteInterface(context, haproxy_virtualserver)
         remote_interface.addIP()
         #Modify remote config file, check and restart remote haproxy
         config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  context.configfilename))

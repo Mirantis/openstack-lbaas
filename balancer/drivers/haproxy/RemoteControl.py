@@ -73,7 +73,7 @@ class RemoteInterface(object):
         env.password = context.password
         env.host_string = context.ip
         self.interface = context.interface
-        
+        self.IP = frontend.bind_address
         
     def changeIP(self, IP, netmask):
         sudo('ifconfig '+self.interface+ ' '+IP+' netmask '+netmask)
