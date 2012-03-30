@@ -43,7 +43,7 @@ class Context(BaseContext):
                 self.configfilename = configfilename
 
         if (interface is None) or (interface == "None"):
-                self.interface = 'eth1'
+                self.interface = 'eth0'
         else:
                 self.interface = interface
 
