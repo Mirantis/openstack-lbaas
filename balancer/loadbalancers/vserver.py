@@ -59,7 +59,7 @@ class Balancer():
         sf.lb_id = lb.id
         sf._predictor = createPredictor(lb.algorithm)
         
-        sf.predictor.sf_id = sf.id
+        sf._predictor.sf_id = sf.id
         sf.name = sf.id
         self.sf = sf
         """ Parse RServer nodes and attach them to SF """
