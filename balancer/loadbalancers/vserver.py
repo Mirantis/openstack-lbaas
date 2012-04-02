@@ -58,7 +58,8 @@ class Balancer():
         sf = serverfarm.ServerFarm()
         sf.lb_id = lb.id
         sf._predictor = createPredictor(lb.algorithm)
-        sf._predictor.sf_id = sf.id
+        
+        sf.predictor.sf_id = sf.id
         sf.name = sf.id
         self.sf = sf
         """ Parse RServer nodes and attach them to SF """
