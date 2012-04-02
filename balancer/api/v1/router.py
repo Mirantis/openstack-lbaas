@@ -74,6 +74,8 @@ class API(wsgi.Router):
                        conditions=dict(method=["POST"]))
         
         tasks_resource = tasks.create_resource(self.conf)
+        mapper.resource("task", "tasks", controller=tasks_resource,
+                        collection={'detail': 'GET'})
         mapper.connect("/tasks/", controller=tasks_resource, action="index")
         
         super(API, self).__init__(mapper)
