@@ -122,7 +122,7 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
-    def show(self,  req,  id):
+    def show(self,  req,  **args):
         try:
             msg = "Got loadbalancerr info request. Request: %s" % req
             logger.debug(msg)
