@@ -53,6 +53,7 @@ class Balancer():
             lb = loadbalancer.LoadBalancer()
         lb.loadFromDict(params)
         self.lb = lb
+        self.lb.status = loadbalancer.LB_BUILD_STATUS
         nodes = params.get('nodes',  None)
         sf = serverfarm.ServerFarm()
         sf.lb_id = lb.id
@@ -94,8 +95,24 @@ class Balancer():
                 self.vips.append(vs)
                 
         #stiky = params.get("sessionPersistence",  None)
+    
+    def update(self):
+        store = balancer.storage.storage.Storage()
+        wr = store.getWriter()
+        wr.updateObjectInTable(self.lb)
+        for rs in self.rs:
+            wr.updateObjectInTable(rs)
         
-                
+        for pr in self.probes:
+            wr.updateObjectInTable(pr)
+            
+        for vip in self.vips:
+            wr.updateObjectInTable(vip)
+            
+        
+    def getLB(self):            
+        return self.lb
+        
     def savetoDB(self):
         store = balancer.storage.storage.Storage()
         wr = store.getWriter()

@@ -132,7 +132,7 @@ class Controller(object):
             #params = args['body']
             params = args
             task.parameters = params
-            worker = mapper.getWorker(task, "loadbalancer_data" )
+            worker = mapper.getWorker(task, "show" )
             if worker.type ==  SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return{'loadbalancer': result}

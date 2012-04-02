@@ -21,6 +21,12 @@ from balancer.core.uniqueobject import UniqueObject
 
 logger = logging.getLogger(__name__)
 
+
+LB_BUILD_STATUS = "BUILD"
+LB_ACTIVE_STATUS = "ACTIVE"
+LB_PENDING_UPDATE_STATUS = "PENDING_UPDATE"
+LB_ERROR_STATUS = "ERROR"
+
 class LoadBalancer(Serializeable,  UniqueObject):
     def __init__(self):
         Serializeable.__init__(self)

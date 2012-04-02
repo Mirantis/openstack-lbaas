@@ -38,11 +38,14 @@ class Scheduller(object):
         
         
     def getDevice(self):
-        return self._device_map['17da1db07a6011e1a3290007e90f795c']
+        #TODO understand how we select device
+        return self._list[0]
+        
     def getDeviceByLBid(self, id):
         rd = store.getReader()
         self._device_map = rd.getDeviceByLBid(id)
         return self._device_map
+        
     def getDeviceByID(self,  id):
         dev = self._device_map.get(id,  None)
         if dev == None:

@@ -20,6 +20,7 @@ import logging
 import sys
 import threading
 import Queue
+import balancer.loadbalancers.loadbalancer
 
 from balancer.core.Worker import *
 from balancer.core.LBCommands import *
@@ -64,7 +65,7 @@ class LBGetDataWorker(SyncronousWorker):
       self._task.status = STATUS_DONE
       return list
       
-class CreateLBWorker(SyncronousWorker):
+class CreateLBWorker(ASyncronousWorker):
         def __init__(self,  task):
             super(CreateLBWorker, self).__init__(task)
             self._command_queue = Queue.LifoQueue()
@@ -77,21 +78,27 @@ class CreateLBWorker(SyncronousWorker):
             devmap = DeviceMap()
             driver = devmap.getDriver(device)
             context = driver.getContext(device)
-            bal_deploy = Balancer()
+            balancer_instance = Balancer()
             
             #Step 1. Parse parameters came from request
-            bal_deploy.parseParams(params)
-            lb = bal_deploy.getLB()
+            balancer_instance.parseParams(params)
+            lb = balancer_instance.getLB()
             lb.device_id = device.id
             #Step 2. Save config in DB
-            bal_deploy.savetoDB()
+            balancer_instance.savetoDB()
             
             #Step 3. Deploy config to device
             commands = makeCreateLBCommandChain(bal_deploy,  driver,  context)
             deploy = Deployer()
             deploy.commands = commands
-            deploy.execute()
-            
+            try:
+                deploy.execute()
+            except exception:
+                balancer_instance.lb.status = balancer.loadbalancers.loadbalancer.LB_ERROR_STATUS
+                balancer_instance.update()
+                return
+            balancer_instance.lb.status = balancer.loadbalancers.loadbalancer.LB_ACTIVE_STATUS
+            balancer_instance.update()
             self._task.status = STATUS_DONE
             return lb.id
             
@@ -135,5 +142,5 @@ class LBActionMapper(object):
             return CreateLBWorker(task)
         if action == "delete":
             return DeleteLBWorker(task)
-        if action =="loadbalancer_data":
+        if action =="show":
             return LBGetDataWorker(task)

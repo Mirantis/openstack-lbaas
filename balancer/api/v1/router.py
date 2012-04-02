@@ -20,6 +20,8 @@ import logging
 import routes
 import loadbalancers
 import devices
+import tasks
+
 
 from openstack.common import wsgi
 from balancer.core.configuration import Configuration
@@ -70,7 +72,8 @@ class API(wsgi.Router):
                        controller=device_resource,
                        action="create",
                        conditions=dict(method=["POST"]))
-
-   
-
+        
+        tasks_resource = tasks.create_resource(self.conf)
+        mapper.connect("/tasks/", controller=tasks_resource, action="index")
+        
         super(API, self).__init__(mapper)
