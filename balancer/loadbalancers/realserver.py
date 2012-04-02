@@ -29,6 +29,7 @@ class RealServer(Serializeable,  UniqueObject):
         self.name = ""
         self.type = "Host"
         self.webHostRedir = ""
+        self.redirectionCode = ""
         self.ipType = "IPv4"
         self.address = ""
         self.port = ""

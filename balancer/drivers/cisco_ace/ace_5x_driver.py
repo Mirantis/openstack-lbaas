@@ -18,7 +18,7 @@
 import md5
 import logging
 
-from balancer.drivers.BaseDriver import BaseDriver
+from balancer.drivers.BaseDriver import (BaseDriver,  is_sequence)
 from balancer.drivers.cisco_ace.Context import Context
 from balancer.drivers.cisco_ace.XmlSender import XmlSender
 
@@ -494,23 +494,19 @@ class AceDriver(BaseDriver):
     
     
     def createVIP(self,  context, vip,  sfarm): 
-        if not bool(vip.name) or not bool(sfarm.name) or not bool(vip.address) :
+        if not bool(vip.name) or not bool(vip.name) or not bool(vip.address) :
             return "ERROR"
         
         sn = "2"
         if bool(vip.allVLANs):
             pmap = "global"
         else:
-            s=""
-            vip.VLAN.sort()
-            for i in vip.VLAN:
-                s=s+str(i)+"-"
-            pmap = "int-" + md5.new(s).hexdigest()
+            pmap = "int-" + md5.new(vip.VLAN).hexdigest()
         
-        # 1) Add a access-list
+        #  Add a access-list
         XMLstr = "<access-list id='vip-acl' config-type='extended' perm-value='permit' protocol-name='ip' src-type='any' host_dest-addr='" + vip.address + "'/>\r\n"
         
-        #2) Add a policy-map
+        # Add a policy-map
         if vip.appProto.lower() == "other" or vip.appProto.lower() == "http":
             vip.appProto = ""
         else:
@@ -525,67 +521,72 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "</class_pmap_lb>\r\n"
         XMLstr = XMLstr + "</policy-map_lb>\r\n"
         
-        #3)Add a class-map
+        # Add a class-map
         XMLstr = XMLstr + "<class-map match-type='match-all' name='" + vip.name + "'>\r\n"
-        XMLstr = XMLstr + "<match_virtual-addr seq-num='" + sn + "' addr-type='virtual-address' ipv4-address='" + vip.address + "' net-mask='" + str(vip.mask) + "'"
+        XMLstr = XMLstr + "<match_virtual-addr seq-num='" + sn + "' virtual-address='" + vip.address + "' net-mask='" + str(vip.mask) + "'"
         XMLstr = XMLstr + " protocol-type='" + vip.proto.lower() + "'"
         if vip.proto.lower() != "any":
-            XMLstr = XMLstr + " operator='eq' port-" + vip.proto.lower() + "-name='" + str(vip.port) + "'"
+            XMLstr = XMLstr + " operator='eq' port-1='" + str(vip.port) + "'"
         XMLstr = XMLstr + "/>\r\n"
         XMLstr = XMLstr + "</class-map>\r\n"
-        
-        #4)Add a policy-map (multimatch) with class-map
-        XMLstr = XMLstr +"<policy-map_multimatch match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
-        XMLstr = XMLstr + "<class cmap-name='" + vip.name + "'>\r\n"
+
+        #  Add a policy-map (multimatch) with class-map
+        XMLstr = XMLstr + "<policy-map_multimatch match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
+        XMLstr = XMLstr + "<class match-cmap='" + vip.name + "'>\r\n"
         
         if bool(vip.status):
             XMLstr = XMLstr + "<loadbalance vip_config-type='" + vip.status.lower() + "'/>\r\n"
-            
+        
         XMLstr = XMLstr + "<loadbalance policy='" + vip.name + "-l7slb'/>\r\n"
+        if bool(vip.ICMPreply):
+            XMLstr = XMLstr + "<loadbalance vip_config-type='icmp-reply'/>\r\n"
         XMLstr = XMLstr + "</class>\r\n"
         XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
         
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
+        s = XmlSender(context)
+        tmp = s.deployConfig(context, XMLstr)    
         if (tmp != 'OK'):
             raise openstack.common.exception.Invalid(tmp)
-        
 
+        
         if bool(vip.allVLANs):
             XMLstr = "<service-policy type='input' name='" + pmap + "'/>"
         else:
             #  Add service-policy for necessary vlans
-            for i in vip.VLAN:
-                XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
-                XMLstr = XMLstr + "<service-policy type='input' name='" + pmap + "'/>\r\n"
-                XMLstr = XMLstr + "</interface>"
-                tmp = s.deployConfig(context, XMLstr)    
-                
-            # Add vip-acl to each VLANs 
-            for i in vip.VLAN:
-                XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
-                XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
-                XMLstr = XMLstr + "</interface>"
-                tmp = s.deployConfig(context, XMLstr)    
-        
+            if is_sequence(vip.VLAN):
+                for i in vip.VLAN:
+                    XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
+                    XMLstr = XMLstr + "<service-policy type='input' name='" + pmap + "'/>\r\n"
+                    XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
+                    XMLstr = XMLstr + "</interface>"
+                    tmp = s.deployConfig(context, XMLstr)    
+            else:
+                    XMLstr = "<interface type='vlan' number='" + str(vip.VLAN) + "'>\r\n"
+                    XMLstr = XMLstr + "<service-policy type='input' name='" + pmap + "'/>\r\n"
+                    XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
+                    XMLstr = XMLstr + "</interface>"
+                    tmp = s.deployConfig(context, XMLstr)    
+
         return 'OK'
-        
+
+
+
     
     def deleteVIP(self,  context,  vip):
-        sn = "2"
         if bool(vip.allVLANs):
             pmap = "global"
         else:
-            pmap = "int-" + md5.new(vip.VLAN).hexdigest()
-        
-        res = XmlSender(context)
+            pmap = "int-" + md5.new(s).hexdigest()
         
         XMLstr = "<policy-map_multimatch match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
         XMLstr = XMLstr + "<class sense='no' cmap-name='" + vip.name + "'>\r\n"
         XMLstr = XMLstr + "</class>\r\n"
         XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
         
-        tmp = res.deployConfig(context, XMLstr)
+        s = XmlSender(context)
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp != 'OK'):
+            raise openstack.common.exception.Invalid(tmp)
         
         #3) Delete policy-map, class-map and access-list
         if vip.appProto.lower() == "other" or vip.appProto.lower() == "http":
@@ -601,24 +602,36 @@ class AceDriver(BaseDriver):
         
         XMLstr = XMLstr + "<access-list sense='no' id='vip-acl' config-type='extended' perm-value='permit' " 
         XMLstr = XMLstr + "protocol-name='ip' src-type='any' host_dest-addr='" + vip.address + "'/>\r\n"
-        
-        tmp = res.deployConfig(context, XMLstr)
 
-        last_policy_map = ''
-        if (last_policy_map == 'YES'):
+        tmp = s.deployConfig(context, XMLstr)    
+        if (tmp != 'OK'):
+            raise openstack.common.exception.Invalid(tmp)
+
+        XMLstr = 'show running-config policy-map %s' % pmap
+        last_policy_map = bool(s.getConfig(context,  XMLstr).find('class'))
+            
+        if (last_policy_map):
             # Remove service-policy from VLANs (Perform if deleted last VIP with it service-policy)
             if bool(vip.allVLANs):
                 XMLstr = "<service-policy sense='no' type='input' name='" + pmap + "'/>"
             else:
-                XMLstr = ""
-                for i in vip.VLAN:
-                    XMLstr = XMLstr + "<interface type='vlan' number='" + str(i) + "'>\r\n"
-                    XMLstr = XMLstr + "<service-policy sense='no' type='input' name='" + pmap + "'/>\r\n"
-                    XMLstr = XMLstr + "</interface>"
-            tmp = res.deployConfig(context, XMLstr)
+                #  Add service-policy for necessary vlans
+                if is_sequence(vip.VLAN):
+                    for i in vip.VLAN:
+                        XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
+                        XMLstr = XMLstr + "<service-policy sense='no' type='input' name='" + pmap + "'/>\r\n"
+                        XMLstr = XMLstr + "</interface>"
+                        tmp = s.deployConfig(context, XMLstr)    
 
-            # Delete class-map from policy-map
-            XMLstr = "<policy-map_multimatch sense='no' match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
-            XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
-            tmp = res.deployConfig(context, XMLstr)
+                        XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
+                        XMLstr = XMLstr + "<access-group sense='no' access-type='input' name='vip-acl'/>\r\n"
+                        XMLstr = XMLstr + "</interface>"
+                        tmp = s.deployConfig(context, XMLstr)    
+                else:
+                        XMLstr = "<interface type='vlan' number='" + str(vip.VLAN) + "'>\r\n"
+                        XMLstr = XMLstr + "<service-policy sense='no' type='input' name='" + pmap + "'/>\r\n"
+                        XMLstr = XMLstr + "<access-group sense='no' access-type='input' name='vip-acl'/>\r\n"                        
+                        XMLstr = XMLstr + "</interface>"
+                        tmp = s.deployConfig(context, XMLstr)   
+        
     

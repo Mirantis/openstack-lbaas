@@ -41,7 +41,7 @@ class XmlSender:
         
         request.add_header("Authorization", authheader)
         
-        data = """xml_cmd=<request_xml>\r\n%s\r\n</request_xml>""" % command
+        data = """xml_cmd=<request_xml>\r\n%s\r\n</request_xml><request_row>copy running-config startup-config</request_row>""" % command
         logger.debug("send data to ACE:\n" + data)
         
         try:
@@ -56,5 +56,32 @@ class XmlSender:
                return 'OK'
         else:
                return s
-                
 
+
+
+
+
+    def getConfig(self,  context,  command):
+        request = urllib2.Request(self.url)
+        
+        base64str = base64.encodestring('%s:%s' % (context.login, context.password))[:-1]
+        
+        authheader = "Basic %s" % base64str
+        
+        request.add_header("Authorization", authheader)
+        
+        data = """xml_cmd=<request_row>\r\n%s\r\n</request_row>""" % command
+        logger.debug("send data to ACE:\n" + data)
+        
+        try:
+          message = urllib2.urlopen(request, data)
+          s = message.read()
+        except (Exception):
+            raise openstack.common.exception.Error(Exception)
+            
+        logger.debug("data from ACE:\n" + s)
+            
+        if (s.find('XML_CMD_SUCCESS') > 0):
+               return 'OK'
+        else:
+               return s

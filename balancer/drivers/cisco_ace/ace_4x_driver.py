@@ -68,7 +68,9 @@ class AceDriver(BaseDriver):
         else:
             if bool(rserver.webHostRedir):
                 XMLstr = XMLstr + "  <webhost-redirection relocation-string='" + rserver.webHostRedir + "'/>\r\n" 
-                # without parameter  redirection-code=
+                if bool(rserver.redirectionCode):
+                    XMLstr = XMLstr + "  <webhost-redirection redirection-code='" + rserver.redirectionCode + "'/>\r\n"
+
 
         if (bool(rserver.maxCon) and bool(rserver.minCon)):
             XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + "' min='" + str(rserver.minCon) + "'/>\r\n"
@@ -127,8 +129,6 @@ class AceDriver(BaseDriver):
         type = probe.type.lower()
         if type == "connect":
             type = "tcp"
-        # Rport need to add for SIP-UDP Probe
-        # sendData need to add for TCP Probe
         
         probes_with_send_data = ['echo-udp',  'echo-tcp',  'finger',  'tcp',  'udp']
         probes_with_timeout = ['echo-tcp',  'finger',  'tcp',  'rtsp',  'http',  'https',  'imap',  'pop',  'sip-tcp',  'smtp',  'telnet']
@@ -324,11 +324,12 @@ class AceDriver(BaseDriver):
         if bool(serverfarm.failAction):
             XMLstr = XMLstr + "<failaction failaction-type='" + serverfarm.failAction + "'/>\r\n"
         
-        if bool(serverfarm._predictor): #Some predictors are may include additional parameters !
-            XMLstr = XMLstr + "<predictor predictor-method='" + serverfarm._predictor.type.lower() + "'/>\r\n"
+        if bool(serverfarm.predictor): #Some predictors are may include additional parameters !
+            XMLstr = XMLstr + "<predictor predictor-method='" + serverfarm.predictor.type.lower() + "'/>\r\n"
         
-        #for probe in serverfarm._probes:
-        #   XMLstr = XMLstr + "<probe_sfarm probe-name='" + probe.name + "'/>\r\n"
+        if bool(serverfarm.probes):
+            for probe in serverfarm.probes:
+                XMLstr = XMLstr + "<probe_sfarm probe-name='" + probe.name + "'/>\r\n"
         
         if serverfarm.type.lower() == "host":
             if bool(serverfarm.failOnAll): 
@@ -387,26 +388,26 @@ class AceDriver(BaseDriver):
             
         # this parameters does not work
         #if bool(rserver.rateConnection):
-        #    XMLstr=XMLstr+"    <rate-limit value='"+str(rserver.rateConnection)+"'/>\r\n"
+        #    XMLstr=XMLstr+"    <rate-limit type='connection' value='"+str(rserver.rateConnection)+"'/>\r\n"
         #if bool(rserver.rateBandwidth):
-        #   XMLstr=XMLstr+"    <rate-limit limit='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>\r\n"
+        #   XMLstr=XMLstr+"    <rate-limit type='bandwidth' value='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>\r\n"
         
         if bool(rserver.cookieStr):
-            XMLstr=XMLstr+"    <cookie-string cookie-value='"+rserver.cookieStr+"'/>\r\n"
+            XMLstr = XMLstr + "    <cookie-string cookie-value='" + rserver.cookieStr + "'/>\r\n"
             
         for i in range(len(rserver.probes)):
-            XMLstr=XMLstr+"    <probe_sfarm probe-name='"+rserver.probes[i]+"'/>\r\n"
+            XMLstr = XMLstr + "    <probe_sfarm probe-name='" + rserver.probes[i] + "'/>\r\n"
         if bool(rserver.failOnAll):
-            XMLstr=XMLstr+"    <probe_sfarm probe-name='fail-on-all'/>"
+            XMLstr = XMLstr + "    <probe_sfarm probe-name='fail-on-all'/>"
         if bool(rserver.state):
             if rserver.state.lower() == "inservice":
-                XMLstr=XMLstr+"    <inservice/>\r\n"
+                XMLstr = XMLstr + "    <inservice/>\r\n"
             if rserver.state.lower() == "standby":
-                XMLstr=XMLstr+"    <inservice mode='"+rserver.state.lower()+"'/>\r\n"
+                XMLstr = XMLstr + "    <inservice mode='"+rserver.state.lower()+"'/>\r\n"
             if rserver.state.lower() == "outofservice":
-                XMLstr=XMLstr+"    <inservice sense='no'/>\r\n"
-        XMLstr=XMLstr+"  </rserver_sfarm>\r\n"
-        XMLstr=XMLstr+"</serverfarm>"
+                XMLstr = XMLstr + "    <inservice sense='no'/>\r\n"
+        XMLstr = XMLstr + "  </rserver_sfarm>\r\n"
+        XMLstr = XMLstr + "</serverfarm>"
         
         return self.send_data(context,  XMLstr)
     
@@ -416,12 +417,12 @@ class AceDriver(BaseDriver):
             return "ERROR"
         
         XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
-        XMLstr=XMLstr+"<rserver_sfarm sense='no' name='"+rserver.name+"'"
+        XMLstr = XMLstr + "<rserver_sfarm sense='no' name='" + rserver.name + "'"
         if bool(rserver.port):
-            XMLstr=XMLstr+" port='"+rserver.port+"'"
-        XMLstr=XMLstr+">\r\n"
-        XMLstr=XMLstr+"</rserver_sfarm>\r\n"
-        XMLstr=XMLstr+"</serverfarm>"
+            XMLstr=XMLstr + " port='" + rserver.port + "'"
+        XMLstr = XMLstr + ">\r\n"
+        XMLstr = XMLstr + "</rserver_sfarm>\r\n"
+        XMLstr = XMLstr + "</serverfarm>"
         
         return self.send_data(context,  XMLstr)
     
@@ -431,8 +432,8 @@ class AceDriver(BaseDriver):
             return "ERROR"
         
         XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
-        XMLstr=XMLstr+" <probe_sfarm probe-name='"+probe.name+"'/>\r\n"
-        XMLstr=XMLstr+"</serverfarm>"
+        XMLstr = XMLstr + " <probe_sfarm probe-name='" + probe.name + "'/>\r\n"
+        XMLstr = XMLstr + "</serverfarm>"
         
         return self.send_data(context,  XMLstr)
     
@@ -442,8 +443,8 @@ class AceDriver(BaseDriver):
             return "ERROR"
         
         XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
-        XMLstr=XMLstr+" <probe_sfarm sense='no' probe-name='"+probe.name+"'/>\r\n"
-        XMLstr=XMLstr+"</serverfarm>"
+        XMLstr = XMLstr + " <probe_sfarm sense='no' probe-name='" + probe.name + "'/>\r\n"
+        XMLstr = XMLstr + "</serverfarm>"
         
         return self.send_data(context,  XMLstr)
     
@@ -523,25 +524,13 @@ class AceDriver(BaseDriver):
                     XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
                     XMLstr = XMLstr + "</interface>"
                     tmp = s.deployConfig(context, XMLstr)    
-                    
-                # Add vip-acl to each VLANs 
-#                for i in vip.VLAN:
-#                    XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
-#                    XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
-#                    XMLstr = XMLstr + "</interface>"
-#                    tmp = s.deployConfig(context, XMLstr)    
             else:
                     XMLstr = "<interface type='vlan' number='" + str(vip.VLAN) + "'>\r\n"
                     XMLstr = XMLstr + "<service-policy type='input' name='" + pmap + "'/>\r\n"
                     XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
                     XMLstr = XMLstr + "</interface>"
                     tmp = s.deployConfig(context, XMLstr)    
-#                    XMLstr = "<interface type='vlan' number='" + str(vip.VLAN) + "'>\r\n"
-#                    XMLstr = XMLstr + "<access-group access-type='input' name='vip-acl'/>\r\n"
-#                    XMLstr = XMLstr + "</interface>"
-#                    tmp = s.deployConfig(context, XMLstr)   
 
-        
         return 'OK'
     
     
@@ -576,14 +565,15 @@ class AceDriver(BaseDriver):
         
         XMLstr = XMLstr + "<access-list sense='no' id='vip-acl' config-type='extended' perm-value='permit' " 
         XMLstr = XMLstr + "protocol-name='ip' src-type='any' host_dest-addr='" + vip.address + "'/>\r\n"
-        
-        s = XmlSender(context)
+
         tmp = s.deployConfig(context, XMLstr)    
         if (tmp != 'OK'):
             raise openstack.common.exception.Invalid(tmp)
 
-        last_policy_map = ''
-        if (last_policy_map == 'YES'):
+        XMLstr = 'show running-config policy-map %s' % pmap
+        last_policy_map = bool(s.getConfig(context,  XMLstr).find('class'))
+            
+        if (last_policy_map):
             # Remove service-policy from VLANs (Perform if deleted last VIP with it service-policy)
             if bool(vip.allVLANs):
                 XMLstr = "<service-policy sense='no' type='input' name='" + pmap + "'/>"
@@ -595,9 +585,7 @@ class AceDriver(BaseDriver):
                         XMLstr = XMLstr + "<service-policy sense='no' type='input' name='" + pmap + "'/>\r\n"
                         XMLstr = XMLstr + "</interface>"
                         tmp = s.deployConfig(context, XMLstr)    
-                        
-                    # Add vip-acl to each VLANs 
-                    for i in vip.VLAN:
+
                         XMLstr = "<interface type='vlan' number='" + str(i) + "'>\r\n"
                         XMLstr = XMLstr + "<access-group sense='no' access-type='input' name='vip-acl'/>\r\n"
                         XMLstr = XMLstr + "</interface>"

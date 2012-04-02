@@ -164,6 +164,7 @@ class SIPUDPprobe(Probe):
         self.destIP = ""
         self.expectRegExp = ""
         self.expectRegExpOffset = ""
+        self.rport = ""
         
 class SIPTCPprobe(SIPUDPprobe):
     def __init__(self):

@@ -44,9 +44,9 @@ class ServerFarm(Serializeable,  UniqueObject):
         self.failOnAll = None
         self.partialThreshPercentage = 0
         self.backInservice = 0
-        self._probes = []
-        self._rservers = []
-        self._predictor = predictor.RoundRobin()
+        self.probes = []
+        self.rservers = []
+        self.predictor = predictor.RoundRobin()
         self.retcodeMap = ""
         self.status = "ACTIVE"
         self.created = None
