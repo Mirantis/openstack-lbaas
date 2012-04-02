@@ -130,7 +130,7 @@ class Controller(object):
             mapper =LBActionMapper()
             #here we need to decide which device should be used
             #params = args['body']
-            params = args['id']
+            params = args
             task.parameters = params
             worker = mapper.getWorker(task, "loadbalancer_data" )
             if worker.type ==  SYNCHRONOUS_WORKER:
