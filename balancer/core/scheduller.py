@@ -29,8 +29,8 @@ class Scheduller(object):
     def __init__(self):
         self._device_map = {}
         self._list = None
-        store = Storage()
-        reader = store.getReader()
+        self.store = Storage()
+        reader = self.store.getReader()
         list = reader.getDevices()
         self._list = list
         for device in list:
@@ -42,7 +42,7 @@ class Scheduller(object):
         return self._list[0]
         
     def getDeviceByLBid(self, id):
-        rd = store.getReader()
+        rd = self.store.getReader()
         self._device_map = rd.getDeviceByLBid(id)
         return self._device_map
         

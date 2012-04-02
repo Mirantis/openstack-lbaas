@@ -78,7 +78,7 @@ class LBshowDetails(SyncronousWorker):
       lb = Balancer()
       lb.loadFromDB(id)
       obj = {'loadbalancer':  lb.lb.convertToDict()}
-      lbobj = obj ['loadbalancer']
+      lbobj = obj ['loadbalancer']      
       lbobj['nodes'] = lb.rs
       lbobj['virtualIps'] = lb.vips
       lbobj['healthMonitor'] = lb.probes
@@ -111,7 +111,7 @@ class CreateLBWorker(ASyncronousWorker):
             balancer_instance.savetoDB()
             
             #Step 3. Deploy config to device
-            commands = makeCreateLBCommandChain(bal_deploy,  driver,  context)
+            commands = makeCreateLBCommandChain(balancer_instance,  driver,  context)
             deploy = Deployer()
             deploy.commands = commands
             try:
@@ -134,22 +134,23 @@ class DeleteLBWorker(SyncronousWorker):
             self._task.status = STATUS_PROGRESS
             lb_id = self._task.parameters
             sched = Scheduller()
-            device = sched.getDeviceByLBid(lb_id)
+            balancer_instance = Balancer()
+            balancer_instance.loadFromDB(lb_id)
+
+            device = sched.getDeviceByID(balancer_instance.lb.device_id)
             devmap = DeviceMap()
             driver = devmap.getDriver(device)
             context = driver.getContext(device)
-            bal_deploy = Balancer()
-            bal_deploy.loadFromDB(lb_id)
             
             
             #Step 1. Parse parameters came from request
             #bal_deploy.parseParams(params)
             
             #Step 2. Delete config in DB
-            bal_deploy.removeFromDB()
+            balancer_instance.removeFromDB()
             
             #Step 3. Destruct config at device
-            commands = makeDeleteLBCommandChain(bal_deploy,  driver,  context)
+            commands = makeDeleteLBCommandChain(balancer_instance,  driver,  context)
             destruct = Destructor()
             destruct.commands = commands
             destruct.execute()

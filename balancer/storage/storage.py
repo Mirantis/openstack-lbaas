@@ -35,11 +35,11 @@ class Reader(object):
     def __init__(self,  db):
         logger.debug("Reader: connecting to db: %s" % db)
         self._con = sqlite3.connect(db)
-        self._probeDict={'DNSprobe':DNSprobe(), 'ECHOTCPprobe':ECHOTCPprobe(), 'ECHOUDPprobe':ECHOUDPprobe(), 
-        'FINGERprobe':FINGERprobe(), 'FTPprobe':FTPprobe(), 'HTTPSprobe':HTTPSprobe(), 'HTTPprobe':HTTPprobe(), 'ICMPprobe':ICMPprobe(), 
-        'IMAPprobe':IMAPprobe(), 'POPprobe':POPprobe(), 'RADIUSprobe':RADIUSprobe(), 'RTSPprobe':RTSPprobe(), 'SCRIPTEDprobe':SCRIPTEDprobe(), 
-        'SIPTCPprobe':SIPTCPprobe(), 'SIPUDPprobe':SIPUDPprobe(), 'SMTPprobe':SMTPprobe(), 'SNMPprobe':SNMPprobe(), 
-        'TCPprobe':TCPprobe(), 'TELNETprobe':TELNETprobe(), 'UDPprobe':UDPprobe(), 'VMprobe':VMprobe()}
+        self._probeDict={'DNS':DNSprobe(), 'ECHOTCP':ECHOTCPprobe(), 'ECHOUDP':ECHOUDPprobe(), 
+        'FINGER':FINGERprobe(), 'FTP':FTPprobe(), 'HTTPS':HTTPSprobe(), 'HTTP':HTTPprobe(), 'ICMP':ICMPprobe(), 
+        'IMAP':IMAPprobe(), 'POP':POPprobe(), 'RADIUS':RADIUSprobe(), 'RTSP':RTSPprobe(), 'SCRIPTED':SCRIPTEDprobe(), 
+        'SIPTCP':SIPTCPprobe(), 'SIPUDP':SIPUDPprobe(), 'SMTP':SMTPprobe(), 'SNMP':SNMPprobe(), 
+        'CONNECT':TCPprobe(), 'TELNET':TELNETprobe(), 'UDP':UDPprobe(), 'VM':VMprobe()}
         self._predictDict={'HashAddrPredictor':HashAddrPredictor(), 'HashContent':HashContent(), 'HashCookie':HashCookie(), 'HashHeader':HashHeader(),
             'HashLayer4':HashLayer4(), 'HashURL':HashURL(), 'LeastBandwidth':LeastBandwidth(), 'LeastConn':LeastConn(), 
             'LeastLoaded':LeastLoaded(), 'Response':Response(), 'RoundRobin':RoundRobin()}
@@ -295,7 +295,8 @@ class Reader(object):
         list = []
         for row in rows:
             rs = RealServer()
-            list.append(rs.loadFromDict(row))
+            rs.loadFromDict(row)
+            list.append(rs)
         return list
 
     def getProbesBySFid(self, id):
@@ -305,8 +306,9 @@ class Reader(object):
         rows = cursor.fetchall()
         list = []
         for row in rows:
-            pr = Probe()
-            list.append(pr.loadFromDict(row))
+            pr = self._probeDict[row['type']].createSame()
+            pr.loadFromDict(row)
+            list.append(pr)
         return list
 
     def getPredictorsBySFid(self, id):
@@ -316,8 +318,9 @@ class Reader(object):
         rows = cursor.fetchall()
         list = []
         for row in rows:
-            pred = Predictor()
-            list.append(pred.loadFromDict(row))
+            pred = self._predictDict[row['type']].createSame()        
+            pred.loadFromDict(row)
+            list.append(pred)
         return list
 
     def getVIPsBySFid(self, id):
@@ -328,7 +331,8 @@ class Reader(object):
         list = []
         for row in rows:
             vs = VirtualServer()
-            list.append(vs.loadFromDict(row))
+            vs.loadFromDict(row)
+            list.append(vs)
         return list
         
 class Writer(object):
@@ -338,8 +342,10 @@ class Writer(object):
     
     def writeLoadBalancer(self,  lb):
          logger.debug("Saving LoadBalancer instance in DB.")
-         cursor = self._con.cursor()
-         command = "INSERT INTO loadbalancers (id, name, algorithm , status , created , updated ) VALUES('%s','%s','%s','%s','%s','%s');"  % (lb.id,  lb.name,  lb.algorithm,  lb.status,  lb.created,  lb.updated)
+         cursor = self._con.cursor()     
+         dict = lb.convertToDict()
+         # command = "INSERT INTO loadbalancers (id, name, algorithm , status , created , updated ) VALUES('%s','%s','%s','%s','%s','%s');"  % (lb.id,  lb.name,  lb.algorithm,  lb.status,  lb.created,  lb.updated)
+         command =self.generateCommand("INSERT INTO loadbalancers (", dict)
          msg = "Executing command: %s" % command
          logger.debug(msg)
          cursor.execute(command)
