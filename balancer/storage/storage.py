@@ -427,6 +427,32 @@ class Writer(object):
         logger.debug(msg)
         cursor.execute(command)
         self._con.commit() 
+    
+    def updateObjectInTable(self,  obj):
+        table = ""
+        if isinstance(obj, LoadBalancer ):
+            table = "loadbalancers"
+        #add other type of objects
+        
+        if table != "":
+            command = self.generateUpdateCommand(table,  obj.id)
+            #execute
+
+    def generateUpdateCommand(self,  table,  id):
+        command1 ="UPDATE %s " % table
+        
+        i=0
+        for key in dict.keys():
+            if i < len(dict)-1:
+                if key != "id":
+                    command1 += key +'=\"' + str(dict[key])+'\",'
+                
+            else:
+                if key != "id":
+                    command1 += key +'=\"' + str(dict[key])+'\")'
+            i+=1
+        command = command1+ " WHERE id = '" + id +"'"
+        return command
 
 class Deleter(object):
     def __init__(self,  db):

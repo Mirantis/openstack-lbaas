@@ -81,7 +81,8 @@ class CreateLBWorker(SyncronousWorker):
             
             #Step 1. Parse parameters came from request
             bal_deploy.parseParams(params)
-            
+            lb = bal_deploy.getLB()
+            lb.device_id = device.id
             #Step 2. Save config in DB
             bal_deploy.savetoDB()
             
@@ -92,7 +93,7 @@ class CreateLBWorker(SyncronousWorker):
             deploy.execute()
             
             self._task.status = STATUS_DONE
-            return "OK"
+            return lb.id
             
 class DeleteLBWorker(SyncronousWorker):            
         def __init__(self,  task):
