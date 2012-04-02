@@ -148,3 +148,75 @@ class StorageTestCase(unittest.TestCase):
         read  = stor.getReader()
         newlb = read.getLoadBalancerById(123)
         self.assertEquals(newlb.name,  "testLB")
+
+    def test_rserver_save(self):
+        rs = RealServer()
+        rs.id = 123
+        rs.sf_id = 123
+        rs.name = "testRS"
+        rs.type = "Host"
+        rs.webHostRedir = ""
+        rs.redirectionCode = ""
+        rs.ipType = "IPv4"
+        rs.address = "10.10.10.10"
+        rs.port = "8080"
+        rs.state= "inservice" #standby, outofservice
+        rs.opstate = "inservice"
+        rs.description = "Test rserver save in DB"
+        rs.failOnAll = None
+        rs.minCon = 4000000
+        rs.maxCon = 4000000
+        rs.weight = 8
+        rs.probes = [1, 23]
+        rs.rateBandwidth = ""
+        rs.rateConnection = ""
+        rs.backupRS = ""
+        rs.backupRSport = ""
+        rs.created = "01-01-2012 11:22:33"
+        rs.updated = "02-04-2012 11:22:33"
+        rs.status = "ACTIVE"
+        rs.cookieStr = None
+        rs.condition = "ENABLED"
+        
+        stor = Storage( {'db_path':'./db/testdb.db'})
+        wr = stor.getWriter()
+        wr.writeRServer(rs)
+        read  = stor.getReader()
+        newrs = read.getRServerById(123)
+        self.assertEquals(newrs.name,  "testRS")
+
+    def test_rserver_update(self):
+        rs = RealServer()
+        rs.id = 123
+        rs.sf_id = "123"
+        rs.name = "testRS"
+        rs.type = "Host"
+        rs.webHostRedir = ""
+        rs.redirectionCode = ""
+        rs.ipType = "IPv6"
+        rs.address = "2002:12:23:34::1"
+        rs.port = "8080"
+        rs.state= "inservice" #standby, outofservice
+        rs.opstate = "inservice"
+        rs.description = "Test rserver update in DB"
+        rs.failOnAll = None
+        rs.minCon = 4000000
+        rs.maxCon = 4000000
+        rs.weight = 8
+        rs.probes = [1, 23]
+        rs.rateBandwidth = ""
+        rs.rateConnection = ""
+        rs.backupRS = ""
+        rs.backupRSport = ""
+        rs.created = "01-01-2012 11:22:33"
+        rs.updated = "02-04-2012 11:22:33"
+        rs.status = "DOWN"
+        rs.cookieStr = None
+        rs.condition = "ENABLED"
+        
+        stor = Storage( {'db_path':'./db/testdb.db'})
+        wr = stor.getWriter()
+        wr.updateObjectInTable(rs)
+        read  = stor.getReader()
+        newrs = read.getRServerById(123)
+        self.assertEquals(newrs.name,  "testRS")

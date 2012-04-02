@@ -24,7 +24,7 @@ class RealServer(Serializeable,  UniqueObject):
     def __init__(self):
         Serializeable.__init__(self)
         UniqueObject.__init__(self)        
-
+        self.id = None
         self.sf_id = None
         self.name = ""
         self.type = "Host"

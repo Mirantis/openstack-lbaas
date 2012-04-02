@@ -136,18 +136,20 @@ class Reader(object):
         return list        
 
     def getRServerById(self,  id):
-         cursor = self._con.cursor()
-         if id == None:
-             raise exception.NotFound("Empty device id.")
-         cursor.execute('SELECT * FROM rservers WHERE id = "%s"' % id)
-         row = cursor.fetchone()
-         if row == None:
-             raise exception.NotFound()
-         rs = RealServer()
-         rs.loadFromDict(row)
-         return rs
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        if id == None:
+            raise exception.NotFound("Empty device id.")
+        cursor.execute('SELECT * FROM rservers WHERE id = "%s"' % id)
+        row = cursor.fetchone()
+        if row == None:
+            raise exception.NotFound()
+        rs = RealServer()
+        rs.loadFromDict(row)
+        return rs
 
     def getRServers(self):
+        self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
         cursor.execute('SELECT * FROM rservers')
         rows = cursor.fetchall()
