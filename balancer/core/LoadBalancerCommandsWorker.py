@@ -49,7 +49,7 @@ class LBGetIndexWorker(SyncronousWorker):
 
 class LBGetDataWorker(SyncronousWorker):
     def __init__(self,  task):
-         super(LBGetIndexWorker, self).__init__(task)
+         super(LBGetDataWorker, self).__init__(task)
          self._t=1
     
     def run(self):
