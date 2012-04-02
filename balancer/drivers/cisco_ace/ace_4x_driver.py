@@ -324,11 +324,11 @@ class AceDriver(BaseDriver):
         if bool(serverfarm.failAction):
             XMLstr = XMLstr + "<failaction failaction-type='" + serverfarm.failAction + "'/>\r\n"
         
-        if bool(serverfarm.predictor): #Some predictors are may include additional parameters !
-            XMLstr = XMLstr + "<predictor predictor-method='" + serverfarm.predictor.type.lower() + "'/>\r\n"
+        if bool(serverfarm._predictor): #Some predictors are may include additional parameters !
+            XMLstr = XMLstr + "<predictor predictor-method='" + serverfarm._predictor.type.lower() + "'/>\r\n"
         
-        if bool(serverfarm.probes):
-            for probe in serverfarm.probes:
+        if bool(serverfarm._probes):
+            for probe in serverfarm._probes:
                 XMLstr = XMLstr + "<probe_sfarm probe-name='" + probe.name + "'/>\r\n"
         
         if serverfarm.type.lower() == "host":
@@ -395,8 +395,8 @@ class AceDriver(BaseDriver):
         if bool(rserver.cookieStr):
             XMLstr = XMLstr + "    <cookie-string cookie-value='" + rserver.cookieStr + "'/>\r\n"
             
-        for i in range(len(rserver.probes)):
-            XMLstr = XMLstr + "    <probe_sfarm probe-name='" + rserver.probes[i] + "'/>\r\n"
+        for i in range(len(rserver._probes)):
+            XMLstr = XMLstr + "    <probe_sfarm probe-name='" + rserver._probes[i] + "'/>\r\n"
         if bool(rserver.failOnAll):
             XMLstr = XMLstr + "    <probe_sfarm probe-name='fail-on-all'/>"
         if bool(rserver.state):
