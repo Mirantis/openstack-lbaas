@@ -30,6 +30,7 @@ from balancer.loadbalancers.vserver import Balancer
 from balancer.loadbalancers.vserver import makeCreateLBCommandChain, makeDeleteLBCommandChain
 from balancer.loadbalancers.vserver import Deployer,  Destructor
 
+logger = logging.getLogger(__name__)
 
 class LBGetIndexWorker(SyncronousWorker):
     def __init__(self,  task):
@@ -55,8 +56,11 @@ class LBGetDataWorker(SyncronousWorker):
       self._task.status = STATUS_PROGRESS
       store = Storage()
       reader = store.getReader()
+      
       id = self._task.parameters['id']
+      logger.debug("Getting information about loadbalancer with id: %s" % id)
       list = reader.getLoadBalancerById(id)
+      logger.debug("Got information: %s" % list)
       self._task.status = STATUS_DONE
       return list
       

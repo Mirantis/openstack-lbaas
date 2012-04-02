@@ -135,7 +135,7 @@ class Controller(object):
             worker = mapper.getWorker(task, "loadbalancer_data" )
             if worker.type ==  SYNCHRONOUS_WORKER:
                 result = worker.run()
-                return dict({'loadbalancer': result})
+                return{'loadbalancer': result}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % params
