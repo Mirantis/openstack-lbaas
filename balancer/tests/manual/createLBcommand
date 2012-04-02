@@ -8,7 +8,7 @@
     
     "virtualIps": [
                     {
-                      "address": "200.1.1.204",
+                      "address": "200.1.1.207",
                       "mask": "255.255.255.255", 
                       "type": "PUBLIC",
                       "ipVersion": "IPv4", 
@@ -17,7 +17,7 @@
 		      "ICMPreply": "True"
                     },
                     {
-                      "address": "200.1.1.205",
+                      "address": "200.1.1.208",
                       "mask": "255.0.0.0",
                       "ipVersion": "IPv4",
                       "VLAN": "200",
@@ -27,7 +27,7 @@
                   ],
     "nodes":      [
                     {
-                       "address": "10.1.1.14",
+                       "address": "10.1.1.19",
                        "type": "host",
                        "port": "80",
                        "weight": "2", 
@@ -40,7 +40,7 @@
                        "cookieStr": "test-str"
                     }, 
                     {
-                       "address": "10.1.1.15",
+                       "address": "10.1.1.20",
                        "type": "host",
                        "port": "180",
                        "description": "test server",

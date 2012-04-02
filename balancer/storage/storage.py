@@ -117,7 +117,7 @@ class Reader(object):
         row = cursor.fetchone()
         if row == None:
             raise exception.NotFound()
-        prb = self._probeDict[row['type']]
+        prb = self._probeDict[row['type']].createSame()
         prb.loadFromDict(row)
         return prb     
 
@@ -130,7 +130,7 @@ class Reader(object):
              raise exception.NotFound()
         list = []
         for row in rows:
-            prb = self._probeDict[row['type']]
+            prb = self._probeDict[row['type']].createSame()
             prb.loadFromDict(row)
             list.append(prb)
         return list        
@@ -169,7 +169,7 @@ class Reader(object):
         row = cursor.fetchone()
         if row == None:
             raise exception.NotFound()
-        prd = self._predictDict[row['type']]
+        prd = self._predictDict[row['type']].createSame()
         prd.loadFromDict(row)
         return prd     
 
@@ -182,7 +182,7 @@ class Reader(object):
              raise exception.NotFound()
         list = []
         for row in rows:
-            prd = self._predictDict[row['type']]
+            prd = self._predictDict[row['type']].createSame()
             prd.loadFromDict(row)
             list.append(prd)
         return list 
