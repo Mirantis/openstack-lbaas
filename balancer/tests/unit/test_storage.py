@@ -48,7 +48,7 @@ class StorageTestCase(unittest.TestCase):
         lb.name  = "testLB"
         lb.id = 123
         lb.algorithm = "ROUND_ROBIN"
-        lb.staus = "ACTIVE"
+        lb.status = "ACTIVE"
         lb.created = "01-01-2012 11:22:33"
         lb.updated = "02-02-2012 11:22:33"
         stor = Storage( {'db_path':'./db/testdb.db'})
@@ -73,7 +73,7 @@ class StorageTestCase(unittest.TestCase):
         lb.name  = "testLB2"
         lb.id = 124
         lb.algorithm = "ROUND_ROBIN"
-        lb.staus = "ACTIVE"
+        lb.status = "ACTIVE"
         lb.created = "01-01-2012 11:22:33"
         lb.updated = "02-02-2012 11:22:33"
         stor = Storage( {'db_path':'./db/testdb.db'})
@@ -82,7 +82,7 @@ class StorageTestCase(unittest.TestCase):
         lb.name  = "testLB3"
         lb.id = 125
         lb.algorithm = "ROUND_ROBIN"
-        lb.staus = "DOWN"
+        lb.statusus = "DOWN"
         lb.created = "01-01-2012 11:22:33"
         lb.updated = "02-02-2012 11:22:33"
         wr.writeLoadBalancer(lb)
@@ -112,4 +112,39 @@ class StorageTestCase(unittest.TestCase):
         newprb = read.getProbeById(1234)
         self.assertEquals(prb.name,  "testProbe")
     
-    
+    def test_probe_update(self):
+        prb = DNSprobe()
+        prb.name  = "testProbe"
+        prb.type = 'DNSprobe'
+        prb.id = '1234'
+        prb.description = 'Test Probe updated'
+        prb.probeInterval = '20'
+        prb.isRouted = 'False'
+        prb.passDetectInterval = '60'
+        prb.receiveTimeout = '10'
+        prb.port = '443'
+        prb.passDetectCount = '4'
+        prb.failDetect = '6'
+        prb.domainName = 'domainname'
+        
+        stor = Storage( {'db_path':'./db/testdb.db'})
+        wr = stor.getWriter()
+        wr.updateObjectInTable(prb)
+        read  = stor.getReader()
+        newprb = read.getProbeById(1234)
+        self.assertEquals(prb.name,  "testProbe")    
+
+    def test_lb_update(self):
+        lb = LoadBalancer()
+        lb.name  = "testLB"
+        lb.id = 123
+        lb.algorithm = "ROUND_ROBIN"
+        lb.status = "DOWN"
+        lb.created = "01-01-2012 11:22:33"
+        lb.updated = "02-04-2012 11:22:33"
+        stor = Storage( {'db_path':'./db/testdb.db'})
+        wr = stor.getWriter()
+        wr.updateObjectInTable(lb)
+        read  = stor.getReader()
+        newlb = read.getLoadBalancerById(123)
+        self.assertEquals(newlb.name,  "testLB")

@@ -432,11 +432,27 @@ class Writer(object):
         table = ""
         if isinstance(obj, LoadBalancer ):
             table = "loadbalancers"
-        #add other type of objects
+        elif isinstance(obj, ServerFarm ):
+            table = "serverfarms"
+        elif isinstance(obj,  Predictor ):
+            table = "predictors"
+        elif isinstance(obj,  RealServer):
+            table = "rservers"
+        elif isinstance(obj,  Device):
+            table = "devices"
+        elif isinstance(obj,  VirtualServer):
+            table = "vips"
+        elif isinstance(obj,  VLAN):
+            table = "vlans"
+        elif isinstance(obj, Probe):
+            table = "probes"
         
         if table != "":
+            logger.debug("Updating table %s in DB." %table)
             command = self.generateUpdateCommand(table,  obj.id)
-            #execute
+            cursor = self._con.cursor()
+            logger.debug("Executing command: %s" % command)
+            cursor.execute(command)
 
     def generateUpdateCommand(self,  table,  id):
         command1 ="UPDATE %s " % table
