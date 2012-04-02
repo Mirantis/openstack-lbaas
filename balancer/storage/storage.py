@@ -434,11 +434,11 @@ class Writer(object):
             table = "loadbalancers"
         elif isinstance(obj, ServerFarm ):
             table = "serverfarms"
-        elif isinstance(obj,  Predictor ):
+        elif isinstance(obj,  BasePredictor):
             table = "predictors"
         elif isinstance(obj,  RealServer):
             table = "rservers"
-        elif isinstance(obj,  Device):
+        elif isinstance(obj,  LBDevice):
             table = "devices"
         elif isinstance(obj,  VirtualServer):
             table = "vips"
@@ -449,13 +449,14 @@ class Writer(object):
         
         if table != "":
             logger.debug("Updating table %s in DB." %table)
-            command = self.generateUpdateCommand(table,  obj.id)
+            dict = obj.convertToDict()
+            command = self.generateUpdateCommand(table,  dict,  obj.id)
             cursor = self._con.cursor()
             logger.debug("Executing command: %s" % command)
             cursor.execute(command)
 
-    def generateUpdateCommand(self,  table,  id):
-        command1 ="UPDATE %s " % table
+    def generateUpdateCommand(self,  table, dict,  id):
+        command1 ="UPDATE %s SET " % table
         
         i=0
         for key in dict.keys():
@@ -465,9 +466,9 @@ class Writer(object):
                 
             else:
                 if key != "id":
-                    command1 += key +'=\"' + str(dict[key])+'\")'
+                    command1 += key +'=\"' + str(dict[key])+'\"'
             i+=1
-        command = command1+ " WHERE id = '" + id +"'"
+        command = command1+ " WHERE id = '" + str(id) +"'"
         return command
 
 class Deleter(object):

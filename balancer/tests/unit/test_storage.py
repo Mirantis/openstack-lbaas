@@ -32,9 +32,9 @@ class StorageTestCase(unittest.TestCase):
         device.name = "DeviceName001"
         device.type = "ACE"
         device.version = "1.0"
-        device.require_VIP_IP = True
-        device.has_ACL = True
-        device.supports_VLAN = False
+        device.requires_vip_ip = True
+        device.has_acl = True
+        device.supports_vlan = False
         stor = Storage( {'db_path':'./db/testdb.db'})
         wr = stor.getWriter()
         wr.writeDevice(device)
