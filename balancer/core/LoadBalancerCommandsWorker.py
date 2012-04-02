@@ -45,6 +45,21 @@ class LBGetIndexWorker(SyncronousWorker):
       return list
        
 
+
+class LBGetDataWorker(SyncronousWorker):
+    def __init__(self,  task):
+         super(LBGetIndexWorker, self).__init__(task)
+         self._t=1
+    
+    def run(self):
+      self._task.status = STATUS_PROGRESS
+      store = Storage()
+      reader = store.getReader()
+      id = self._task.parameters['id']
+      list = reader.getLoadBalancerById(id)
+      self._task.status = STATUS_DONE
+      return list
+      
 class CreateLBWorker(SyncronousWorker):
         def __init__(self,  task):
             super(CreateLBWorker, self).__init__(task)
@@ -115,3 +130,5 @@ class LBActionMapper(object):
             return CreateLBWorker(task)
         if action == "delete":
             return DeleteLBWorker(task)
+        if action =="loadbalancer_data":
+            return LBGetDataWorker(task)

@@ -123,7 +123,28 @@ class Controller(object):
             raise webob.exc.HTTPForbidden(msg)
 
     def loadbalancer_data(self,  req,  id):
-       pass
+        try:
+            msg = "Got loadbalancerr info request. Request: %s" % req
+            logger.debug(msg)
+            task = self._service_controller.createTask()
+            mapper =LBActionMapper()
+            #here we need to decide which device should be used
+            #params = args['body']
+            params = args['id']
+            task.parameters = params
+            worker = mapper.getWorker(task, "loadbalancer_data" )
+            if worker.type ==  SYNCHRONOUS_WORKER:
+                result = worker.run()
+                return dict({'loadbalancer': result})
+
+        except exception.NotFound:
+            msg = "Image with identifier %s not found" % params
+            logger.debug(msg)
+            raise webob.exc.HTTPNotFound(msg)
+        except exception.NotAuthorized:
+            msg = _("Unauthorized image access")
+            logger.debug(msg)
+            raise webob.exc.HTTPForbidden(msg)
         
         
     def _get_query_params(self, req):
