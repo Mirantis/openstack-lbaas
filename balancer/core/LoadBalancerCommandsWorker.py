@@ -65,6 +65,29 @@ class LBGetDataWorker(SyncronousWorker):
       self._task.status = STATUS_DONE
       return list
       
+class LBshowDetails(SyncronousWorker):
+    def __init__(self,  task):
+         super(LBshowDetails, self).__init__(task)
+    
+    def run(self):
+      self._task.status = STATUS_PROGRESS
+      store = Storage()
+      reader = store.getReader()
+      
+      id = self._task.parameters['id']
+      lb = Balancer()
+      lb.loadFromDB(id)
+      obj = {'loadbalancer':  lb.lb.convertToDict()}
+      lbobj = obj ['loadbalancer']
+      lbobj['nodes'] = lb.rs
+      lbobj['virtualIps'] = lb.vips
+      lbobj['healthMonitor'] = lb.probes
+      logger.debug("Getting information about loadbalancer with id: %s" % id)
+      #list = reader.getLoadBalancerById(id)
+      logger.debug("Got information: %s" % lbobj)
+      self._task.status = STATUS_DONE
+      return lbobj
+      
 class CreateLBWorker(ASyncronousWorker):
         def __init__(self,  task):
             super(CreateLBWorker, self).__init__(task)
@@ -144,3 +167,5 @@ class LBActionMapper(object):
             return DeleteLBWorker(task)
         if action =="show":
             return LBGetDataWorker(task)
+        if action =="showDetails":
+            return LBshowDetails(task)
