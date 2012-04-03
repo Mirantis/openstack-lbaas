@@ -239,6 +239,7 @@ class LBaddNode(SyncronousWorker):
             node = self._task.parameters['node']
             logger.debug("Got new node description %s" %node)  
             rs = RealServer()
+            sched = Scheduller()
             bal_instance = Balancer()
             
             bal_instance.loadFromDB(lb_id)
