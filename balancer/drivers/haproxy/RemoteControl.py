@@ -80,11 +80,17 @@ class RemoteInterface(object):
         disconnect_all()    
         
     def addIP(self):
-        logger.debug('[HAPROXY] remote add ip %s to inteface %s' % (self.IP,  self.interface))        
-        sudo('/sbin/ip addr add %s/32 dev %s'% (self.IP,  self.interface))
+        if run ('/sbin/ip addr show dev %s' % self.interface ).find(self.IP) < 0 :
+            sudo('/sbin/ip addr add %s/32 dev %s'% (self.IP,  self.interface))
+            logger.debug('[HAPROXY] remote add ip %s to inteface %s' % (self.IP,  self.interface))  
+        else:
+            logger.debug('[HAPROXY] remote ip %s is already configured on the %s' % (self.IP,  self.interface))
         disconnect_all()
         
     def delIP(self):
-        logger.debug('[HAPROXY] remote delete ip %s from inteface %s' % (self.IP,  self.interface))
-        sudo('/sbin/ip addr del %s/32 dev %s'% (self.IP,  self.interface))
+        if run ('/sbin/ip addr show dev %s' % self.interface ).find(self.IP) >= 0 :
+            logger.debug('[HAPROXY] remote delete ip %s from inteface %s' % (self.IP,  self.interface))
+            sudo('/sbin/ip addr del %s/32 dev %s'% (self.IP,  self.interface))
+        else:
+            logger.debug('[HAPROXY] remote ip %s is not configured on the %s' % (self.IP,  self.interface))
         disconnect_all()

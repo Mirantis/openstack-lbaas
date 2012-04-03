@@ -73,7 +73,14 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.rserver.weight = '8'
         self.rserver.maxCon = 30000
         #
-   
+    def test_IPaddressAdd(self):
+        interface = RemoteInterface(self.context,  self.frontend)
+        interface.addIP()
+        self.assertTrue(True)
+    def test_IPaddressDelete(self):
+        interface = RemoteInterface(self.context,  self.frontend)
+        interface.delIP()
+        self.assertTrue(True)    
     def test_FileName(self):
         filename = HaproxyConfigFile("/tmp/haproxy.cfg")
         self.assertEqual(filename.GetHAproxyConfigFileName(),  "/tmp/haproxy.cfg")
@@ -125,6 +132,7 @@ class HAproxyDriverTestCase (unittest.TestCase):
     def test_checkRemoteHaproxyConfig(self):
         remote_config = RemoteConfig(self.context)
         self.assertTrue(remote_config.validationConfig())
+
     
     
 
