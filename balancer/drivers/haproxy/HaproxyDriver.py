@@ -90,7 +90,7 @@ class HaproxyDriver(BaseDriver):
         remote.getConfig() 
         config_file.AddFronted(haproxy_virtualserver,  haproxy_serverfarm)
         remote.putConfig()
-
+        remote.validationConfig()
     
     def deleteVIP(self,  context,  virtualserver,  serverfarm):
         logger.debug('[HAPROXY] delete VIP')

@@ -43,7 +43,14 @@ class RemoteConfig(object):
 
     def validationConfig(self): 
         env.warn_only = True
-        return (run('haproxy -c -f  %s/%s' % (self.remotepath,  self.configfilename)) == 'Configuration file is valid')
+        if run('haproxy -c -f  %s/%s' % (self.remotepath,  self.configfilename)).find('Configuration file is valid') >= 0:
+            logger.debug ('[HAPROXY] remote configuration is valid, restart haproxy')
+            sudo('service haproxy restart')
+            return True
+        else:
+            logger.error('[HAPROXY] remote configuration is not valid')
+            return False
+
 
 class RemoteService(object):
     def __init__(self, context):
