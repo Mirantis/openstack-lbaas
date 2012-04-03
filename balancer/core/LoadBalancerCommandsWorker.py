@@ -124,6 +124,50 @@ class CreateLBWorker(ASyncronousWorker):
             balancer_instance.update()
             self._task.status = STATUS_DONE
             return lb.id
+
+class UpdateLBWorker(ASyncronousWorker):
+        def __init__(self,  task):
+            super(CreateLBWorker, self).__init__(task)
+            self._command_queue = Queue.LifoQueue()
+        
+        def run(self):
+            self._task.status = STATUS_PROGRESS
+            params = self._task.parameters
+            sched = Scheduller()
+            device = sched.getDevice()
+            devmap = DeviceMap()
+            driver = devmap.getDriver(device)
+            context = driver.getContext(device)
+            balancer_instance = Balancer()
+            
+            #Step 1. Parse parameters came from request
+            balancer_instance.parseParams(params)
+            lb = balancer_instance.getLB()
+            lb.device_id = device.id
+            #Step 2. Update config in DB
+            balancer_instance.update()
+            
+            #Step 3. Destroy old config on device
+            commands = makeDeleteLBCommandChain(balancer_instance,  driver,  context)
+            destruct = Destructor()
+            destruct.commands = commands
+            destruct.execute()
+            
+            commands = []
+            #Step 4. Deploy new config to device
+            commands = makeCreateLBCommandChain(balancer_instance,  driver,  context)
+            deploy = Deployer()
+            deploy.commands = commands
+            try:
+                deploy.execute()
+            except exception:
+                balancer_instance.lb.status = balancer.loadbalancers.loadbalancer.LB_ERROR_STATUS
+                balancer_instance.update()
+                return
+            balancer_instance.lb.status = balancer.loadbalancers.loadbalancer.LB_ACTIVE_STATUS
+            balancer_instance.update()
+            self._task.status = STATUS_DONE
+            return lb.id
             
 class DeleteLBWorker(SyncronousWorker):            
         def __init__(self,  task):
@@ -170,3 +214,6 @@ class LBActionMapper(object):
             return LBGetDataWorker(task)
         if action =="showDetails":
             return LBshowDetails(task)
+        if action == "update":
+            return UpdateLBWorker(task)
+
