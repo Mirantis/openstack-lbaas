@@ -244,6 +244,7 @@ class LBaddNode(SyncronousWorker):
             
             bal_instance.loadFromDB(lb_id)
             rs.loadFromDict(node)
+            rs.name = "testRS"
             bal_instance.rs.append(rs)
             bal_instance.savetoDB()
             

@@ -204,7 +204,7 @@ class Controller(object):
 
     def addNode(self,  req,  **args):
         try:
-            msg = "Got update request. Request: %s" % req
+            msg = "Got addNode request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
             mapper =LBActionMapper()
