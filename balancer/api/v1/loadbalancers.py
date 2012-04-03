@@ -211,7 +211,8 @@ class Controller(object):
             
             #here we need to decide which device should be used            
             params = {}
-            params['body'] = args['body']
+            body= args['body']
+            params['node'] = body['node']
             params['id'] = args['id']
             task.parameters = params
             
