@@ -217,6 +217,11 @@ def makeUpdateLBCommandChain(old_bal,  new_bal,  driver,  context):
         list.append(CreateServerFarmCommand(driver, context,  new_bal.sf))
     return list
             
+def makeAddNodeToLBChain(bal, driver,  context,  rs):
+    list = []
+    list.append(CreateRServerCommand(driver, context, rs))
+    list.append(AddRServerToSFCommand(driver, context, bal.sf, rs))
+    return list
     
 class Deployer(object):
     def __init__(self):

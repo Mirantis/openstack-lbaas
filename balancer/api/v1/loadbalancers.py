@@ -201,6 +201,38 @@ class Controller(object):
             msg = _("Unauthorized image access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
+
+    def addNode(self,  req,  **args):
+        try:
+            msg = "Got update request. Request: %s" % req
+            logger.debug(msg)
+            task = self._service_controller.createTask()
+            mapper =LBActionMapper()
+            
+            #here we need to decide which device should be used            
+            params = {}
+            params['body'] = args['body']
+            params['id'] = args['id']
+            task.parameters = params
+            
+            worker = mapper.getWorker(task, "addNode" )
+            if worker.type ==  SYNCHRONOUS_WORKER:
+                result = worker.run()
+                return {'loadbalancers':  result}
+            
+            if worker.type == ASYNCHRONOUS_WORKER:
+                task.worker = worker
+                self._service_controller.addTask(task)
+                return {'loadbalancers' : "OK"}
+
+        except exception.NotFound:
+            msg = "Image with identifier %s not found" % image_id
+            logger.debug(msg)
+            raise webob.exc.HTTPNotFound(msg)
+        except exception.NotAuthorized:
+            msg = _("Unauthorized image access")
+            logger.debug(msg)
+            raise webob.exc.HTTPForbidden(msg)
             
     def _get_query_params(self, req):
         """

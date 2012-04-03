@@ -29,7 +29,7 @@ from balancer.storage.storage import *
 from balancer.core.scheduller import Scheduller
 from balancer.devices.DeviceMap import DeviceMap
 from balancer.loadbalancers.vserver import Balancer
-from balancer.loadbalancers.vserver import makeCreateLBCommandChain, makeDeleteLBCommandChain, makeUpdateLBCommandChain
+from balancer.loadbalancers.vserver import makeCreateLBCommandChain, makeDeleteLBCommandChain, makeUpdateLBCommandChain, makeAddNodeToLBChain
 from balancer.loadbalancers.vserver import Deployer,  Destructor, createPredictor
 
 logger = logging.getLogger(__name__)
@@ -228,6 +228,36 @@ class DeleteLBWorker(SyncronousWorker):
             self._task.status = STATUS_DONE
             return "OK"
 
+class LBaddNode(SyncronousWorker):
+        def __init__(self,  task):
+            super(LBaddNode, self).__init__(task)
+            self._command_queue = Queue.LifoQueue()   
+        
+        def run(self):
+            self._task.status = STATUS_PROGRESS
+            logger.debug("Got new node description %s" %node)    
+            lb_id = self._task.parameters['id']
+            node = self._task.parameters['node']
+            rs = RealServer()
+            bal_instance = Balancer()
+            
+            bal_instance.loadFromDB(lb_id)
+            rs.loadFromDict(node)
+            bal_instance.rs.append(rs)
+            bal_instance.savetoDB()
+            
+            device = sched.getDeviceByID(bal_instance.lb.device_id)
+            devmap = DeviceMap()
+            driver = devmap.getDriver(device)
+            context = driver.getContext(device)
+            
+            commands = makeAddNodeToLBChain(bal_instance, driver, context, rs)
+            deploy = Deployer()
+            deploy.commands = commands
+            deploy.execute()
+            self._task.status = STATUS_DONE
+            return "OK"
+
 class LBActionMapper(object):
     def getWorker(self, task,  action,  params=None):
         if action == "index":
@@ -242,4 +272,5 @@ class LBActionMapper(object):
             return LBshowDetails(task)
         if action == "update":
             return UpdateLBWorker(task)
-
+        if action == "addNode":
+            return LBaddNode(task)
