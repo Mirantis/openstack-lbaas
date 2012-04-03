@@ -299,14 +299,14 @@ class AceDriver(BaseDriver):
             type = "tcp"
 
         if ((type != 'echo-tcp') and (type != 'echo-udp')):
-            XMLstr = "<probe_" + type + " type='"  + type + "' name='" + probe.name + "' sense='no'>\r\n"
+            XMLstr = "<probe_" + type + " type='"  + type + "' name='" + probe.name + "' sense='no'>\r\n</probe_" + type + ">"
         else:
             XMLstr = "<probe_echo type='echo' conn-type='"
             if (type == 'echo-tcp'):
                 XMLstr = XMLstr + "tcp' name='"
             else:
                 XMLstr = XMLstr + "udp' name='"
-            XMLstr = XMLstr + probe.name + "' sense='no'>\r\n"
+            XMLstr = XMLstr + probe.name + "' sense='no'>\r\n</probe_echo>"
             
         return self.send_data(context,  XMLstr)
         
@@ -504,6 +504,7 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "<loadbalance policy='" + vip.name + "-l7slb'/>\r\n"
         if self.checkNone(vip.ICMPreply):
             XMLstr = XMLstr + "<loadbalance vip_config-type='icmp-reply'/>\r\n"
+
         XMLstr = XMLstr + "</class>\r\n"
         XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
         
