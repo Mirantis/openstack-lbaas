@@ -41,7 +41,7 @@ class XmlSender:
         
         request.add_header("Authorization", authheader)
         
-        data = """xml_cmd=<request_xml>\r\n%s\r\n</request_xml><request_row>copy running-config startup-config</request_row>""" % command
+        data = """xml_cmd=<request_xml>\r\n%s\r\n</request_xml>""" % command
         logger.debug("send data to ACE:\n" + data)
         
         try:
