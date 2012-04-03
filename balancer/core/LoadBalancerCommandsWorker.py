@@ -235,9 +235,9 @@ class LBaddNode(SyncronousWorker):
         
         def run(self):
             self._task.status = STATUS_PROGRESS
-            logger.debug("Got new node description %s" %node)    
             lb_id = self._task.parameters['id']
             node = self._task.parameters['node']
+            logger.debug("Got new node description %s" %node)  
             rs = RealServer()
             bal_instance = Balancer()
             
