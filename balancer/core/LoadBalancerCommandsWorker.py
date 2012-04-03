@@ -277,7 +277,7 @@ class LBShowNodes(SyncronousWorker):
         
         bal_instance.loadFromDB(lb_id)
         for rs in bal_instance.rs:
-            nodes['nodes'].append(rs.convertToDict)
+            nodes['nodes'].append(rs().convertToDict)
         
         self._task.status = STATUS_DONE
         return nodes

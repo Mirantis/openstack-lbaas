@@ -250,7 +250,7 @@ class Controller(object):
             worker = mapper.getWorker(task, "showNodes" )
             if worker.type ==  SYNCHRONOUS_WORKER:
                 result = worker.run()
-                return {'loadbalancers':  result}
+                return result
             
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
