@@ -138,27 +138,34 @@ class UpdateLBWorker(ASyncronousWorker):
             
             #Step1. Load LB from DB
             
+            old_balancer_instance = Balancer()
             balancer_instance = Balancer()
             logger.debug("Loading LB data from DB")
+            #TODO add clone function to Balancer in order to avoid double read
             balancer_instance.loadFromDB(id)
+            old_balancer_instance.loadFromDB(id)
             
             #Step 1. Parse parameters came from request
             body = params['body']
             lb = balancer_instance.lb
             old_predictor_id = None
+            port_updated = False
             for key in body.keys():
-        	if lb.hasattr(key):
-        	    logger.debug("updating attribute %s of LB. Value is %s"%(key, body[key]))        	
-        	    lb.setattr(key, body[key])
-        	    if key.lower()=="algorithm":
-        	        old_predictor_id = balancer_instance.sf._predictor.id
-        		balancer_instance.sf._predictor = createPredictor(body[key])
-        	else:
-        	    logger.debug("Got unknown attribute %s of LB. Value is %s"%(key, body[key]))        	
+                if lb.hasattr(key):
+                    logger.debug("updating attribute %s of LB. Value is %s"%(key, body[key]))        	
+                    lb.setattr(key, body[key])
+                    if key.lower()=="algorithm":
+                        old_predictor_id = balancer_instance.sf._predictor.id
+                        balancer_instance.sf._predictor = createPredictor(body[key])
+                    if key.lower()=="port":
+                        for vip in balancer_instance.vips:
+                            vip.port = body[key]
+                else:
+                    logger.debug("Got unknown attribute %s of LB. Value is %s"%(key, body[key]))        	
             #Step2: Save updated data in DB
             lb.status = balancer.loadbalancers.loadbalancer.LB_PENDING_UPDATE_STATUS
             balancer_instance.update()
-	    #Step3. Update device config
+            #Step3. Update device config
 
             
             
@@ -167,16 +174,13 @@ class UpdateLBWorker(ASyncronousWorker):
             driver = devmap.getDriver(device)
             context = driver.getContext(device)
             
-            commands = []
-            destruct = Destructor()
-            destruct.commands = commands
-            destruct.execute()
             
-            commands = []
+            
             #Step 4. Deploy new config to device
-            commands = makeCreateLBCommandChain(balancer_instance,  driver,  context)
+            commands = makeUpdateLBCommandChain(old_balancer_instance, balancer_instance,  driver,  context)
             deploy = Deployer()
             deploy.commands = commands
+            deploy.execute()
             try:
                 deploy.execute()
             except exception:

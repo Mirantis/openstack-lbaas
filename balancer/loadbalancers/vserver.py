@@ -143,7 +143,7 @@ class Balancer():
         	self.sf._rservers.append(rs)
         self.probes = rd.getProbesBySFid(sf_id)
         for prob in self.probes:
-    	    self.sf._probes.append(prob)
+            self.sf._probes.append(prob)
         self.vips = rd.getVIPsBySFid(sf_id)
         
     def removeFromDB(self):
@@ -207,6 +207,19 @@ def makeDeleteLBCommandChain(bal,  driver,  context):
     list.append(DeleteServerFarmCommand(driver, context,  bal.sf))
     return list
 
+def makeUpdateLBCommandChain(old_bal,  new_bal,  driver,  context):
+    list = []
+    if old_bal.lb.algorithm != new_bal.lb.algorithm:
+        list.append(CreateServerFarmCommand(driver, context,  bal.sf))
+    if old_bal.lb.port != new_bal.lb.port:
+          
+        for vip in old_bal.vips:
+            list.append(DeleteVIPCommand(driver,  context,  vip,  bal.sf))
+        
+        for vip in new_bal.vips:
+            list.append(CreateVIPCommand(driver,  context,  vip,  new_bal.sf))
+            
+    
 class Deployer(object):
     def __init__(self):
         self.commands = []
