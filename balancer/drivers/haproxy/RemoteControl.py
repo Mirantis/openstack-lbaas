@@ -42,6 +42,9 @@ class RemoteConfig(object):
       
 
     def validationConfig(self): 
+        '''
+            Validate conifig and restart haproxy
+        '''
         env.warn_only = True
         if run('haproxy -c -f  %s/%s' % (self.remotepath,  self.configfilename)).find('Configuration file is valid') >= 0:
             logger.debug ('[HAPROXY] remote configuration is valid, restart haproxy')
@@ -101,3 +104,32 @@ class RemoteInterface(object):
         else:
             logger.debug('[HAPROXY] remote ip %s is not configured on the %s' % (self.IP,  self.interface))
         disconnect_all()
+
+class RemoteSocketOperation(object):
+    def __init__(self, context,  backend,  rserver):
+        env.user = context.login
+        env.hosts = []
+        env.hosts.append(context.ip)
+        env.password = context.password
+        env.host_string = context.ip
+        self.interface = context.interface
+        self.haproxy_socket = context.haproxy_socket
+        self.backend_name = backend.name
+        self.rserver_name = rserver.name
+
+    def  suspendServer(self):
+        out = sudo('echo disable server %s/%s | socat stdio unix-connect:%s' % \
+                    (self.backend_name, self.rserver_name,  self.haproxy_socket ))
+        if out == "": out = 'ok'
+        logger.debug('[HAPROXY] disable server  %s/%s. Result is "%s"' % \
+                      (self.backend_name,  self.rserver_name,  out))
+        disconnect_all()
+
+    def activateServer(self):
+        out = sudo('echo enable server %s/%s | socat stdio unix-connect:%s' % \
+                    (self.backend_name, self.rserver_name,  self.haproxy_socket ))
+        if out == "": out = 'ok'
+        logger.debug('[HAPROXY] enable server  %s/%s. Result is "%s"' % \
+                      (self.backend_name,  self.rserver_name,  out))
+        disconnect_all()
+       

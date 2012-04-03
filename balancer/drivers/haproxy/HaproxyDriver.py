@@ -27,6 +27,7 @@ from balancer.drivers.haproxy.Context import Context
 from balancer.drivers.haproxy.RemoteControl import RemoteConfig
 from balancer.drivers.haproxy.RemoteControl import RemoteService
 from balancer.drivers.haproxy.RemoteControl import RemoteInterface
+from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +113,29 @@ class HaproxyDriver(BaseDriver):
         config_file.DeleteBlock(haproxy_virtualserver) 
         remote.putConfig()
         
-
+    def suspendRServer(self,  context,  serverfarm,  rserver):
+        self.operationWithRServer(context,  serverfarm,  rserver,  'suspend')
+    
+    
+    def activateRServer(self,  context,  serverfarm,  rserver):
+        self.operationWithRServer(context,  serverfarm,  rserver,  'activate')
+    
+    def operationWithRServer (self,  context,  serverfarm,  rserver,  type_of_operation):
+        haproxy_rserver = HaproxyRserver()
+        haproxy_rserver.name = rserver.name
+        haproxy_serverfarm = HaproxyBackend()
+        haproxy_serverfarm.name = serverfarm.name
+        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  context.configfilename))
+        remote_config = RemoteConfig(context)
+        remote_socket = RemoteSocketOperation(context, haproxy_serverfarm, haproxy_rserver)
+        remote_config.getConfig()
+        if type_of_operation == 'suspend':
+            config_file.EnableDisableRserverInBackendBlock(haproxy_serverfarm,  haproxy_rserver,  'disable')
+            remote_socket.suspendServer()
+        elif type_of_operation == 'activate':
+            config_file.EnableDisableRserverInBackendBlock(haproxy_serverfarm,  haproxy_rserver,  'enable')
+            remote_socket.activateServer()
+        remote_config.putConfig()
 
     def createServerFarm(self,  context,  serverfarm):
         if not bool(serverfarm.name):
@@ -231,6 +254,28 @@ class HaproxyConfigFile:
                 for j in new_config_file[i]:
                     logger.debug ('[HAPROXY] found %s' % new_config_file[i])
                     if j.find('server') >= 0 and j.find(HaproxyRserver.name) >= 0: new_config_file[i].remove(j)
+        self._WriteConfigFile(new_config_file)
+
+    def EnableDisableRserverInBackendBlock(self,  HaproxyBackend,  HaproxyRserver,  type_of_operation):
+        '''
+            Disable/Enable server in the backend section config file
+        '''
+        new_config_file = self._ReadConfigFile()
+        logger.debug('[HAPROXY] backend %s rserver %s' % (HaproxyBackend.name,  HaproxyRserver.name))
+        if HaproxyBackend.name =='':
+            logger.error('[HAPROXY] Empty backend name')
+            return 'BACKEND NAME ERROR'
+        for i in new_config_file.keys():
+            if i.find(HaproxyBackend.type) == 0 and i.find('%s' % HaproxyBackend.name) >= 0:
+                for j in new_config_file[i]:
+                    logger.debug ('[HAPROXY] found %s' % new_config_file[i])
+                    if j.find('server') >= 0 and j.find(HaproxyRserver.name) >= 0: 
+                        if type_of_operation == 'disable':
+                            tmp_str = ('%s disabled'% j)
+                        elif type_of_operation == 'enable':
+                            tmp_str = j.replace(' disabled', '')
+                        new_config_file[i].remove(j)
+                        new_config_file[i].append(tmp_str)
         self._WriteConfigFile(new_config_file)
 
     def AddFronted(self,  HaproxyFronted,  HaproxyBackend = None):
