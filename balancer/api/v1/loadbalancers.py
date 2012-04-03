@@ -176,12 +176,13 @@ class Controller(object):
             logger.debug(msg)
             task = self._service_controller.createTask()
             mapper =LBActionMapper()
-            #here we need to decide which device should be used
-            params = args['body']
-            # We need to create LB object and return its id
-            lb = balancer.loadbalancers.loadbalancer.LoadBalancer()
-            params['lb'] = lb
+            
+            #here we need to decide which device should be used            
+            params = {}
+            params['body'] = args['body']        
+            params['id']= id
             task.parameters = params
+            
             worker = mapper.getWorker(task, "update" )
             if worker.type ==  SYNCHRONOUS_WORKER:
                 result = worker.run()

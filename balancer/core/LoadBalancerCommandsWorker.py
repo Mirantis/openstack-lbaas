@@ -29,7 +29,7 @@ from balancer.core.scheduller import Scheduller
 from balancer.devices.DeviceMap import DeviceMap
 from balancer.loadbalancers.vserver import Balancer
 from balancer.loadbalancers.vserver import makeCreateLBCommandChain, makeDeleteLBCommandChain
-from balancer.loadbalancers.vserver import Deployer,  Destructor
+from balancer.loadbalancers.vserver import Deployer,  Destructor, createPredictor
 
 logger = logging.getLogger(__name__)
 
@@ -133,22 +133,41 @@ class UpdateLBWorker(ASyncronousWorker):
         def run(self):
             self._task.status = STATUS_PROGRESS
             params = self._task.parameters
+            id = params['id']
             sched = Scheduller()
-            device = sched.getDevice()
+            
+            #Step1. Load LB from DB
+            
+            balancer_instance = Balancer()
+            logger.debug("Loading LB data from DB")
+            balancer_instance.loadFromDB(id)
+            
+            #Step 1. Parse parameters came from request
+            body = params['body']
+            lb = balancer_instance.lb
+            old_predictor_id = None
+            for key in body.keys():
+        	if lb.hasattr(key):
+        	    logger.debug("updating attribute %s of LB. Value is %s"%(key, body[key]))        	
+        	    lb.setattr(key, body[key])
+        	    if key.lower()=="algorithm":
+        	        old_predictor_id = balancer_instance.sf._predictor.id
+        		balancer_instance.sf._predictor = createPredictor(body[key])
+        	else:
+        	    logger.debug("Got unknown attribute %s of LB. Value is %s"%(key, body[key]))        	
+            #Step2: Save updated data in DB
+            lb.status = balancer.loadbalancers.loadbalancer.LB_PENDING_UPDATE_STATUS
+            balancer_instance.update()
+	    #Step3. Update device config
+
+            
+            
+            device = sched.getDeviceByID(lb.id)
             devmap = DeviceMap()
             driver = devmap.getDriver(device)
             context = driver.getContext(device)
-            balancer_instance = Balancer()
             
-            #Step 1. Parse parameters came from request
-            balancer_instance.parseParams(params)
-            lb = balancer_instance.getLB()
-            lb.device_id = device.id
-            #Step 2. Update config in DB
-            balancer_instance.update()
-            
-            #Step 3. Destroy old config on device
-            commands = makeDeleteLBCommandChain(balancer_instance,  driver,  context)
+            commands = []
             destruct = Destructor()
             destruct.commands = commands
             destruct.execute()

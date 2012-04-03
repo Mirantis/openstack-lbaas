@@ -311,17 +311,14 @@ class Reader(object):
             list.append(pr)
         return list
 
-    def getPredictorsBySFid(self, id):
+    def getPredictorBySFid(self, id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
         cursor.execute('SELECT * FROM predictors WHERE sf_id = "%s"' % id)
-        rows = cursor.fetchall()
-        list = []
-        for row in rows:
-            pred = self._predictDict[row['type']].createSame()        
-            pred.loadFromDict(row)
-            list.append(pred)
-        return list
+        rows = cursor.fetchone()
+        pred = self._predictDict[rows['type']].createSame()        
+        pred.loadFromDict(rows)
+        return pred
 
     def getVIPsBySFid(self, id):
         self._con.row_factory = sqlite3.Row

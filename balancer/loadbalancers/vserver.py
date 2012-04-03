@@ -136,8 +136,14 @@ class Balancer():
         self.lb = rd.getLoadBalancerById(lb_id)
         self.sf = rd.getSFByLBid(lb_id)
         sf_id = self.sf.id
+        predictor = rd.getPredictorBySFid(sf_id)
+        self.sf._predictor = predictor
         self.rs = rd.getRServersBySFid(sf_id)
+        for rs in self.rs:
+        	self.sf._rservers.append(rs)
         self.probes = rd.getProbesBySFid(sf_id)
+        for prob in self.probes:
+    	    self.sf._probes.append(prob)
         self.vips = rd.getVIPsBySFid(sf_id)
         
     def removeFromDB(self):
