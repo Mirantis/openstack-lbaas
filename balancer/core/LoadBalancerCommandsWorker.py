@@ -244,8 +244,11 @@ class LBaddNode(SyncronousWorker):
             
             bal_instance.loadFromDB(lb_id)
             rs.loadFromDict(node)
-            rs.name = "testRS"
+            rs.sf_id = bal_instance.sf.id
+            rs.name = rs.id
+
             bal_instance.rs.append(rs)
+            bal_instance.sf._rservers.append(rs)
             bal_instance.savetoDB()
             
             device = sched.getDeviceByID(bal_instance.lb.device_id)
