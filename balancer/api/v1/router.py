@@ -61,6 +61,9 @@ class API(wsgi.Router):
         mapper.connect("/loadbalancers/{id}/nodes", controller=lb_resource,
                        action="addNode", conditions=dict(method=["PUT"]))
                        
+        mapper.connect("/loadbalancers/{id}/nodes", controller=lb_resource,
+                       action="showNodes", conditions=dict(method=["GET"]))   
+                       
         mapper.connect("/loadbalancers/",
                        controller=lb_resource,
                        action="create",

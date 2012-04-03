@@ -263,6 +263,24 @@ class LBaddNode(SyncronousWorker):
             self._task.status = STATUS_DONE
             return "OK"
 
+class LBShowNodes(SyncronousWorker):
+    def __init__(self,  task):
+        super(LBShowNodes, self).__init__(task)
+        self._command_queue = Queue.LifoQueue()      
+            
+    def run(self):
+        self._task.status = STATUS_PROGRESS
+        lb_id = self._task.parameters['id']        
+
+        bal_instance = Balancer()
+        nodes = {'nodes':[]}
+        
+        bal_instance.loadFromDB(lb_id)
+        for rs in bal_instance.rs:
+            nodes['nodes'].append(rs.convertToDict)
+        return nodes
+            
+            
 class LBActionMapper(object):
     def getWorker(self, task,  action,  params=None):
         if action == "index":
@@ -279,3 +297,5 @@ class LBActionMapper(object):
             return UpdateLBWorker(task)
         if action == "addNode":
             return LBaddNode(task)
+        if action == "showNodes":
+            return LBShowNodes(task)
