@@ -20,7 +20,7 @@ import logging
 
 
 
-from openstack.common import exception
+import openstack.common.exception
 #from balancer.loadbalancers.command import BaseCommand
 import balancer.storage.storage 
 
@@ -181,14 +181,18 @@ class Balancer():
         
 def makeCreateLBCommandChain(bal,  driver,  context):
     list = []
+
+    for pr in bal.probes:
+        list.append(CreateProbeCommand(driver,  context,  pr))
+    
     list.append(CreateServerFarmCommand(driver, context,  bal.sf))
     for rs in bal.rs:
         list.append(CreateRServerCommand(driver,  context, rs))
         list.append(AddRServerToSFCommand(driver, context, bal.sf,  rs))
     
-    for pr in bal.probes:
-        list.append(CreateProbeCommand(driver,  context,  pr))
-        list.append(AddProbeToSFCommand(driver,  context,  bal.sf,  pr))
+    #for pr in bal.probes:
+    #    list.append(CreateProbeCommand(driver,  context,  pr))
+    #    list.append(AddProbeToSFCommand(driver,  context,  bal.sf,  pr))
     for vip in bal.vips:
         list.append(CreateVIPCommand(driver,  context,  vip,  bal.sf))
     return list
@@ -210,14 +214,8 @@ def makeDeleteLBCommandChain(bal,  driver,  context):
 def makeUpdateLBCommandChain(old_bal,  new_bal,  driver,  context):
     list = []
     if old_bal.lb.algorithm != new_bal.lb.algorithm:
-        list.append(CreateServerFarmCommand(driver, context,  bal.sf))
-    if old_bal.lb.port != new_bal.lb.port:
-          
-        for vip in old_bal.vips:
-            list.append(DeleteVIPCommand(driver,  context,  vip,  bal.sf))
-        
-        for vip in new_bal.vips:
-            list.append(CreateVIPCommand(driver,  context,  vip,  new_bal.sf))
+        list.append(CreateServerFarmCommand(driver, context,  new_bal.sf))
+    return list
             
     
 class Deployer(object):
@@ -229,14 +227,25 @@ class Deployer(object):
             current_command = self.commands[index]
             try:
                 current_command.execute()
-            except:
-                i = index
-                logger.error("Got exception during deploy. Rolling back changes.")
+            except openstack.common.exception.Invalid  as ex :
+                i = index-1
+                logger.error("Got exception during deploy. Rolling back changes. Error message %s" % ex)
                 
-                for k in range(index):
-                    command = self.commands[index - k]
+                for k in range(index-1):
+                    command = self.commands[i - k]
                     command.undo()
-                raise exception.Error()
+                raise openstack.common.exception.Error()
+                
+            except openstack.common.exception.Error  as ex :
+                i = index-1
+                logger.error("Got exception during deploy. Rolling back changes. Error message %s" % ex)
+                
+                for k in range(index-1):
+                    command = self.commands[i - k]
+                    command.undo()
+                raise openstack.common.exception.Error()
+
+                
                 
                 
 class Destructor(object):    
@@ -251,7 +260,7 @@ class Destructor(object):
             except:
 
                 logger.error("Got exception during deleting.")
-                raise exception.Error()
+                raise openstack.common.exception.Error()
 
 class CreateRServerCommand(object): 
     def __init__(self,  driver,  context,  rs):
@@ -397,10 +406,10 @@ def createProbe(probe_type):
 def createPredictor(pr_type):
     predictDict={'HashAddr':predictor.HashAddrPredictor(), 'HashContent':predictor.HashContent(), 'HashCookie':predictor.HashCookie(), 'HashHeader':predictor.HashHeader(),
             'HashLayer4':predictor.HashLayer4(), 'HashURL':predictor.HashURL(), 'LeastBandwidth':predictor.LeastBandwidth(), 'LeastConn':predictor.LeastConn(), 
-            'LeastLoaded':predictor.LeastLoaded(), 'Response':predictor.Response(), 'ROUND_ROBIN':predictor.RoundRobin()}
+            'LeastLoaded':predictor.LeastLoaded(), 'Response':predictor.Response(), 'RoundRobin':predictor.RoundRobin()}
     
     obj = predictDict.get(pr_type,  None)
     if obj == None:
-        raise exception.Invalid("Can't find load balancing algorithm with type %s" % pr_type)
+        raise openstack.common.exception.Invalid("Can't find load balancing algorithm with type %s" % pr_type)
     return obj.createSame()
     

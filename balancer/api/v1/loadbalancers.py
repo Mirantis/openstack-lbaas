@@ -180,18 +180,18 @@ class Controller(object):
             #here we need to decide which device should be used            
             params = {}
             params['body'] = args['body']        
-            params['id']= id
+            params['id']= args['id']
             task.parameters = params
             
             worker = mapper.getWorker(task, "update" )
             if worker.type ==  SYNCHRONOUS_WORKER:
                 result = worker.run()
-                return {'loadbalancers': {"id": lb.id}}
+                return {'loadbalancers':  result}
             
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'loadbalancers' : {'id':lb.id}}
+                return {'loadbalancers' : "OK"}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id

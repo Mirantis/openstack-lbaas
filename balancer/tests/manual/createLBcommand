@@ -3,8 +3,7 @@
     "name": "testLB",
     "protocol": "HTTP",
     "transport": "TCP", 
-    "port": "80",
-    "algorithm": "ROUND_ROBIN",
+    "algorithm": "RoundRobin",
     
     "virtualIps": [
                     {
@@ -35,7 +34,7 @@
                        "maxCon": "400000", 
                        "rateBandwidth": "12", 
                        "rateConnection": "1000", 
-                       "status": "ONLINE",
+                       "status": "INSERVICE",
                        "condition": "ENABLED",
                        "cookieStr": "test-str"
                     }, 
@@ -49,7 +48,7 @@
                        "maxCon": "400000", 
                        "rateBandwidth": "12", 
                        "rateConnection": "1000", 
-                       "status": "ONLINE",
+                       "status": "INSERVICE",
                        "condition": "ENABLED"
                     }
                   ], 

@@ -459,6 +459,7 @@ class Writer(object):
             cursor = self._con.cursor()
             logger.debug("Executing command: %s" % command)
             cursor.execute(command)
+        self._con.commit()             
 
     def generateUpdateCommand(self,  table, dict,  id):
         command1 ="UPDATE %s SET " % table

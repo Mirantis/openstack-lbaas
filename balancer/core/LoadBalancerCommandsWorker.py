@@ -21,6 +21,7 @@ import sys
 import threading
 import Queue
 import balancer.loadbalancers.loadbalancer
+import openstack.common.exception
 
 from balancer.core.Worker import *
 from balancer.core.LBCommands import *
@@ -28,7 +29,7 @@ from balancer.storage.storage import *
 from balancer.core.scheduller import Scheduller
 from balancer.devices.DeviceMap import DeviceMap
 from balancer.loadbalancers.vserver import Balancer
-from balancer.loadbalancers.vserver import makeCreateLBCommandChain, makeDeleteLBCommandChain
+from balancer.loadbalancers.vserver import makeCreateLBCommandChain, makeDeleteLBCommandChain, makeUpdateLBCommandChain
 from balancer.loadbalancers.vserver import Deployer,  Destructor, createPredictor
 
 logger = logging.getLogger(__name__)
@@ -88,7 +89,7 @@ class LBshowDetails(SyncronousWorker):
       self._task.status = STATUS_DONE
       return lbobj
       
-class CreateLBWorker(ASyncronousWorker):
+class CreateLBWorker(SyncronousWorker):
         def __init__(self,  task):
             super(CreateLBWorker, self).__init__(task)
             self._command_queue = Queue.LifoQueue()
@@ -116,10 +117,15 @@ class CreateLBWorker(ASyncronousWorker):
             deploy.commands = commands
             try:
                 deploy.execute()
-            except exception:
+            except openstack.common.exception.Error:
                 balancer_instance.lb.status = balancer.loadbalancers.loadbalancer.LB_ERROR_STATUS
                 balancer_instance.update()
                 return
+            except openstack.common.exception.Invalid:
+                balancer_instance.lb.status = balancer.loadbalancers.loadbalancer.LB_ERROR_STATUS
+                balancer_instance.update()
+                return
+
             balancer_instance.lb.status = balancer.loadbalancers.loadbalancer.LB_ACTIVE_STATUS
             balancer_instance.update()
             self._task.status = STATUS_DONE
@@ -127,23 +133,23 @@ class CreateLBWorker(ASyncronousWorker):
 
 class UpdateLBWorker(ASyncronousWorker):
         def __init__(self,  task):
-            super(CreateLBWorker, self).__init__(task)
+            super(UpdateLBWorker, self).__init__(task)
             self._command_queue = Queue.LifoQueue()
         
         def run(self):
             self._task.status = STATUS_PROGRESS
             params = self._task.parameters
-            id = params['id']
+            lb_id = params['id']
             sched = Scheduller()
             
             #Step1. Load LB from DB
             
             old_balancer_instance = Balancer()
             balancer_instance = Balancer()
-            logger.debug("Loading LB data from DB")
+            logger.debug("Loading LB data from DB for Lb id: %s" % lb_id)
             #TODO add clone function to Balancer in order to avoid double read
-            balancer_instance.loadFromDB(id)
-            old_balancer_instance.loadFromDB(id)
+            balancer_instance.loadFromDB(lb_id)
+            old_balancer_instance.loadFromDB(lb_id)
             
             #Step 1. Parse parameters came from request
             body = params['body']
@@ -151,15 +157,12 @@ class UpdateLBWorker(ASyncronousWorker):
             old_predictor_id = None
             port_updated = False
             for key in body.keys():
-                if lb.hasattr(key):
+                if hasattr(lb,key):
                     logger.debug("updating attribute %s of LB. Value is %s"%(key, body[key]))        	
-                    lb.setattr(key, body[key])
+                    setattr(lb,key, body[key])
                     if key.lower()=="algorithm":
                         old_predictor_id = balancer_instance.sf._predictor.id
                         balancer_instance.sf._predictor = createPredictor(body[key])
-                    if key.lower()=="port":
-                        for vip in balancer_instance.vips:
-                            vip.port = body[key]
                 else:
                     logger.debug("Got unknown attribute %s of LB. Value is %s"%(key, body[key]))        	
             #Step2: Save updated data in DB
@@ -169,7 +172,7 @@ class UpdateLBWorker(ASyncronousWorker):
 
             
             
-            device = sched.getDeviceByID(lb.id)
+            device = sched.getDeviceByID(lb.device_id)
             devmap = DeviceMap()
             driver = devmap.getDriver(device)
             context = driver.getContext(device)
@@ -180,13 +183,13 @@ class UpdateLBWorker(ASyncronousWorker):
             commands = makeUpdateLBCommandChain(old_balancer_instance, balancer_instance,  driver,  context)
             deploy = Deployer()
             deploy.commands = commands
-            deploy.execute()
             try:
                 deploy.execute()
-            except exception:
-                balancer_instance.lb.status = balancer.loadbalancers.loadbalancer.LB_ERROR_STATUS
-                balancer_instance.update()
+            except:
+                old_balancer_instance.lb.status = balancer.loadbalancers.loadbalancer.LB_ERROR_STATUS
+                old_balancer_instance.update()
                 return
+                
             balancer_instance.lb.status = balancer.loadbalancers.loadbalancer.LB_ACTIVE_STATUS
             balancer_instance.update()
             self._task.status = STATUS_DONE

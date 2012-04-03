@@ -29,6 +29,12 @@ class AceDriver(BaseDriver):
     def __init__(self):
         pass
     
+    def checkNone(self, obj):
+        if bool(obj):
+          if obj != 'None':
+            return True
+        return False
+    
     def send_data(self,  context,  XMLstr):
         s = XmlSender(context)
         tmp = s.deployConfig(context, XMLstr)    
@@ -43,17 +49,17 @@ class AceDriver(BaseDriver):
     
     def createRServer(self, context, rserver):
         logger.debug("Creating the Real Server\n")
-        if not bool(rserver.name): 
+        if not self.checkNone(rserver.name): 
             logger.error("Can't find rserver name")
             return 'RSERVER NAME ERROR'
 
         XMLstr = "<rserver type='" + rserver.type.lower() + "' name='" + rserver.name + "'>\r\n"
         
-        if bool(rserver.description): 
+        if self.checkNone(rserver.description): 
             XMLstr = XMLstr + "  <description descr-string='" + rserver.description + "'/>\r\n"
 
         if (rserver.type.lower() == "host"):
-            if bool(rserver.address):
+            if self.checkNone(rserver.address):
                 XMLstr = XMLstr + "  <ip_address  "
                 if (rserver.ipType.lower() == 'ipv4'):
                     XMLstr = XMLstr + "address='" 
@@ -61,23 +67,23 @@ class AceDriver(BaseDriver):
                     XMLstr = XMLstr + "ipv6-address='"
                 XMLstr = XMLstr + rserver.address + "'/>\r\n"
                 
-            if bool(rserver.failOnAll):
+            if self.checkNone(rserver.failOnAll):
                 XMLstr = XMLstr + "  <fail-on-all/>\r\n"
             
             XMLstr = XMLstr + "  <weight value='" + str(rserver.weight) + "'/>\r\n"
         else:
-            if bool(rserver.webHostRedir):
+            if self.checkNone(rserver.webHostRedir):
                 XMLstr = XMLstr + "  <webhost-redirection relocation-string='" + rserver.webHostRedir + "'/>\r\n" 
-                if bool(rserver.redirectionCode):
+                if self.checkNone(rserver.redirectionCode):
                     XMLstr = XMLstr + "  <webhost-redirection redirection-code='" + rserver.redirectionCode + "'/>\r\n"
 
 
-        if (bool(rserver.maxCon) and bool(rserver.minCon)):
+        if (self.checkNone(rserver.maxCon) and self.checkNone(rserver.minCon)):
             XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + "' min='" + str(rserver.minCon) + "'/>\r\n"
         
-        if bool(rserver.rateConnection):
+        if self.checkNone(rserver.rateConnection):
             XMLstr = XMLstr + "  <rate-limit type='connection' value='" + str(rserver.rateConnection) + "'/>\r\n"
-        if bool(rserver.rateBandwidth):
+        if self.checkNone(rserver.rateBandwidth):
             XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + str(rserver.rateBandwidth) + "'/>\r\n"        
             
         if (rserver.state == "In Service"):
@@ -89,7 +95,7 @@ class AceDriver(BaseDriver):
     
     
     def deleteRServer(self, context, rserver):
-        if not bool(rserver.name): 
+        if not self.checkNone(rserver.name): 
             return 'RSERVER NAME ERROR'
         
         XMLstr = "<rserver sense='no' type='" + rserver.type.lower() + "' name='" + rserver.name + "'></rserver>"
@@ -98,7 +104,7 @@ class AceDriver(BaseDriver):
     
     
     def activateRServer(self,  context,  serverfarm,  rserver):
-        if not bool(rserver.name): 
+        if not self.checkNone(rserver.name): 
             return 'RSERVER NAME ERROR'
 
         XMLstr = "<serverfarm type='" + serverfarm.type.lower() + "' name='" + serverfarm.name + "'>"
@@ -111,7 +117,7 @@ class AceDriver(BaseDriver):
 
     
     def suspendRServer(self,  context,  serverfarm,  rserver):
-        if not bool(rserver.name): 
+        if not self.checkNone(rserver.name): 
             return 'RSERVER NAME ERROR'
 
         XMLstr = "<serverfarm type='"+serverfarm.type.lower()+"' name='"+serverfarm.name+"'>"
@@ -124,7 +130,7 @@ class AceDriver(BaseDriver):
 
     
     def createProbe(self,  context,  probe):
-        if not bool(probe.name): 
+        if not self.checkNone(probe.name): 
             return 'PROBE NAME ERROR'
         type = probe.type.lower()
         if type == "connect":
@@ -145,140 +151,140 @@ class AceDriver(BaseDriver):
                 XMLstr = XMLstr + "udp' name='"
             XMLstr = XMLstr + probe.name + "'>\r\n"
     
-        if bool(probe.description): 
+        if self.checkNone(probe.description): 
             XMLstr = XMLstr + "  <description descr-string='" + probe.description + "'/>\r\n"
                 
-        if bool(probe.probeInterval):
+        if self.checkNone(probe.probeInterval):
             XMLstr = XMLstr + "  <interval value='" + str(probe.probeInterval) + "'/>\r\n"
         
         if (type != 'vm'):
-            if bool(probe.passDetectInterval):
+            if self.checkNone(probe.passDetectInterval):
                 XMLstr = XMLstr + "  <passdetect interval='" + str(probe.passDetectInterval) + "'/>\r\n"
                 
-            if bool(probe.passDetectCount):
+            if self.checkNone(probe.passDetectCount):
                 XMLstr = XMLstr + "  <passdetect count='" + str(probe.passDetectCount) + "'/>\r\n"
             
-            if bool(probe.failDetect):
+            if self.checkNone(probe.failDetect):
                 XMLstr = XMLstr + "  <faildetect retry-count='" + str(probe.failDetect) + "'/>\r\n"
             
-            if bool(probe.receiveTimeout):
+            if self.checkNone(probe.receiveTimeout):
                 XMLstr = XMLstr + "  <receive timeout='" + str(probe.receiveTimeout) + "'/>\r\n"
             
-            if ((type != 'icmp') and bool(probe.port)):
+            if ((type != 'icmp') and self.checkNone(probe.port)):
                 XMLstr = XMLstr + "  <port value='" + str(probe.port) + "'/>\r\n"
 
             if (type != 'scripted'):
-                if (bool(probe.destIP)):
+                if (self.checkNone(probe.destIP)):
                     XMLstr = XMLstr + "  <ip_address address='" + probe.destIP + "'"
                     if ((type != 'rtsp') and (type != 'sip-tcp') and (type != 'sip-udp')):
-                        if bool(probe.isRouted):
+                        if self.checkNone(probe.isRouted):
                             XMLstr = XMLstr + " routing-option='routed'"
                     XMLstr = XMLstr + "/>\r\n"
                 
             if (type == "dns"):
-                if bool(probe.domainName):
+                if self.checkNone(probe.domainName):
                     XMLstr = XMLstr + "  <domain domain-name='" + probe.domainName + "'/>\r\n"
             
             if (probes_with_send_data.count(type) > 0):
-                if bool(probe.sendData):
+                if self.checkNone(probe.sendData):
                     XMLstr = XMLstr + "  <send-data data='" + probe.sendData + "'/>\r\n"
 
             if (probes_with_timeout.count(type) > 0):
-                if bool(probe.openTimeout):
+                if self.checkNone(probe.openTimeout):
                     XMLstr = XMLstr + "  <open timeout='" + str(probe.openTimeout) + "'/>"
-                if bool(probe.tcpConnTerm):
+                if self.checkNone(probe.tcpConnTerm):
                     XMLstr = XMLstr + "  <connection_term term='forced'/>\r\n"
 
             if (probes_with_credentials.count(type) > 0):
-                if (bool(probe.userName) and bool(probe.password)):
+                if (self.checkNone(probe.userName) and self.checkNone(probe.password)):
                     XMLstr = XMLstr + "  <credentials username='" + probe.userName + "' password='" + probe.password
                     if (type == 'radius'):
-                        if bool(probe.userSecret):
+                        if self.checkNone(probe.userSecret):
                             XMLstr = XMLstr + "' secret='" + probe.userSecret
                     XMLstr = XMLstr + "'/>\r\n"
 
             if (probes_with_regex.count(type) > 0):
-                    if bool(probe.expectRegExp):
+                    if self.checkNone(probe.expectRegExp):
                         XMLstr = XMLstr + "  <expect_regex regex='" + probe.expectRegExp + "'"
-                        if bool(probe.expectRegExpOffset):
+                        if self.checkNone(probe.expectRegExpOffset):
                             XMLstr = XMLstr + " offset='" + str(probe.expectRegExpOffset) + "'"
                         XMLstr = XMLstr + "/>\r\n"
 
             if ((type == 'http') or (type == 'https')):
-                if bool(probe.requestMethodType):
+                if self.checkNone(probe.requestMethodType):
                     XMLstr = XMLstr + "  <request method='" + probe.requestMethodType.lower() + "' url='" + probe.requestHTTPurl.lower() + "'/>\r\n"
                     
-                if bool(probe.appendPortHostTag):
+                if self.checkNone(probe.appendPortHostTag):
                     XMLstr = XMLstr + "  <append-port-hosttag/>\r\n"
                     
-                if bool(probe.hash):
+                if self.checkNone(probe.hash):
                     XMLstr = XMLstr + "  <hash"
-                    if bool(probe.hashString):
+                    if self.checkNone(probe.hashString):
                         XMLstr = XMLstr + " hash-string='" + probe.hashString + "'"
                     XMLstr = XMLstr + "/>\r\n"
 
                 if (type == 'https'):
-                    if bool(probe.cipher):
+                    if self.checkNone(probe.cipher):
                         XMLstr = XMLstr + "  <ssl cipher='" + probe.cipher + "'/>\r\n"
-                    if bool(probe.SSLversion):
+                    if self.checkNone(probe.SSLversion):
                         XMLstr = XMLstr + "  <ssl version='" + probe.SSLversion + "'/>\r\n"
                         
             if ((type == 'pop') or (type == 'imap')):
-                if bool(probe.requestCommand):
+                if self.checkNone(probe.requestCommand):
                     XMLstr = XMLstr + "  <request command='" + probe.requestCommand + "'/>\r\n"
                 if (type == 'imap'):
-                    if bool(probe.maibox):
+                    if self.checkNone(probe.maibox):
                         XMLstr = XMLstr + "  <credentials mailbox='" + probe.maibox + "'/>\r\n"
 
             if (type == 'radius'):
-                if bool(probe.NASIPaddr):
+                if self.checkNone(probe.NASIPaddr):
                     XMLstr = XMLstr + "  <nas ip_address='" + probe.NASIPaddr + "'/>\r\n"
                     
             if (type == 'rtsp'):
-                if bool(probe.requareHeaderValue):
+                if self.checkNone(probe.requareHeaderValue):
                     XMLstr = XMLstr + "  <header header-name='Require' header-value='" + probe.requareHeaderValue + "'/>\r\n"
                     
-                if bool(probe.proxyRequareHeaderValue):
+                if self.checkNone(probe.proxyRequareHeaderValue):
                     XMLstr = XMLstr + "  <header header-name='Proxy-Require' header-value='" + probe.proxyRequareHeaderValue + "'/>\r\n"
                     
-                if bool(probe.requestURL):
+                if self.checkNone(probe.requestURL):
                     XMLstr = XMLstr + "  <request "
-                    if bool(probe.requestMethodType):
+                    if self.checkNone(probe.requestMethodType):
                         XMLstr = XMLstr + "  method='" + probe.requestMethodType + "' "
                     XMLstr = XMLstr + "url='" + probe.requestURL + "'/>\r\n"
             
             # Need add download script section for this type
             if (type == 'scripted'):
-                if bool(probe.scriptName):
+                if self.checkNone(probe.scriptName):
                     XMLstr = XMLstr + "  <script_elem script-name='" + probe.scriptName
-                    if bool(probe.scriptArgv):
+                    if self.checkNone(probe.scriptArgv):
                        XMLstr = XMLstr + "' script-arguments='" + probe.scriptArgv
                     XMLstr = XMLstr + "'/>\r\n"
             
-            if ((type == 'sip-udp') and bool(probe.Rport)):
+            if ((type == 'sip-udp') and self.checkNone(probe.Rport)):
                 XMLstr = XMLstr + "  <rport type='enable'/>\r\n"
                 
             if (type == 'snmp'):
-                if bool(probe.SNMPver):
+                if self.checkNone(probe.SNMPver):
                     XMLstr = XMLstr + "  <version value='" + probe.SNMPver + "'/>\r\n"
-                    if bool(probe.SNMPComm):
+                    if self.checkNone(probe.SNMPComm):
                         XMLstr = XMLstr + "  <community community-string='" + probe.SNMPComm + "'/>\r\n"
             
         else:   # for type == vm
-            if bool(probe.VMControllerName):
+            if self.checkNone(probe.VMControllerName):
                 XMLstr = XMLstr + "  <vm-controller name='" + probe.VMControllerName + "'/>\r\n"
-                if (bool(probe.maxCPUburstThresh) or bool(probe.minCPUburstThresh)):
+                if (self.checkNone(probe.maxCPUburstThresh) or self.checkNone(probe.minCPUburstThresh)):
                     XMLstr = XMLstr + "  <load type='cpu' param='burst-threshold'"
-                    if bool(probe.maxCPUburstThresh):
+                    if self.checkNone(probe.maxCPUburstThresh):
                         XMLstr = XMLstr + " max='" + probe.maxCPUburstThresh + "'"
-                    if bool(probe.minCPUburstThresh):
+                    if self.checkNone(probe.minCPUburstThresh):
                         XMLstr = XMLstr + " min='" + probe.minCPUburstThresh + "'"
                     XMLstr = XMLstr + "/>\r\n"
-                if (bool(probe.maxMemBurstThresh) or bool(probe.minMemBurstThresh)):
+                if (self.checkNone(probe.maxMemBurstThresh) or self.checkNone(probe.minMemBurstThresh)):
                     XMLstr = XMLstr + "  <load type='mem' param='burst-threshold'"
-                    if bool(probe.maxMemBurstThresh):
+                    if self.checkNone(probe.maxMemBurstThresh):
                         XMLstr = XMLstr + " max='" + probe.maxMemBurstThresh + "'"
-                    if bool(probe.minMemBurstThresh):
+                    if self.checkNone(probe.minMemBurstThresh):
                         XMLstr = XMLstr + " min='" + probe.minMemBurstThresh + "'"
                     XMLstr = XMLstr + "/>\r\n"
             
@@ -292,7 +298,7 @@ class AceDriver(BaseDriver):
     
     
     def deleteProbe(self,  context,  probe):
-        if not bool(probe.name): 
+        if not self.checkNone(probe.name): 
             return 'PROBE NAME ERROR'
         type = probe.type.lower()
         if type == "connect":
@@ -313,35 +319,35 @@ class AceDriver(BaseDriver):
     
     
     def createServerFarm(self,  context,  serverfarm):
-        if not bool(serverfarm.name):
+        if not self.checkNone(serverfarm.name):
             return "SERVER FARM NAME ERROR"
         
         XMLstr = "<serverfarm type='" + serverfarm.type.lower() + "' name='" + serverfarm.name + "'>\r\n"
         
-        if bool(serverfarm.description):
+        if self.checkNone(serverfarm.description):
             XMLstr = XMLstr + "<description descr-string='" + serverfarm.description + "'/> \r\n"
         
-        if bool(serverfarm.failAction):
+        if self.checkNone(serverfarm.failAction):
             XMLstr = XMLstr + "<failaction failaction-type='" + serverfarm.failAction + "'/>\r\n"
         
-        if bool(serverfarm._predictor): #Some predictors are may include additional parameters !
+        if self.checkNone(serverfarm._predictor): #Some predictors are may include additional parameters !
             XMLstr = XMLstr + "<predictor predictor-method='" + serverfarm._predictor.type.lower() + "'/>\r\n"
         
-        if bool(serverfarm._probes):
+        if self.checkNone(serverfarm._probes):
             for probe in serverfarm._probes:
                 XMLstr = XMLstr + "<probe_sfarm probe-name='" + probe.name + "'/>\r\n"
         
         if serverfarm.type.lower() == "host":
-            if bool(serverfarm.failOnAll): 
+            if self.checkNone(serverfarm.failOnAll): 
                 XMLstr = XMLstr + "<probe_sfarm probe-name='fail-on-all'/>\r\n"
             
-            if bool(serverfarm.transparent):
+            if self.checkNone(serverfarm.transparent):
                 XMLstr = XMLstr + "<transparent/>\r\n"
             
-            if bool(serverfarm.partialThreshPercentage) and bool(serverfarm.backInservice):
+            if self.checkNone(serverfarm.partialThreshPercentage) and self.checkNone(serverfarm.backInservice):
                 XMLstr = XMLstr + "<partial-threshold value='" + serverfarm.partialThreshPercentage + "' back-inservice='" + serverfarm.backInservice + "'/>\r\n"
             
-            if bool(serverfarm.inbandHealthCheck):
+            if self.checkNone(serverfarm.inbandHealthCheck):
                 XMLstr = XMLstr + "<inband-health check='" + serverfarm.inbandHealthCheck + "'"
                 if serverfarm.inbandHealthCheck.lower == "log":
                     XMLstr = XMLstr + "threshold='" + str(serverfarm.connFailureThreshCount) + "' reset='" + str(serverfarm.resetTimeout) + "'" #Do deploy if  resetTimeout='' ?
@@ -350,7 +356,7 @@ class AceDriver(BaseDriver):
                     XMLstr=XMLstr+"threshold='"+str(serverfarm.connFailureThreshCount)+"' reset='"+str(serverfarm.resetTimeout)+"'  resume-service='"+str(serverfarm.resumeService)+"'" #Do deploy if  resumeService='' ?
                 XMLstr=XMLstr+"/>\r\n"
             
-            if bool(serverfarm.dynamicWorkloadScale): # Need to upgrade (may include VM's)
+            if self.checkNone(serverfarm.dynamicWorkloadScale): # Need to upgrade (may include VM's)
                 XMLstr = XMLstr + "<dws type='" + serverfarm.failAction + "'/>\r\n"
         
         XMLstr = XMLstr + "</serverfarm>"
@@ -359,7 +365,7 @@ class AceDriver(BaseDriver):
     
     
     def deleteServerFarm(self,  context,  serverfarm):
-        if not bool(serverfarm.name): 
+        if not self.checkNone(serverfarm.name): 
             return 'SERVER FARM NAME ERROR'
 
         XMLstr = "<serverfarm sense='no' name='" + serverfarm.name + "'></serverfarm>"
@@ -368,38 +374,38 @@ class AceDriver(BaseDriver):
     
     
     def addRServerToSF(self,  context,  serverfarm,  rserver): #rserver in sfarm may include many parameters !
-        if not bool(serverfarm.name) or not bool(rserver.name):
+        if not self.checkNone(serverfarm.name) or not self.checkNone(rserver.name):
             return "ERROR"
         
         XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
         XMLstr=XMLstr+"  <rserver_sfarm name='"+rserver.name+"'"
-        if bool(rserver.port):
+        if self.checkNone(rserver.port):
             XMLstr=XMLstr+" port='"+rserver.port+"'"
         XMLstr=XMLstr+">\r\n"
-        if bool(rserver.weight):
+        if self.checkNone(rserver.weight):
             XMLstr=XMLstr+"    <weight value='"+str(rserver.weight)+"'/>\r\n"
-        if bool(rserver.backupRS):
+        if self.checkNone(rserver.backupRS):
             XMLstr=XMLstr+"    <backup-rserver rserver-name='"+rserver.backupRS+"'"
-            if bool(rserver.backupRSport):
+            if self.checkNone(rserver.backupRSport):
                 XMLstr=XMLstr+" port='"+rserver.backupRSport+"'"
             XMLstr=XMLstr+"/>\r\n"
-        if bool(rserver.maxCon) and bool(rserver.minCon):
+        if self.checkNone(rserver.maxCon) and self.checkNone(rserver.minCon):
             XMLstr=XMLstr+"    <conn-limit max='"+str(rserver.maxCon)+"' min='"+str(rserver.minCon)+"'/>\r\n"
             
         # this parameters does not work
-        #if bool(rserver.rateConnection):
+        #if self.checkNone(rserver.rateConnection):
         #    XMLstr=XMLstr+"    <rate-limit type='connection' value='"+str(rserver.rateConnection)+"'/>\r\n"
-        #if bool(rserver.rateBandwidth):
+        #if self.checkNone(rserver.rateBandwidth):
         #   XMLstr=XMLstr+"    <rate-limit type='bandwidth' value='bandwidth' value='"+str(rserver.rateBandwidth)+"'/>\r\n"
         
-        if bool(rserver.cookieStr):
+        if self.checkNone(rserver.cookieStr):
             XMLstr = XMLstr + "    <cookie-string cookie-value='" + rserver.cookieStr + "'/>\r\n"
             
-        for i in range(len(rserver._probes)):
-            XMLstr = XMLstr + "    <probe_sfarm probe-name='" + rserver._probes[i] + "'/>\r\n"
-        if bool(rserver.failOnAll):
+#        for i in range(len(rserver._probes)):
+#            XMLstr = XMLstr + "    <probe_sfarm probe-name='" + rserver._probes[i] + "'/>\r\n"
+        if self.checkNone(rserver.failOnAll):
             XMLstr = XMLstr + "    <probe_sfarm probe-name='fail-on-all'/>"
-        if bool(rserver.state):
+        if self.checkNone(rserver.state):
             if rserver.state.lower() == "inservice":
                 XMLstr = XMLstr + "    <inservice/>\r\n"
             if rserver.state.lower() == "standby":
@@ -413,12 +419,12 @@ class AceDriver(BaseDriver):
     
     
     def deleteRServerFromSF(self,  context,  serverfarm,  rserver):
-        if not bool(serverfarm.name) or not bool(rserver.name):
+        if not self.checkNone(serverfarm.name) or not self.checkNone(rserver.name):
             return "ERROR"
         
         XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
         XMLstr = XMLstr + "<rserver_sfarm sense='no' name='" + rserver.name + "'"
-        if bool(rserver.port):
+        if self.checkNone(rserver.port):
             XMLstr=XMLstr + " port='" + rserver.port + "'"
         XMLstr = XMLstr + ">\r\n"
         XMLstr = XMLstr + "</rserver_sfarm>\r\n"
@@ -428,7 +434,7 @@ class AceDriver(BaseDriver):
     
     
     def addProbeToSF(self,  context,  serverfarm,  probe):
-        if not bool(serverfarm.name) or not bool(probe.name):
+        if not self.checkNone(serverfarm.name) or not self.checkNone(probe.name):
             return "ERROR"
         
         XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
@@ -439,7 +445,7 @@ class AceDriver(BaseDriver):
     
     
     def deleteProbeFromSF (elf,  context,  serverfarm,  probe):
-        if not bool(serverfarm.name) or not bool(probe.name):
+        if not self.checkNone(serverfarm.name) or not self.checkNone(probe.name):
             return "ERROR"
         
         XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
@@ -458,11 +464,11 @@ class AceDriver(BaseDriver):
     
     
     def createVIP(self,  context, vip,  sfarm): 
-        if not bool(vip.name) or not bool(vip.name) or not bool(vip.address) :
+        if not self.checkNone(vip.name) or not self.checkNone(vip.name) or not self.checkNone(vip.address) :
             return "ERROR"
         
         sn = "2"
-        if bool(vip.allVLANs):
+        if self.checkNone(vip.allVLANs):
             pmap = "global"
         else:
             pmap = "int-" + md5.new(vip.VLAN).hexdigest()
@@ -479,7 +485,7 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "<policy-map_lb type='loadbalance" + vip.appProto + "' match-type='first-match' pmap-name='"+vip.name+"-l7slb'>\r\n"
         XMLstr = XMLstr + "<class_pmap_lb match-cmap-default='class-default'>\r\n"
         XMLstr = XMLstr + "<serverfarm_pmap sfarm-name='" + sfarm.name + "'"
-        if bool(vip.backupServerFarm):
+        if self.checkNone(vip.backupServerFarm):
             XMLstr = XMLstr + " backup-name='" + vip.backupServerFarm + "'"
         XMLstr = XMLstr + "/>\r\n"
         XMLstr = XMLstr + "</class_pmap_lb>\r\n"
@@ -498,11 +504,11 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "<policy-map_multimatch match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
         XMLstr = XMLstr + "<class match-cmap='" + vip.name + "'>\r\n"
         
-        if bool(vip.status):
+        if self.checkNone(vip.status):
             XMLstr = XMLstr + "<loadbalance vip_config-type='" + vip.status.lower() + "'/>\r\n"
         
         XMLstr = XMLstr + "<loadbalance policy='" + vip.name + "-l7slb'/>\r\n"
-        if bool(vip.ICMPreply):
+        if self.checkNone(vip.ICMPreply):
             XMLstr = XMLstr + "<loadbalance vip_config-type='icmp-reply'/>\r\n"
         XMLstr = XMLstr + "</class>\r\n"
         XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
@@ -513,7 +519,7 @@ class AceDriver(BaseDriver):
             raise openstack.common.exception.Invalid(tmp)
 
         
-        if bool(vip.allVLANs):
+        if self.checkNone(vip.allVLANs):
             XMLstr = "<service-policy type='input' name='" + pmap + "'/>"
         else:
             #  Add service-policy for necessary vlans
@@ -536,7 +542,7 @@ class AceDriver(BaseDriver):
     
 
     def deleteVIP(self,  context,  vip):
-        if bool(vip.allVLANs):
+        if self.checkNone(vip.allVLANs):
             pmap = "global"
         else:
             pmap = "int-" + md5.new(s).hexdigest()
@@ -571,11 +577,11 @@ class AceDriver(BaseDriver):
             raise openstack.common.exception.Invalid(tmp)
 
         XMLstr = 'show running-config policy-map %s' % pmap
-        last_policy_map = bool(s.getConfig(context,  XMLstr).find('class'))
+        last_policy_map = self.checkNone(s.getConfig(context,  XMLstr).find('class'))
             
         if (last_policy_map):
             # Remove service-policy from VLANs (Perform if deleted last VIP with it service-policy)
-            if bool(vip.allVLANs):
+            if self.checkNone(vip.allVLANs):
                 XMLstr = "<service-policy sense='no' type='input' name='" + pmap + "'/>"
             else:
                 #  Add service-policy for necessary vlans
