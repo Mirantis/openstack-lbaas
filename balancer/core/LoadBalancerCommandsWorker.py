@@ -29,7 +29,7 @@ from balancer.storage.storage import *
 from balancer.core.scheduller import Scheduller
 from balancer.devices.DeviceMap import DeviceMap
 from balancer.loadbalancers.vserver import Balancer
-from balancer.loadbalancers.vserver import makeCreateLBCommandChain, makeDeleteLBCommandChain, makeUpdateLBCommandChain, makeAddNodeToLBChain
+from balancer.loadbalancers.vserver import makeCreateLBCommandChain, makeDeleteLBCommandChain, makeUpdateLBCommandChain, makeAddNodeToLBChain, makeDeleteNodeFromLBChain
 from balancer.loadbalancers.vserver import Deployer,  Destructor, createPredictor
 
 logger = logging.getLogger(__name__)
@@ -282,7 +282,46 @@ class LBShowNodes(SyncronousWorker):
         self._task.status = STATUS_DONE
         return nodes
             
-            
+def LBDeleteNode(SyncronousWorker):
+    def __init__(self,  task):
+        super(LBShowNodes, self).__init__(task)
+        self._command_queue = Queue.LifoQueue()  
+    
+    def run(self):
+        self._task.status = STATUS_PROGRESS
+        lb_id = self._task.parameters['id']    
+        nodeID = self._task.parameters['nodeID']
+        
+        bal_instance = Balancer()
+        sched = Scheduller()
+        device = sched.getDeviceByID(bal_instance.lb.device_id)
+        devmap = DeviceMap()
+        driver = devmap.getDriver(device)
+        context = driver.getContext(device)
+        
+        #Step 1: Load balancer from DB
+        bal_instance.loadFromDB(lb_id)
+        
+        store = Storage
+        
+        #Step 2: Get reader and writer
+        rd = store.getReader()
+        dl = store.getDeleter()
+        #Step 3: Get RS object from DB
+        rs = rd.getRServerById(nodeID)
+        
+        #Step 4: Delete RS from DB
+        dl.deleteRSbyID(nodeID)
+        
+        #Step 5: Make commands for deleting RS
+        
+        commands = makeDeleteNodeFromLBChain(bal_instance, driver, context, rs)
+        destruct = Destructor()
+        destruct.commands = commands
+        
+        #Step 6: Delete real server from device
+        destruct.excute()
+    
 class LBActionMapper(object):
     def getWorker(self, task,  action,  params=None):
         if action == "index":
@@ -301,3 +340,5 @@ class LBActionMapper(object):
             return LBaddNode(task)
         if action == "showNodes":
             return LBShowNodes(task)
+        if action == "deleteNode":
+            return LBDeleteNode

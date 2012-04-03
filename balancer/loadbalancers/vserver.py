@@ -222,6 +222,12 @@ def makeAddNodeToLBChain(bal, driver,  context,  rs):
     list.append(CreateRServerCommand(driver, context, rs))
     list.append(AddRServerToSFCommand(driver, context, bal.sf, rs))
     return list
+
+def makeDeleteNodeFromLBChain(bal, driver,  context,  rs):
+    list = []
+    list.append(DeleteRServerFromSFCommand(driver, context, bal.sf, rs))
+    list.append(DeleteRServerCommand(driver, context, rs))
+    return list
     
 class Deployer(object):
     def __init__(self):
