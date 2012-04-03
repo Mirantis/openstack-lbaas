@@ -485,14 +485,6 @@ class AceDriver(BaseDriver):
         return tmp
     
     
-    def createStickiness(self,  context,  vip,  sticky):
-        pass
-    
-    
-    def deleteStickiness(self,  context,  vip,  sticky):
-        pass
-    
-    
     def createVIP(self,  context, vip,  sfarm): 
         if not bool(vip.name) or not bool(vip.name) or not bool(vip.address) :
             return "ERROR"
@@ -568,9 +560,7 @@ class AceDriver(BaseDriver):
                     tmp = s.deployConfig(context, XMLstr)    
 
         return 'OK'
-
-
-
+    
     
     def deleteVIP(self,  context,  vip):
         if bool(vip.allVLANs):
@@ -633,5 +623,120 @@ class AceDriver(BaseDriver):
                         XMLstr = XMLstr + "<access-group sense='no' access-type='input' name='vip-acl'/>\r\n"                        
                         XMLstr = XMLstr + "</interface>"
                         tmp = s.deployConfig(context, XMLstr)   
+    
+    
+    def createStickiness(self,  context,  vip,  sticky):
+        if not bool(vip.name) or not bool(sticky.name):
+            return "ERROR"
         
+        stickiness_HTTP = ['echo-udp',  'echo-tcp',  'finger',  'tcp',  'udp']
+        
+        if sticky.type.lower() == "httpcontent":
+            XMLstr = "<sticky http-content='http-content' sticky-group-name='"+sticky.name+"'>\r\n"
+            if bool(sticky.offset) or bool(sticky.length) or bool(sticky.beginPattern) or bool(sticky.endPattern):
+                XMLstr = XMLstr+"<content "
+                if bool(sticky.offset):
+                    XMLstr = XMLstr+" offset='"+str(sticky.offset)+"'"
+                if bool(sticky.length):
+                    XMLstr = XMLstr+" length='"+str(sticky.length)+"'"
+                if bool(sticky.beginPattern):
+                    XMLstr = XMLstr+" begin-pattern_expression='"+sticky.beginPattern+"'"
+                if bool(sticky.endPattern) and not bool(sticky.length):
+                    XMLstr = XMLstr+" end-pattern_expression='eennndd'"
+                XMLstr = XMLstr+"/>\r\n"
+        
+        if sticky.type.lower() == "httpcookie":
+            XMLstr = "<sticky http-cookie='"+sticky.cookieName+"' sticky-group-name='"+sticky.name+"'>\r\n"
+            if bool(sticky.enableInsert):
+                XMLstr = XMLstr+"<cookie config-type='insert'"
+                if bool(sticky.enableInsert):
+                    XMLstr = XMLstr+" specify-expire-keyword='browser-expire'"
+                XMLstr = XMLstr+"/>\r\n"
+            if boot(sticky.offset) or boot(sticky.length):
+                XMLstr = XMLstr+"<cookie config-type='offset'"
+                if bool(sticky.offset):
+                    XMLstr = XMLstr+" offset-value='"+str(sticky.offset)+"'"
+                if bool(sticky.length):
+                    XMLstr = XMLstr+" length='"+str(sticky.length)+"'"
+                XMLstr = XMLstr+"/>\r\n"
+            if bool(sticky.secondaryName):
+                XMLstr = XMLstr+"<cookie config-type='secondary' secondary-cookie-name='"+sticky.secondaryName+"'/>\r\n"
+        
+        if sticky.type.lower() == "httpheader":
+            XMLstr = "<sticky http-header='"+sticky.headerName+"' sticky-group-name='"+sticky.name+"'>\r\n"
+            if boot(sticky.offset) or boot(sticky.length):
+                XMLstr = XMLstr+"<header_offset"
+                if bool(sticky.offset):
+                    XMLstr = XMLstr+" offset='"+str(sticky.offset)+"'"
+                if bool(sticky.length):
+                    XMLstr = XMLstr+" length='"+str(sticky.length)+"'"
+                XMLstr = XMLstr+"/>\r\n"
+        
+        if sticky.type.lower() == "ipnetmask":
+            XMLstr = "<sticky sticky-type='ip-netmask' netmask='"+str(sticky.netmask)+"' address='"+sticky.addressType.lower()+"' sticky-group-name='"+sticky.name+"'>\r\n"
+            if bool(sticky.ipv6PrefixLength):
+                XMLstr = XMLstr+"<v6-prefix prefix-length='"+str(sticky.ipv6PrefixLength)+"'/>\r\n"
+        
+        if sticky.type.lower() == "v6prefix":
+            XMLstr = "<sticky sticky-type='v6-prefix' prefix-length='"+str(sticky.prefixLength)+"' address='"+sticky.addressType.lower()+"' sticky-group-name='"+sticky.name+"'>\r\n"
+            if bool(sticky):
+                XMLstr = XMLstr+"<ip-netmask netmask='"+str(sticky.netmask)+"'/>\r\n"
+        
+        if sticky.type.lower() == "l4payload":
+            XMLstr = "<sticky sticky-group-name='"+sticky.name+"'>\r\n"
+            if bool(sticky.enableStickyForResponse):
+                XMLstr = XMLstr+"<response response-info='sticky'/>\r\n"
+            if bool(sticky.offset) or bool(sticky.length) or bool(sticky.beginPattern) or bool(sticky.endPattern):
+                XMLstr = XMLstr+"<l4payload "
+                if bool(sticky.offset):
+                    XMLstr = XMLstr+" offset='"+str(sticky.offset)+"'"
+                if bool(sticky.length):
+                    XMLstr = XMLstr+" length='"+str(sticky.length)+"'"
+                if bool(sticky.beginPattern):
+                    XMLstr = XMLstr+" begin-pattern_expression='"+sticky.beginPattern+"'"
+                if bool(sticky.endPattern) and not bool(sticky.length):
+                    XMLstr = XMLstr+" end-pattern_expression='eennndd'"
+                XMLstr = XMLstr+"/>\r\n"
+        
+        if sticky.type.lower() == "radius": # without sticky.radiusTypes
+            XMLstr = "<sticky sticky-group-name='"+sticky.name+"'>\r\n"
+        
+        if sticky.lower() == "rtspheader":
+            XMLstr = "<sticky rtsp-header='Session' sticky-group-name='"+sticky.name+"'>\r\n"
+            if boot(sticky.offset) or boot(sticky.length):
+                XMLstr = XMLstr+"<header_offset"
+                if bool(sticky.offset):
+                    XMLstr = XMLstr+" offset='"+str(sticky.offset)+"'"
+                if bool(sticky.length):
+                    XMLstr = XMLstr+" length='"+str(sticky.length)+"'"
+                XMLstr = XMLstr+"/>\r\n"
+        
+        if sticky.lower() == "sipheader":
+            XMLstr = "<sticky sip-header='Call-ID' sticky-group-name='"+sticky.name+"'>\r\n"
+        
+        if bool(sticky.timeout):
+            XMLstr = XMLstr+"<timeout timeout-value='"+str(sticky.timeout)+"'/>\r\n"
+        if bool(sticky.timeoutActiveConn):
+            XMLstr = XMLstr+"<timeout config-type='activeconns'/>\r\n"
+        if bool(sticky.replicateOnHAPeer):
+            XMLstr = XMLstr+"<replicate replicate-info='sticky'/>\r\n"
+        if bool(sticky.serverFarm):
+            XMLstr = XMLstr+"<serverfarm_sticky sfarm-name='"+sticky.serverFarm+"'"
+            if bool(sticky.backupServerFarm):
+                XMLstr = XMLstr+" backup='"+sticky.backupServerFarm+"' "
+                if bool(sticky.enableStyckyOnBackupSF):
+                    XMLstr = XMLstr+"sfarm-behaviour='sticky'"
+                if bool(sticky.aggregateState):
+                    XMLstr = XMLstr+" backup-sfarm-state='aggregate-state'"
+            XMLstr = XMLstr+"/>\r\n"
+        XMLstr = XMLstr+"</sticky>"
+    
+    res = XmlSender(context)
+    tmp = res.deployConfig(context, XMLstr)
+    if (tmp != 'OK'):
+        raise openstack.common.exception.Invalid(tmp)
+    
+    
+    def deleteStickiness(self,  context,  vip,  sticky):
+        pass
     

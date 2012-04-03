@@ -29,12 +29,6 @@ class AceDriver(BaseDriver):
     def __init__(self):
         pass
     
-    def checkNone(self, obj):
-        if bool(obj):
-          if obj != 'None':
-            return True
-        return False
-    
     def send_data(self,  context,  XMLstr):
         s = XmlSender(context)
         tmp = s.deployConfig(context, XMLstr)    
