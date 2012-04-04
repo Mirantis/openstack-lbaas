@@ -272,8 +272,7 @@ class Controller(object):
             logger.debug(msg)
             task = self._service_controller.createTask()
             mapper =LBActionMapper()
-            
-            #here we need to decide which device should be used            
+                        
             params = {}
             params['id'] = args['id']
             params['nodeID'] = args['nodeID']
