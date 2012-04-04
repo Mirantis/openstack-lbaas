@@ -395,9 +395,8 @@ class LBUpdateNode(SyncronousWorker):
         rs = reader.getRServerById(nodeID)
         dict = rs.convertToDict()
         new_rs = RealServer()
-        new_rs.id = rs.id
-        new_rs.name = rs.name
-        new_rs.sf_id = rs.sf_id
+        new_rs.loadFromDict(dict)
+
         for prop in node.keys():
             if hasattr(rs, prop):
                 if dict[prop] != node[prop]: 
