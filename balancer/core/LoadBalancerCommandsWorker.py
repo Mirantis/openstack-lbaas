@@ -321,7 +321,9 @@ def LBDeleteNode(SyncronousWorker):
         
         #Step 6: Delete real server from device
         destruct.excute()
-    
+        self._task.status = STATUS_DONE
+        return "OK"
+
 class LBActionMapper(object):
     def getWorker(self, task,  action,  params=None):
         if action == "index":
