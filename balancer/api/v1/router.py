@@ -65,7 +65,10 @@ class API(wsgi.Router):
                        action="showNodes", conditions=dict(method=["GET"]))   
                        
         mapper.connect("/loadbalancers/{id}/nodes/{nodeID}", controller=lb_resource,
-                       action="deleteNode", conditions=dict(method=["POST"]))   
+                       action="deleteNode", conditions=dict(method=["POST"]))
+                       
+        mapper.connect("/loadbalancers/{id}/nodes/{nodeID}/{status}", controller=lb_resource,
+                       action="changeStatus", conditions=dict(method=["POST"]))                        
                        
         mapper.connect("/loadbalancers/",
                        controller=lb_resource,

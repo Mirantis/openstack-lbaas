@@ -30,7 +30,7 @@ from balancer.core.scheduller import Scheduller
 from balancer.devices.DeviceMap import DeviceMap
 from balancer.loadbalancers.vserver import Balancer
 from balancer.loadbalancers.vserver import makeCreateLBCommandChain, makeDeleteLBCommandChain, makeUpdateLBCommandChain, makeAddNodeToLBChain, makeDeleteNodeFromLBChain
-from balancer.loadbalancers.vserver import Deployer,  Destructor, createPredictor
+from balancer.loadbalancers.vserver import Deployer,  Destructor, createPredictor,  CreateRServerCommand
 
 logger = logging.getLogger(__name__)
 
@@ -326,6 +326,42 @@ class LBDeleteNode(SyncronousWorker):
         self._task.status = STATUS_DONE
         return "OK"
 
+class LBChangeNodeStatus(SyncronousWorker):
+    def __init__(self,  task):
+        super(LBChangeNodeStatus, self).__init__(task)
+        self._command_queue = Queue.LifoQueue()  
+    
+    def run(self):
+        self._task.status = STATUS_PROGRESS
+        lb_id = self._task.parameters['id']    
+        nodeID = self._task.parameters['nodeID']
+        nodeStatus = self._task.parameters['status']
+        
+        bal_instance = Balancer()
+        bal_instance.loadFromDB(lb_id)
+        sched = Scheduller()
+        device = sched.getDeviceByID(bal_instance.lb.device_id)
+        devmap = DeviceMap()
+        driver = devmap.getDriver(device)
+        context = driver.getContext(device) 
+        store = Storage()
+        reader = store.getReader()
+        writer = store.getWriter()
+        deleter = store.getDeleter()
+        
+        rs = reader.getRServerById(nodeID)
+        logger.debug("Got rs description %s" %rs.convertToDict()) 
+        rs.status = nodeStatus
+        deleter.deleteRSbyID(nodeID)
+        logger.debug("Write updated rs as %s" %rs.convertToDict()) 
+        writer.writeRServer(rs)
+        
+        updater = CreateRServerCommand(driver, context, rs)
+        updater.execute()
+        
+        self._task.status = STATUS_DONE
+        return "OK"        
+
 class LBActionMapper(object):
     def getWorker(self, task,  action,  params=None):
         if action == "index":
@@ -346,3 +382,5 @@ class LBActionMapper(object):
             return LBShowNodes(task)
         if action == "deleteNode":
             return LBDeleteNode(task)
+        if action == "changeNodeStatus":
+            return LBChangeNodeStatus
