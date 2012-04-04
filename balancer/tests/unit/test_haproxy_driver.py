@@ -106,54 +106,54 @@ class HAproxyDriverTestCase (unittest.TestCase):
         driver = HaproxyDriver()
         driver.activateRServer(self.context,  self.server_farm,  self.rserver)
         self.assertTrue(True)
-#    def test_FileName(self):
-#        filename = HaproxyConfigFile("/tmp/haproxy.cfg")
-#        self.assertEqual(filename.GetHAproxyConfigFileName(),  "/tmp/haproxy.cfg")
-#    def test_AddFrontend(self):
-#        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-#        test.AddFronted(self.frontend)
-#        self.assertTrue(True)
-#    def test_AddBackend(self):
-#        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-#        test.AddBackend(self.backend)
-#        self.assertTrue(True)
-#    def test_DeleteBlock(self):
-#        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-#        test.DeleteBlock(self.block_for_delete)
-#        self.assertTrue(True)
-#    def test_AddRserverToBackendBlock(self):
-#        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-#        test.AddRserverToBackendBlock(self.backend,  self.haproxy_rserver)
-#        test.AddRserverToBackendBlock(self.backend,  self.haproxy_rserver1)
-#        self.assertTrue(True)
-#    def test_DelRserverFromBackendBlock(self):
-#        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-#        test.DelRserverFromBackendBlock(self.backend,  self.haproxy_rserver)
-#        self.assertTrue(True)    
-#    def test_createServerFarm(self):
-#        driver = HaproxyDriver()
-#        driver.createServerFarm(self.context,  self.server_farm)
-#        self.assertTrue(True)
-#    def test_deleteServerFarm(self):
-#        driver = HaproxyDriver()
-#        driver.deleteServerFarm(self.context,  self.server_farm)
-#        self.assertTrue(True)    
-#    def test_createVirtualServer(self):
-#        driver = HaproxyDriver()
-#        driver.createVIP(self.context,  self.virtualserver,  self.server_farm)
-#        self.assertTrue(True)
-#    def test_deleteVirtualServer(self):
-#        driver = HaproxyDriver()
-#        driver.deleteVIP(self.context,  self.virtualserver,   self.server_farm)
-#        self.assertTrue(True)
-#    def test_addRServerToSF(self):
-#        driver = HaproxyDriver()
-#        driver.addRServerToSF(self.context,  self.server_farm,  self.rserver)
-#        self.assertTrue(True)
-#    def test_deleteRServerFromSF(self):
-#        driver = HaproxyDriver()
-#        driver.deleteRServerFromSF (self.context,  self.server_farm,  self.rserver)
-#        self.assertTrue(True)
+    def test_FileName(self):
+        filename = HaproxyConfigFile("/tmp/haproxy.cfg")
+        self.assertEqual(filename.GetHAproxyConfigFileName(),  "/tmp/haproxy.cfg")
+    def test_AddFrontend(self):
+        test = HaproxyConfigFile("/tmp/haproxy.cfg")
+        test.AddFronted(self.frontend)
+        self.assertTrue(True)
+    def test_AddBackend(self):
+        test = HaproxyConfigFile("/tmp/haproxy.cfg")
+        test.AddBackend(self.backend)
+        self.assertTrue(True)
+    def test_DeleteBlock(self):
+        test = HaproxyConfigFile("/tmp/haproxy.cfg")
+        test.DeleteBlock(self.block_for_delete)
+        self.assertTrue(True)
+    def test_AddRserverToBackendBlock(self):
+        test = HaproxyConfigFile("/tmp/haproxy.cfg")
+        test.AddRserverToBackendBlock(self.backend,  self.haproxy_rserver)
+        test.AddRserverToBackendBlock(self.backend,  self.haproxy_rserver1)
+        self.assertTrue(True)
+    def test_DelRserverFromBackendBlock(self):
+        test = HaproxyConfigFile("/tmp/haproxy.cfg")
+        test.DelRserverFromBackendBlock(self.backend,  self.haproxy_rserver)
+        self.assertTrue(True)    
+    def test_createServerFarm(self):
+        driver = HaproxyDriver()
+        driver.createServerFarm(self.context,  self.server_farm)
+        self.assertTrue(True)
+    def test_deleteServerFarm(self):
+        driver = HaproxyDriver()
+        driver.deleteServerFarm(self.context,  self.server_farm)
+        self.assertTrue(True)    
+    def test_createVirtualServer(self):
+        driver = HaproxyDriver()
+        driver.createVIP(self.context,  self.virtualserver,  self.server_farm)
+        self.assertTrue(True)
+    def test_deleteVirtualServer(self):
+        driver = HaproxyDriver()
+        driver.deleteVIP(self.context,  self.virtualserver,   self.server_farm)
+        self.assertTrue(True)
+    def test_addRServerToSF(self):
+        driver = HaproxyDriver()
+        driver.addRServerToSF(self.context,  self.server_farm,  self.rserver)
+        self.assertTrue(True)
+    def test_deleteRServerFromSF(self):
+        driver = HaproxyDriver()
+        driver.deleteRServerFromSF (self.context,  self.server_farm,  self.rserver)
+        self.assertTrue(True)
     def test_checkRemoteHaproxyConfig(self):
         remote_config = RemoteConfig(self.context)
         self.assertTrue(remote_config.validationConfig())
