@@ -262,7 +262,7 @@ class LBaddNode(SyncronousWorker):
             deploy.commands = commands
             deploy.execute()
             self._task.status = STATUS_DONE
-            return "OK"
+            return "node: %s" %rs.id
 
 class LBShowNodes(SyncronousWorker):
     def __init__(self,  task):
@@ -324,7 +324,7 @@ class LBDeleteNode(SyncronousWorker):
         #Step 6: Delete real server from device
         destruct.execute()
         self._task.status = STATUS_DONE
-        return "OK"
+        return "Deleted node with id %s"  %nodeID
 
 class LBChangeNodeStatus(SyncronousWorker):
     def __init__(self,  task):
@@ -366,7 +366,8 @@ class LBChangeNodeStatus(SyncronousWorker):
         deploy.commands = commands
         deploy.execute()
         self._task.status = STATUS_DONE
-        return "OK"
+        msg = "Node %s has status %s" % (nodeID, rs.state)
+        return msg
 
 class LBUpdateNode(SyncronousWorker):
     def __init__(self,  task):
@@ -396,7 +397,7 @@ class LBUpdateNode(SyncronousWorker):
         new_rs = RealServer()
         new_rs.id = rs.id
         new_rs.name = rs.name
-        
+        new_rs.sf_id = rs.sf_id
         for prop in node.keys():
             if hasattr(rs, prop):
                 if dict[prop] != node[prop]: 
@@ -409,7 +410,7 @@ class LBUpdateNode(SyncronousWorker):
         deploy.commands = commands
         deploy.execute()
         self._task.status = STATUS_DONE
-        return "OK"
+        return "Node with id %s now has params %s" %(nodeID, new_rs.convertToDict())
         
 class LBActionMapper(object):
     def getWorker(self, task,  action,  params=None):
