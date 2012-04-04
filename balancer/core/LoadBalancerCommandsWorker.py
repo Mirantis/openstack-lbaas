@@ -436,7 +436,7 @@ class LBShowProbes(SyncronousWorker):
 
 class LBAddProbe(SyncronousWorker):
         def __init__(self,  task):
-            super(LBaddNode, self).__init__(task)
+            super(LBAddProbe, self).__init__(task)
             self._command_queue = Queue.LifoQueue()   
         
         def run(self):
