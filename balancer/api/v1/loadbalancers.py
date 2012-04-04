@@ -354,7 +354,7 @@ class Controller(object):
                 return {'loadbalancers' : "OK"}
 
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+            msg = "LB with identifier %s or node with id %s not found" % (args['id'],  args['nodeID'])
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
