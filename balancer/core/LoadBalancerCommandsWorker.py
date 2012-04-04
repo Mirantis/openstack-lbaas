@@ -387,4 +387,4 @@ class LBActionMapper(object):
         if action == "deleteNode":
             return LBDeleteNode(task)
         if action == "changeNodeStatus":
-            return LBChangeNodeStatus
+            return LBChangeNodeStatus(task)
