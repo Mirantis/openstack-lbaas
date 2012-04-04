@@ -452,7 +452,7 @@ class LBAddProbe(SyncronousWorker):
             
             bal_instance.loadFromDB(lb_id)
             bal_instance.removeFromDB()
-            prb = CreateProbe(probe['type'])
+            prb = createProbe(probe['type'])
             prb.loadFromDict(probe)
             prb.sf_id = bal_instance.sf.id
             prb.name = prb.id
