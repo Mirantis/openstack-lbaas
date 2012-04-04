@@ -243,6 +243,7 @@ class LBaddNode(SyncronousWorker):
             bal_instance = Balancer()
             
             bal_instance.loadFromDB(lb_id)
+            bal_instance.removeFromDB()
             rs.loadFromDict(node)
             rs.sf_id = bal_instance.sf.id
             rs.name = rs.id
