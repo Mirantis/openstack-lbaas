@@ -362,6 +362,36 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)        
 
+    def showMonitoring(self,  req,  **args):
+        try:
+            msg = "Got showMonitoring request. Request: %s" % req
+            logger.debug(msg)
+            task = self._service_controller.createTask()
+            mapper =LBActionMapper()
+                        
+            params = {}
+            params['id'] = args['id']
+            task.parameters = params
+            
+            worker = mapper.getWorker(task, "showProbes" )
+            if worker.type ==  SYNCHRONOUS_WORKER:
+                result = worker.run()
+                return result
+            
+            if worker.type == ASYNCHRONOUS_WORKER:
+                task.worker = worker
+                self._service_controller.addTask(task)
+                return {'loadbalancers' : "OK"}
+
+        except exception.NotFound:
+            msg = "LB with identifier %s not found" % args['id']
+            logger.debug(msg)
+            raise webob.exc.HTTPNotFound(msg)
+        except exception.NotAuthorized:
+            msg = _("Unauthorized image access")
+            logger.debug(msg)
+            raise webob.exc.HTTPForbidden(msg) 
+            
     def _get_query_params(self, req):
         """
         Extracts necessary query params from request.

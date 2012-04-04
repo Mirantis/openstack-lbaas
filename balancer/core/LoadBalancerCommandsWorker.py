@@ -410,7 +410,27 @@ class LBUpdateNode(SyncronousWorker):
         deploy.execute()
         self._task.status = STATUS_DONE
         return "Node with id %s now has params %s" %(nodeID, new_rs.convertToDict())
+
+class LBShowProbes(SyncronousWorker):
+    def __init__(self,  task):
+        super(LBShowProbes, self).__init__(task)
+        self._command_queue = Queue.LifoQueue()  
+    
+    def run(self):
+        self._task.status = STATUS_PROGRESS
+        lb_id = self._task.parameters['id']    
+
+        reader = store.getReader()
         
+        sf_id = reader.getSFByLBid(lb_id).id
+        probes = reader.getProbesBySFid(sf_id)
+        
+        list = []
+        for prb in probes:
+            list.append(prb.convertToDict())
+        self._task.status = STATUS_DONE
+        return "LB with id %s has probes: %s" %(lb_id, list)
+
 class LBActionMapper(object):
     def getWorker(self, task,  action,  params=None):
         if action == "index":
@@ -435,3 +455,5 @@ class LBActionMapper(object):
             return LBChangeNodeStatus(task)
         if action == "updateNode":
             return LBUpdateNode(task)
+        if action == "showProbes":
+            return LBShowProbes(task)
