@@ -399,8 +399,8 @@ class LBUpdateNode(SyncronousWorker):
         
         for prop in node.keys():
             if hasattr(rs, prop):
-                if dict['prop'] != node['prop']: 
-                    setattr(new_rs, prop, node['prop'])
+                if dict[prop] != node[prop]: 
+                    setattr(new_rs, prop, node[prop])
         
         deleter.deleteRSbyID(nodeID)
         
