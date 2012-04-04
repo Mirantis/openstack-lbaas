@@ -282,7 +282,7 @@ class LBShowNodes(SyncronousWorker):
         self._task.status = STATUS_DONE
         return nodes
             
-def LBDeleteNode(SyncronousWorker):
+class LBDeleteNode(SyncronousWorker):
     def __init__(self,  task):
         super(LBDeleteNode, self).__init__(task)
         self._command_queue = Queue.LifoQueue()  
