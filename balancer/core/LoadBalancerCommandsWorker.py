@@ -426,10 +426,12 @@ class LBShowProbes(SyncronousWorker):
         probes = reader.getProbesBySFid(sf_id)
         
         list = []
+        dict={"healthMonitoring":{}}
         for prb in probes:
             list.append(prb.convertToDict())
         self._task.status = STATUS_DONE
-        return "LB with id %s has probes: %s" %(lb_id, list)
+        dict['healthMonitoring'] = list
+        return dict
 
 class LBActionMapper(object):
     def getWorker(self, task,  action,  params=None):
