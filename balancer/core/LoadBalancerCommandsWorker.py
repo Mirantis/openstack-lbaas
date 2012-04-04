@@ -343,4 +343,4 @@ class LBActionMapper(object):
         if action == "showNodes":
             return LBShowNodes(task)
         if action == "deleteNode":
-            return LBDeleteNode
+            return LBDeleteNode(task)
