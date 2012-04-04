@@ -29,8 +29,8 @@ from balancer.storage.storage import *
 from balancer.core.scheduller import Scheduller
 from balancer.devices.DeviceMap import DeviceMap
 from balancer.loadbalancers.vserver import Balancer
-from balancer.loadbalancers.vserver import makeCreateLBCommandChain, makeDeleteLBCommandChain, makeUpdateLBCommandChain, makeAddNodeToLBChain, makeDeleteNodeFromLBChain
-from balancer.loadbalancers.vserver import Deployer,  Destructor, createPredictor,  CreateRServerCommand
+from balancer.loadbalancers.vserver import makeCreateLBCommandChain, makeDeleteLBCommandChain, makeUpdateLBCommandChain, makeAddNodeToLBChain, makeDeleteNodeFromLBChain, makeChangeNodeStatus
+from balancer.loadbalancers.vserver import Deployer,  Destructor, createPredictor
 
 logger = logging.getLogger(__name__)
 
@@ -352,16 +352,20 @@ class LBChangeNodeStatus(SyncronousWorker):
         rs = reader.getRServerById(nodeID)
         logger.debug("Got rs description %s" %rs.convertToDict()) 
         rs.status = nodeStatus
+        rsprop = rs.convertToDict()
         deleter.deleteRSbyID(nodeID)
         logger.debug("Write updated rs as %s" %rs.convertToDict()) 
         writer.writeRServer(rs)
-        
-        updater = CreateRServerCommand(driver, context, rs)
-        updater.execute()
-        
-        self._task.status = STATUS_DONE
-        return "OK"        
+        new_rs = RealServer()
+        new_rs.loadFromDict(rsprop)
 
+        deploy = Deployer()
+        commands = makeChangeNodeStatus(bal_instance, driver, context, rs, new_rs)
+        deploy.commands = commands
+        deploy.execute()
+        self._task.status = STATUS_DONE
+        return "OK"
+        
 class LBActionMapper(object):
     def getWorker(self, task,  action,  params=None):
         if action == "index":
