@@ -219,7 +219,7 @@ class Controller(object):
             worker = mapper.getWorker(task, "addNode" )
             if worker.type ==  SYNCHRONOUS_WORKER:
                 result = worker.run()
-                return {'loadbalancers':  result}
+                return result
             
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
@@ -281,7 +281,7 @@ class Controller(object):
             worker = mapper.getWorker(task, "deleteNode" )
             if worker.type ==  SYNCHRONOUS_WORKER:
                 result = worker.run()
-                return {'loadbalancers' : "OK"}
+                return result
             
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
@@ -313,7 +313,7 @@ class Controller(object):
             worker = mapper.getWorker(task, "changeNodeStatus" )
             if worker.type ==  SYNCHRONOUS_WORKER:
                 result = worker.run()
-                return {'loadbalancers' : "OK"}
+                return result
             
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
@@ -346,7 +346,7 @@ class Controller(object):
             worker = mapper.getWorker(task, "updateNode" )
             if worker.type ==  SYNCHRONOUS_WORKER:
                 result = worker.run()
-                return {'loadbalancers' : "OK"}
+                return result
             
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
