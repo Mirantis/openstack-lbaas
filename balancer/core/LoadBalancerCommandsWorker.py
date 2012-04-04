@@ -362,7 +362,7 @@ class LBChangeNodeStatus(SyncronousWorker):
         new_rs.loadFromDict(rsprop)
 
         deploy = Deployer()
-        commands = makeDeleteNodeFromLBChain(bal_instance, driver, context,  rs) + makeAddNodeToLBChain(bal_instance, driver, context, rs, new_rs)
+        commands = makeDeleteNodeFromLBChain(bal_instance, driver, context,  rs) + makeAddNodeToLBChain(bal_instance, driver, context, new_rs)
         deploy.commands = commands
         deploy.execute()
         self._task.status = STATUS_DONE
@@ -405,7 +405,7 @@ class LBUpdateNode(SyncronousWorker):
         deleter.deleteRSbyID(nodeID)
         
         deploy = Deployer()
-        commands = commands = makeDeleteNodeFromLBChain(bal_instance, driver, context,  rs) + makeAddNodeToLBChain(bal_instance, driver, context, rs, new_rs)
+        commands = commands = makeDeleteNodeFromLBChain(bal_instance, driver, context,  rs) + makeAddNodeToLBChain(bal_instance, driver, context, new_rs)
         deploy.commands = commands
         deploy.execute()
         self._task.status = STATUS_DONE
