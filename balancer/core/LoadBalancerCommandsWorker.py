@@ -351,7 +351,7 @@ class LBChangeNodeStatus(SyncronousWorker):
         
         rs = reader.getRServerById(nodeID)
         logger.debug("Got rs description %s" %rs.convertToDict()) 
-        rs.status = nodeStatus
+        rs.state = nodeStatus
         rsprop = rs.convertToDict()
         deleter.deleteRSbyID(nodeID)
         logger.debug("Write updated rs as %s" %rs.convertToDict()) 
