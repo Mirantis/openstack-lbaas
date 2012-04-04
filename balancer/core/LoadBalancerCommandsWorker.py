@@ -321,7 +321,7 @@ class LBDeleteNode(SyncronousWorker):
         destruct.commands = commands
         
         #Step 6: Delete real server from device
-        destruct.excute()
+        destruct.execute()
         self._task.status = STATUS_DONE
         return "OK"
 
