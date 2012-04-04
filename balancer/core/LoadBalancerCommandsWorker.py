@@ -303,7 +303,7 @@ class LBDeleteNode(SyncronousWorker):
         #Step 1: Load balancer from DB
         bal_instance.loadFromDB(lb_id)
         
-        store = Storage
+        store = Storage()
         
         #Step 2: Get reader and writer
         rd = store.getReader()
