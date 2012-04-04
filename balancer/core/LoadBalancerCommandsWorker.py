@@ -403,7 +403,7 @@ class LBUpdateNode(SyncronousWorker):
                     setattr(new_rs, prop, node[prop])
         
         deleter.deleteRSbyID(nodeID)
-        
+        writer.writeRServer(new_rs)
         deploy = Deployer()
         commands = commands = makeDeleteNodeFromLBChain(bal_instance, driver, context,  rs) + makeAddNodeToLBChain(bal_instance, driver, context, new_rs)
         deploy.commands = commands
