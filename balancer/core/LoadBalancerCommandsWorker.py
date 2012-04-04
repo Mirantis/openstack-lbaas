@@ -29,7 +29,7 @@ from balancer.storage.storage import *
 from balancer.core.scheduller import Scheduller
 from balancer.devices.DeviceMap import DeviceMap
 from balancer.loadbalancers.vserver import Balancer
-from balancer.loadbalancers.vserver import makeCreateLBCommandChain, makeDeleteLBCommandChain, makeUpdateLBCommandChain, makeAddNodeToLBChain, makeDeleteNodeFromLBChain, makeChangeNodeStatus
+from balancer.loadbalancers.vserver import makeCreateLBCommandChain, makeDeleteLBCommandChain, makeUpdateLBCommandChain, makeAddNodeToLBChain, makeDeleteNodeFromLBChain
 from balancer.loadbalancers.vserver import Deployer,  Destructor, createPredictor
 
 logger = logging.getLogger(__name__)
@@ -362,7 +362,50 @@ class LBChangeNodeStatus(SyncronousWorker):
         new_rs.loadFromDict(rsprop)
 
         deploy = Deployer()
-        commands = makeChangeNodeStatus(bal_instance, driver, context, rs, new_rs)
+        commands = makeDeleteNodeFromLBChain(bal_instance, driver, context,  rs) + makeAddNodeToLBChain(bal_instance, driver, context, rs, new_rs)
+        deploy.commands = commands
+        deploy.execute()
+        self._task.status = STATUS_DONE
+        return "OK"
+
+class LBUpdateNode(SyncronousWorker):
+    def __init__(self,  task):
+        super(LBUpdateNode, self).__init__(task)
+        self._command_queue = Queue.LifoQueue()  
+    
+    def run(self):
+        self._task.status = STATUS_PROGRESS
+        lb_id = self._task.parameters['id']    
+        nodeID = self._task.parameters['nodeID']
+        node = self._task.parameters['node']
+
+        bal_instance = Balancer()
+        bal_instance.loadFromDB(lb_id)
+        sched = Scheduller()
+        device = sched.getDeviceByID(bal_instance.lb.device_id)
+        devmap = DeviceMap()
+        driver = devmap.getDriver(device)
+        context = driver.getContext(device) 
+        store = Storage()
+        reader = store.getReader()
+        writer = store.getWriter()
+        deleter = store.getDeleter()
+        
+        rs = reader.getRServerById(nodeID)
+        dict = rs.convertToDict()
+        new_rs = RealServer()
+        new_rs.id = rs.id
+        new_rs.name = rs.name
+        
+        for prop in node.keys():
+            if hasattr(rs, prop):
+                if dict['prop'] != node['prop']: 
+                    setattr(new_rs, prop, node['prop'])
+        
+        deleter.deleteRSbyID(nodeID)
+        
+        deploy = Deployer()
+        commands = commands = makeDeleteNodeFromLBChain(bal_instance, driver, context,  rs) + makeAddNodeToLBChain(bal_instance, driver, context, rs, new_rs)
         deploy.commands = commands
         deploy.execute()
         self._task.status = STATUS_DONE
@@ -390,3 +433,5 @@ class LBActionMapper(object):
             return LBDeleteNode(task)
         if action == "changeNodeStatus":
             return LBChangeNodeStatus(task)
+        if action == "updateNode":
+            return LBUpdateNode(task)

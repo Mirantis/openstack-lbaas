@@ -329,6 +329,39 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
             
+    def updateNode(self,  req,  **args):
+        try:
+            msg = "Got updateNode request. Request: %s" % req
+            logger.debug(msg)
+            task = self._service_controller.createTask()
+            mapper =LBActionMapper()
+                        
+            params = {}
+            params['id'] = args['id']
+            params['nodeID'] = args['nodeID']
+            body = args['body']
+            params['node'] = body['node']
+            task.parameters = params
+            
+            worker = mapper.getWorker(task, "updateNode" )
+            if worker.type ==  SYNCHRONOUS_WORKER:
+                result = worker.run()
+                return {'loadbalancers' : "OK"}
+            
+            if worker.type == ASYNCHRONOUS_WORKER:
+                task.worker = worker
+                self._service_controller.addTask(task)
+                return {'loadbalancers' : "OK"}
+
+        except exception.NotFound:
+            msg = "Image with identifier %s not found" % image_id
+            logger.debug(msg)
+            raise webob.exc.HTTPNotFound(msg)
+        except exception.NotAuthorized:
+            msg = _("Unauthorized image access")
+            logger.debug(msg)
+            raise webob.exc.HTTPForbidden(msg)        
+
     def _get_query_params(self, req):
         """
         Extracts necessary query params from request.
