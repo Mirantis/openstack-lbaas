@@ -419,7 +419,7 @@ class LBShowProbes(SyncronousWorker):
     def run(self):
         self._task.status = STATUS_PROGRESS
         lb_id = self._task.parameters['id']    
-
+        store = Storage()
         reader = store.getReader()
         
         sf_id = reader.getSFByLBid(lb_id).id
