@@ -75,7 +75,10 @@ class API(wsgi.Router):
 
         mapper.connect("/loadbalancers/{id}/healthMonitoring", controller=lb_resource,
                        action="showMonitoring", conditions=dict(method=["GET"]))       
-                       
+
+        mapper.connect("/loadbalancers/{id}/healthMonitoring", controller=lb_resource,
+                       action="addProbe", conditions=dict(method=["PUT"]))   
+
         mapper.connect("/loadbalancers/",
                        controller=lb_resource,
                        action="create",

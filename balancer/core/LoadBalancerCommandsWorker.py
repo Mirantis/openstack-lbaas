@@ -30,7 +30,8 @@ from balancer.core.scheduller import Scheduller
 from balancer.devices.DeviceMap import DeviceMap
 from balancer.loadbalancers.vserver import Balancer
 from balancer.loadbalancers.vserver import makeCreateLBCommandChain, makeDeleteLBCommandChain, makeUpdateLBCommandChain, makeAddNodeToLBChain, makeDeleteNodeFromLBChain
-from balancer.loadbalancers.vserver import Deployer,  Destructor, createPredictor
+from balancer.loadbalancers.vserver import makeAddProbeToLBChain, makeDeleteProbeFromLBChain
+from balancer.loadbalancers.vserver import Deployer,  Destructor, createPredictor,  createProbe
 
 logger = logging.getLogger(__name__)
 
@@ -433,6 +434,46 @@ class LBShowProbes(SyncronousWorker):
         dict['healthMonitoring'] = list
         return dict
 
+class LBAddProbe(SyncronousWorker):
+        def __init__(self,  task):
+            super(LBaddNode, self).__init__(task)
+            self._command_queue = Queue.LifoQueue()   
+        
+        def run(self):
+            self._task.status = STATUS_PROGRESS
+            lb_id = self._task.parameters['id']
+            probe = self._task.parameters['probe']
+            logger.debug("Got new probe description %s" %probe)  
+            if probe['type'] == None:
+                return
+                
+            sched = Scheduller()
+            bal_instance = Balancer()
+            
+            bal_instance.loadFromDB(lb_id)
+            bal_instance.removeFromDB()
+            prb = CreateProbe(probe['type'])
+            prb.loadFromDict(probe)
+            prb.sf_id = bal_instance.sf.id
+            prb.name = prb.id
+
+            bal_instance.probes.append(prb)
+            bal_instance.sf._probes.append(rs)
+            bal_instance.savetoDB()
+            
+            device = sched.getDeviceByID(bal_instance.lb.device_id)
+            devmap = DeviceMap()
+            driver = devmap.getDriver(device)
+            context = driver.getContext(device)
+            
+            commands = makeAddProbeToLBChain(bal_instance, driver, context, prb)
+            deploy = Deployer()
+            deploy.commands = commands
+            deploy.execute()
+            self._task.status = STATUS_DONE
+            return "probe: %s" %prb.id    
+    
+
 class LBActionMapper(object):
     def getWorker(self, task,  action,  params=None):
         if action == "index":
@@ -459,3 +500,5 @@ class LBActionMapper(object):
             return LBUpdateNode(task)
         if action == "showProbes":
             return LBShowProbes(task)
+        if action == "LBAddProbe":
+            return LBAddProbe(task)

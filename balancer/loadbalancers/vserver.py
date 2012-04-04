@@ -228,7 +228,19 @@ def makeDeleteNodeFromLBChain(bal, driver,  context,  rs):
     list.append(DeleteRServerFromSFCommand(driver, context, bal.sf, rs))
     list.append(DeleteRServerCommand(driver, context, rs))
     return list
+
+def makeAddProbeToLBChain(bal, driver, context,  probe):
+    list =[]
+    list.append(CreateProbeCommand(driver, context, probe))
+    list.append(AddProbeToSFCommand(driver, context, bal.sf, probe))
+    return list
     
+def makeDeleteProbeFromLBChain(bal, driver, context, probe):
+    list = []
+    list.append(DeleteProbeFromSFCommand(driver, context, sf, probe))
+    list.append(DeleteProbeCommand(driver, context, probe))
+    return list
+
 class Deployer(object):
     def __init__(self):
         self.commands = []
