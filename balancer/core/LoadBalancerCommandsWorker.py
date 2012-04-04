@@ -458,7 +458,7 @@ class LBAddProbe(SyncronousWorker):
             prb.name = prb.id
 
             bal_instance.probes.append(prb)
-            bal_instance.sf._probes.append(rs)
+            bal_instance.sf._probes.append(prb)
             bal_instance.savetoDB()
             
             device = sched.getDeviceByID(bal_instance.lb.device_id)
