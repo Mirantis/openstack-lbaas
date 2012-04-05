@@ -64,18 +64,19 @@ class BaseDriver(object):
         pass
     
     
+    def createStickiness(self,  context,  sticky):
+        pass
+    
+    def deleteStickiness(self,  context,  sticky):
+        pass
+    
+    
     def createVIP(self,  context,  vip,  sfarm):
         pass
 
     def deleteVIP(self,  context,  vip):
         pass
-    
-    
-    def createStickiness(self,  context,  vip,  sticky):
-        pass
-    
-    def deleteStickiness(self,  context,  vip,  sticky):
-        pass
+
 
 class BaseContext(object):
     def __init__(self):
