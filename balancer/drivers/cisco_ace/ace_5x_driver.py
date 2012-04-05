@@ -485,6 +485,161 @@ class AceDriver(BaseDriver):
         return tmp
     
     
+    def createStickiness(self,  context, sticky):
+        if not self.checkNone(sticky.name):
+            return "ERROR"
+        
+        name = sticky.name
+        
+        if sticky.type.lower() == "httpcontent":
+            XMLstr = "<sticky http-content='http-content' sticky-group-name='"+name+"'>\r\n"
+            if self.checkNone(sticky.offset) or self.checkNone(sticky.length) or self.checkNone(sticky.beginPattern) or self.checkNone(sticky.endPattern):
+                XMLstr = XMLstr+"<content "
+                if self.checkNone(sticky.offset):
+                    XMLstr = XMLstr+" offset='"+str(sticky.offset)+"'"
+                if self.checkNone(sticky.length):
+                    XMLstr = XMLstr+" length='"+str(sticky.length)+"'"
+                if self.checkNone(sticky.beginPattern):
+                    XMLstr = XMLstr+" begin-pattern_expression='"+sticky.beginPattern+"'"
+                if self.checkNone(sticky.endPattern) and not self.checkNone(sticky.length):
+                    XMLstr = XMLstr+" end-pattern_expression='eennndd'"
+                XMLstr = XMLstr+"/>\r\n"
+        
+        if sticky.type.lower() == "httpcookie":
+            XMLstr = "<sticky http-cookie='"+sticky.cookieName+"' sticky-group-name='"+name+"'>\r\n"
+            if self.checkNone(sticky.enableInsert):
+                XMLstr = XMLstr+"<cookie config-type='insert'"
+                if self.checkNone(sticky.enableInsert):
+                    XMLstr = XMLstr+" specify-expire-keyword='browser-expire'"
+                XMLstr = XMLstr+"/>\r\n"
+            if boot(sticky.offset) or boot(sticky.length):
+                XMLstr = XMLstr+"<cookie config-type='offset'"
+                if self.checkNone(sticky.offset):
+                    XMLstr = XMLstr+" offset-value='"+str(sticky.offset)+"'"
+                if self.checkNone(sticky.length):
+                    XMLstr = XMLstr+" length='"+str(sticky.length)+"'"
+                XMLstr = XMLstr+"/>\r\n"
+            if self.checkNone(sticky.secondaryName):
+                XMLstr = XMLstr+"<cookie config-type='secondary' secondary-cookie-name='"+sticky.secondaryName+"'/>\r\n"
+        
+        if sticky.type.lower() == "httpheader":
+            XMLstr = "<sticky http-header='"+sticky.headerName+"' sticky-group-name='"+name+"'>\r\n"
+            if boot(sticky.offset) or boot(sticky.length):
+                XMLstr = XMLstr+"<header_offset"
+                if self.checkNone(sticky.offset):
+                    XMLstr = XMLstr+" offset='"+str(sticky.offset)+"'"
+                if self.checkNone(sticky.length):
+                    XMLstr = XMLstr+" length='"+str(sticky.length)+"'"
+                XMLstr = XMLstr+"/>\r\n"
+        
+        if sticky.type.lower() == "ipnetmask":
+            XMLstr = "<sticky sticky-type='ip-netmask' netmask='"+str(sticky.netmask)+"' address='"+sticky.addressType.lower()+"' sticky-group-name='"+name+"'>\r\n"
+            if self.checkNone(sticky.ipv6PrefixLength):
+                XMLstr = XMLstr+"<v6-prefix prefix-length='"+str(sticky.ipv6PrefixLength)+"'/>\r\n"
+        
+        if sticky.type.lower() == "v6prefix":
+            XMLstr = "<sticky sticky-type='v6-prefix' prefix-length='"+str(sticky.prefixLength)+"' address='"+sticky.addressType.lower()+"' sticky-group-name='"+name+"'>\r\n"
+            if self.checkNone(sticky):
+                XMLstr = XMLstr+"<ip-netmask netmask='"+str(sticky.netmask)+"'/>\r\n"
+        
+        if sticky.type.lower() == "l4payload":
+            XMLstr = "<sticky sticky-group-name='"+name+"'>\r\n"
+            if self.checkNone(sticky.enableStickyForResponse):
+                XMLstr = XMLstr+"<response response-info='sticky'/>\r\n"
+            if self.checkNone(sticky.offset) or self.checkNone(sticky.length) or self.checkNone(sticky.beginPattern) or self.checkNone(sticky.endPattern):
+                XMLstr = XMLstr+"<l4payload "
+                if self.checkNone(sticky.offset):
+                    XMLstr = XMLstr+" offset='"+str(sticky.offset)+"'"
+                if self.checkNone(sticky.length):
+                    XMLstr = XMLstr+" length='"+str(sticky.length)+"'"
+                if self.checkNone(sticky.beginPattern):
+                    XMLstr = XMLstr+" begin-pattern_expression='"+sticky.beginPattern+"'"
+                if self.checkNone(sticky.endPattern) and not self.checkNone(sticky.length):
+                    XMLstr = XMLstr+" end-pattern_expression='eennndd'"
+                XMLstr = XMLstr+"/>\r\n"
+        
+        if sticky.type.lower() == "radius": # without sticky.radiusTypes
+            XMLstr = "<sticky sticky-group-name='"+name+"'>\r\n"
+        
+        if sticky.type.lower() == "rtspheader":
+            XMLstr = "<sticky rtsp-header='Session' sticky-group-name='"+name+"'>\r\n"
+            if boot(sticky.offset) or boot(sticky.length):
+                XMLstr = XMLstr+"<header_offset"
+                if self.checkNone(sticky.offset):
+                    XMLstr = XMLstr+" offset='"+str(sticky.offset)+"'"
+                if self.checkNone(sticky.length):
+                    XMLstr = XMLstr+" length='"+str(sticky.length)+"'"
+                XMLstr = XMLstr+"/>\r\n"
+        
+        if sticky.type.lower() == "sipheader":
+            XMLstr = "<sticky sip-header='Call-ID' sticky-group-name='"+name+"'>\r\n"
+        
+        if self.checkNone(sticky.timeout):
+            XMLstr = XMLstr+"<timeout timeout-value='"+str(sticky.timeout)+"'/>\r\n"
+        if self.checkNone(sticky.timeoutActiveConn):
+            XMLstr = XMLstr+"<timeout config-type='activeconns'/>\r\n"
+        if self.checkNone(sticky.replicateOnHAPeer):
+            XMLstr = XMLstr+"<replicate replicate-info='sticky'/>\r\n"
+        if self.checkNone(sticky.serverFarm):
+            XMLstr = XMLstr+"<serverfarm_sticky sfarm-name='"+sticky.serverFarm+"'"
+            if self.checkNone(sticky.backupServerFarm):
+                XMLstr = XMLstr+" backup='"+sticky.backupServerFarm+"' "
+                if self.checkNone(sticky.enableStyckyOnBackupSF):
+                    XMLstr = XMLstr+"sfarm-behaviour='sticky'"
+                if self.checkNone(sticky.aggregateState):
+                    XMLstr = XMLstr+" backup-sfarm-state='aggregate-state'"
+            XMLstr = XMLstr+"/>\r\n"
+        XMLstr = XMLstr+"</sticky>"
+    
+        res = XmlSender(context)
+        tmp = res.deployConfig(context, XMLstr)
+        if (tmp != 'OK'):
+            raise openstack.common.exception.Invalid(tmp)
+        return tmp
+    
+    
+    def deleteStickiness(self,  context,   sticky):
+        if not self.checkNone(sticky.name):
+            return "ERROR"
+        
+        name = sticky.name
+        
+        if sticky.type.lower() == "httpcontent":
+            XMLstr = "<sticky sense='no' http-content='http-content' sticky-group-name='"+name+"'>\r\n"
+        
+        if sticky.type.lower() == "httpcookie":
+            XMLstr = "<sticky http-cookie='"+sticky.cookieName+"' sticky-group-name='"+name+"'>\r\n"
+        
+        if sticky.type.lower() == "httpheader":
+            XMLstr = "<sticky http-header='"+sticky.headerName+"' sticky-group-name='"+name+"'>\r\n"
+        
+        if sticky.type.lower() == "ipnetmask":
+            XMLstr = "<sticky sticky-type='ip-netmask' netmask='"+str(sticky.netmask)+"' address='"+sticky.addressType.lower()+"' sticky-group-name='"+name+"'>\r\n"
+        
+        if sticky.type.lower() == "v6prefix":
+            XMLstr = "<sticky sticky-type='v6-prefix' prefix-length='"+str(sticky.prefixLength)+"' address='"+sticky.addressType.lower()+"' sticky-group-name='"+name+"'>\r\n"
+        
+        if sticky.type.lower() == "l4payload":
+            XMLstr = "<sticky sticky-group-name='"+name+"'>\r\n"
+        
+        if sticky.type.lower() == "radius": # without sticky.radiusTypes
+            XMLstr = "<sticky sticky-group-name='"+name+"'>\r\n"
+        
+        if sticky.type.lower() == "rtspheader":
+            XMLstr = "<sticky rtsp-header='Session' sticky-group-name='"+name+"'>\r\n"
+        
+        if sticky.type.lower() == "sipheader":
+            XMLstr = "<sticky sip-header='Call-ID' sticky-group-name='"+name+"'>\r\n"
+        
+        XMLstr = XMLstr+"</sticky>"
+        
+        res = XmlSender(context)
+        tmp = res.deployConfig(context, XMLstr)
+        if (tmp != 'OK'):
+            raise openstack.common.exception.Invalid(tmp)
+        return tmp
+    
+    
     def createVIP(self,  context, vip,  sfarm): 
         if not self.checkNone(vip.name) or not self.checkNone(vip.name) or not self.checkNone(vip.address) :
             return "ERROR"
@@ -622,122 +777,5 @@ class AceDriver(BaseDriver):
                         XMLstr = XMLstr + "<service-policy sense='no' type='input' name='" + pmap + "'/>\r\n"
                         XMLstr = XMLstr + "<access-group sense='no' access-type='input' name='vip-acl'/>\r\n"                        
                         XMLstr = XMLstr + "</interface>"
-                        tmp = s.deployConfig(context, XMLstr)   
-    
-    
-    def createStickiness(self,  context,  vip,  sticky):
-        if not self.checkNone(vip.name) or not self.checkNone(sticky.name):
-            return "ERROR"
-        
-        name = vip.name+"_"+sticky.name
-        
-        if sticky.type.lower() == "httpcontent":
-            XMLstr = "<sticky http-content='http-content' sticky-group-name='"+name+"'>\r\n"
-            if self.checkNone(sticky.offset) or self.checkNone(sticky.length) or self.checkNone(sticky.beginPattern) or self.checkNone(sticky.endPattern):
-                XMLstr = XMLstr+"<content "
-                if self.checkNone(sticky.offset):
-                    XMLstr = XMLstr+" offset='"+str(sticky.offset)+"'"
-                if self.checkNone(sticky.length):
-                    XMLstr = XMLstr+" length='"+str(sticky.length)+"'"
-                if self.checkNone(sticky.beginPattern):
-                    XMLstr = XMLstr+" begin-pattern_expression='"+sticky.beginPattern+"'"
-                if self.checkNone(sticky.endPattern) and not self.checkNone(sticky.length):
-                    XMLstr = XMLstr+" end-pattern_expression='eennndd'"
-                XMLstr = XMLstr+"/>\r\n"
-        
-        if sticky.type.lower() == "httpcookie":
-            XMLstr = "<sticky http-cookie='"+sticky.cookieName+"' sticky-group-name='"+name+"'>\r\n"
-            if self.checkNone(sticky.enableInsert):
-                XMLstr = XMLstr+"<cookie config-type='insert'"
-                if self.checkNone(sticky.enableInsert):
-                    XMLstr = XMLstr+" specify-expire-keyword='browser-expire'"
-                XMLstr = XMLstr+"/>\r\n"
-            if boot(sticky.offset) or boot(sticky.length):
-                XMLstr = XMLstr+"<cookie config-type='offset'"
-                if self.checkNone(sticky.offset):
-                    XMLstr = XMLstr+" offset-value='"+str(sticky.offset)+"'"
-                if self.checkNone(sticky.length):
-                    XMLstr = XMLstr+" length='"+str(sticky.length)+"'"
-                XMLstr = XMLstr+"/>\r\n"
-            if self.checkNone(sticky.secondaryName):
-                XMLstr = XMLstr+"<cookie config-type='secondary' secondary-cookie-name='"+sticky.secondaryName+"'/>\r\n"
-        
-        if sticky.type.lower() == "httpheader":
-            XMLstr = "<sticky http-header='"+sticky.headerName+"' sticky-group-name='"+name+"'>\r\n"
-            if boot(sticky.offset) or boot(sticky.length):
-                XMLstr = XMLstr+"<header_offset"
-                if self.checkNone(sticky.offset):
-                    XMLstr = XMLstr+" offset='"+str(sticky.offset)+"'"
-                if self.checkNone(sticky.length):
-                    XMLstr = XMLstr+" length='"+str(sticky.length)+"'"
-                XMLstr = XMLstr+"/>\r\n"
-        
-        if sticky.type.lower() == "ipnetmask":
-            XMLstr = "<sticky sticky-type='ip-netmask' netmask='"+str(sticky.netmask)+"' address='"+sticky.addressType.lower()+"' sticky-group-name='"+name+"'>\r\n"
-            if self.checkNone(sticky.ipv6PrefixLength):
-                XMLstr = XMLstr+"<v6-prefix prefix-length='"+str(sticky.ipv6PrefixLength)+"'/>\r\n"
-        
-        if sticky.type.lower() == "v6prefix":
-            XMLstr = "<sticky sticky-type='v6-prefix' prefix-length='"+str(sticky.prefixLength)+"' address='"+sticky.addressType.lower()+"' sticky-group-name='"+name+"'>\r\n"
-            if self.checkNone(sticky):
-                XMLstr = XMLstr+"<ip-netmask netmask='"+str(sticky.netmask)+"'/>\r\n"
-        
-        if sticky.type.lower() == "l4payload":
-            XMLstr = "<sticky sticky-group-name='"+name+"'>\r\n"
-            if self.checkNone(sticky.enableStickyForResponse):
-                XMLstr = XMLstr+"<response response-info='sticky'/>\r\n"
-            if self.checkNone(sticky.offset) or self.checkNone(sticky.length) or self.checkNone(sticky.beginPattern) or self.checkNone(sticky.endPattern):
-                XMLstr = XMLstr+"<l4payload "
-                if self.checkNone(sticky.offset):
-                    XMLstr = XMLstr+" offset='"+str(sticky.offset)+"'"
-                if self.checkNone(sticky.length):
-                    XMLstr = XMLstr+" length='"+str(sticky.length)+"'"
-                if self.checkNone(sticky.beginPattern):
-                    XMLstr = XMLstr+" begin-pattern_expression='"+sticky.beginPattern+"'"
-                if self.checkNone(sticky.endPattern) and not self.checkNone(sticky.length):
-                    XMLstr = XMLstr+" end-pattern_expression='eennndd'"
-                XMLstr = XMLstr+"/>\r\n"
-        
-        if sticky.type.lower() == "radius": # without sticky.radiusTypes
-            XMLstr = "<sticky sticky-group-name='"+name+"'>\r\n"
-        
-        if sticky.lower() == "rtspheader":
-            XMLstr = "<sticky rtsp-header='Session' sticky-group-name='"+name+"'>\r\n"
-            if boot(sticky.offset) or boot(sticky.length):
-                XMLstr = XMLstr+"<header_offset"
-                if self.checkNone(sticky.offset):
-                    XMLstr = XMLstr+" offset='"+str(sticky.offset)+"'"
-                if self.checkNone(sticky.length):
-                    XMLstr = XMLstr+" length='"+str(sticky.length)+"'"
-                XMLstr = XMLstr+"/>\r\n"
-        
-        if sticky.lower() == "sipheader":
-            XMLstr = "<sticky sip-header='Call-ID' sticky-group-name='"+name+"'>\r\n"
-        
-        if self.checkNone(sticky.timeout):
-            XMLstr = XMLstr+"<timeout timeout-value='"+str(sticky.timeout)+"'/>\r\n"
-        if self.checkNone(sticky.timeoutActiveConn):
-            XMLstr = XMLstr+"<timeout config-type='activeconns'/>\r\n"
-        if self.checkNone(sticky.replicateOnHAPeer):
-            XMLstr = XMLstr+"<replicate replicate-info='sticky'/>\r\n"
-        if self.checkNone(sticky.serverFarm):
-            XMLstr = XMLstr+"<serverfarm_sticky sfarm-name='"+sticky.serverFarm+"'"
-            if self.checkNone(sticky.backupServerFarm):
-                XMLstr = XMLstr+" backup='"+sticky.backupServerFarm+"' "
-                if self.checkNone(sticky.enableStyckyOnBackupSF):
-                    XMLstr = XMLstr+"sfarm-behaviour='sticky'"
-                if self.checkNone(sticky.aggregateState):
-                    XMLstr = XMLstr+" backup-sfarm-state='aggregate-state'"
-            XMLstr = XMLstr+"/>\r\n"
-        XMLstr = XMLstr+"</sticky>"
-    
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-    
-    
-    
-    def deleteStickiness(self,  context,  vip,  sticky):
-        pass
+                        tmp = s.deployConfig(context, XMLstr)
     
