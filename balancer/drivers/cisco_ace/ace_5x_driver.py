@@ -512,7 +512,7 @@ class AceDriver(BaseDriver):
                 if self.checkNone(sticky.enableInsert):
                     XMLstr = XMLstr+" specify-expire-keyword='browser-expire'"
                 XMLstr = XMLstr+"/>\r\n"
-            if boot(sticky.offset) or boot(sticky.length):
+            if self.checkNone(sticky.offset) or self.checkNone(sticky.length):
                 XMLstr = XMLstr+"<cookie config-type='offset'"
                 if self.checkNone(sticky.offset):
                     XMLstr = XMLstr+" offset-value='"+str(sticky.offset)+"'"
@@ -524,7 +524,7 @@ class AceDriver(BaseDriver):
         
         if sticky.type.lower() == "httpheader":
             XMLstr = "<sticky http-header='"+sticky.headerName+"' sticky-group-name='"+name+"'>\r\n"
-            if boot(sticky.offset) or boot(sticky.length):
+            if self.checkNone(sticky.offset) or self.checkNone(sticky.length):
                 XMLstr = XMLstr+"<header_offset"
                 if self.checkNone(sticky.offset):
                     XMLstr = XMLstr+" offset='"+str(sticky.offset)+"'"
@@ -608,28 +608,28 @@ class AceDriver(BaseDriver):
             XMLstr = "<sticky sense='no' http-content='http-content' sticky-group-name='"+name+"'>\r\n"
         
         if sticky.type.lower() == "httpcookie":
-            XMLstr = "<sticky http-cookie='"+sticky.cookieName+"' sticky-group-name='"+name+"'>\r\n"
+            XMLstr = "<sticky sense='no' http-cookie='"+sticky.cookieName+"' sticky-group-name='"+name+"'>\r\n"
         
         if sticky.type.lower() == "httpheader":
-            XMLstr = "<sticky http-header='"+sticky.headerName+"' sticky-group-name='"+name+"'>\r\n"
+            XMLstr = "<sticky sense='no' http-header='"+sticky.headerName+"' sticky-group-name='"+name+"'>\r\n"
         
         if sticky.type.lower() == "ipnetmask":
-            XMLstr = "<sticky sticky-type='ip-netmask' netmask='"+str(sticky.netmask)+"' address='"+sticky.addressType.lower()+"' sticky-group-name='"+name+"'>\r\n"
+            XMLstr = "<sticky sense='no' sticky-type='ip-netmask' netmask='"+str(sticky.netmask)+"' address='"+sticky.addressType.lower()+"' sticky-group-name='"+name+"'>\r\n"
         
         if sticky.type.lower() == "v6prefix":
-            XMLstr = "<sticky sticky-type='v6-prefix' prefix-length='"+str(sticky.prefixLength)+"' address='"+sticky.addressType.lower()+"' sticky-group-name='"+name+"'>\r\n"
+            XMLstr = "<sticky sense='no' sticky-type='v6-prefix' prefix-length='"+str(sticky.prefixLength)+"' address='"+sticky.addressType.lower()+"' sticky-group-name='"+name+"'>\r\n"
         
         if sticky.type.lower() == "l4payload":
-            XMLstr = "<sticky sticky-group-name='"+name+"'>\r\n"
+            XMLstr = "<sticky sense='no' sticky-group-name='"+name+"'>\r\n"
         
         if sticky.type.lower() == "radius": # without sticky.radiusTypes
-            XMLstr = "<sticky sticky-group-name='"+name+"'>\r\n"
+            XMLstr = "<sticky sense='no' sticky-group-name='"+name+"'>\r\n"
         
         if sticky.type.lower() == "rtspheader":
-            XMLstr = "<sticky rtsp-header='Session' sticky-group-name='"+name+"'>\r\n"
+            XMLstr = "<sticky sense='no' rtsp-header='Session' sticky-group-name='"+name+"'>\r\n"
         
         if sticky.type.lower() == "sipheader":
-            XMLstr = "<sticky sip-header='Call-ID' sticky-group-name='"+name+"'>\r\n"
+            XMLstr = "<sticky sense='no' sip-header='Call-ID' sticky-group-name='"+name+"'>\r\n"
         
         XMLstr = XMLstr+"</sticky>"
         
