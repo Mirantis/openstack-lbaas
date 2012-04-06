@@ -1,0 +1,2 @@
+echo Get list of LBs. Auth with Token "$1"
+curl -H  "X-Auth-Token:$1" -H "X-Storage-Token:$1"  http://localhost:8181/loadbalancers
