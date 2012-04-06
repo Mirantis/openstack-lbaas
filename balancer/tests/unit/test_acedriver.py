@@ -16,18 +16,16 @@
 #    under the License.
 import unittest
 
-from balancer.core.serializeable import Serializeable
-from balancer.core.uniqueobject import UniqueObject
-
 from balancer.drivers.cisco_ace.ace_5x_driver import AceDriver
 from balancer.drivers.cisco_ace.Context import Context
 from balancer.drivers.cisco_ace.XmlSender import XmlSender
 from balancer.loadbalancers.realserver import RealServer
 from balancer.loadbalancers.serverfarm import ServerFarm
 from balancer.loadbalancers.probe import *
+from balancer.loadbalancers.sticky import *
 from balancer.loadbalancers.virtualserver import VirtualServer
 
-test_context = Context('10.4.15.30', '10443', 'admin', 'cisco123')
+test_context = Context('10.4.15.21', '10443', 'admin', 'cisco123')
 driver = AceDriver()
 
 rs = RealServer()
@@ -78,12 +76,43 @@ sf.dynamicWorkloadScale = "Local"
 sf.partialThreshPercentage = 11
 sf.backInservice = 22
 
+sticky_type = "httpheader"
+if sticky_type=="httpcontent":
+    sticky = HTTPContentSticky()
+    sticky.offset = 10
+    sticky.length  = ""
+    sticky.beginPattern = "beginpaternnn"
+    sticky.endPattern = "endpaternnnn"
+elif sticky_type=="httpcookie":
+    sticky = HTTPCookieSticky()
+    sticky.cookieName = "cookieshmuki"
+    sticky.enableInsert = True
+    sticky.browserExpire = True
+    sticky.offset = 10
+    sticky.length  = 20
+    sticky.secondaryName = "stickysecname"
+elif sticky_type=="httpheader":
+    sticky = HTTPHeaderSticky()
+    sticky.headerName = "authorization"
+    sticky.offset = 10
+    sticky.length  = 20
+sticky.type = sticky_type
+sticky.name = "LB_test_sticky01"
+sticky.serverFarm = "LB_test_sfarm01"
+sticky.backupServerFarm = ""
+sticky.aggregateState = True
+sticky.enableStyckyOnBackupSF = True
+sticky.replicateOnHAPeer = True
+sticky.timeout = 2880
+sticky.timeoutActiveConn = True
+
 vs = VirtualServer()
 vs.name = "LB_test_VIP1"
 vs.address = "10.250.250.250"
 vs.VLAN=[2]
 vs.port="80"
 
+    
 class Ace_5x_DriverTestCase(unittest.TestCase):
     """def test_01_createRServer(self):
         print driver.createRServer(test_context, rs)
@@ -100,29 +129,36 @@ class Ace_5x_DriverTestCase(unittest.TestCase):
     def test_05_addProbeToSF(self):
         driver.addProbeToSF(test_context, sf,  probe)"""
     
-    def test_06_createVIP(self):
+    def test_06_createStickiness(self):
+        driver.createStickiness(test_context, sticky)
+    
+    """def test_07_createVIP(self):
         driver.createVIP(test_context, vs,  sf)
     
-    """def test_07_suspendRServer(self):
+    def test_08_suspendRServer(self):
         driver.suspendRServer(test_context, sf, rs)
     
-    def test_08_activateRServer(self):
+    def test_09_activateRServer(self):
         driver.activateRServer(test_context, sf, rs)
     
-    def test_09_deleteVIP(self):
-        driver.deleteVIP(test_context, vs)
+    def test_10_deleteVIP(self):
+        driver.deleteVIP(test_context, vs)"""
 
-    def test_10_deleteProbeFromSF(self):
+    def test_11_deleteStickiness(self):
+        driver.deleteStickiness(test_context, sticky)
+
+    """def test_12_deleteProbeFromSF(self):
         driver.deleteProbeFromSF(test_context, sf,  probe)
     
-    def test_11_deleteRServerFromSF(self):
+    def test_13_deleteRServerFromSF(self):
         driver.deleteRServerFromSF(test_context, sf,  rs)
     
-    def test_12_deleteServerFarm(self):
+    def test_14_deleteServerFarm(self):
         driver.deleteServerFarm(test_context, sf)
     
-    def test_13_deleteProbe(self):
+    def test_15_deleteProbe(self):
         driver.deleteProbe(test_context, probe)
     
-    def test_14_deleteRServer(self):
+    def test_16_deleteRServer(self):
         driver.deleteRServer(test_context, rs)"""
+    
