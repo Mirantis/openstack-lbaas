@@ -472,7 +472,47 @@ class LBAddProbe(SyncronousWorker):
             deploy.execute()
             self._task.status = STATUS_DONE
             return "probe: %s" %prb.id    
+
+class LBdeleteProbe(SyncronousWorker):
+    def __init__(self,  task):
+        super(LBdeleteProbe, self).__init__(task)
+        self._command_queue = Queue.LifoQueue()   
     
+    def run(self):
+        self._task.status = STATUS_PROGRESS
+        lb_id = self._task.parameters['id']    
+        probeID = self._task.parameters['probeID']
+        
+        bal_instance = Balancer()
+        #Step 1: Load balancer from DB
+        bal_instance.loadFromDB(lb_id)
+        sched = Scheduller()
+        device = sched.getDeviceByID(bal_instance.lb.device_id)
+        devmap = DeviceMap()
+        driver = devmap.getDriver(device)
+        context = driver.getContext(device)
+        
+        store = Storage()
+        
+        #Step 2: Get reader and writer
+        rd = store.getReader()
+        dl = store.getDeleter()
+        #Step 3: Get RS object from DB
+        prb = rd.getProbeById(probeID)
+        
+        #Step 4: Delete RS from DB
+        dl.deleteProbeByID(probeID)
+        
+        #Step 5: Make commands for deleting probe
+        
+        commands = makeDeleteProbeFromLBChain(bal_instance, driver, context, prb)
+        destruct = Destructor()
+        destruct.commands = commands
+        
+        #Step 6: Delete real server from device
+        destruct.execute()
+        self._task.status = STATUS_DONE
+        return "Deleted probe with id %s"  %nodeID        
 
 class LBActionMapper(object):
     def getWorker(self, task,  action,  params=None):
@@ -502,3 +542,5 @@ class LBActionMapper(object):
             return LBShowProbes(task)
         if action == "LBAddProbe":
             return LBAddProbe(task)
+        if action == "LBdeleteProbe":
+            return LBdeleteProbe(task)
