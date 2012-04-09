@@ -295,6 +295,7 @@ class LBDeleteNode(SyncronousWorker):
         nodeID = self._task.parameters['nodeID']
         
         bal_instance = Balancer()
+        #Step 1: Load balancer from DB
         bal_instance.loadFromDB(lb_id)
         sched = Scheduller()
         device = sched.getDeviceByID(bal_instance.lb.device_id)
@@ -302,8 +303,8 @@ class LBDeleteNode(SyncronousWorker):
         driver = devmap.getDriver(device)
         context = driver.getContext(device)
         
-        #Step 1: Load balancer from DB
-        bal_instance.loadFromDB(lb_id)
+        
+#        bal_instance.loadFromDB(lb_id)
         
         store = Storage()
         
