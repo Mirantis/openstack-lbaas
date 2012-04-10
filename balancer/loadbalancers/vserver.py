@@ -237,7 +237,7 @@ def makeAddProbeToLBChain(bal, driver, context,  probe):
     
 def makeDeleteProbeFromLBChain(bal, driver, context, probe):
     list = []
-    list.append(DeleteProbeFromSFCommand(driver, context, sf, probe))
+    list.append(DeleteProbeFromSFCommand(driver, context, bal.sf, probe))
     list.append(DeleteProbeCommand(driver, context, probe))
     return list
 
