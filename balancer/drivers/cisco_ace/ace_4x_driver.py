@@ -438,7 +438,7 @@ class AceDriver(BaseDriver):
         return self.send_data(context,  XMLstr)
     
     
-    def deleteProbeFromSF (elf,  context,  serverfarm,  probe):
+    def deleteProbeFromSF (self,  context,  serverfarm,  probe):
         if not self.checkNone(serverfarm.name) or not self.checkNone(probe.name):
             return "ERROR"
         
