@@ -513,7 +513,7 @@ class LBdeleteProbe(SyncronousWorker):
         #Step 6: Delete real server from device
         destruct.execute()
         self._task.status = STATUS_DONE
-        return "Deleted probe with id %s"  %nodeID        
+        return "Deleted probe with id %s"  %probeID        
 
 class LBActionMapper(object):
     def getWorker(self, task,  action,  params=None):
