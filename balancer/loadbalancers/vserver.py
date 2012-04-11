@@ -283,6 +283,7 @@ class Destructor(object):
             current_command = self.commands[index]
             try:
                 current_command.execute()
+                logger.debug("Execute command: %s"%current_command)
             except:
 
                 logger.error("Got exception during deleting.")
