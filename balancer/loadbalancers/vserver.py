@@ -182,17 +182,17 @@ class Balancer():
 def makeCreateLBCommandChain(bal,  driver,  context):
     list = []
 
-#    for pr in bal.probes:
-#        list.append(CreateProbeCommand(driver,  context,  pr))
+    for pr in bal.probes:
+        list.append(CreateProbeCommand(driver,  context,  pr))
     
     list.append(CreateServerFarmCommand(driver, context,  bal.sf))
     for rs in bal.rs:
         list.append(CreateRServerCommand(driver,  context, rs))
         list.append(AddRServerToSFCommand(driver, context, bal.sf,  rs))
     
-    for pr in bal.probes:
-        list.append(CreateProbeCommand(driver,  context,  pr))
-        list.append(AddProbeToSFCommand(driver,  context,  bal.sf,  pr))
+#    for pr in bal.probes:
+#        list.append(CreateProbeCommand(driver,  context,  pr))
+#        list.append(AddProbeToSFCommand(driver,  context,  bal.sf,  pr))
     for vip in bal.vips:
         list.append(CreateVIPCommand(driver,  context,  vip,  bal.sf))
     return list
@@ -201,14 +201,16 @@ def makeDeleteLBCommandChain(bal,  driver,  context):
     list = []
     for vip in bal.vips:
         list.append(DeleteVIPCommand(driver,  context,  vip,  bal.sf))
-    for pr in bal.probes:
-        list.append(DeleteProbeFromSFCommand(driver,  context,  bal.sf,  pr))
-        list.append(DeleteProbeCommand(driver,  context,  pr))
+#    for pr in bal.probes:
+#        list.append(DeleteProbeFromSFCommand(driver,  context,  bal.sf,  pr))
+#        list.append(DeleteProbeCommand(driver,  context,  pr))
     for rs in bal.rs:
         list.append(DeleteRServerFromSFCommand(driver, context, bal.sf,  rs))      
         list.append(DeleteRServerCommand(driver,  context, rs))
           
     list.append(DeleteServerFarmCommand(driver, context,  bal.sf))
+    for pr in bal.probes:
+        list.append(DeleteProbeCommand(driver,  context,  pr))
     return list
 
 def makeUpdateLBCommandChain(old_bal,  new_bal,  driver,  context):
