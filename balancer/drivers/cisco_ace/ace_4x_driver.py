@@ -540,7 +540,7 @@ class AceDriver(BaseDriver):
         if self.checkNone(vip.allVLANs):
             pmap = "global"
         else:
-            pmap = "int-" + md5.new(s).hexdigest()
+            pmap = "int-" + md5.new(vip.VLAN).hexdigest()
         
         XMLstr = "<policy-map_multimatch match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
         XMLstr = XMLstr + "<class sense='no' cmap-name='" + vip.name + "'>\r\n"
