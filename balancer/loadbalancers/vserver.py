@@ -207,10 +207,11 @@ def makeDeleteLBCommandChain(bal,  driver,  context):
     for rs in bal.rs:
         list.append(DeleteRServerFromSFCommand(driver, context, bal.sf,  rs))      
         list.append(DeleteRServerCommand(driver,  context, rs))
-          
-    list.append(DeleteServerFarmCommand(driver, context,  bal.sf))
     for pr in bal.probes:
-        list.append(DeleteProbeCommand(driver,  context,  pr))
+        list.append(DeleteProbeFromSFCommand(driver,  context,  bal.sf,  pr))
+        list.append(DeleteProbeCommand(driver,  context,  pr))      
+    list.append(DeleteServerFarmCommand(driver, context,  bal.sf))
+
     return list
 
 def makeUpdateLBCommandChain(old_bal,  new_bal,  driver,  context):
