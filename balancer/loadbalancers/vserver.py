@@ -182,17 +182,17 @@ class Balancer():
 def makeCreateLBCommandChain(bal,  driver,  context):
     list = []
 
-    for pr in bal.probes:
-        list.append(CreateProbeCommand(driver,  context,  pr))
+#    for pr in bal.probes:
+#        list.append(CreateProbeCommand(driver,  context,  pr))
     
     list.append(CreateServerFarmCommand(driver, context,  bal.sf))
     for rs in bal.rs:
         list.append(CreateRServerCommand(driver,  context, rs))
         list.append(AddRServerToSFCommand(driver, context, bal.sf,  rs))
     
-    #for pr in bal.probes:
-    #    list.append(CreateProbeCommand(driver,  context,  pr))
-    #    list.append(AddProbeToSFCommand(driver,  context,  bal.sf,  pr))
+    for pr in bal.probes:
+        list.append(CreateProbeCommand(driver,  context,  pr))
+        list.append(AddProbeToSFCommand(driver,  context,  bal.sf,  pr))
     for vip in bal.vips:
         list.append(CreateVIPCommand(driver,  context,  vip,  bal.sf))
     return list
