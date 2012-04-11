@@ -200,7 +200,7 @@ def makeCreateLBCommandChain(bal,  driver,  context):
 def makeDeleteLBCommandChain(bal,  driver,  context):
     list = []
     for vip in bal.vips:
-        list.append(DeleteVIPCommand(driver,  context,  vip,  bal.sf))
+        list.append(DeleteVIPCommand(driver,  context,   vip))
 #    for pr in bal.probes:
 #        list.append(DeleteProbeFromSFCommand(driver,  context,  bal.sf,  pr))
 #        list.append(DeleteProbeCommand(driver,  context,  pr))
@@ -409,11 +409,11 @@ class CreateVIPCommand(object):
         self._driver.deleteVIP(self._context,  self._vip,  self._sf)
 
 class DeleteVIPCommand(object):
-    def __init__(self,  driver,  context,  vip,  sf):
+    def __init__(self,  driver,  context,  vip):
         self._driver = driver
         self._context = context
         self._vip = vip
-        self._sf = sf       
+        #self._sf = sf       
 
     def execute(self):
         self._driver.deleteVIP(self._context,  self._vip,  self._sf)    
