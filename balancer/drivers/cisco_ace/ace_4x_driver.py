@@ -546,7 +546,8 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "<class sense='no' cmap-name='" + vip.name + "'>\r\n"
         XMLstr = XMLstr + "</class>\r\n"
         XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
-        
+        logger.debug("pmap name is %s"%pmap)
+        logger.debug("Trying to do %s"%XMLstr)
         s = XmlSender(context)
         tmp = s.deployConfig(context, XMLstr)    
         if (tmp != 'OK'):
