@@ -93,7 +93,7 @@ class HaproxyDriver(BaseDriver):
         remote.putConfig()
         remote.validationConfig()
     
-    def deleteVIP(self,  context,  virtualserver,  serverfarm):
+    def deleteVIP(self,  context,  virtualserver):
         logger.debug('[HAPROXY] delete VIP')
         if not bool(virtualserver.name):
             logger.error ('[HAPROXY] Virtualserver name is empty')

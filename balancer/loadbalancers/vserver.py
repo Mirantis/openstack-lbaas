@@ -308,7 +308,7 @@ class DeleteRServerCommand(object):
         self._rs = rs
     
     def execute(self):
-         self._driver.deleteRServer(self._context,  self._rs)
+         self._driver.deleteRServer(self._context,   self._rs)
 
         
 class CreateServerFarmCommand(object):
@@ -414,10 +414,9 @@ class DeleteVIPCommand(object):
         self._driver = driver
         self._context = context
         self._vip = vip
-        #self._sf = sf       
 
     def execute(self):
-        self._driver.deleteVIP(self._context,  self._vip,  self._sf)    
+        self._driver.deleteVIP(self._context,   self._vip)    
 
 def createProbe(probe_type):
     probeDict={'DNS':probe.DNSprobe(), 'ECHOTCP':probe.ECHOTCPprobe(), 'ECHOUDP':probe.ECHOUDPprobe(), 
