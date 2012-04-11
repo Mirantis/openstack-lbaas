@@ -543,7 +543,7 @@ class AceDriver(BaseDriver):
             pmap = "int-" + md5.new(vip.VLAN).hexdigest()
         
         XMLstr = "<policy-map_multimatch match-type='multi-match' pmap-name='" + pmap + "'>\r\n"
-        XMLstr = XMLstr + "<class sense='no' cmap-name='" + vip.name + "'>\r\n"
+        XMLstr = XMLstr + "<class sense='no' match-cmap='" + vip.name + "'>\r\n"
         XMLstr = XMLstr + "</class>\r\n"
         XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
         logger.debug("pmap name is %s"%pmap)
