@@ -82,7 +82,7 @@ class StorageTestCase(unittest.TestCase):
         lb.name  = "testLB3"
         lb.id = 125
         lb.algorithm = "ROUND_ROBIN"
-        lb.statusus = "DOWN"
+        lb.status = "DOWN"
         lb.created = "01-01-2012 11:22:33"
         lb.updated = "02-02-2012 11:22:33"
         wr.writeLoadBalancer(lb)
