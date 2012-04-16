@@ -67,7 +67,14 @@ class V1Client(base_client.BaseClient):
         res = self.do_request("GET", "loadbalancers/%s"% lb_id)
         data = json.loads(res.read())
         return data 
-     
+    
+    def create_lb(self,  body):
+        post_body = json.dumps(body)
+        data= self.do_request("POST", "loadbalancers",  post_body, 
+                              {'content-type': 'application/json'})
+        return data
+
+        
 
         
     
