@@ -1,0 +1,7 @@
+{
+	"name": "testLB",
+	"protocol": "HTTP",
+	"transport": "TCP",
+	"port": "8080",
+	"algorithm": "ROUND_ROBIN"
+}

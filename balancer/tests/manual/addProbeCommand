@@ -1,0 +1,8 @@
+{
+  "healthMonitoring": {
+			"type": "ICMP",
+			"delay": "10",
+			"attemptsDeforeDeactivation": "5",
+			"timeout": "10"
+		      }
+}
