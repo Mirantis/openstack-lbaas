@@ -21,46 +21,49 @@ import sys
 import threading
 import Queue
 
+
 class BaseCommand(object):
     def __init__(self,  driver):
         self._driver = driver
-    
+
     @property
     def driver(self):
         return self._driver
-        
+
+
 class CreateSFCommand(BaseCommand):
     def __init__(self,  driver):
         super(CreateSFCommand,  self).__init__(driver)
-        
+
     def execute(self, context,   sf):
-          createSF(sf)
-          self._sf = sf
-    
+        createSF(sf)
+        self._sf = sf
+
     def undo(self, context,   params):
         deleteSF()
-        
+
+
 class CreateRServerCommand(BaseCommand):
     def __init__(self,  driver):
         super(CreateRServerCommand,  self).__init__(driver)
-        
 
     def execute(self, context,   sf,  node):
         createRServer(sf, node)
         self._sf = sf
         self._node = node
-    
+
     def undo(self, context,   params):
         deleteRServerFormSF(self._sf,  self._node)
+
 
 class CreateProbeCommand(BaseCommand):
     def __init__(self,  driver):
         super(CreateProbeCommand,  self).__init__(driver)
-       
+
     def execute(self, context,   probe):
         createProbe(probe)
         self._probe = probe
-    
+
     def undo(self, context,   params):
         deleteProbe(self._probe)
 
@@ -68,23 +71,24 @@ class CreateProbeCommand(BaseCommand):
 class AttachProbeCommand(BaseCommand):
     def __init__(self,  driver):
         super(AttachProbeCommand,  self).__init__(driver)
-       
+
     def execute(self, context,   sf,  probe):
         attachProbe(sf, probe)
         self._probe = probe
         self._sf = sf
-  
+
     def undo(self, context,   params):
         deleteProbefromSF(self._sf, self._probe)
-        
+
+
 class CreateVServerCommand(BaseCommand):
     def __init__(self,  driver):
         super(CreateVServerCommand,  self).__init__(driver)
-       
+
     def execute(self, context,   sf,  vip):
         createVS(sf, vip)
         self._vip = vip
         self._sf = sf
-  
+
     def undo(self, context,   params):
         deleteVS(self._sf, self._vip)

@@ -41,17 +41,18 @@ class API(wsgi.Router):
 
         lb_resource = loadbalancers.create_resource(self.conf)
 
-        mapper.resource("loadbalancer", "loadbalancers", controller=lb_resource,
-                        collection={'detail': 'GET'})
-                        
-        mapper.connect("/loadbalancers/", controller=lb_resource, action="index")
-        
+        mapper.resource("loadbalancer", "loadbalancers", \
+        controller=lb_resource, collection={'detail': 'GET'})
+
+        mapper.connect("/loadbalancers/", controller=lb_resource, \
+        action="index")
+
         mapper.connect("/loadbalancers/{id}", controller=lb_resource,
                        action="show", conditions=dict(method=["GET"]))
-                       
+
         mapper.connect("/loadbalancers/{id}/details", controller=lb_resource,
                        action="showDetails", conditions=dict(method=["GET"]))
-                       
+
         mapper.connect("/loadbalancers/{id}", controller=lb_resource,
                        action="delete", conditions=dict(method=["POST"]))
 
@@ -60,52 +61,58 @@ class API(wsgi.Router):
 
         mapper.connect("/loadbalancers/{id}/nodes", controller=lb_resource,
                        action="addNode", conditions=dict(method=["PUT"]))
-                       
+
         mapper.connect("/loadbalancers/{id}/nodes", controller=lb_resource,
-                       action="showNodes", conditions=dict(method=["GET"]))   
-                       
-        mapper.connect("/loadbalancers/{id}/nodes/{nodeID}", controller=lb_resource,
-                       action="deleteNode", conditions=dict(method=["DELETE"]))
+                       action="showNodes", conditions=dict(method=["GET"]))
 
-        mapper.connect("/loadbalancers/{id}/nodes/{nodeID}", controller=lb_resource,
-                       action="updateNode", conditions=dict(method=["PUT"]))
-                       
-        mapper.connect("/loadbalancers/{id}/nodes/{nodeID}/{status}", controller=lb_resource,
-                       action="changeNodeStatus", conditions=dict(method=["PUT"]))                        
+        mapper.connect("/loadbalancers/{id}/nodes/{nodeID}", \
+                       controller=lb_resource, action="deleteNode", \
+                       conditions=dict(method=["DELETE"]))
 
-        mapper.connect("/loadbalancers/{id}/healthMonitoring", controller=lb_resource,
-                       action="showMonitoring", conditions=dict(method=["GET"]))       
+        mapper.connect("/loadbalancers/{id}/nodes/{nodeID}", \
+                       controller=lb_resource, action="updateNode", \
+                       conditions=dict(method=["PUT"]))
 
-        mapper.connect("/loadbalancers/{id}/healthMonitoring", controller=lb_resource,
-                       action="addProbe", conditions=dict(method=["PUT"]))   
+        mapper.connect("/loadbalancers/{id}/nodes/{nodeID}/{status}", \
+                       controller=lb_resource, action="changeNodeStatus", \
+                       conditions=dict(method=["PUT"]))
 
-        mapper.connect("/loadbalancers/{id}/healthMonitoring/{probeID}", controller=lb_resource,
-                       action="deleteProbe", conditions=dict(method=["DELETE"]))   
-                       
+        mapper.connect("/loadbalancers/{id}/healthMonitoring", \
+                       controller=lb_resource, action="showMonitoring", \
+                       conditions=dict(method=["GET"]))
+
+        mapper.connect("/loadbalancers/{id}/healthMonitoring", \
+                       controller=lb_resource, \
+                       action="addProbe", conditions=dict(method=["PUT"]))
+
+        mapper.connect("/loadbalancers/{id}/healthMonitoring/{probeID}", \
+                       controller=lb_resource, action="deleteProbe", \
+                       conditions=dict(method=["DELETE"]))
+
         mapper.connect("/loadbalancers/",
                        controller=lb_resource,
                        action="create",
                        conditions=dict(method=["POST"]))
         device_resource = devices.create_resource(self.conf)
-        
+
         mapper.resource("device", "devices", controller=device_resource,
                         collection={'detail': 'GET'})
-        
+
         mapper.connect("/devices/", controller=device_resource, action="index")
-        
+
         mapper.connect("/devices/{id}", controller=device_resource,
                        action="device_data")
         mapper.connect("/devices/{id}/{info}", controller=device_resource,
                        action="device_info")
-                       
+
         mapper.connect("/devices/",
                        controller=device_resource,
                        action="create",
                        conditions=dict(method=["POST"]))
-        
+
         tasks_resource = tasks.create_resource(self.conf)
         mapper.resource("task", "tasks", controller=tasks_resource,
                         collection={'detail': 'GET'})
         mapper.connect("/tasks/", controller=tasks_resource, action="index")
-        
+
         super(API, self).__init__(mapper)

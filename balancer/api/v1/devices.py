@@ -29,6 +29,7 @@ from balancer.core.Worker import *
 
 logger = logging.getLogger('balancer.api.v1.devices')
 
+
 class Controller(object):
 
     def __init__(self, conf):
@@ -37,23 +38,23 @@ class Controller(object):
         self.conf = conf
         self._service_controller = ServiceController.Instance()
         pass
-    
+
     def index(self,  req):
         try:
             msg = "Got index request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
             mapper = DeviceActionMapper()
-            worker = mapper.getWorker(task, "index" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+            worker = mapper.getWorker(task, "index")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 logger.debug("Obtained response: %s" % result)
                 return {'devices': result}
-            
+
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'task_id' : task.id}
+                return {'task_id': task.id}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
@@ -63,10 +64,10 @@ class Controller(object):
             msg = _("Unauthorized image access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
-      
+
         pass
-        
-    def create(self,  req,   **args):
+
+    def create(self, req, **args):
         msg = "Got create request. Request: %s" % req
         logger.debug(msg)
         try:
@@ -77,16 +78,16 @@ class Controller(object):
             task = self._service_controller.createTask()
             task.parameters = params
             mapper = DeviceActionMapper()
-            worker = mapper.getWorker(task, "create" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+            worker = mapper.getWorker(task, "create")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
-                
+
                 return {'devices': result}
-            
+
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'task_id' : task.id}            
+                return {'task_id': task.id}
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
@@ -94,30 +95,31 @@ class Controller(object):
         except exception.NotAuthorized:
             msg = _("Unauthorized image access")
             logger.debug(msg)
-            raise webob.exc.HTTPForbidden(msg)        
+            raise webob.exc.HTTPForbidden(msg)
         return {'devices': list}
-        
-    def show(self,  req,  **args):
-        msg = "Got device data request. Request: %s Arguments: %s" % (req,  args)
+
+    def show(self, req, **args):
+        msg = "Got device data request. Request: %s Arguments: %s" \
+        % (req, args)
         logger.debug(msg)
         try:
-            
+
             return {"list": "OK"}
             logger.debug(msg)
             self._validate_params(params)
             task = self._service_controller.createTask()
             task.parameters = params
             mapper = DeviceActionMapper()
-            worker = mapper.getWorker(task, "show" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+            worker = mapper.getWorker(task, "show")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
-                
+
                 return {'devices': result}
-            
+
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'task_id' : task.id}            
+                return {'task_id': task.id}
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
@@ -125,25 +127,26 @@ class Controller(object):
         except exception.NotAuthorized:
             msg = _("Unauthorized image access")
             logger.debug(msg)
-            raise webob.exc.HTTPForbidden(msg)        
+            raise webob.exc.HTTPForbidden(msg)
         return {'devices': list}
-        
-    def device_info(self,  req,  **args):
-        try:       
+
+    def device_info(self, req, **args):
+        try:
+
             task = self._service_controller.createTask()
             task.parameters = args
             task.parameters['query_params'] = req.GET
             mapper = DeviceActionMapper()
-            worker = mapper.getWorker(task, "info" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+            worker = mapper.getWorker(task, "info")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
-                
+
                 return {'devices': result}
-            
+
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'task_id' : task.id}            
+                return {'task_id': task.id}
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
@@ -151,12 +154,13 @@ class Controller(object):
         except exception.NotAuthorized:
             msg = _("Unauthorized image access")
             logger.debug(msg)
-            raise webob.exc.HTTPForbidden(msg)        
+            raise webob.exc.HTTPForbidden(msg)
         return {'devices': list}
-        
+
     def _validate_params(self,  params):
         pass
-                
+
+
 def create_resource(conf):
     """Devices  resource factory method"""
     deserializer = wsgi.JSONRequestDeserializer()

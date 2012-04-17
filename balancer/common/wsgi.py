@@ -577,8 +577,8 @@ class FilterFactory(AppFactory):
 
     """A Generic paste.deploy filter factory.
 
-    This requires balancer.filter_factory to be set to a callable which returns a
-    WSGI filter when invoked. The format is <module>:<callable> e.g.
+    This requires balancer.filter_factory to be set to a callable which returns
+    a WSGI filter when invoked. The format is <module>:<callable> e.g.
 
       [filter:cache]
       paste.filter_factory = balancer.common.wsgi:filter_factory

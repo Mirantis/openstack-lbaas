@@ -44,51 +44,46 @@ class V1Client(base_client.BaseClient):
     DEFAULT_PORT = 8181
     DEFAULT_DOC_ROOT = ""
 
-    def get_loadbalancers(self,  **kwargs):
+    def get_loadbalancers(self, **kwargs):
         res = self.do_request("GET", "loadbalancers")
         data = json.loads(res.read())['loadbalancers']
         return data
-    
-    def get_algorithms(self,  **kwargs):
-        algorithms = ["RoundRobin",  "LeastConn",  "LeastLoaded",  "LeastBandwidth"]
+
+    def get_algorithms(self, **kwargs):
+        algorithms = ["RoundRobin",  "LeastConn",  "LeastLoaded",
+"LeastBandwidth"]
         return algorithms
-    
-    def get_probe_types(self,  **kwargs):
+
+    def get_probe_types(self, **kwargs):
         probes = ["CONNECT",  "HTTP",  "HTTPS",  "ICMP"]
         return probes
-    
-    def get_loadbalancer_details(self,  lb_id):
-        res = self.do_request("GET", "loadbalancers/%s/detail"% lb_id)
+
+    def get_loadbalancer_details(self, lb_id):
+        res = self.do_request("GET", "loadbalancers/%s/detail" % lb_id)
         data = json.loads(res.read())
         return data
-        
-        
-    def get_loadbalancer(self,  lb_id):
-        res = self.do_request("GET", "loadbalancers/%s"% lb_id)
+
+    def get_loadbalancer(self, lb_id):
+        res = self.do_request("GET", "loadbalancers/%s" % lb_id)
         data = json.loads(res.read())
-        return data 
-    
-    def create_lb(self,  body):
+        return data
+
+    def create_lb(self, body):
         post_body = json.dumps(body)
-        data= self.do_request("POST", "loadbalancers",  post_body, 
+        data = self.do_request("POST", "loadbalancers",  post_body,
                               {'content-type': 'application/json'})
         return data
 
-        
-
-        
-    
     def get_images(self, **kwargs):
-        """
-        Returns a list of image id/name mappings from Registry
+        """Returns a list of image id/name mappings from Registry
 
         :param filters: dictionary of attributes by which the resulting
                         collection of images should be filtered
         :param marker: id after which to start the page of images
         :param limit: maximum number of items to return
         :param sort_key: results will be ordered by this image attribute
-        :param sort_dir: direction in which to to order results (asc, desc)
-        """
+        :param sort_dir: direction in which to to order results (asc, desc)"""
+
         params = self._extract_params(kwargs, SUPPORTED_PARAMS)
         res = self.do_request("GET", "loadbalancers", params=params)
         data = json.loads(res.read())['loadbalancers']

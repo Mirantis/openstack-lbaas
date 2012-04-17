@@ -92,7 +92,8 @@ class StorageWriteDenied(GlanceException):
 
 
 class ImportFailure(GlanceException):
-    message = "Failed to import requested object/class: '%(import_str)s'. Reason: %(reason)s"
+    message = "Failed to import requested object/class: '%(import_str)s'. \
+    Reason: %(reason)s"
 
 
 class AuthBadRequest(GlanceException):
@@ -181,4 +182,3 @@ class NoServiceEndpoint(GlanceException):
 
 class RegionAmbiguity(GlanceException):
     message = "Multiple 'image' service matches for region %(region)s. This "
-                

@@ -32,30 +32,32 @@ logger = logging.getLogger('balancer.api.v1.loadbalancers')
 SUPPORTED_PARAMS = balancer.api.v1.SUPPORTED_PARAMS
 SUPPORTED_FILTERS = balancer.api.v1.SUPPORTED_FILTERS
 
+
 class Controller(object):
 
     def __init__(self, conf):
-        msg = "Creating loadbalancers controller with config:loadbalancers.py %s" % conf
+        msg = "Creating loadbalancers controller with config:loadbalancers.py \
+        %s" % conf
         logger.debug(msg)
         self.conf = conf
         self._service_controller = ServiceController.Instance()
         pass
-    
+
     def index(self, req):
         try:
             msg = "Got index request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
             mapper = LBActionMapper()
-            worker = mapper.getWorker(task, "index" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+            worker = mapper.getWorker(task, "index")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return {'loadbalancers': result}
-            
+
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'loadbalancers' : task.id}
+                return {'loadbalancers': task.id}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
@@ -66,28 +68,28 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
         return {'loadbalancers': list}
-        
-    def create(self,  req,  **args):
+
+    def create(self, req, **args):
         try:
             msg = "Got create request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
-            mapper =LBActionMapper()
+            mapper = LBActionMapper()
             #here we need to decide which device should be used
             params = args['body']
             # We need to create LB object and return its id
             lb = balancer.loadbalancers.loadbalancer.LoadBalancer()
             params['lb'] = lb
             task.parameters = params
-            worker = mapper.getWorker(task, "create" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+            worker = mapper.getWorker(task, "create")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return {'loadbalancers': {"id": lb.id}}
-            
+
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'loadbalancers' : {'id':lb.id}}
+                return {'loadbalancers': {'id': lb.id}}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
@@ -98,18 +100,18 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
-    def delete(self,  req,  **args):
+    def delete(self, req, **args):
         try:
             msg = "Got delete request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
-            mapper =LBActionMapper()
+            mapper = LBActionMapper()
             #here we need to decide which device should be used
             #params = args['body']
             params = args['id']
             task.parameters = params
-            worker = mapper.getWorker(task, "delete" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+            worker = mapper.getWorker(task, "delete")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return "OK"
 
@@ -122,18 +124,18 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
-    def show(self,  req,  **args):
+    def show(self, req, **args):
         try:
             msg = "Got loadbalancerr info request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
-            mapper =LBActionMapper()
+            mapper = LBActionMapper()
             #here we need to decide which device should be used
             #params = args['body']
             params = args
             task.parameters = params
-            worker = mapper.getWorker(task, "show" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+            worker = mapper.getWorker(task, "show")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return{'loadbalancer': result}
 
@@ -145,19 +147,19 @@ class Controller(object):
             msg = _("Unauthorized image access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
-        
-    def showDetails(self,  req,  **args):
+
+    def showDetails(self, req, **args):
         try:
             msg = "Got loadbalancerr info request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
-            mapper =LBActionMapper()
+            mapper = LBActionMapper()
             #here we need to decide which device should be used
             #params = args['body']
             params = args
             task.parameters = params
-            worker = mapper.getWorker(task, "showDetails" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+            worker = mapper.getWorker(task, "showDetails")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
 
@@ -166,222 +168,223 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = ("Unauthorized image access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
-    def update(self,  req,  **args):
+    def update(self, req, **args):
         try:
             msg = "Got update request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
-            mapper =LBActionMapper()
-            
-            #here we need to decide which device should be used            
+            mapper = LBActionMapper()
+
+            #here we need to decide which device should be used
             params = {}
-            params['body'] = args['body']        
-            params['id']= args['id']
+            params['body'] = args['body']
+            params['id'] = args['id']
             task.parameters = params
-            
-            worker = mapper.getWorker(task, "update" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+
+            worker = mapper.getWorker(task, "update")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
-                return {'loadbalancers':  result}
-            
+                return {'loadbalancers': result}
+
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'loadbalancers' : "OK"}
+                return {'loadbalancers': "OK"}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = ("Unauthorized image access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
-    def addNode(self,  req,  **args):
+    def addNode(self, req, **args):
         try:
             msg = "Got addNode request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
-            mapper =LBActionMapper()
-            
-            #here we need to decide which device should be used            
+            mapper = LBActionMapper()
+
+            #here we need to decide which device should be used
             params = {}
-            body= args['body']
+            body = args['body']
             params['node'] = body['node']
             params['id'] = args['id']
             task.parameters = params
-            
-            worker = mapper.getWorker(task, "addNode" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+
+            worker = mapper.getWorker(task, "addNode")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
-            
+
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'loadbalancers' : "OK"}
+                return {'loadbalancers': "OK"}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = ("Unauthorized image access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
-    def showNodes(self,  req,  **args):
+    def showNodes(self, req, **args):
         try:
             msg = "Got showNodes request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
-            mapper =LBActionMapper()
-            
-            #here we need to decide which device should be used            
+            mapper = LBActionMapper()
+
+            #here we need to decide which device should be used
             params = {}
             params['id'] = args['id']
             task.parameters = params
-            
-            worker = mapper.getWorker(task, "showNodes" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+
+            worker = mapper.getWorker(task, "showNodes")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
-            
+
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'loadbalancers' : "OK"}
+                return {'loadbalancers': "OK"}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = ("Unauthorized image access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
-    def deleteNode(self,  req,  **args):
+    def deleteNode(self, req, **args):
         try:
             msg = "Got deleteNode request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
-            mapper =LBActionMapper()
-                        
+            mapper = LBActionMapper()
+
             params = {}
             params['id'] = args['id']
             params['nodeID'] = args['nodeID']
             task.parameters = params
-            
-            worker = mapper.getWorker(task, "deleteNode" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+
+            worker = mapper.getWorker(task, "deleteNode")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
-            
+
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'loadbalancers' : "OK"}
+                return {'loadbalancers': "OK"}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = ("Unauthorized image access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
-    def changeNodeStatus(self,  req,  **args):
+    def changeNodeStatus(self, req, **args):
         try:
             msg = "Got changeNodeStatus request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
-            mapper =LBActionMapper()
-                        
+            mapper = LBActionMapper()
+
             params = {}
             params['id'] = args['id']
             params['nodeID'] = args['nodeID']
             params['status'] = args['status']
             task.parameters = params
-            
-            worker = mapper.getWorker(task, "changeNodeStatus" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+
+            worker = mapper.getWorker(task, "changeNodeStatus")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
-            
+
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'loadbalancers' : "OK"}
+                return {'loadbalancers': "OK"}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = ("Unauthorized image access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
-            
-    def updateNode(self,  req,  **args):
+
+    def updateNode(self, req, **args):
         try:
             msg = "Got updateNode request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
-            mapper =LBActionMapper()
-                        
+            mapper = LBActionMapper()
+
             params = {}
             params['id'] = args['id']
             params['nodeID'] = args['nodeID']
             body = args['body']
             params['node'] = body['node']
             task.parameters = params
-            
-            worker = mapper.getWorker(task, "updateNode" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+
+            worker = mapper.getWorker(task, "updateNode")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
-            
+
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'loadbalancers' : "OK"}
+                return {'loadbalancers': "OK"}
 
         except exception.NotFound:
-            msg = "LB with identifier %s or node with id %s not found" % (args['id'],  args['nodeID'])
+            msg = "LB with identifier %s or node with id %s not found" \
+            % (args['id'],  args['nodeID'])
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = ("Unauthorized image access")
             logger.debug(msg)
-            raise webob.exc.HTTPForbidden(msg)        
+            raise webob.exc.HTTPForbidden(msg)
 
-    def showMonitoring(self,  req,  **args):
+    def showMonitoring(self, req, **args):
         try:
             msg = "Got showMonitoring request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
-            mapper =LBActionMapper()
-                        
+            mapper = LBActionMapper()
+
             params = {}
             params['id'] = args['id']
             task.parameters = params
-            
-            worker = mapper.getWorker(task, "showProbes" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+
+            worker = mapper.getWorker(task, "showProbes")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
-            
+
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'loadbalancers' : "OK"}
+                return {'loadbalancers': "OK"}
 
         except exception.NotFound:
             msg = "LB with identifier %s not found" % args['id']
@@ -390,30 +393,30 @@ class Controller(object):
         except exception.NotAuthorized:
             msg = _("Unauthorized image access")
             logger.debug(msg)
-            raise webob.exc.HTTPForbidden(msg) 
+            raise webob.exc.HTTPForbidden(msg)
 
-    def addProbe(self,  req,  **args):
+    def addProbe(self, req, **args):
         try:
             msg = "Got addProbe request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
-            mapper =LBActionMapper()
-                        
+            mapper = LBActionMapper()
+
             params = {}
             params['id'] = args['id']
             body = args['body']
             params['probe'] = body['healthMonitoring']
             task.parameters = params
-            
-            worker = mapper.getWorker(task, "LBAddProbe" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+
+            worker = mapper.getWorker(task, "LBAddProbe")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
-            
+
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'loadbalancers' : "OK"}
+                return {'loadbalancers': "OK"}
 
         except exception.NotFound:
             msg = "LB with identifier %s not found" % args['id']
@@ -422,29 +425,29 @@ class Controller(object):
         except exception.NotAuthorized:
             msg = _("Unauthorized image access")
             logger.debug(msg)
-            raise webob.exc.HTTPForbidden(msg)         
+            raise webob.exc.HTTPForbidden(msg)
 
-    def deleteProbe(self, req,  **args):
+    def deleteProbe(self, req, **args):
         try:
             msg = "Got deleteProbe request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
-            mapper =LBActionMapper()
-                        
+            mapper = LBActionMapper()
+
             params = {}
             params['id'] = args['id']
             params['probeID'] = args['probeID']
             task.parameters = params
-            
-            worker = mapper.getWorker(task, "LBdeleteProbe" )
-            if worker.type ==  SYNCHRONOUS_WORKER:
+
+            worker = mapper.getWorker(task, "LBdeleteProbe")
+            if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
-            
+
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
-                return {'loadbalancers' : "OK"}
+                return {'loadbalancers': "OK"}
 
         except exception.NotFound:
             msg = "LB with identifier %s not found" % args['id']
@@ -453,8 +456,8 @@ class Controller(object):
         except exception.NotAuthorized:
             msg = _("Unauthorized image access")
             logger.debug(msg)
-            raise webob.exc.HTTPForbidden(msg)  
-        
+            raise webob.exc.HTTPForbidden(msg)
+
     def _get_query_params(self, req):
         """
         Extracts necessary query params from request.
@@ -485,6 +488,7 @@ class Controller(object):
                                          'got %s' % (param,
                                                      query_filters[param]))
         return query_filters
+
 
 def create_resource(conf):
     """Loadbalancers  resource factory method"""

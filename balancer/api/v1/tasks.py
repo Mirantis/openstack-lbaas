@@ -30,22 +30,23 @@ from balancer.core.ServiceController import (ServiceController,  ServiceTask)
 
 logger = logging.getLogger(__name__)
 
+
 class Controller(object):
 
     def __init__(self, conf):
-        msg = "Creating loadbalancers controller with config:loadbalancers.py %s" % conf
+        msg = "Creating loadbalancers controller with config:loadbalancers.py \
+        %s" % conf
         logger.debug(msg)
         self.conf = conf
         self._service_controller = ServiceController.Instance()
-        
-        
+
     def index(self, req):
         try:
             msg = "Got index request. Request: %s" % req
             logger.debug(msg)
-            
+
             list = self._servicecontroller.getTasks()
-            return {'tasks' : list}
+            return {'tasks': list}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
@@ -57,11 +58,9 @@ class Controller(object):
             raise webob.exc.HTTPForbidden(msg)
         return {}
 
+
 def create_resource(conf):
     """Loadbalancers  resource factory method"""
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = wsgi.JSONResponseSerializer()
     return wsgi.Resource(Controller(conf), deserializer, serializer)
-    
-
-
