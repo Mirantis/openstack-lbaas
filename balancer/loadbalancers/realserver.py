@@ -49,3 +49,4 @@ class RealServer(Serializeable,  UniqueObject):
         self.status = None
         self.cookieStr = None
         self.condition = "ENABLED"
+        self.vm_instance = ""
