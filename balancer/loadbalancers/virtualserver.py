@@ -21,6 +21,7 @@ import vlan
 from balancer.core.serializeable import Serializeable
 from balancer.core.uniqueobject import UniqueObject
 
+
 class VirtualServer(Serializeable,  UniqueObject):
     def __init__(self):
         Serializeable.__init__(self)
@@ -33,22 +34,22 @@ class VirtualServer(Serializeable,  UniqueObject):
         self.appProto = "Other"
         self.port = "any"
         self.allVLANs = None
-        self.VLAN = [] #need to describe in new module
-        self.connParameterMap = None #need to describe in new module
+        self.VLAN = []  # need to describe in new module
+        self.connParameterMap = None  # need to describe in new module
         self.KALAPtagName = ""
         self.KALAPprimaryOutOfServ = None
         self.ICMPreply = None
         self.status = "inservice"
-        
-        self.protocolInspect = None #need to describe in new module
-        self.appAccelAndOpt = None #need to describe in new module
-        self.L7LoadBalancing = None #need to describe in new module
+
+        self.protocolInspect = None  # need to describe in new module
+        self.appAccelAndOpt = None  # need to describe in new module
+        self.L7LoadBalancing = None  # need to describe in new module
         self.sf_id = None
         self.lb_id = None
         self.backupServerFarm = None
-        self.SSLproxyServName = None #need to describe in new module
-        self.defaultL7LBAction = None #need to describe in new module
-        self.SSLinitiation = None #need to describe in new module
-        self.NAT = [] #need to describe in new module
+        self.SSLproxyServName = None  # need to describe in new module
+        self.defaultL7LBAction = None  # need to describe in new module
+        self.SSLinitiation = None  # need to describe in new module
+        self.NAT = []  # need to describe in new module
         self.created = None
         self.updated = None

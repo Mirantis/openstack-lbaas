@@ -23,9 +23,10 @@ import realserver
 from balancer.core.serializeable import Serializeable
 from balancer.core.uniqueobject import UniqueObject
 
+
 class ServerFarm(Serializeable,  UniqueObject):
     def __init__(self):
-        
+
         Serializeable.__init__(self)
         UniqueObject.__init__(self)
         self.lb_id = None

@@ -20,6 +20,7 @@ import logging
 from balancer.core.serializeable import Serializeable
 from balancer.core.uniqueobject import UniqueObject
 
+
 class Sticky(Serializeable,  UniqueObject):
     def __init__(self):
         Serializeable.__init__(self)
@@ -35,13 +36,15 @@ class Sticky(Serializeable,  UniqueObject):
         self.timeout = 1440
         self.timeoutActiveConn = None
 
+
 class HTTPContentSticky(Sticky):
     def __init__(self):
         Sticky.__init__(self)
         self.offset = ""
-        self.length  = ""
+        self.length = ""
         self.beginPattern = ""
         self.endPattern = ""
+
 
 class HTTPCookieSticky(Sticky):
     def __init__(self):
@@ -50,51 +53,57 @@ class HTTPCookieSticky(Sticky):
         self.enableInsert = None
         self.browserExpire = None
         self.offset = ""
-        self.length  = ""
+        self.length = ""
         self.secondaryName = ""
+
 
 class HTTPHeaderSticky(Sticky):
     def __init__(self):
         Sticky.__init__(self)
         self.headerName = ""
         self.offset = ""
-        self.length  = ""
+        self.length = ""
+
 
 class IPNetmaskSticky(Sticky):
     def __init__(self):
         Sticky.__init__(self)
         self.netmask = ""
         self.ipv6PrefixLength = ""
-        self.addressType = "Both" #Destination, Source
+        self.addressType = "Both"  # Destination, Source
+
 
 class v6PrefixSticky(Sticky):
     def __init__(self):
         Sticky.__init__(self)
         self.prefixLength = ""
         self.netmask = ""
-        self.addressType = "Both" #Destination, Source
+        self.addressType = "Both"  # Destination, Source
+
 
 class L4PayloadSticky(Sticky):
     def __init__(self):
         Sticky.__init__(self)
         self.offset = ""
-        self.length  = ""
+        self.length = ""
         self.beginPattern = ""
         self.endPattern = ""
         self.enableStickyForResponse = None
-    
+
+
 class RadiusSticky(Sticky):
     def __init__(self):
         Sticky.__init__(self)
-        self.radiusTypes = "" #Radius Calling Id, Radius User Name
-    
+        self.radiusTypes = ""  # Radius Calling Id, Radius User Name
+
+
 class RTSPHeaderSticky(Sticky):
     def __init__(self):
         Sticky.__init__(self)
         self.offset = ""
-        self.length  = ""
+        self.length = ""
+
 
 class SIPHeaderSticky(Sticky):
     def __init__(self):
         Sticky.__init__(self)
-    

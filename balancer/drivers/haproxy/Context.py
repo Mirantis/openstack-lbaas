@@ -20,23 +20,25 @@ from balancer.drivers.BaseDriver import BaseContext
 
 
 class Context(BaseContext):
-    def __init__(self, ip = '', port='22', login='', password='', localpath='/tmp/', configfilename='haproxy.cfg', \
-                 remotepath='/etc/haproxy/',  interface ='',  haproxy_socket = '/tmp/haproxy.sock'):
+    def __init__(self, ip='', port='22', login='', password='',\
+        localpath='/tmp/', configfilename='haproxy.cfg',\
+        remotepath='/etc/haproxy/',  interface='',\
+        haproxy_socket='/tmp/haproxy.sock'):
         self.ip = ip
         self.port = port
         if (localpath is None) or (localpath == "None"):
                 self.localpath = '/tmp/'
         else:
                 self.localpath = localpath
-        
+
         self.login = login
         self.password = password
-        
+
         if (remotepath is None) or (remotepath == "None"):
                 self.remotepath = '/etc/haproxy/'
         else:
                 self.remotepath = remotepath
-        
+
         if (configfilename is None) or (configfilename == "None"):
                 self.configfilename = 'haproxy.cfg'
         else:
@@ -46,10 +48,8 @@ class Context(BaseContext):
                 self.interface = 'eth0'
         else:
                 self.interface = interface
-        
+
         if (haproxy_socket is None) or (haproxy_socket == "None"):
                 self.haproxy_socket = '/tmp/haproxy.sock'
         else:
                 self.haproxy_socket = haproxy_socket
-
-        

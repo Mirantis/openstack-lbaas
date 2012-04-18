@@ -23,7 +23,7 @@ from balancer.core.uniqueobject import UniqueObject
 class RealServer(Serializeable,  UniqueObject):
     def __init__(self):
         Serializeable.__init__(self)
-        UniqueObject.__init__(self)        
+        UniqueObject.__init__(self)
         self.sf_id = None
         self.name = ""
         self.type = "Host"
@@ -32,7 +32,7 @@ class RealServer(Serializeable,  UniqueObject):
         self.ipType = "IPv4"
         self.address = ""
         self.port = ""
-        self.state= "inservice" #standby, outofservice
+        self.state = "inservice"  # standby, outofservice
         self.opstate = "inservice"
         self.description = ""
         self.failOnAll = None

@@ -23,10 +23,10 @@ from balancer.core.uniqueobject import UniqueObject
 
 class VLAN(Serializeable,  UniqueObject):
     def __init__(self):
-        
+
         Serializeable.__init__(self)
         UniqueObject.__init__(self)
-        
+
         self.description = ""
         self.intType = "Routed"
         self.IPaddr = ""
@@ -37,17 +37,15 @@ class VLAN(Serializeable,  UniqueObject):
         self.enableMACsticky = None
         self.enableNormalization = "IPv4v6"
         self.enableIPv6 = None
-        self.ipv6GlobalIP = [] #possible use as ["IPv6Address","eui-64","aliasIPv6Address","peerIPv6Address","eui-64","prefixLength"]
-        #                                                          ["2002:1:2:3::1","0","2002:2:3:4::1","2002:3:4:5::1","0","80"]
-        self.ipv6UniqueLocalAddr = [] #possible use as ["IPv6Address","eui-64","peerIPv6Address","eui-64","prefixLenght"]
-        #                                                                        ["fb8:22:22::1","0","fb8:23:23::1","0","64"]
+        self.ipv6GlobalIP = []
+        self.ipv6UniqueLocalAddr = []
         self.ipv6LinkLocalAddr = ""
         self.ipv6PeerLinkLocalAddr = ""
         self.enableICMPguard = "IPv4v6"
-        self.enableDHCPrelay = ""# "Ipv4v6" or "IPv4" or "IPv6"
+        self.enableDHCPrelay = ""  # "Ipv4v6" or "IPv4" or "IPv6"
         self.RPF = ""
-        self.reassemblyTimeout = ["5", "60"] # ["ipv4","ipv6"]
-        self.maxFragChainsAllowed = ["24", "24"] 
+        self.reassemblyTimeout = ["5", "60"]  # ["ipv4","ipv6"]
+        self.maxFragChainsAllowed = ["24", "24"]
         self.minFragMTUvalue = ["576", "1280"]
         self.MTU = ["1500", "1500"]
         self.actionForIPheaderOptions = ["Clear-Invalid", "Drop"]
@@ -57,7 +55,7 @@ class VLAN(Serializeable,  UniqueObject):
         self.actionForDBfit = "Allow"
         self.ARPinspectType = None
         self.UDPconfigCommands = None
-        self.secondaryIPgroups = [] # ["IP","aliasIP","peerIP","netmask"]
+        self.secondaryIPgroups = []  # ["IP","aliasIP","peerIP","netmask"]
         self.inputPolicies = []
         self.inputAccessGroup = []
         self.outputAccessGroup = []

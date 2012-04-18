@@ -27,7 +27,8 @@ class BasePredictor(Serializeable,  UniqueObject):
         UniqueObject.__init__(self)
         self.type = None
         self.sf_id = None
-        
+
+
 class HashAddrPredictor(BasePredictor):
     def __init__(self):
         BasePredictor.__init__(self)
@@ -36,12 +37,14 @@ class HashAddrPredictor(BasePredictor):
         self.ipv6Prefix = ""
         self.type = "HashAddrPredictor"
 
+
 class HashURL(BasePredictor):
     def __init__(self):
         BasePredictor.__init__(self)
         self.beginPattern = ""
         self.endPattern = ""
         self.type = "HashURL"
+
 
 class HashContent(HashURL):
     def __init__(self):
@@ -50,11 +53,13 @@ class HashContent(HashURL):
         self.offsetBytes = ""
         self.type = "HashContent"
 
+
 class HashCookie(BasePredictor):
     def __init__(self):
         BasePredictor.__init__(self)
         self.cookieName = ""
         self.type = "HashCookie"
+
 
 class HashHeader(BasePredictor):
     def __init__(self):
@@ -63,11 +68,13 @@ class HashHeader(BasePredictor):
         self.definedHeader = None
         self.type = "HashHeader"
 
+
 class HashLayer4(HashContent):
     def __init__(self):
         HashContent.__init__(self)
         self.type = "HashLayer4"
     pass
+
 
 class LeastBandwidth(BasePredictor):
     def __init__(self):
@@ -76,11 +83,13 @@ class LeastBandwidth(BasePredictor):
         self.samples = None
         self.type = "LeastBandwidth"
 
+
 class LeastConn(BasePredictor):
     def __init__(self):
         BasePredictor.__init__(self)
         self.slowStartDur = None
         self.type = "LeastConns"
+
 
 class LeastLoaded(BasePredictor):
     def __init__(self):
@@ -90,6 +99,7 @@ class LeastLoaded(BasePredictor):
         self.weightConn = None
         self.type = "LeastLoaded"
 
+
 class Response(BasePredictor):
     def __init__(self):
         BasePredictor.__init__(self)
@@ -97,6 +107,7 @@ class Response(BasePredictor):
         self.samples = ""
         self.weightConn = None
         self.type = "Response"
+
 
 class RoundRobin(BasePredictor):
     def __init__(self):

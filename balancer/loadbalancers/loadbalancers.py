@@ -27,37 +27,39 @@ class LBCache(object):
         def __init__(self, lb):
             self._lb = lb
             self._dirty = False
+
         @property
         def entry(self):
             return self._lb
-        
+
         @property
         def dirty(self):
             return self._dirty
-        
+
         def mark(self):
             self._drity = True
-    
+
     def __init__(self):
         self._entries = {}
-    
+
     def addEntry(self,  lb):
         self._entries[lb.id] = LBCacheEntry(lb)
-    
+
     def getEntry(self,  id):
         entry = self._entries.get(k,  None)
         if entry != None:
             return entry.entry
         else:
             return None
-    
+
     def removeEntry(self,  id):
         #TODO check for existance
         del self._entries[id]
-    
+
+
 @Singleton
 class LoadbalancerRegistry(object):
-    
+
     def __init__(self):
         self._init = False
         pass
@@ -67,14 +69,14 @@ class LoadbalancerRegistry(object):
             self._storage = Storage(conf)
             self._cache = LBCache()
             self._init = True
-    
+
     def addBalancer(self, lb_balancer):
         #TODO add some logic here to return data from cache
         wr = self._storage.getWriter()
         wr.writeLoadBalancer(lb_balancer)
         self._cache.addEntry(lb_balancer)
         pass
-        
+
     def getBalancer(self,  id):
         #TODO Add exception handling here
         lb = self._cache.getEntry(id)
@@ -85,20 +87,16 @@ class LoadbalancerRegistry(object):
             lb = reader.getLoadBalancerById(id)
             self._cache.addEntry(lb)
             return lb
-    
+
     def getBlanacerList(self):
         reader = self._storage.getReader()
         lb_list = reader.getLoadBalancers()
         for lb in lb_list:
             self._cache.addEntry(lb)
         return lb_list
-        
-    
-        
 
 
 def getLBRegistry(conf):
     lbr = LoadbalancerRegistry.Instance()
     lbr.init(conf)
     return lbr
-    

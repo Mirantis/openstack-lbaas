@@ -27,6 +27,7 @@ LB_ACTIVE_STATUS = "ACTIVE"
 LB_PENDING_UPDATE_STATUS = "PENDING_UPDATE"
 LB_ERROR_STATUS = "ERROR"
 
+
 class LoadBalancer(Serializeable,  UniqueObject):
     def __init__(self):
         Serializeable.__init__(self)
@@ -39,4 +40,3 @@ class LoadBalancer(Serializeable,  UniqueObject):
         self.status = "ACTIVE"
         self.created = None
         self.updated = None
-    
