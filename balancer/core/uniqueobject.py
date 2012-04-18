@@ -17,9 +17,10 @@
 
 import uuid
 
+
 class UniqueObject(object):
     def __init__(self):
         self.id = uuid.uuid1().hex
-        
+
     def createSame(self):
         return type(self)()

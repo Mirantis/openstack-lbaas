@@ -24,72 +24,77 @@ from balancer.core.Worker import *
 from balancer.storage.storage import *
 from balancer.core.ServiceController import *
 
-logger =  logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+
 
 class DeviceGetIndexWorker(SyncronousWorker):
     def __init__(self,  task):
-         super(DeviceGetIndexWorker,  self).__init__(task)
-    
+        super(DeviceGetIndexWorker,  self).__init__(task)
+
     def run(self):
-      self._task.status = STATUS_PROGRESS
-      store = Storage()
-      reader = store.getReader()
-      list = reader.getDevices()
-      self._task.status = STATUS_DONE
-      return list
-       
+        self._task.status = STATUS_PROGRESS
+        store = Storage()
+        reader = store.getReader()
+        list = reader.getDevices()
+        self._task.status = STATUS_DONE
+        return list
+
 
 class DeviceCreateWorker(SyncronousWorker):
     def __init__(self,  task):
-          super(DeviceCreateWorker, self).__init__(task)
-    
+        super(DeviceCreateWorker, self).__init__(task)
+
     def run(self):
-      self._task.status = STATUS_PROGRESS
-      params = self._task.parameters
-      dev = LBDevice()
-      dev.loadFromDict(params)
-      
-      store = Storage()
-      writer = store.getWriter()
-      writer.writeDevice(dev)
-      sc = ServiceController.Instance()
-      sched = sc.scheduller
-      sched.addDevice(dev)
-      self._task.status = STATUS_DONE
-      return 'OK'
-      
+        self._task.status = STATUS_PROGRESS
+        params = self._task.parameters
+        dev = LBDevice()
+        dev.loadFromDict(params)
+
+        store = Storage()
+        writer = store.getWriter()
+        writer.writeDevice(dev)
+        sc = ServiceController.Instance()
+        sched = sc.scheduller
+        sched.addDevice(dev)
+        self._task.status = STATUS_DONE
+        return 'OK'
+
+
 class DeviceInfoWorker(SyncronousWorker):
     def __init__(self,  task):
         super(DeviceInfoWorker, self).__init__(task)
-        
+
     def run(self):
-         self._task.status = STATUS_PROGRESS
-         params = self._task.parameters
-         query = params['query_params']
-         msg = "DeviceInfoWorker start with Params: %s Query: %s" %(params,  query)
-         logger.debug(msg)
-         self._task.status = STATUS_DONE
-         return 'OK'
-         
+        self._task.status = STATUS_PROGRESS
+        params = self._task.parameters
+        query = params['query_params']
+        msg = "DeviceInfoWorker start with Params: %s Query: %s" \
+            % (params,  query)
+        logger.debug(msg)
+        self._task.status = STATUS_DONE
+        return 'OK'
+
+
 class DeviceDeleteWorker(SyncronousWorker):
     def __init__(self,  task):
-          super(DeviceDeleteWorker, self).__init__(task)
-    
+        super(DeviceDeleteWorker, self).__init__(task)
+
     def run(self):
-      self._task.status = STATUS_PROGRESS
-      params = self._task.parameters
-      dev = LBDevice()
-      dev.loadFromDict(params)
-      
-      store = Storage()
-      writer = store.getWriter()
-      writer.writeDevice(dev)
-      sc = ServiceController.Instance()
-      sched = sc.scheduller
-      sched.addDevice(dev)
-      self._task.status = STATUS_DONE
-      return 'OK'         
-      
+        self._task.status = STATUS_PROGRESS
+        params = self._task.parameters
+        dev = LBDevice()
+        dev.loadFromDict(params)
+
+        store = Storage()
+        writer = store.getWriter()
+        writer.writeDevice(dev)
+        sc = ServiceController.Instance()
+        sched = sc.scheduller
+        sched.addDevice(dev)
+        self._task.status = STATUS_DONE
+        return 'OK'
+
+
 class DeviceActionMapper(object):
     def getWorker(self, task,  action,  params=None):
         if action == "index":
@@ -97,6 +102,6 @@ class DeviceActionMapper(object):
         if action == "create":
             return DeviceCreateWorker(task)
         if action == "info":
-            return DeviceInfoWorker(task)              
+            return DeviceInfoWorker(task)
         if action == "delete":
             return DeviceDeleteWorker(task)

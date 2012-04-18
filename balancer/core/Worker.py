@@ -30,30 +30,29 @@ class SyncronousWorker(object):
     def __init__(self,  task):
         self._type = SYNCHRONOUS_WORKER
         self._task = task
-    
-    @property 
+
+    @property
     def type(self):
         return self._type
-        
+
     def run(self):
         self._task.status = STATUS_PROGRESS
-        
+
         self._task.status = STATUS_DONE
         pass
-    
+
 
 class ASyncronousWorker(threading.Thread):
     def __init__(self,  task):
         threading.Thread.__init__(self)
         self._type = ASYNCHRONOUS_WORKER
         self._task = task
-    
-    @property 
+
+    @property
     def type(self):
         return self._type
-    
+
     def run(self):
         self._task.status = STATUS_PROGRESS
         self._task.status = STATUS_DONE
         pass
-    

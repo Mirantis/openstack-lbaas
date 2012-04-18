@@ -20,9 +20,7 @@ import balancer.common.cfg
 
 
 class PolicyConfig(balancer.common.cfg.ConfigOpts):
-    def __init__(self,  **kwargs):
+    def __init__(self, **kwargs):
         config_files = cfg.find_config_files(project='balancer',
                                              prog='balancer-policy')
         super(PolicyConfig, self).__init__(config_files, **kwargs)
-        
-    

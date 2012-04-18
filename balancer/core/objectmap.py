@@ -27,9 +27,9 @@ import balancer.loadbalancers.vlan
 
 class ObjectFactory(object):
     def __init__(self):
-        self._map = {   'devices': balancer.devices.device.LBDevice(), 
-                                'loadbalancers': balancer.loadbalancers.loadbalancer.LoadBalancer()}
-                                
+        self._map = {'devices': balancer.devices.device.LBDevice(),
+        'loadbalancers': balancer.loadbalancers.loadbalancer.LoadBalancer()}
+
     def createOnject(self,  action):
         obj = self._map.get(action, None)
         if obj != None:

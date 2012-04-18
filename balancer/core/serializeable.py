@@ -15,6 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 class Serializeable(object):
     def toDict(self):
         dict = {}
@@ -23,21 +24,19 @@ class Serializeable(object):
                 #dict.update({key[1:]:self.__dict__[key]})
                 pass
             else:
-                dict.update({key:self.__dict__[key]})            
+                dict.update({key: self.__dict__[key]})
         return dict
-        
+
     def loadFromDict(self, dict):
 
         for attr in dict.keys():
-            if hasattr(self, attr): 
+            if hasattr(self, attr):
                 setattr(self, attr, dict[attr])
         pass
-        
+
     def convertToDict(self):
         dict = {}
         for key in self.__dict__.keys():
             if not key.startswith('_'):
-                dict.update({key:self.__dict__[key]})            
+                dict.update({key: self.__dict__[key]})
         return dict
-      
-      

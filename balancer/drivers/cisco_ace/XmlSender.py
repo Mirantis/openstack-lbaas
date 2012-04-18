@@ -18,12 +18,13 @@
 
 import urllib2
 import base64
-import re 
+import re
 import logging
 from balancer.drivers.cisco_ace.Context import Context
 import openstack.common.exception
 
 logger = logging.getLogger(__name__)
+
 
 class XmlSender:
     def __init__(self,  context):
@@ -31,57 +32,55 @@ class XmlSender:
 
     def getParam(self, name):
         return self._params.get(name,  None)
-    
+
     def deployConfig(self,  context,  command):
         request = urllib2.Request(self.url)
-        
-        base64str = base64.encodestring('%s:%s' % (context.login, context.password))[:-1]
-        
+
+        base64str = base64.encodestring('%s:%s' % \
+            (context.login, context.password))[:-1]
+
         authheader = "Basic %s" % base64str
-        
+
         request.add_header("Authorization", authheader)
-        
+
         data = """xml_cmd=<request_xml>\r\n%s\r\n</request_xml>""" % command
         logger.debug("send data to ACE:\n" + data)
-        
+
         try:
-          message = urllib2.urlopen(request, data)
-          s = message.read()
+            message = urllib2.urlopen(request, data)
+            s = message.read()
         except (Exception):
             raise openstack.common.exception.Error(Exception)
-            
+
         logger.debug("data from ACE:\n" + s)
-            
+
         if (s.find('XML_CMD_SUCCESS') > 0):
-               return 'OK'
+            return 'OK'
         else:
-               return s
-
-
-
-
+            return s
 
     def getConfig(self,  context,  command):
         request = urllib2.Request(self.url)
-        
-        base64str = base64.encodestring('%s:%s' % (context.login, context.password))[:-1]
-        
+
+        base64str = base64.encodestring('%s:%s' % \
+            (context.login, context.password))[:-1]
+
         authheader = "Basic %s" % base64str
-        
+
         request.add_header("Authorization", authheader)
-        
+
         data = """xml_cmd=<request_row>\r\n%s\r\n</request_row>""" % command
         logger.debug("send data to ACE:\n" + data)
-        
+
         try:
-          message = urllib2.urlopen(request, data)
-          s = message.read()
+            message = urllib2.urlopen(request, data)
+            s = message.read()
         except (Exception):
             raise openstack.common.exception.Error(Exception)
-            
+
         logger.debug("data from ACE:\n" + s)
-            
+
         if (s.find('XML_CMD_SUCCESS') > 0):
-               return 'OK'
+            return 'OK'
         else:
-               return s
+            return s

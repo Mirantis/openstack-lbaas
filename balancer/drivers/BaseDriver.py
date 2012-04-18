@@ -15,62 +15,59 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 class BaseDriver(object):
     def getContext(self):
         return BaseContext()
-    
+
     def checkNone(self, obj):
         if bool(obj):
-          if obj != 'None':
-            return True
+            if obj != 'None':
+                return True
         return False
-    
+
     def createRServer(self,  context,  rserver):
         pass
-        
+
     def deleteRServer(self,  context,  rserver):
         pass
-    
+
     def activateRServer(self,  context,  serverfarm,  rserver):
         pass
-    
+
     def suspendRServer(self,  context,  serverfarm,  rserver):
         pass
-    
-    
+
     def createProbe(self,  context,  probe):
         pass
-    
+
     def deleteProbe(self,  context,  probe):
         pass
-    
-    
+
     def createServerFarm(self,  context,  serverfarm):
         pass
-    
+
     def deleteServerFarm(self,  context,  serverfarm):
         pass
-    
+
     def addRServerToSF(self,  context,  serverfarm,  rserver):
         pass
-    
+
     def deleteRServerFromSF(self, context,  serverfarm,  rserver):
         pass
-    
+
     def addProbeToSF(self,  context,  serverfarm,  probe):
         pass
-    
+
     def deleteProbeFromSF(self,  context,  serverfarm,  probe):
         pass
-    
-    
+
     def createStickiness(self,  context,  sticky):
         pass
-    
+
     def deleteStickiness(self,  context,  sticky):
         pass
-    
-    
+
     def createVIP(self,  context,  vip,  sfarm):
         pass
 
@@ -81,18 +78,15 @@ class BaseDriver(object):
 class BaseContext(object):
     def __init__(self):
         self._params = {}
-    
+
     def addParam(self,  name,  param):
         self._params[name] = param
-    
+
     def getParam(self, name):
         return self._params.get(name,  None)
 
 
-    
 def is_sequence(arg):
     return (not hasattr(arg, "strip") and
             hasattr(arg, "__getitem__") or
             hasattr(arg, "__iter__"))
-
-

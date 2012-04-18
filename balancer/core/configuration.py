@@ -23,23 +23,22 @@ import threading
 from balancer.common.utils import *
 logger = logging.getLogger(__name__)
 
+
 @Singleton
 class Configuration(object):
     def __init__(self):
         self._config = None
         self._lock = threading.Lock()
-    
+
     def put(self,  conf):
         msg = "Put config: %s" % conf
         logger.debug(msg)
         self._lock.acquire()
         self._config = conf
         self._lock.release()
-    
+
     def get(self):
         self._lock.acquire()
         conf = self._config
         self._lock.release()
         return conf
-        
-        

@@ -18,11 +18,12 @@ import uuid
 from balancer.core.serializeable import Serializeable
 from balancer.core.uniqueobject import UniqueObject
 
+
 class LBDevice(Serializeable, UniqueObject):
     def __init__(self):
         Serializeable.__init__(self)
         UniqueObject.__init__(self)
-   
+
         self.name = None
         self.type = "ACE"
         self.version = None
@@ -39,4 +40,3 @@ class LBDevice(Serializeable, UniqueObject):
         self.configfilepath = None
         self.remotepath = None
         self.interface = None
-    
