@@ -41,6 +41,7 @@ class Balancer():
         self.rs = []
         self.probes = []
         self.vips = []
+        self.sticky = None
 
     def parseParams(self, params):
 
@@ -94,13 +95,21 @@ class Balancer():
                 vs.name = vs.id
                 self.vips.append(vs)
 
-        #stiky = params.get("sessionPersistence",  None)
+        stiky = params.get("sessionPersistence",  None)
+        
+        if sticky != None:
+            st = createSticky(sticky['type'])
+            st.loadFromDict(sticky)
+            st.sf_id = sf.id
+            st.name = st.id
+            self.sticky = st
+            self.sf._sticky = st            
 
     def update(self):
         store = balancer.storage.storage.Storage()
         wr = store.getWriter()
         wr.updateObjectInTable(self.lb)
-        wr.writeSticky(self.sf._sticky)
+        wr.updateObjectInTable(self.sf._sticky)
         for rs in self.rs:
             wr.updateObjectInTable(rs)
 
