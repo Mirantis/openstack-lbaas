@@ -41,7 +41,6 @@ class Balancer():
         self.rs = []
         self.probes = []
         self.vips = []
-        self.sticky = ""
 
     def parseParams(self, params):
 
@@ -102,8 +101,7 @@ class Balancer():
             st.loadFromDict(stic)
             st.sf_id = sf.id
             st.name = st.id
-            self.sticky = st
-            self.sf._sticky = st            
+            self.sf._sticky = st         
 
     def update(self):
         store = balancer.storage.storage.Storage()

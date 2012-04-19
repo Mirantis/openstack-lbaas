@@ -431,6 +431,8 @@ class Writer(object):
         self._con.commit()
         
     def writeSticky(self, st):
+        if st == None:
+            return
         logger.debug("Saving Sticky instance in DB.")
         cursor = self._con.cursor()
         dict = st.convertToDict()
