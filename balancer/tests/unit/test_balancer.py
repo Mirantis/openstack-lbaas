@@ -20,13 +20,16 @@ import unittest
 from balancer.loadbalancers.vserver import Balancer
 from openstack.common.wsgi import JSONRequestDeserializer
 
+
 class BalancerTestCase(unittest.TestCase):
     class RequestMock(object):
         def __init__(self,  body):
             self.body = body
             self.content_length = len(body)
-            self.headers = {'Content length': self.content_length,  'transfer-encoding': 'chunked',  'Content-Type':'application/json'}
-    
+            self.headers = {'Content length': self.content_length,  \
+                           'transfer-encoding': 'chunked',  \
+                           'Content-Type': 'application/json'}
+
     def test_balancer_parse(self):
         bl = Balancer()
         file = open("./balancer/tests/unit/createLBcommand")
@@ -36,21 +39,18 @@ class BalancerTestCase(unittest.TestCase):
         serializer = JSONRequestDeserializer()
         parsed = serializer.default(req)
         params = parsed['body']
-        
+
         bl.parseParams(params)
-        
+
         if bl.sf.lb_id != bl.lb.id:
             self.fail("SF.lb_id does not point ot LB id")
-        
+
         for rs in bl.rs:
             if rs.sf_id != bl.sf.id:
                 self.fail("RS.sf_id does not point to SF id")
-            
+
         for vip in bl.vips:
             if vip.sf_id != bl.sf.id:
                 self.fail("VIp.sf_id does not point to SF id")
             if vip.lb_id != bl.lb.id:
                 self.fail("Vip.lb_id does not point to LB id")
-        
-    
-        

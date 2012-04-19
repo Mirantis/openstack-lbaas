@@ -19,17 +19,16 @@ import unittest
 
 from balancer.devices.device import LBDevice
 
+
 class DeviceTestCase(unittest.TestCase):
-    
+
     def test_device_defaults(self):
         device = LBDevice()
         device.name = "test"
         self.assertEquals(device.name,  "test")
-        
+
     def test_device_load(self):
         device = LBDevice()
-        params = {'name':"test",  'ip': '10.10.10.10'}
+        params = {'name': "test",  'ip': '10.10.10.10'}
         device.loadFromDict(params)
         self.assertEqual(device.name,  "test")
-
-    

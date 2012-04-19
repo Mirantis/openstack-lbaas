@@ -45,8 +45,8 @@ rs.probes = ["icmp"]
 
 probe = HTTPprobe()
 probe.name = "LB_test_ProbeHTTP"
-probe.type="HTTP"
-probe.requestHTTPurl = "cisco.com" #Change default value in Probe class !
+probe.type = "HTTP"
+probe.requestHTTPurl = "cisco.com"  # Change default value in Probe class !
 probe.probeInterval = 16
 probe.passDetectInterval = 61
 probe.failDetect = 4
@@ -77,25 +77,25 @@ sf.partialThreshPercentage = 11
 sf.backInservice = 22
 
 sticky_type = "httpheader"
-if sticky_type=="httpcontent":
+if sticky_type == "httpcontent":
     sticky = HTTPContentSticky()
     sticky.offset = 10
-    sticky.length  = ""
+    sticky.length = ""
     sticky.beginPattern = "beginpaternnn"
     sticky.endPattern = "endpaternnnn"
-elif sticky_type=="httpcookie":
+elif sticky_type == "httpcookie":
     sticky = HTTPCookieSticky()
     sticky.cookieName = "cookieshmuki"
     sticky.enableInsert = True
     sticky.browserExpire = True
     sticky.offset = 10
-    sticky.length  = 20
+    sticky.length = 20
     sticky.secondaryName = "stickysecname"
-elif sticky_type=="httpheader":
+elif sticky_type == "httpheader":
     sticky = HTTPHeaderSticky()
     sticky.headerName = "authorization"
     sticky.offset = 10
-    sticky.length  = 20
+    sticky.length = 20
 sticky.type = sticky_type
 sticky.name = "LB_test_sticky01"
 sticky.serverFarm = "LB_test_sfarm01"
@@ -109,38 +109,38 @@ sticky.timeoutActiveConn = True
 vs = VirtualServer()
 vs.name = "LB_test_VIP1"
 vs.address = "10.250.250.250"
-vs.VLAN=[2]
-vs.port="80"
+vs.VLAN = [2]
+vs.port = "80"
 
-    
+
 class Ace_5x_DriverTestCase(unittest.TestCase):
     """def test_01_createRServer(self):
         print driver.createRServer(test_context, rs)
-    
+
     def test_02_createProbe(self):
         driver.createProbe(test_context, probe)
-    
+
     def test_03_createServerFarm(self):
         driver.createServerFarm(test_context, sf)
-    
+
     def test_04_addRServerToSF(self):
         driver.addRServerToSF(test_context, sf,  rs)
-    
+
     def test_05_addProbeToSF(self):
         driver.addProbeToSF(test_context, sf,  probe)"""
-    
+
     def test_06_createStickiness(self):
         driver.createStickiness(test_context, sticky)
-    
+
     """def test_07_createVIP(self):
         driver.createVIP(test_context, vs,  sf)
-    
+
     def test_08_suspendRServer(self):
         driver.suspendRServer(test_context, sf, rs)
-    
+
     def test_09_activateRServer(self):
         driver.activateRServer(test_context, sf, rs)
-    
+
     def test_10_deleteVIP(self):
         driver.deleteVIP(test_context, vs)"""
 
@@ -149,16 +149,15 @@ class Ace_5x_DriverTestCase(unittest.TestCase):
 
     """def test_12_deleteProbeFromSF(self):
         driver.deleteProbeFromSF(test_context, sf,  probe)
-    
+
     def test_13_deleteRServerFromSF(self):
         driver.deleteRServerFromSF(test_context, sf,  rs)
-    
+
     def test_14_deleteServerFarm(self):
         driver.deleteServerFarm(test_context, sf)
-    
+
     def test_15_deleteProbe(self):
         driver.deleteProbe(test_context, probe)
-    
+
     def test_16_deleteRServer(self):
         driver.deleteRServer(test_context, rs)"""
-    
