@@ -112,10 +112,10 @@ class AceDriver(BaseDriver):
 
         XMLstr = "<serverfarm type='" + serverfarm.type.lower() + \
             "' name='" + serverfarm.name + "'>"
-        XMLstr = XMLstr + "<rserver name='" + rserver.name + "'>\r\n  \
+        XMLstr = XMLstr + "  <rserver name='" + rserver.name + "'>\r\n  \
             </rserver>"
-        XMLstr = XMLstr + "<inservice/>\r\n"
-        XMLstr = XMLstr + "</rserver_sfarm>\r\n"
+        XMLstr = XMLstr + "    <inservice/>\r\n"
+        XMLstr = XMLstr + "  </rserver_sfarm>\r\n"
         XMLstr = XMLstr + "</serverfarm>"
 
         return self.send_data(context,  XMLstr)
@@ -376,38 +376,37 @@ class AceDriver(BaseDriver):
             "' name='" + serverfarm.name + "'>\r\n"
 
         if self.checkNone(serverfarm.description):
-            XMLstr = XMLstr + "<description descr-string='" + \
+            XMLstr = XMLstr + "  <description descr-string='" + \
                 serverfarm.description + "'/> \r\n"
 
         if self.checkNone(serverfarm.failAction):
-            XMLstr = XMLstr + "<failaction failaction-type='" + \
+            XMLstr = XMLstr + "  <failaction failaction-type='" + \
                 serverfarm.failAction + "'/>\r\n"
 
         if self.checkNone(serverfarm._predictor):
-        #Some predictors are may include additional parameters !
-            XMLstr = XMLstr + "<predictor predictor-method='" + \
+            XMLstr = XMLstr + "  <predictor predictor-method='" + \
                 serverfarm._predictor.type.lower() + "'/>\r\n"
 
         if self.checkNone(serverfarm._probes):
             for probe in serverfarm._probes:
-                XMLstr = XMLstr + "<probe_sfarm probe-name='" + \
+                XMLstr = XMLstr + "  <probe_sfarm probe-name='" + \
                     probe.name + "'/>\r\n"
 
         if serverfarm.type.lower() == "host":
             if self.checkNone(serverfarm.failOnAll):
-                XMLstr = XMLstr + "<probe_sfarm probe-name='fail-on-all'/>\r\n"
+                XMLstr = XMLstr + "  <probe_sfarm probe-name='fail-on-all'/>\r\n"
 
             if self.checkNone(serverfarm.transparent):
-                XMLstr = XMLstr + "<transparent/>\r\n"
+                XMLstr = XMLstr + "  <transparent/>\r\n"
 
             if self.checkNone(serverfarm.partialThreshPercentage) and \
                 self.checkNone(serverfarm.backInservice):
-                XMLstr = XMLstr + "<partial-threshold value='" + \
+                XMLstr = XMLstr + "  <partial-threshold value='" + \
                     serverfarm.partialThreshPercentage + "' back-inservice='" \
                     + serverfarm.backInservice + "'/>\r\n"
 
             if self.checkNone(serverfarm.inbandHealthCheck):
-                XMLstr = XMLstr + "<inband-health check='" + \
+                XMLstr = XMLstr + "  <inband-health check='" + \
                     serverfarm.inbandHealthCheck + "'"
                 if serverfarm.inbandHealthCheck.lower == "log":
                     XMLstr = XMLstr + "threshold='" + \
@@ -669,11 +668,7 @@ class AceDriver(BaseDriver):
             XMLstr = XMLstr + "/>\r\n"
         XMLstr = XMLstr + "</sticky>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
 
     def deleteStickiness(self,  context,   sticky):
         if not self.checkNone(sticky.name):
@@ -722,11 +717,7 @@ class AceDriver(BaseDriver):
 
         XMLstr = XMLstr + "</sticky>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
 
     def createVIP(self,  context, vip,  sfarm):
         if not self.checkNone(vip.name) or not self.checkNone(vip.name) \
@@ -909,3 +900,4 @@ class AceDriver(BaseDriver):
                             access-type='input' name='vip-acl'/>\r\n"
                         XMLstr = XMLstr + "</interface>"
                         tmp = s.deployConfig(context, XMLstr)
+        return "OK"

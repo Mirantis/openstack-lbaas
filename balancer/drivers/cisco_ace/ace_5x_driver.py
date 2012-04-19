@@ -30,10 +30,22 @@ class AceDriver(BaseDriver):
     def __init__(self):
         pass
 
+    def send_data(self,  context,  XMLstr):
+        s = XmlSender(context)
+        tmp = s.deployConfig(context, XMLstr)
+        if (tmp == 'OK'):
+            return tmp
+        else:
+            raise openstack.common.exception.Invalid(tmp)
+
+
+
     def getContext(self,  dev):
         logger.debug("Creating context with params: IP %s, Port: %s" % \
             (dev.ip,  dev.port))
         return Context(dev.ip, dev.port, dev.user,  dev.password)
+
+
 
     def createRServer(self, context, rserver):
         logger.debug("Creating the Real Server\n")
@@ -44,29 +56,39 @@ class AceDriver(BaseDriver):
         XMLstr = "<rserver type='" + rserver.type.lower() + \
             "' name='" + rserver.name + "'>\r\n"
 
-        if (rserver.type.lower() == "host"):
-            if self.checkNone(rserver.address):
-                XMLstr = XMLstr + "  <ip_address node='address' " + \
-                    rserver.ipType.lower() + "-address='" + \
-                    str(rserver.address) + "'/>\r\n"
-            if self.checkNone(rserver.failOnAll):
-                XMLstr = XMLstr + "  <fail-on-all/>\r\n"
-            if self.checkNone(rserver.weight):
-                XMLstr = XMLstr + "  <weight value='" + str(rserver.weight) + \
-                    "'/>\r\n"
-
-        if (rserver.type.lower() == "redirect"):
-            if self.checkNone(rserver.webHostRedir):
-                XMLstr = XMLstr + \
-                    "  <webhost-redirection relocation-string='" + \
-                    rserver.webHostRedir + "'"
-                # without parameter  redirection-code
-                XMLstr = XMLstr + " redirection-code='301'"
-                XMLstr = XMLstr + "/>\r\n"
-
         if self.checkNone(rserver.description):
             XMLstr = XMLstr + "  <description descr-string='" + \
                 rserver.description + "'/>\r\n"
+
+
+        if (rserver.type.lower() == "host"):
+            if self.checkNone(rserver.address):
+                XMLstr = XMLstr + "  <ip_address node='address' "
+                if (rserver.ipType.lower() == 'ipv4'):
+                    XMLstr = XMLstr + "ipv4-address='"
+                else:
+                    XMLstr = XMLstr + "ipv6-address='"
+                XMLstr = XMLstr + rserver.address + "'/>\r\n"
+
+            if self.checkNone(rserver.failOnAll):
+                XMLstr = XMLstr + "  <fail-on-all/>\r\n"
+
+            XMLstr = XMLstr + "  <weight value='" + str(rserver.weight) + \
+                "'/>\r\n"
+        else:
+            if self.checkNone(rserver.webHostRedir):
+                XMLstr = XMLstr + "  <webhost-redirection relocation-string='"\
+                    + rserver.webHostRedir + "'/>\r\n"
+                if self.checkNone(rserver.redirectionCode):
+                    XMLstr = XMLstr + \
+                    "  <webhost-redirection redirection-code='" + \
+                    rserver.redirectionCode + "'/>\r\n"
+
+
+        if (self.checkNone(rserver.maxCon) and self.checkNone(rserver.minCon)):
+            XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + \
+                "' min='" + str(rserver.minCon) + "'/>\r\n"
+
 
         if (self.checkNone(rserver.maxCon) and self.checkNone(rserver.minCon)):
             XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + \
@@ -75,21 +97,18 @@ class AceDriver(BaseDriver):
         if self.checkNone(rserver.rateConnection):
             XMLstr = XMLstr + "  <rate-limit type='connection' value='" + \
                 str(rserver.rateConnection) + "'/>\r\n"
-
         if self.checkNone(rserver.rateBandwidth):
             XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + \
                 str(rserver.rateBandwidth) + "'/>\r\n"
 
-        if self.checkNone(rserver.state):
-            XMLstr = XMLstr + "  <" + rserver.state.lower() + "/>\r\n"
+        if (rserver.state == "In Service"):
+            XMLstr = XMLstr + "  <inservice/>\r\n"
 
         XMLstr = XMLstr + "</rserver>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
+
+
 
     def deleteRServer(self, context, rserver):
         if not self.checkNone(rserver.name):
@@ -98,50 +117,37 @@ class AceDriver(BaseDriver):
         XMLstr = "<rserver sense='no' type='" + rserver.type.lower() + \
             "' name='" + rserver.name + "'></rserver>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
+
+
 
     def activateRServer(self,  context,  serverfarm,  rserver):
-        if not self.checkNone(rserver.name) or not \
-            self.checkNone(serverfarm.name):
-            return 'RSERVER or SERVERFARM NAME ERROR'
+        if not self.checkNone(rserver.name):
+            return 'RSERVER NAME ERROR'
 
         XMLstr = "<serverfarm type='" + serverfarm.type.lower() + \
-            "' name='" + serverfarm.name + "'>r\n"
-        XMLstr = XMLstr + "<rserver name='" + rserver.name + "'>\r\n"
-        XMLstr = XMLstr + "<inservice/>\r\n"
-        XMLstr = XMLstr + "</rserver>\r\n"
+            "' name='" + serverfarm.name + "'>"
+        XMLstr = XMLstr + "  <rserver name='" + rserver.name + "'>\r\n  \
+            </rserver>"
+        XMLstr = XMLstr + "    <inservice/>\r\n"
+        XMLstr = XMLstr + "  </rserver_sfarm>\r\n"
         XMLstr = XMLstr + "</serverfarm>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
 
     def suspendRServer(self,  context,  serverfarm,  rserver):
         if not self.checkNone(rserver.name):
             return 'RSERVER NAME ERROR'
 
-        if not self.checkNone(rserver.name) or not \
-            self.checkNone(serverfarm.name):
-            return 'RSERVER or SERVERFARM NAME ERROR'
-
         XMLstr = "<serverfarm type='" + serverfarm.type.lower() + \
-            "' name='" + serverfarm.name + "'>r\n"
-        XMLstr = XMLstr + "<rserver name='" + rserver.name + "'>\r\n"
+            "' name='" + serverfarm.name + "'>"
+        XMLstr = XMLstr + "<rserver name='" + rserver.name + "'>\r\n  \
+            </rserver>"
         XMLstr = XMLstr + "<inservice sense='no'/>\r\n"
-        XMLstr = XMLstr + "</rserver>\r\n"
+        XMLstr = XMLstr + "</rserver_sfarm>\r\n"
         XMLstr = XMLstr + "</serverfarm>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
 
     def createProbe(self,  context,  probe):
         if not self.checkNone(probe.name):
@@ -356,16 +362,14 @@ class AceDriver(BaseDriver):
         else:
             XMLstr = XMLstr + "</probe_echo>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
 
     def deleteProbe(self,  context,  probe):
         if not self.checkNone(probe.name):
             return 'PROBE NAME ERROR'
         type = probe.type.lower()
+        if type == "connect":
+            type = "tcp"
 
         if ((type != 'echo-tcp') and (type != 'echo-udp')):
             XMLstr = "<probe_" + type + " type='" + type + "' name='" + \
@@ -378,11 +382,7 @@ class AceDriver(BaseDriver):
                 XMLstr = XMLstr + "udp' name='"
             XMLstr = XMLstr + probe.name + "' sense='no'>\r\n</probe_echo>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
 
     def createServerFarm(self,  context,  serverfarm):
         if not self.checkNone(serverfarm.name):
@@ -392,80 +392,71 @@ class AceDriver(BaseDriver):
             "' name='" + serverfarm.name + "'>\r\n"
 
         if self.checkNone(serverfarm.description):
-            XMLstr = XMLstr + "<description descr-string='" + \
+            XMLstr = XMLstr + "  <description descr-string='" + \
                 serverfarm.description + "'/> \r\n"
 
         if self.checkNone(serverfarm.failAction):
-            XMLstr = XMLstr + "<failaction failaction-type='" + \
-                serverfarm.failAction.lower() + "'/>\r\n"
-        #Some predictors are may include additional parameters !
+            XMLstr = XMLstr + "  <failaction failaction-type='" + \
+                serverfarm.failAction + "'/>\r\n"
+
         if self.checkNone(serverfarm._predictor):
-            XMLstr = XMLstr + "<predictor predictor-method='" + \
+            XMLstr = XMLstr + "  <predictor predictor-method='" + \
                 serverfarm._predictor.type.lower() + "'/>\r\n"
 
-        for i in serverfarm._probes:
-            XMLstr = XMLstr + "<probe_sfarm probe-name='" + i.upper() + \
-                "'/>\r\n"
+        if self.checkNone(serverfarm._probes):
+            for probe in serverfarm._probes:
+                XMLstr = XMLstr + "  <probe_sfarm probe-name='" + \
+                    probe.name + "'/>\r\n"
 
         if serverfarm.type.lower() == "host":
-            #if self.checkNone(serverfarm.failOnAll):              #NOT WORK !
-            #XMLstr = XMLstr + "<probe_sfarm probe-name='fail-on-all'/>\r\n"
+            if self.checkNone(serverfarm.failOnAll):
+                XMLstr = XMLstr + "  <probe_sfarm probe-name='fail-on-all'/>\r\n"
 
             if self.checkNone(serverfarm.transparent):
-                XMLstr = XMLstr + "<transparent/>\r\n"
+                XMLstr = XMLstr + "  <transparent/>\r\n"
 
             if self.checkNone(serverfarm.partialThreshPercentage) and \
                 self.checkNone(serverfarm.backInservice):
-                XMLstr = XMLstr + "<partial-threshold value='" + \
-                    str(serverfarm.partialThreshPercentage) + \
-                    "' back-inservice='" + str(serverfarm.backInservice) + \
-                    "'/>\r\n"
+                XMLstr = XMLstr + "  <partial-threshold value='" + \
+                    serverfarm.partialThreshPercentage + "' back-inservice='" \
+                    + serverfarm.backInservice + "'/>\r\n"
 
             if self.checkNone(serverfarm.inbandHealthCheck):
-                XMLstr = XMLstr + "<inband-health check='" + \
-                    serverfarm.inbandHealthCheck.lower() + "'"
-                if serverfarm.inbandHealthCheck.lower() == "log":
-                    XMLstr = XMLstr + " threshold='" + \
+                XMLstr = XMLstr + "  <inband-health check='" + \
+                    serverfarm.inbandHealthCheck + "'"
+                if serverfarm.inbandHealthCheck.lower == "log":
+                    XMLstr = XMLstr + "threshold='" + \
                         str(serverfarm.connFailureThreshCount) + \
-                        "' reset='" + str(serverfarm.resetTimeout) + "'"
+                        "' reset='" + str(serverfarm.resetTimeout) + \
+                        "'"
                         #Do deploy if  resetTimeout='' ?
-                if serverfarm.inbandHealthCheck.lower() == "remove":
-                    XMLstr = XMLstr + " threshold='" + \
-                        str(serverfarm.connFailureThreshCount) + "'"
-                        # if  resumeService='' ?
-                    if self.checkNone(serverfarm.resetTimeout):
-                        XMLstr = XMLstr + " reset='" + \
-                            str(serverfarm.resetTimeout) + "'"
-                    if self.checkNone(serverfarm.resumeService):
-                        XMLstr = XMLstr + " resume-service='" + \
-                            str(serverfarm.resumeService) + "'"
+
+                if serverfarm.inbandHealthCheck.lower == "remove":
+                    XMLstr = XMLstr + "threshold='" + \
+                        str(serverfarm.connFailureThreshCount) + \
+                        "' reset='" + str(serverfarm.resetTimeout) + \
+                        "'  resume-service='" + \
+                        str(serverfarm.resumeService) + "'"
+                        #Do deploy if  resumeService='' ?
                 XMLstr = XMLstr + "/>\r\n"
 
             if self.checkNone(serverfarm.dynamicWorkloadScale):
             # Need to upgrade (may include VM's)
-                XMLstr = XMLstr + "<dws type='" + \
-                    serverfarm.dynamicWorkloadScale.lower() + "'/>\r\n"
+                XMLstr = XMLstr + "<dws type='" + serverfarm.failAction + \
+                    "'/>\r\n"
 
         XMLstr = XMLstr + "</serverfarm>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
 
     def deleteServerFarm(self,  context,  serverfarm):
         if not self.checkNone(serverfarm.name):
             return 'SERVER FARM NAME ERROR'
 
-        XMLstr = "<serverfarm sense='no' type='" + serverfarm.type.lower() + \
-            "' name='" + serverfarm.name + "'></serverfarm>"
+        XMLstr = "<serverfarm sense='no' name='" + serverfarm.name + \
+            "'></serverfarm>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
 
     def addRServerToSF(self,  context,  serverfarm,  rserver):
     #rserver in sfarm may include many parameters !
@@ -473,64 +464,60 @@ class AceDriver(BaseDriver):
             self.checkNone(rserver.name):
             return "ERROR"
 
-        XMLstr = "<serverfarm type='" + serverfarm.type.lower() + \
-            "' name='" + serverfarm.name + "'>\r\n"
-        XMLstr = XMLstr + "<rserver_sfarm name='" + rserver.name + "'"
+        XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
+        XMLstr = XMLstr + "  <rserver_sfarm name='" + rserver.name + "'"
         if self.checkNone(rserver.port):
             XMLstr = XMLstr + " port='" + rserver.port + "'"
         XMLstr = XMLstr + ">\r\n"
         if self.checkNone(rserver.weight):
-            XMLstr = XMLstr + "<weight value='" + str(rserver.weight) + \
+            XMLstr = XMLstr + "    <weight value='" + str(rserver.weight) + \
                 "'/>\r\n"
         if self.checkNone(rserver.backupRS):
-            XMLstr = XMLstr + "<backup-rserver rserver-name='" + \
+            XMLstr = XMLstr + "    <backup-rserver rserver-name='" + \
                 rserver.backupRS + "'"
             if self.checkNone(rserver.backupRSport):
                 XMLstr = XMLstr + " port='" + rserver.backupRSport + "'"
             XMLstr = XMLstr + "/>\r\n"
         if self.checkNone(rserver.maxCon) and self.checkNone(rserver.minCon):
-            XMLstr = XMLstr + "<conn-limit max='" + str(rserver.maxCon) + \
+            XMLstr = XMLstr + "    <conn-limit max='" + str(rserver.maxCon) + \
                 "' min='" + str(rserver.minCon) + "'/>\r\n"
-        #if self.checkNone(rserver.rateConnection):               #NOT WORK !
-            #XMLstr=XMLstr+"<rate-limit type='connection' value='"+
-            #str(rserver.rateConnection)+"'/>\r\n"
+
+        # this parameters does not work
+        #if self.checkNone(rserver.rateConnection):
+        #    XMLstr = XMLstr+"    <rate-limit type='connection' value='"
+        #+str(rserver.rateConnection)+"'/>\r\n"
         #if self.checkNone(rserver.rateBandwidth):
-            #XMLstr=XMLstr+"<rate-limit type='bandwidth' value='"+
-            #str(rserver.rateBandwidth)+"'/>\r\n"
+        #   XMLstr = XMLstr+"    <rate-limit type='bandwidth' value='bandwidth'
+        # value='"+str(rserver.rateBandwidth)+"'/>\r\n"
 
         if self.checkNone(rserver.cookieStr):
-            XMLstr = XMLstr + "<cookie-string cookie-value='" + \
+            XMLstr = XMLstr + "    <cookie-string cookie-value='" + \
                 rserver.cookieStr + "'/>\r\n"
 
-        for i in rserver.probes:
-            XMLstr = XMLstr + "<probe_sfarm probe-name='" + i.upper() + \
-                "'/>\r\n"
-        #if self.checkNone(rserver.failOnAll):
-            #XMLstr=XMLstr+"<probe_sfarm probe-name='fail-on-all'/>"
+#        for i in range(len(rserver._probes)):
+#            XMLstr = XMLstr + "    <probe_sfarm probe-name='" + \
+#               rserver._probes[i] + "'/>\r\n"
+        if self.checkNone(rserver.failOnAll):
+            XMLstr = XMLstr + "    <probe_sfarm probe-name='fail-on-all'/>"
         if self.checkNone(rserver.state):
             if rserver.state.lower() == "inservice":
-                XMLstr = XMLstr + "<inservice/>\r\n"
+                XMLstr = XMLstr + "    <inservice/>\r\n"
             if rserver.state.lower() == "standby":
-                XMLstr = XMLstr + "<inservice mode='" + \
+                XMLstr = XMLstr + "    <inservice mode='" + \
                     rserver.state.lower() + "'/>\r\n"
             if rserver.state.lower() == "outofservice":
-                XMLstr = XMLstr + "<inservice sense='no'/>\r\n"
-        XMLstr = XMLstr + "</rserver_sfarm>\r\n"
+                XMLstr = XMLstr + "    <inservice sense='no'/>\r\n"
+        XMLstr = XMLstr + "  </rserver_sfarm>\r\n"
         XMLstr = XMLstr + "</serverfarm>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
 
     def deleteRServerFromSF(self,  context,  serverfarm,  rserver):
         if not self.checkNone(serverfarm.name) or not \
             self.checkNone(rserver.name):
             return "ERROR"
 
-        XMLstr = "<serverfarm type='" + serverfarm.type.lower() + \
-            "' name='" + serverfarm.name + "'>\r\n"
+        XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
         XMLstr = XMLstr + "<rserver_sfarm sense='no' name='" + \
             rserver.name + "'"
         if self.checkNone(rserver.port):
@@ -539,45 +526,30 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "</rserver_sfarm>\r\n"
         XMLstr = XMLstr + "</serverfarm>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
 
     def addProbeToSF(self,  context,  serverfarm,  probe):
         if not self.checkNone(serverfarm.name) or not \
             self.checkNone(probe.name):
             return "ERROR"
 
-        XMLstr = "<serverfarm type='" + serverfarm.type.lower() + \
-            "' name='" + serverfarm.name + "'>\r\n"
-        XMLstr = XMLstr + " <probe_sfarm probe-name='" + probe.name + \
-            "'/>\r\n"
+        XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
+        XMLstr = XMLstr + " <probe_sfarm probe-name='" + probe.name + "'/>\r\n"
         XMLstr = XMLstr + "</serverfarm>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
 
-    def deleteProbeFromSF(elf,  context,  serverfarm,  probe):
+    def deleteProbeFromSF(self,  context,  serverfarm,  probe):
         if not self.checkNone(serverfarm.name) or not \
             self.checkNone(probe.name):
             return "ERROR"
 
-        XMLstr = "<serverfarm type='" + serverfarm.type.lower() + \
-            "' name='" + serverfarm.name + "'>\r\n"
+        XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
         XMLstr = XMLstr + " <probe_sfarm sense='no' probe-name='" + \
             probe.name + "'/>\r\n"
         XMLstr = XMLstr + "</serverfarm>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
 
     def createStickiness(self,  context, sticky):
         if not self.checkNone(sticky.name):
@@ -712,11 +684,7 @@ class AceDriver(BaseDriver):
             XMLstr = XMLstr + "/>\r\n"
         XMLstr = XMLstr + "</sticky>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
 
     def deleteStickiness(self,  context,   sticky):
         if not self.checkNone(sticky.name):
@@ -765,11 +733,7 @@ class AceDriver(BaseDriver):
 
         XMLstr = XMLstr + "</sticky>"
 
-        res = XmlSender(context)
-        tmp = res.deployConfig(context, XMLstr)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
-        return tmp
+        return self.send_data(context,  XMLstr)
 
     def createVIP(self,  context, vip,  sfarm):
         if not self.checkNone(vip.name) or not self.checkNone(vip.name) \
@@ -939,3 +903,4 @@ class AceDriver(BaseDriver):
                             access-type='input' name='vip-acl'/>\r\n"
                         XMLstr = XMLstr + "</interface>"
                         tmp = s.deployConfig(context, XMLstr)
+        return "OK"
