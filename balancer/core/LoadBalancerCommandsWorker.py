@@ -574,7 +574,7 @@ class LBAddSticky(SyncronousWorker):
         lb_id = self._task.parameters['id']
         sticky = self._task.parameters['sticky']
         logger.debug("Got new sticky description %s" % sticky)
-        if probe['type'] == None:
+        if sticky['type'] == None:
             return
 
         sched = Scheduller()
