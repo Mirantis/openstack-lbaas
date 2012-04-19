@@ -40,6 +40,6 @@ CREATE TABLE probes(sf_id TEXT,delay TEXT,attemptsBeforeDeactivation TEXT,timeou
         scriptName TEXT, scriptArgv TEXT,  copied TEXT,  proto TEXT,  sourceFileName TEXT,  SNMPComm TEXT,  SNMPver TEXT,  maxCPUburstThresh TEXT, minCPUburstThresh TEXT,
         maxMemBurstThresh TEXT, minMemBurstThresh TEXT, VMControllerName TEXT);
 
-CREATE TABLE stickies(sf_id TEXT, name TEXT, type TEXT, serverFarm TEXT, backupServerFarm TEXT, aggregateState TEXT, enableStyckyOnBackupSF TEXT, replicateOnHAPeer TEXT,
+CREATE TABLE stickies(id TEXT, sf_id TEXT, name TEXT, type TEXT, serverFarm TEXT, backupServerFarm TEXT, aggregateState TEXT, enableStyckyOnBackupSF TEXT, replicateOnHAPeer TEXT,
         timeout TEXT, timeoutActiveConn TEXT, offset TEXT, length TEXT, beginPattern TEXT, endPattern TEXT, cookieName TEXT, enableInsert TEXT, browserExpire TEXT, secondaryName TEXT,
         headerName TEXT, netmask TEXT, ipv6PrefixLength TEXT, addressType TEXT, prefixLength TEXT, enableStickyForResponse TEXT, radiusTypes TEXT);
