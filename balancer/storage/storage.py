@@ -22,6 +22,7 @@ from openstack.common import exception
 from balancer.devices.device import LBDevice
 from balancer.core.configuration import Configuration
 from balancer.loadbalancers.probe import *
+from balancer.loadbalancers.sticky import *
 from balancer.loadbalancers.realserver import RealServer
 from balancer.loadbalancers.predictor import *
 from balancer.loadbalancers.serverfarm import ServerFarm
