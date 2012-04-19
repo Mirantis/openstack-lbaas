@@ -514,14 +514,14 @@ def createPredictor(pr_type):
 
 
 def createSticky(st_type):
-    stickyDict = {'HTTPContentSticky': HTTPContentSticky(), \
-                        'HTTPCookieSticky': HTTPCookieSticky(), \
-                        'HTTPHeaderSticky': HTTPHeaderSticky(), \
-                        'IPNetmaskSticky': IPNetmaskSticky(), \
-                        'L4PayloadSticky': L4PayloadSticky(), \
-                        'RTSPHeaderSticky': RTSPHeaderSticky(), \
-                        'RadiusSticky': RadiusSticky(), \
-                        'SIPHeaderSticky': SIPHeaderSticky(), \
+    stickyDict = {'HTTP_CONTENT': HTTPContentSticky(), \
+                        'HTTP_COOKIE': HTTPCookieSticky(), \
+                        'HTTP_HEADER': HTTPHeaderSticky(), \
+                        'IP_NETMASK': IPNetmaskSticky(), \
+                        'L4_PAYLOAD': L4PayloadSticky(), \
+                        'RTSP_HEADER': RTSPHeaderSticky(), \
+                        'RADIUS': RadiusSticky(), \
+                        'SIP_HEADER': SIPHeaderSticky(), \
                         'v6PrefixSticky': v6PrefixSticky()}
 
     obj = stickyDict.get(st_type,  None)
