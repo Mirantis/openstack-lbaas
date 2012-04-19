@@ -41,7 +41,7 @@ class Balancer():
         self.rs = []
         self.probes = []
         self.vips = []
-        self.sticky = None
+        self.sticky = ""
 
     def parseParams(self, params):
 

@@ -48,7 +48,7 @@ class ServerFarm(Serializeable,  UniqueObject):
         self._probes = []
         self._rservers = []
         self._predictor = predictor.RoundRobin()
-        self._sticky = None
+        self._sticky = ""
         self.retcodeMap = ""
         self.status = "ACTIVE"
         self.created = None
