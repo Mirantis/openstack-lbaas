@@ -95,11 +95,11 @@ class Balancer():
                 vs.name = vs.id
                 self.vips.append(vs)
 
-        stiky = params.get("sessionPersistence",  None)
+        stic = params.get("sessionPersistence",  None)
         
-        if sticky != None:
-            st = createSticky(sticky['type'])
-            st.loadFromDict(sticky)
+        if stic != None:
+            st = createSticky(stic['type'])
+            st.loadFromDict(stic)
             st.sf_id = sf.id
             st.name = st.id
             self.sticky = st
