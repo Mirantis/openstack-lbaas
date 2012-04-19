@@ -121,7 +121,7 @@ class Balancer():
         wr.writeLoadBalancer(self.lb)
         wr.writeServerFarm(self.sf)
         wr.writePredictor(self.sf._predictor)
-        wr.writeSticky(self.sticky)
+        # wr.writeSticky(self.sticky)
         for rs in self.rs:
             wr.writeRServer(rs)
 
@@ -140,8 +140,8 @@ class Balancer():
         predictor = rd.getPredictorBySFid(sf_id)
         self.sf._predictor = predictor
         self.rs = rd.getRServersBySFid(sf_id)
-        self.sticky = rd.getStickiesBySFid(sf_id)
-        self.sf._sticky = self.sticky
+        # self.sticky = rd.getStickiesBySFid(sf_id)
+        # self.sf._sticky = self.sticky
         for rs in self.rs:
             self.sf._rservers.append(rs)
         self.probes = rd.getProbesBySFid(sf_id)
