@@ -27,6 +27,7 @@ import realserver
 import serverfarm
 import vlan
 import virtualserver
+import sticky
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ class Balancer():
         self.rs = []
         self.probes = []
         self.vips = []
+        self.sticky = None
 
     def parseParams(self, params):
 
@@ -55,8 +57,9 @@ class Balancer():
         sf = serverfarm.ServerFarm()
         sf.lb_id = lb.id
         sf._predictor = createPredictor(lb.algorithm)
-
+        
         sf._predictor.sf_id = sf.id
+        
         sf.name = sf.id
         self.sf = sf
         """ Parse RServer nodes and attach them to SF """
@@ -98,6 +101,7 @@ class Balancer():
         store = balancer.storage.storage.Storage()
         wr = store.getWriter()
         wr.updateObjectInTable(self.lb)
+        wr.writeSticky(self.sticky)
         for rs in self.rs:
             wr.updateObjectInTable(rs)
 
@@ -117,6 +121,7 @@ class Balancer():
         wr.writeLoadBalancer(self.lb)
         wr.writeServerFarm(self.sf)
         wr.writePredictor(self.sf._predictor)
+        wr.writeSticky(self.sticky)
         for rs in self.rs:
             wr.writeRServer(rs)
 
@@ -135,6 +140,8 @@ class Balancer():
         predictor = rd.getPredictorBySFid(sf_id)
         self.sf._predictor = predictor
         self.rs = rd.getRServersBySFid(sf_id)
+        self.sticky = rd.getStickiesBySFid(sf_id)
+        self.sf._sticky = self.sticky
         for rs in self.rs:
             self.sf._rservers.append(rs)
         self.probes = rd.getProbesBySFid(sf_id)
@@ -154,6 +161,7 @@ class Balancer():
         dl.deleteRSsBySFid(sf_id)
         dl.deleteProbesBySFid(sf_id)
         dl.deleteVSsBySFid(sf_id)
+        dl.deleteStickiesBySFid(sf_id)
 
 #    def deploy(self,  driver,  context):
 #        #Step 1. Deploy server farm
@@ -246,6 +254,15 @@ def makeDeleteProbeFromLBChain(bal, driver, context, probe):
     list.append(DeleteProbeCommand(driver, context, probe))
     return list
 
+def makeAddStickyToLBChain(bal, driver, context, sticky):
+    list = [CreateStickyCommand(driver, context, sticky)]
+    return list
+
+
+def makeDeleteStickyFromLBChain(bal, driver, context, sticky):
+    list = [DeleteStickyCommand(driver, context, sticky)]
+    return list
+
 
 class Deployer(object):
     def __init__(self):
@@ -314,6 +331,26 @@ class DeleteRServerCommand(object):
 
     def execute(self):
         self._driver.deleteRServer(self._context,   self._rs)
+
+
+class CreateStickyCommand(object):
+    def __init__(self, driver,  context,  sticky):
+        self._driver = driver
+        self._context = context
+        self._sticky = sticky
+        
+    def execute(self):
+        self._driver.createStickiness(self._context,  self._sticky)
+
+
+class DeleteStickyCommand(object):
+    def __init__(self, driver,  context,  sticky):
+        self._driver = driver
+        self._context = context
+        self._sticky = sticky
+        
+    def execute(self):
+        self._driver.deleteStickiness(self._context,  self._sticky)
 
 
 class CreateServerFarmCommand(object):
@@ -473,4 +510,22 @@ def createPredictor(pr_type):
     if obj == None:
         raise openstack.common.exception.Invalid("Can't find load balancing \
                                            algorithm with type %s" % pr_type)
+    return obj.createSame()
+
+
+def createSticky(st_type):
+    stickyDict = {'HTTPContentSticky': HTTPContentSticky(), \
+                        'HTTPCookieSticky': HTTPCookieSticky(), \
+                        'HTTPHeaderSticky': HTTPHeaderSticky(), \
+                        'IPNetmaskSticky': IPNetmaskSticky(), \
+                        'L4PayloadSticky': L4PayloadSticky(), \
+                        'RTSPHeaderSticky': RTSPHeaderSticky(), \
+                        'RadiusSticky': RadiusSticky(), \
+                        'SIPHeaderSticky': SIPHeaderSticky(), \
+                        'v6PrefixSticky': v6PrefixSticky()}
+
+    obj = stickyDict.get(st_type,  None)
+    if obj == None:
+        raise openstack.common.exception.Invalid("Can't find load balancing \
+                                           algorithm with type %s" % st_type)
     return obj.createSame()

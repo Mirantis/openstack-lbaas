@@ -55,6 +55,16 @@ class Reader(object):
                           'LeastConn': LeastConn(), \
                           'LeastLoaded': LeastLoaded(), \
                           'Response': Response(), 'RoundRobin': RoundRobin()}
+                          
+        self._stickyDict = {'HTTPContentSticky': HTTPContentSticky(), \
+                                    'HTTPCookieSticky': HTTPCookieSticky(), \
+                                    'HTTPHeaderSticky': HTTPHeaderSticky(), \
+                                    'IPNetmaskSticky': IPNetmaskSticky(), \
+                                    'L4PayloadSticky': L4PayloadSticky(), \
+                                    'RTSPHeaderSticky': RTSPHeaderSticky(), \
+                                    'RadiusSticky': RadiusSticky(), \
+                                    'SIPHeaderSticky': SIPHeaderSticky(), \
+                                    'v6PrefixSticky': v6PrefixSticky()}
 
     def getLoadBalancers(self):
         self._con.row_factory = sqlite3.Row
@@ -148,6 +158,31 @@ class Reader(object):
             list.append(prb)
         return list
 
+    def getStickyById(self, id):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM stickies WHERE id = "%s"' % id)
+        row = cursor.fetchone()
+        if row == None:
+            raise exception.NotFound()
+        st = self._stickyDict[row['type']].createSame()
+        st.loadFromDict(row)
+        return st
+
+    def getStickies(self):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM stickies')
+        rows = cursor.fetchall()
+        if rows == None:
+            raise exception.NotFound()
+        list = []
+        for row in rows:
+            st = self._stickyDict[row['type']].createSame()
+            st.loadFromDict(row)
+            list.append(st)
+        return list
+        
     def getRServerById(self,  id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
@@ -313,6 +348,18 @@ class Reader(object):
             list.append(rs)
         return list
 
+    def getStickiesBySFid(self, id):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM stickies WHERE sf_id = "%s"' % id)
+        rows = cursor.fetchall()
+        list = []
+        for row in rows:
+            st = self._stickyDict[row['type']].createSame()
+            st.loadFromDict(row)
+            list.append(st)
+        return list
+        
     def getProbesBySFid(self, id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
@@ -377,6 +424,16 @@ class Writer(object):
         cursor = self._con.cursor()
         dict = prb.convertToDict()
         command = self.generateCommand(" INSERT INTO probes (", dict)
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()
+        
+    def writeSticky(self, st):
+        logger.debug("Saving Sticky instance in DB.")
+        cursor = self._con.cursor()
+        dict = st.convertToDict()
+        command = self.generateCommand(" INSERT INTO stickies (", dict)
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
@@ -465,7 +522,9 @@ class Writer(object):
             table = "vlans"
         elif isinstance(obj, Probe):
             table = "probes"
-
+        elif isinstance(obj, Sticky):
+            table = "stickies"
+            
         if table != "":
             logger.debug("Updating table %s in DB." % table)
             dict = obj.convertToDict()
@@ -540,6 +599,22 @@ class Deleter(object):
     def deleteProbesBySFid(self, id):
         cursor = self._con.cursor()
         command = "DELETE from probes where probes.sf_id = '%s'" % id
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()
+
+    def deleteStickyByID(self,  id):
+        cursor = self._con.cursor()
+        command = "DELETE from stickies where id = '%s'" % id
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()
+
+    def deleteStickiesBySFid(self, id):
+        cursor = self._con.cursor()
+        command = "DELETE from stickies where sf_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)

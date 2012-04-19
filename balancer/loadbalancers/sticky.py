@@ -17,9 +17,10 @@
 
 import logging
 
-from balancer.core.serializeable import Serializeable
-from balancer.core.uniqueobject import UniqueObject
-
+#from balancer.core.serializeable import Serializeable
+#from balancer.core.uniqueobject import UniqueObject
+from serializeable import Serializeable
+from uniqueobject import UniqueObject
 
 class Sticky(Serializeable,  UniqueObject):
     def __init__(self):

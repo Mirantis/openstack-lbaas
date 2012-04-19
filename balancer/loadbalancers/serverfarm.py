@@ -19,6 +19,7 @@ import logging
 import predictor
 import probe
 import realserver
+import sticky
 
 from balancer.core.serializeable import Serializeable
 from balancer.core.uniqueobject import UniqueObject
@@ -47,6 +48,7 @@ class ServerFarm(Serializeable,  UniqueObject):
         self._probes = []
         self._rservers = []
         self._predictor = predictor.RoundRobin()
+        self._sticky = None
         self.retcodeMap = ""
         self.status = "ACTIVE"
         self.created = None

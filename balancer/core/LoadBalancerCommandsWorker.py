@@ -31,11 +31,11 @@ from balancer.devices.DeviceMap import DeviceMap
 from balancer.loadbalancers.vserver import Balancer
 from balancer.loadbalancers.vserver import makeCreateLBCommandChain, \
 makeDeleteLBCommandChain, makeUpdateLBCommandChain, makeAddNodeToLBChain, \
-makeDeleteNodeFromLBChain
+makeDeleteNodeFromLBChain, makeAddStickyToLBChain, makeDeleteStickyFromLBChain
 from balancer.loadbalancers.vserver import makeAddProbeToLBChain, \
 makeDeleteProbeFromLBChain
 from balancer.loadbalancers.vserver import Deployer,  Destructor, \
-createPredictor,  createProbe
+createPredictor,  createProbe,  createSticky
 
 logger = logging.getLogger(__name__)
 
@@ -541,6 +541,112 @@ class LBdeleteProbe(SyncronousWorker):
         return "Deleted probe with id %s" % probeID
 
 
+class LBShowSticky(SyncronousWorker):
+    def __init__(self,  task):
+        super(LBShowSticky, self).__init__(task)
+        self._command_queue = Queue.LifoQueue()
+
+    def run(self):
+        self._task.status = STATUS_PROGRESS
+        lb_id = self._task.parameters['id']
+        store = Storage()
+        reader = store.getReader()
+
+        sf_id = reader.getSFByLBid(lb_id).id
+        stickies = reader.getStickiesBySFid(sf_id)
+
+        list = []
+        dict = {"sessionPersistence": {}}
+        for st in stickies:
+            list.append(st.convertToDict())
+        self._task.status = STATUS_DONE
+        dict['sessionPersistence'] = list
+        return dict
+
+
+class LBAddSticky(SyncronousWorker):
+    def __init__(self,  task):
+        super(LBAddSticky, self).__init__(task)
+        self._command_queue = Queue.LifoQueue()
+
+    def run(self):
+        self._task.status = STATUS_PROGRESS
+        lb_id = self._task.parameters['id']
+        sticky = self._task.parameters['sticky']
+        logger.debug("Got new sticky description %s" % sticky)
+        if probe['type'] == None:
+            return
+
+        sched = Scheduller()
+        bal_instance = Balancer()
+
+        bal_instance.loadFromDB(lb_id)
+        bal_instance.removeFromDB()
+        st = createSticky(sticky['type'])
+        st.loadFromDict(sticky)
+        st.sf_id = bal_instance.sf.id
+        st.name = st.id
+
+        bal_instance.sticky = st
+        bal_instance.sf._sticky = st
+        bal_instance.savetoDB()
+
+        device = sched.getDeviceByID(bal_instance.lb.device_id)
+        devmap = DeviceMap()
+        driver = devmap.getDriver(device)
+        context = driver.getContext(device)
+
+        commands = makeAddStickyToLBChain(bal_instance, driver, context, st)
+        deploy = Deployer()
+        deploy.commands = commands
+        deploy.execute()
+        self._task.status = STATUS_DONE
+        return "probe: %s" % st.id
+
+
+class LBdeleteSticky(SyncronousWorker):
+    def __init__(self,  task):
+        super(LBdeleteSticky, self).__init__(task)
+        self._command_queue = Queue.LifoQueue()
+
+    def run(self):
+        self._task.status = STATUS_PROGRESS
+        lb_id = self._task.parameters['id']
+        stickyID = self._task.parameters['stickyID']
+
+        bal_instance = Balancer()
+        #Step 1: Load balancer from DB
+        bal_instance.loadFromDB(lb_id)
+        sched = Scheduller()
+        device = sched.getDeviceByID(bal_instance.lb.device_id)
+        devmap = DeviceMap()
+        driver = devmap.getDriver(device)
+        context = driver.getContext(device)
+
+        store = Storage()
+
+        #Step 2: Get reader and writer
+        rd = store.getReader()
+        dl = store.getDeleter()
+        #Step 3: Get sticky object from DB
+        st = rd.getStickyById(stickyID)
+
+        #Step 4: Delete sticky from DB
+        dl.deleteStickyByID(stickyID)
+
+        #Step 5: Make commands for deleting probe
+
+        commands = \
+            makeDeleteStickyFromLBChain(bal_instance, driver, context, st)
+        destruct = Destructor()
+        destruct.commands = commands
+
+        #Step 6: Delete real server from device
+        destruct.execute()
+        self._task.status = STATUS_DONE
+        return "Deleted sticky with id %s" % stickyID
+        
+        
 class LBActionMapper(object):
     def getWorker(self, task,  action,  params=None):
         if action == "index":
@@ -571,3 +677,9 @@ class LBActionMapper(object):
             return LBAddProbe(task)
         if action == "LBdeleteProbe":
             return LBdeleteProbe(task)
+        if action == "showSticky":
+            return LBShowSticky(task)
+        if action == "addSticky":
+            return LBAddSticky(task)
+        if action == "deleteSticky":
+            return LBdeleteSticky(task)            

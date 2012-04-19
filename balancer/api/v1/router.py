@@ -89,6 +89,18 @@ class API(wsgi.Router):
                        controller=lb_resource, action="deleteProbe", \
                        conditions=dict(method=["DELETE"]))
 
+        mapper.connect("/loadbalancers/{id}/sessionPersistence", \
+                       controller=lb_resource, action="showStickiness", \
+                       conditions=dict(method=["GET"]))
+
+        mapper.connect("/loadbalancers/{id}/sessionPersistence", \
+                       controller=lb_resource, \
+                       action="addSticky", conditions=dict(method=["PUT"]))
+
+        mapper.connect("/loadbalancers/{id}/sessionPersistence/{stickyID}", \
+                       controller=lb_resource, action="deleteSticky", \
+                       conditions=dict(method=["DELETE"]))
+
         mapper.connect("/loadbalancers/",
                        controller=lb_resource,
                        action="create",
