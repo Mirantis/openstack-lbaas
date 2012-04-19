@@ -225,23 +225,27 @@ def makeAddNodeToLBChain(bal, driver,  context,  rs):
     list.append(AddRServerToSFCommand(driver, context, bal.sf, rs))
     return list
 
+
 def makeDeleteNodeFromLBChain(bal, driver,  context,  rs):
     list = []
     list.append(DeleteRServerFromSFCommand(driver, context, bal.sf, rs))
     list.append(DeleteRServerCommand(driver, context, rs))
     return list
 
+
 def makeAddProbeToLBChain(bal, driver, context,  probe):
-    list =[]
+    list = []
     list.append(CreateProbeCommand(driver, context, probe))
     list.append(AddProbeToSFCommand(driver, context, bal.sf, probe))
     return list
+
 
 def makeDeleteProbeFromLBChain(bal, driver, context, probe):
     list = []
     list.append(DeleteProbeFromSFCommand(driver, context, bal.sf, probe))
     list.append(DeleteProbeCommand(driver, context, probe))
     return list
+
 
 class Deployer(object):
     def __init__(self):
@@ -252,25 +256,25 @@ class Deployer(object):
             current_command = self.commands[index]
             try:
                 current_command.execute()
-            except openstack.common.exception.Invalid  as ex :
-                i = index-1
-                logger.error("Got exception during deploy. Rolling back changes. Error message %s" % ex)
+            except openstack.common.exception.Invalid  as ex:
+                i = index - 1
+                logger.error("Got exception during deploy. \
+                               Rolling back changes. Error message %s" % ex)
 
-                for k in range(index-1):
+                for k in range(index - 1):
                     command = self.commands[i - k]
                     command.undo()
                 raise openstack.common.exception.Error()
 
-            except openstack.common.exception.Error  as ex :
-                i = index-1
-                logger.error("Got exception during deploy. Rolling back changes. Error message %s" % ex)
+            except openstack.common.exception.Error  as ex:
+                i = index - 1
+                logger.error("Got exception during deploy. \
+                               Rolling back changes. Error message %s" % ex)
 
-                for k in range(index-1):
+                for k in range(index - 1):
                     command = self.commands[i - k]
                     command.undo()
                 raise openstack.common.exception.Error()
-
-
 
 
 class Destructor(object):
@@ -282,11 +286,12 @@ class Destructor(object):
             current_command = self.commands[index]
             try:
                 current_command.execute()
-                logger.debug("Execute command: %s"%current_command)
+                logger.debug("Execute command: %s" % current_command)
             except:
 
                 logger.error("Got exception during deleting.")
                 raise openstack.common.exception.Error()
+
 
 class CreateRServerCommand(object):
     def __init__(self,  driver,  context,  rs):
@@ -295,10 +300,11 @@ class CreateRServerCommand(object):
         self._rs = rs
 
     def execute(self):
-         self._driver.createRServer(self._context,  self._rs)
+        self._driver.createRServer(self._context,  self._rs)
 
     def undo(self):
         self._driver.deleteRServer(self._context,  self._rs)
+
 
 class DeleteRServerCommand(object):
     def __init__(self,  driver,  context,  rs):
@@ -307,7 +313,7 @@ class DeleteRServerCommand(object):
         self._rs = rs
 
     def execute(self):
-         self._driver.deleteRServer(self._context,   self._rs)
+        self._driver.deleteRServer(self._context,   self._rs)
 
 
 class CreateServerFarmCommand(object):
@@ -322,6 +328,7 @@ class CreateServerFarmCommand(object):
     def undo(self):
         self._driver.deleteServerFarm(self._context,  self._sf)
 
+
 class DeleteServerFarmCommand(object):
     def __init__(self,  driver,  context,  sf):
         self._driver = driver
@@ -330,6 +337,7 @@ class DeleteServerFarmCommand(object):
 
     def execute(self):
         self._driver.deleteServerFarm(self._context,  self._sf)
+
 
 class AddRServerToSFCommand(object):
     def __init__(self,  driver,  context,  sf, rs):
@@ -340,8 +348,10 @@ class AddRServerToSFCommand(object):
 
     def execute(self):
         self._driver.addRServerToSF(self._context,  self._sf,  self._rs)
+
     def undo(self):
         self._driver.deleteRServerFromSF(self._context,  self._sf,  self._rs)
+
 
 class DeleteRServerFromSFCommand(object):
     def __init__(self,  driver,  context,  sf, rs):
@@ -353,6 +363,7 @@ class DeleteRServerFromSFCommand(object):
     def execute(self):
         self._driver.deleteRServerFromSF(self._context,  self._sf,  self._rs)
 
+
 class CreateProbeCommand(object):
     def __init__(self,  driver,  context,  probe):
         self._driver = driver
@@ -361,8 +372,10 @@ class CreateProbeCommand(object):
 
     def execute(self):
         self._driver.createProbe(self._context, self._probe)
+
     def undo(self):
         self._driver.deleteProbe(self._context, self._probe)
+
 
 class DeleteProbeCommand(object):
     def __init__(self,  driver,  context,  probe):
@@ -373,6 +386,7 @@ class DeleteProbeCommand(object):
     def execute(self):
         self._driver.deleteProbe(self._context, self._probe)
 
+
 class AddProbeToSFCommand(object):
     def __init__(self,  driver,  context,  sf,  probe):
         self._driver = driver
@@ -382,8 +396,10 @@ class AddProbeToSFCommand(object):
 
     def execute(self):
         self._driver.addProbeToSF(self._context,  self._sf,  self._probe)
+
     def undo(self):
         self._driver.deleteProbeFromSF(self._context,  self._sf,  self._probe)
+
 
 class DeleteProbeFromSFCommand(object):
     def __init__(self,  driver,  context,  sf,  probe):
@@ -405,8 +421,10 @@ class CreateVIPCommand(object):
 
     def execute(self):
         self._driver.createVIP(self._context,  self._vip,  self._sf)
+
     def undo(self):
         self._driver.deleteVIP(self._context,  self._vip,  self._sf)
+
 
 class DeleteVIPCommand(object):
     def __init__(self,  driver,  context,  vip):
@@ -417,23 +435,42 @@ class DeleteVIPCommand(object):
     def execute(self):
         self._driver.deleteVIP(self._context,   self._vip)
 
+
 def createProbe(probe_type):
-    probeDict={'DNS':probe.DNSprobe(), 'ECHOTCP':probe.ECHOTCPprobe(), 'ECHOUDP':probe.ECHOUDPprobe(),
-        'FINGER':probe.FINGERprobe(), 'FTP':probe.FTPprobe(), 'HTTPS':probe.HTTPSprobe(), 'HTTP':probe.HTTPprobe(), 'ICMP':probe.ICMPprobe(),
-        'IMAP':probe.IMAPprobe(), 'POP':probe.POPprobe(), 'RADIUS':probe.RADIUSprobe(), 'RTSP':probe.RTSPprobe(), 'SCRIPTED':probe.SCRIPTEDprobe(),
-        'SIPTCP':probe.SIPTCPprobe(), 'SIPUDP':probe.SIPUDPprobe(), 'SMTP':probe.SMTPprobe(), 'SNMP':probe.SNMPprobe(),
-        'CONNECT':probe.TCPprobe(), 'TELNET':probe.TELNETprobe(), 'UDP':probe.UDPprobe(), 'VM':probe.VMprobe()}
+    probeDict = {'DNS': probe.DNSprobe(), 'ECHOTCP': probe.ECHOTCPprobe(),
+                'ECHOUDP': probe.ECHOUDPprobe(), 'FINGER': probe.FINGERprobe(),
+                'FTP': probe.FTPprobe(), 'HTTPS': probe.HTTPSprobe(),
+                'HTTP': probe.HTTPprobe(), 'ICMP': probe.ICMPprobe(),
+                'IMAP': probe.IMAPprobe(), 'POP': probe.POPprobe(),
+                'RADIUS': probe.RADIUSprobe(), 'RTSP': probe.RTSPprobe(),
+                'SCRIPTED': probe.SCRIPTEDprobe(),
+                'SIPTCP': probe.SIPTCPprobe(),
+                'SIPUDP': probe.SIPUDPprobe(), 'SMTP': probe.SMTPprobe(),
+                'SNMP': probe.SNMPprobe(), 'CONNECT': probe.TCPprobe(),
+                'TELNET': probe.TELNETprobe(), 'UDP': probe.UDPprobe(),
+                'VM': probe.VMprobe()}
     obj = probeDict.get(probe_type,  None)
     if obj == None:
-        raise exception.NotFound("Can't create health monitoring probe of type %s" % probe_type)
+        raise exception.NotFound("Can't create health monitoring probe \
+                                               of type %s" % probe_type)
     return obj.createSame()
 
+
 def createPredictor(pr_type):
-    predictDict={'HashAddr':predictor.HashAddrPredictor(), 'HashContent':predictor.HashContent(), 'HashCookie':predictor.HashCookie(), 'HashHeader':predictor.HashHeader(),
-            'HashLayer4':predictor.HashLayer4(), 'HashURL':predictor.HashURL(), 'LeastBandwidth':predictor.LeastBandwidth(), 'LeastConn':predictor.LeastConn(),
-            'LeastLoaded':predictor.LeastLoaded(), 'Response':predictor.Response(), 'RoundRobin':predictor.RoundRobin()}
+    predictDict = {'HashAddr': predictor.HashAddrPredictor(),
+                  'HashContent': predictor.HashContent(),
+                  'HashCookie': predictor.HashCookie(),
+                  'HashHeader': predictor.HashHeader(),
+                  'HashLayer4': predictor.HashLayer4(),
+                  'HashURL': predictor.HashURL(),
+                  'LeastBandwidth': predictor.LeastBandwidth(),
+                  'LeastConn': predictor.LeastConn(),
+                  'LeastLoaded': predictor.LeastLoaded(),
+                  'Response': predictor.Response(),
+                  'RoundRobin': predictor.RoundRobin()}
 
     obj = predictDict.get(pr_type,  None)
     if obj == None:
-        raise openstack.common.exception.Invalid("Can't find load balancing algorithm with type %s" % pr_type)
+        raise openstack.common.exception.Invalid("Can't find load balancing \
+                                           algorithm with type %s" % pr_type)
     return obj.createSame()

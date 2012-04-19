@@ -22,7 +22,7 @@ from openstack.common import exception
 from balancer.devices.device import LBDevice
 from balancer.core.configuration import Configuration
 from balancer.loadbalancers.probe import *
-from balancer.loadbalancers.realserver import RealServer 
+from balancer.loadbalancers.realserver import RealServer
 from balancer.loadbalancers.predictor import *
 from balancer.loadbalancers.serverfarm import ServerFarm
 from balancer.loadbalancers.virtualserver import VirtualServer
@@ -35,14 +35,26 @@ class Reader(object):
     def __init__(self,  db):
         logger.debug("Reader: connecting to db: %s" % db)
         self._con = sqlite3.connect(db)
-        self._probeDict={'DNS':DNSprobe(), 'ECHOTCP':ECHOTCPprobe(), 'ECHOUDP':ECHOUDPprobe(), 
-        'FINGER':FINGERprobe(), 'FTP':FTPprobe(), 'HTTPS':HTTPSprobe(), 'HTTP':HTTPprobe(), 'ICMP':ICMPprobe(), 
-        'IMAP':IMAPprobe(), 'POP':POPprobe(), 'RADIUS':RADIUSprobe(), 'RTSP':RTSPprobe(), 'SCRIPTED':SCRIPTEDprobe(), 
-        'SIPTCP':SIPTCPprobe(), 'SIPUDP':SIPUDPprobe(), 'SMTP':SMTPprobe(), 'SNMP':SNMPprobe(), 
-        'CONNECT':TCPprobe(), 'TELNET':TELNETprobe(), 'UDP':UDPprobe(), 'VM':VMprobe()}
-        self._predictDict={'HashAddrPredictor':HashAddrPredictor(), 'HashContent':HashContent(), 'HashCookie':HashCookie(), 'HashHeader':HashHeader(),
-            'HashLayer4':HashLayer4(), 'HashURL':HashURL(), 'LeastBandwidth':LeastBandwidth(), 'LeastConn':LeastConn(), 
-            'LeastLoaded':LeastLoaded(), 'Response':Response(), 'RoundRobin':RoundRobin()}
+        self._probeDict = {'DNS': DNSprobe(), 'ECHOTCP': ECHOTCPprobe(), \
+                        'ECHOUDP': ECHOUDPprobe(), 'FINGER': FINGERprobe(), \
+                        'FTP': FTPprobe(), 'HTTPS': HTTPSprobe(), \
+                        'HTTP': HTTPprobe(), 'ICMP': ICMPprobe(), \
+                        'IMAP': IMAPprobe(), 'POP': POPprobe(), \
+                        'RADIUS': RADIUSprobe(), 'RTSP': RTSPprobe(), \
+                        'SCRIPTED': SCRIPTEDprobe(), 'SIPTCP': SIPTCPprobe(), \
+                        'SIPUDP': SIPUDPprobe(), 'SMTP': SMTPprobe(), \
+                        'SNMP': SNMPprobe(), 'CONNECT': TCPprobe(), \
+                        'TELNET': TELNETprobe(), 'UDP': UDPprobe(), \
+                        'VM': VMprobe()}
+        self._predictDict = {'HashAddrPredictor': HashAddrPredictor(), \
+                          'HashContent': HashContent(), \
+                          'HashCookie': HashCookie(), \
+                          'HashHeader': HashHeader(),
+                          'HashLayer4': HashLayer4(), 'HashURL': HashURL(), \
+                          'LeastBandwidth': LeastBandwidth(), \
+                          'LeastConn': LeastConn(), \
+                          'LeastLoaded': LeastLoaded(), \
+                          'Response': Response(), 'RoundRobin': RoundRobin()}
 
     def getLoadBalancers(self):
         self._con.row_factory = sqlite3.Row
@@ -50,51 +62,52 @@ class Reader(object):
         cursor.execute('SELECT * FROM loadbalancers')
         rows = cursor.fetchall()
         if rows == None:
-             raise exception.NotFound()
+            raise exception.NotFound()
         list = []
         for row in rows:
             lb = LoadBalancer()
             lb.loadFromDict(row)
             list.append(lb)
         return list
-    
+
     def getLoadBalancerById(self,  id):
-         self._con.row_factory = sqlite3.Row
-         cursor = self._con.cursor()
-         cursor.execute('SELECT * FROM loadbalancers WHERE id = "%s"' % id)
-         row = cursor.fetchone()
-         if row == None:
-             raise exception.NotFound()
-         lb = LoadBalancer()
-         lb.loadFromDict(row)
-         return lb
-    
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM loadbalancers WHERE id = "%s"' % id)
+        row = cursor.fetchone()
+        if row == None:
+            raise exception.NotFound()
+        lb = LoadBalancer()
+        lb.loadFromDict(row)
+        return lb
+
     def getDeviceById(self,  id):
-         self._con.row_factory = sqlite3.Row
-         cursor = self._con.cursor()
-         if id == None:
-             raise exception.NotFound("Empty device id.")
-         cursor.execute('SELECT * FROM devices WHERE id = "%s"' % id)
-         row = cursor.fetchone()
-         if row == None:
-             raise exception.NotFound()
-         lb = LBDevice()
-         lb.loadFromDict(row)
-         return lb
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        if id == None:
+            raise exception.NotFound("Empty device id.")
+        cursor.execute('SELECT * FROM devices WHERE id = "%s"' % id)
+        row = cursor.fetchone()
+        if row == None:
+            raise exception.NotFound()
+        lb = LBDevice()
+        lb.loadFromDict(row)
+        return lb
 
     def getDeviceByLBid(self,  id):
-         self._con.row_factory = sqlite3.Row
-         cursor = self._con.cursor()
-         if id == None:
-             raise exception.NotFound("Empty device id.")
-         cursor.execute('SELECT * FROM loadbalancers WHERE id = "%s"' % id)
-         row = cursor.fetchone()
-         cursor.execute('SELECT * FROM devices WHERE id = "%s"' % row['device_id'])
-         dict = cursor.fetchone()
-         if dict == None:
-             raise exception.NotFound()
-         lb = LBDevice()
-         lb.loadFromDict(dict)
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        if id == None:
+            raise exception.NotFound("Empty device id.")
+        cursor.execute('SELECT * FROM loadbalancers WHERE id = "%s"' % id)
+        row = cursor.fetchone()
+        cursor.execute('SELECT * FROM devices WHERE id = "%s"' % \
+                                                  row['device_id'])
+        dict = cursor.fetchone()
+        if dict == None:
+            raise exception.NotFound()
+        lb = LBDevice()
+        lb.loadFromDict(dict)
 
     def getDevices(self):
         self._con.row_factory = sqlite3.Row
@@ -102,7 +115,7 @@ class Reader(object):
         cursor.execute('SELECT * FROM devices')
         rows = cursor.fetchall()
         if rows == None:
-             raise exception.NotFound()
+            raise exception.NotFound()
         list = []
         for row in rows:
             lb = LBDevice()
@@ -119,7 +132,7 @@ class Reader(object):
             raise exception.NotFound()
         prb = self._probeDict[row['type']].createSame()
         prb.loadFromDict(row)
-        return prb     
+        return prb
 
     def getProbes(self):
         self._con.row_factory = sqlite3.Row
@@ -127,13 +140,13 @@ class Reader(object):
         cursor.execute('SELECT * FROM probes')
         rows = cursor.fetchall()
         if rows == None:
-             raise exception.NotFound()
+            raise exception.NotFound()
         list = []
         for row in rows:
             prb = self._probeDict[row['type']].createSame()
             prb.loadFromDict(row)
             list.append(prb)
-        return list        
+        return list
 
     def getRServerById(self,  id):
         self._con.row_factory = sqlite3.Row
@@ -154,14 +167,14 @@ class Reader(object):
         cursor.execute('SELECT * FROM rservers')
         rows = cursor.fetchall()
         if rows == None:
-             raise exception.NotFound()
+            raise exception.NotFound()
         list = []
         for row in rows:
             rs = RealServer()
             rs.loadFromDict(row)
             list.append(rs)
         return list
-        
+
     def getPreditorById(self, id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
@@ -171,7 +184,7 @@ class Reader(object):
             raise exception.NotFound()
         prd = self._predictDict[row['type']].createSame()
         prd.loadFromDict(row)
-        return prd     
+        return prd
 
     def getPredictors(self):
         self._con.row_factory = sqlite3.Row
@@ -179,13 +192,13 @@ class Reader(object):
         cursor.execute('SELECT * FROM predictors')
         rows = cursor.fetchall()
         if rows == None:
-             raise exception.NotFound()
+            raise exception.NotFound()
         list = []
         for row in rows:
             prd = self._predictDict[row['type']].createSame()
             prd.loadFromDict(row)
             list.append(prd)
-        return list 
+        return list
 
     def getServerFarmById(self, id):
         self._con.row_factory = sqlite3.Row
@@ -196,7 +209,7 @@ class Reader(object):
             raise exception.NotFound()
         sf = ServerFarm()
         sf.loadFromDict(row)
-        return sf     
+        return sf
 
     def getServerFarms(self):
         self._con.row_factory = sqlite3.Row
@@ -204,13 +217,13 @@ class Reader(object):
         cursor.execute('SELECT * FROM serverfarms')
         rows = cursor.fetchall()
         if rows == None:
-             raise exception.NotFound()
+            raise exception.NotFound()
         list = []
         for row in rows:
             sf = ServerFarm()
             sf.loadFromDict(row)
             list.append(sf)
-        return list 
+        return list
 
     def getVirtualServerById(self, id):
         self._con.row_factory = sqlite3.Row
@@ -221,7 +234,7 @@ class Reader(object):
             raise exception.NotFound()
         vs = VirtualServer()
         vs.loadFromDict(row)
-        return vs     
+        return vs
 
     def getVirtualServers(self):
         self._con.row_factory = sqlite3.Row
@@ -229,13 +242,13 @@ class Reader(object):
         cursor.execute('SELECT * FROM vips')
         rows = cursor.fetchall()
         if rows == None:
-             raise exception.NotFound()
+            raise exception.NotFound()
         list = []
         for row in rows:
             vs = VirtualServer()
             vs.loadFromDict(row)
             list.append(vs)
-        return list 
+        return list
 
     def getServerFarms(self):
         self._con.row_factory = sqlite3.Row
@@ -243,13 +256,13 @@ class Reader(object):
         cursor.execute('SELECT * FROM serverfarms')
         rows = cursor.fetchall()
         if rows == None:
-             raise exception.NotFound()
+            raise exception.NotFound()
         list = []
         for row in rows:
             sf = ServerFarm()
             sf.loadFromDict(row)
             list.append(sf)
-        return list 
+        return list
 
     def getVLANbyId(self, id):
         self._con.row_factory = sqlite3.Row
@@ -260,7 +273,7 @@ class Reader(object):
             raise exception.NotFound()
         vlan = VLAN()
         vlan.loadFromDict(row)
-        return vlan     
+        return vlan
 
     def getVLANs(self):
         self._con.row_factory = sqlite3.Row
@@ -268,20 +281,21 @@ class Reader(object):
         cursor.execute('SELECT * FROM vlans')
         rows = cursor.fetchall()
         if rows == None:
-             raise exception.NotFound()
+            raise exception.NotFound()
         list = []
         for row in rows:
             vlan = VLAN()
             vlan.loadFromDict(row)
             list.append(vlan)
-        return list 
-        
+        return list
+
     def getSFByLBid(self,  id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM loadbalancers WHERE id = "%s"' %id)
+        cursor.execute('SELECT * FROM loadbalancers WHERE id = "%s"' % id)
         dict = cursor.fetchone()
-        cursor.execute('SELECT * FROM serverfarms WHERE lb_id = "%s"' % dict['id'])
+        cursor.execute('SELECT * FROM serverfarms WHERE lb_id = "%s"' % \
+                                                              dict['id'])
         row = cursor.fetchone()
         sf = ServerFarm()
         sf.loadFromDict(row)
@@ -316,7 +330,7 @@ class Reader(object):
         cursor = self._con.cursor()
         cursor.execute('SELECT * FROM predictors WHERE sf_id = "%s"' % id)
         rows = cursor.fetchone()
-        pred = self._predictDict[rows['type']].createSame()        
+        pred = self._predictDict[rows['type']].createSame()
         pred.loadFromDict(rows)
         return pred
 
@@ -331,33 +345,33 @@ class Reader(object):
             vs.loadFromDict(row)
             list.append(vs)
         return list
-        
+
+
 class Writer(object):
     def __init__(self,  db):
         logger.debug("Writer: connecting to db: %s" % db)
         self._con = sqlite3.connect(db)
-    
+
     def writeLoadBalancer(self,  lb):
-         logger.debug("Saving LoadBalancer instance in DB.")
-         cursor = self._con.cursor()     
-         dict = lb.convertToDict()
-         # command = "INSERT INTO loadbalancers (id, name, algorithm , status , created , updated ) VALUES('%s','%s','%s','%s','%s','%s');"  % (lb.id,  lb.name,  lb.algorithm,  lb.status,  lb.created,  lb.updated)
-         command =self.generateCommand("INSERT INTO loadbalancers (", dict)
-         msg = "Executing command: %s" % command
-         logger.debug(msg)
-         cursor.execute(command)
-         self._con.commit()
-         
+        logger.debug("Saving LoadBalancer instance in DB.")
+        cursor = self._con.cursor()
+        dict = lb.convertToDict()
+        command = self.generateCommand("INSERT INTO loadbalancers (", dict)
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()
+
     def writeDevice(self,  device):
-         logger.debug("Saving Device instance in DB.")
-         cursor = self._con.cursor()
-         dict = device.convertToDict()
-         command =self.generateCommand(" INSERT INTO devices (", dict)
-         msg = "Executing command: %s" % command
-         logger.debug(msg)
-         cursor.execute(command)
-         self._con.commit()    
-         
+        logger.debug("Saving Device instance in DB.")
+        cursor = self._con.cursor()
+        dict = device.convertToDict()
+        command = self.generateCommand(" INSERT INTO devices (", dict)
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()
+
     def writeProbe(self, prb):
         logger.debug("Saving Probe instance in DB.")
         cursor = self._con.cursor()
@@ -366,32 +380,32 @@ class Writer(object):
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit()            
+        self._con.commit()
 
     def generateCommand(self, start, dict):
-        command1 =start
+        command1 = start
         command2 = ""
-        i=0
+        i = 0
         for key in dict.keys():
-            if i < len(dict)-1:
-                command1 += key +','
-                command2 +="'"+str(dict[key])+"'" + ","
+            if i < len(dict) - 1:
+                command1 += key + ','
+                command2 += "'" + str(dict[key]) + "'" + ","
             else:
                 command1 += key + ") VALUES("
-                command2 +="'"+str(dict[key])+"'" + ");"
-            i+=1
-        command = command1+command2
+                command2 += "'" + str(dict[key]) + "'" + ");"
+            i += 1
+        command = command1 + command2
         return command
-         
+
     def writeRServer(self,  rs):
-         logger.debug("Saving RServer instance in DB.")
-         cursor = self._con.cursor()
-         dict = rs.convertToDict()
-         command =self.generateCommand(" INSERT INTO rservers (", dict)
-         msg = "Executing command: %s" % command
-         logger.debug(msg)
-         cursor.execute(command)
-         self._con.commit()        
+        logger.debug("Saving RServer instance in DB.")
+        cursor = self._con.cursor()
+        dict = rs.convertToDict()
+        command = self.generateCommand(" INSERT INTO rservers (", dict)
+        msg = "Executing command: %s" % command
+        logger.debug(msg)
+        cursor.execute(command)
+        self._con.commit()
 
     def writePredictor(self, prd):
         logger.debug("Saving Predictor instance in DB.")
@@ -411,7 +425,7 @@ class Writer(object):
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit()        
+        self._con.commit()
 
     def writeVirtualServer(self, vs):
         logger.debug("Saving VirtualServer instance in DB.")
@@ -421,7 +435,7 @@ class Writer(object):
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit() 
+        self._con.commit()
 
     def writeVLAN(self, vlan):
         logger.debug("Saving VLAN instance in DB.")
@@ -431,13 +445,13 @@ class Writer(object):
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit() 
-    
+        self._con.commit()
+
     def updateObjectInTable(self,  obj):
         table = ""
-        if isinstance(obj, LoadBalancer ):
+        if isinstance(obj, LoadBalancer):
             table = "loadbalancers"
-        elif isinstance(obj, ServerFarm ):
+        elif isinstance(obj, ServerFarm):
             table = "serverfarms"
         elif isinstance(obj,  BasePredictor):
             table = "predictors"
@@ -451,160 +465,160 @@ class Writer(object):
             table = "vlans"
         elif isinstance(obj, Probe):
             table = "probes"
-        
+
         if table != "":
-            logger.debug("Updating table %s in DB." %table)
+            logger.debug("Updating table %s in DB." % table)
             dict = obj.convertToDict()
             command = self.generateUpdateCommand(table,  dict,  obj.id)
             cursor = self._con.cursor()
             logger.debug("Executing command: %s" % command)
             cursor.execute(command)
-        self._con.commit()             
+        self._con.commit()
 
     def generateUpdateCommand(self,  table, dict,  id):
-        command1 ="UPDATE %s SET " % table
-        
-        i=0
+        command1 = "UPDATE %s SET " % table
+
+        i = 0
         for key in dict.keys():
-            if i < len(dict)-1:
+            if i < len(dict) - 1:
                 if key != "id":
-                    command1 += key +'=\"' + str(dict[key])+'\",'
-                
+                    command1 += key + '=\"' + str(dict[key]) + '\",'
+
             else:
                 if key != "id":
-                    command1 += key +'=\"' + str(dict[key])+'\"'
-            i+=1
-        command = command1+ " WHERE id = '" + str(id) +"'"
+                    command1 += key + '=\"' + str(dict[key]) + '\"'
+            i += 1
+        command = command1 + " WHERE id = '" + str(id) + "'"
         return command
+
 
 class Deleter(object):
     def __init__(self,  db):
         logger.debug("Deleter: connecting to db: %s" % db)
         self._con = sqlite3.connect(db)
-    
+
     def deleteRSbyID(self, id):
         cursor = self._con.cursor()
-        command = "DELETE from rservers where id = '%s'" %id
+        command = "DELETE from rservers where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit() 
-        
+        self._con.commit()
+
     def deleteRSsBySFid(self, id):
         cursor = self._con.cursor()
-        command = "DELETE from rservers where  sf_id = '%s'" %id
+        command = "DELETE from rservers where  sf_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit() 
-        
+        self._con.commit()
+
     def deleteVSbyID(self, id):
         cursor = self._con.cursor()
-        command = "DELETE from vips where id = '%s'" %id
+        command = "DELETE from vips where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit() 
+        self._con.commit()
 
     def deleteVSsBySFid(self,  id):
         cursor = self._con.cursor()
-        command = "DELETE from vips where  sf_id = '%s'" %id
+        command = "DELETE from vips where  sf_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit() 
+        self._con.commit()
 
     def deleteProbeByID(self,  id):
         cursor = self._con.cursor()
-        command = "DELETE from probes where id = '%s'" %id
+        command = "DELETE from probes where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit()           
+        self._con.commit()
 
     def deleteProbesBySFid(self, id):
         cursor = self._con.cursor()
-        command = "DELETE from probes where probes.sf_id = '%s'" %id
+        command = "DELETE from probes where probes.sf_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit()   
-        
+        self._con.commit()
+
     def deleteLBbyID(self,  id):
         cursor = self._con.cursor()
-        command = "DELETE from loadbalancers where id = '%s'" %id
+        command = "DELETE from loadbalancers where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit()  
+        self._con.commit()
 
     def deleteDeviceByID(self, id):
         cursor = self._con.cursor()
-        command = "DELETE from devices where id = '%s'" %id
+        command = "DELETE from devices where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit()  
+        self._con.commit()
 
     def deletePredictorByID(self, id):
         cursor = self._con.cursor()
-        command = "DELETE from predictors where id = '%s'" %id
+        command = "DELETE from predictors where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit()  
+        self._con.commit()
 
     def deletePredictorBySFid(self, id):
         cursor = self._con.cursor()
-        command = "DELETE from predictors where sf_id = '%s'" %id
+        command = "DELETE from predictors where sf_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit()  
-        
+        self._con.commit()
+
     def deleteSFbyID(self, id):
         cursor = self._con.cursor()
-        command = "DELETE from serverfarms where id = '%s'" %id
+        command = "DELETE from serverfarms where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit()  
+        self._con.commit()
 
     def deleteSFbyLBid(self, id):
         cursor = self._con.cursor()
-        command = "DELETE from serverfarms where lb_id = '%s'" %id
+        command = "DELETE from serverfarms where lb_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit()  
-        
+        self._con.commit()
+
     def deleteVLANbyID(self,  id):
         cursor = self._con.cursor()
-        command = "DELETE from vlans where id = '%s'" %id
+        command = "DELETE from vlans where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
         cursor.execute(command)
-        self._con.commit()  
-        
+        self._con.commit()
+
+
 class Storage(object):
     def __init__(self,  conf=None):
-         db = None
-         if conf == None:
+        db = None
+        if conf == None:
             conf_data = Configuration.Instance()
             conf = conf_data.get()
             db = conf.db_path
-         else:
-             db = conf['db_path']
-         self._db =db
-         self._writer = Writer(self._db)
+        else:
+            db = conf['db_path']
+        self._db = db
+        self._writer = Writer(self._db)
 
     def getReader(self):
         return Reader(self._db)
-        
+
     def getWriter(self):
         return self._writer
-        
+
     def getDeleter(self):
         return Deleter(self._db)
-
-
