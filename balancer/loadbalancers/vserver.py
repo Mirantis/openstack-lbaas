@@ -520,15 +520,15 @@ def createPredictor(pr_type):
 
 
 def createSticky(st_type):
-    stickyDict = {'HTTPCONTENT': sticky.HTTPContentSticky(), \
-                        'HTTPCOOKIE': sticky.HTTPCookieSticky(), \
-                        'HTTPHEADER': sticky.HTTPHeaderSticky(), \
-                        'IPNETMASK': sticky.IPNetmaskSticky(), \
-                        'L4PAYLOAD': sticky.L4PayloadSticky(), \
-                        'RTSPHEADER': sticky.RTSPHeaderSticky(), \
-                        'RADIUS': sticky.RadiusSticky(), \
-                        'SIPHEADER': sticky.SIPHeaderSticky(), \
-                        'v6Prefix': sticky.v6PrefixSticky()}
+    stickyDict = {'httpcontent': sticky.HTTPContentSticky(), \
+                        'httpcookie': sticky.HTTPCookieSticky(), \
+                        'httpheader': sticky.HTTPHeaderSticky(), \
+                        'ipnetmask': sticky.IPNetmaskSticky(), \
+                        'l4payload': sticky.L4PayloadSticky(), \
+                        'rtspheader': sticky.RTSPHeaderSticky(), \
+                        'radius': sticky.RadiusSticky(), \
+                        'sipheader': sticky.SIPHeaderSticky(), \
+                        'v6prefix': sticky.v6PrefixSticky()}
 
     obj = stickyDict.get(st_type,  None)
     if obj == None:

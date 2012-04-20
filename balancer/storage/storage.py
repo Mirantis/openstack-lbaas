@@ -57,15 +57,15 @@ class Reader(object):
                           'LeastLoaded': LeastLoaded(), \
                           'Response': Response(), 'RoundRobin': RoundRobin()}
                           
-        self._stickyDict = {'HTTPContent': HTTPContentSticky(), \
-                                    'HTTPCookie': HTTPCookieSticky(), \
-                                    'HTTPHeader': HTTPHeaderSticky(), \
-                                    'IPNetmask': IPNetmaskSticky(), \
-                                    'L4Payload': L4PayloadSticky(), \
-                                    'RTSPHeader': RTSPHeaderSticky(), \
-                                    'Radius': RadiusSticky(), \
-                                    'SIPHeader': SIPHeaderSticky(), \
-                                    'v6Prefix': v6PrefixSticky()}
+        self._stickyDict = {'httpcontent': HTTPContentSticky(), \
+                                    'httpcookie': HTTPCookieSticky(), \
+                                    'httpheader': HTTPHeaderSticky(), \
+                                    'ipnetmask': IPNetmaskSticky(), \
+                                    'l4payload': L4PayloadSticky(), \
+                                    'rtspheader': RTSPHeaderSticky(), \
+                                    'radius': RadiusSticky(), \
+                                    'sipheader': SIPHeaderSticky(), \
+                                    'v6prefix': v6PrefixSticky()}
 
     def getLoadBalancers(self):
         self._con.row_factory = sqlite3.Row
