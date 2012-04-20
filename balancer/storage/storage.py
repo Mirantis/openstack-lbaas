@@ -53,7 +53,7 @@ class Reader(object):
                           'HashHeader': HashHeader(),
                           'HashLayer4': HashLayer4(), 'HashURL': HashURL(), \
                           'LeastBandwidth': LeastBandwidth(), \
-                          'LeastConn': LeastConn(), \
+                          'LeastConnections': LeastConn(), \
                           'LeastLoaded': LeastLoaded(), \
                           'Response': Response(), 'RoundRobin': RoundRobin()}
                           

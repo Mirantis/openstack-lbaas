@@ -88,7 +88,7 @@ class LeastConn(BasePredictor):
     def __init__(self):
         BasePredictor.__init__(self)
         self.slowStartDur = None
-        self.type = "LeastConns"
+        self.type = "LeastConnections"
 
 
 class LeastLoaded(BasePredictor):

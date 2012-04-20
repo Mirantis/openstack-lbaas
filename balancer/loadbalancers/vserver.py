@@ -507,7 +507,7 @@ def createPredictor(pr_type):
                   'HashLayer4': predictor.HashLayer4(),
                   'HashURL': predictor.HashURL(),
                   'LeastBandwidth': predictor.LeastBandwidth(),
-                  'LeastConn': predictor.LeastConn(),
+                  'LeastConnections': predictor.LeastConn(),
                   'LeastLoaded': predictor.LeastLoaded(),
                   'Response': predictor.Response(),
                   'RoundRobin': predictor.RoundRobin()}

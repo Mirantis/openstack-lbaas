@@ -1,13 +1,13 @@
 { 
   
-    "name": "testLB",
+    "name": "testLB002",
     "protocol": "HTTP",
     "transport": "TCP", 
     "algorithm": "RoundRobin",
     
     "virtualIps": [
                     {
-                      "address": "200.1.1.207",
+                      "address": "200.1.1.209",
                       "mask": "255.255.255.255", 
                       "type": "PUBLIC",
                       "ipVersion": "IPv4", 
@@ -16,7 +16,7 @@
 		      "ICMPreply": "True"
                     },
                     {
-                      "address": "200.1.1.208",
+                      "address": "200.1.1.210",
                       "mask": "255.0.0.0",
                       "ipVersion": "IPv4",
                       "VLAN": "200",
@@ -26,7 +26,7 @@
                   ],
     "nodes":      [
                     {
-                       "address": "10.1.1.19",
+                       "address": "100.1.1.19",
                        "type": "host",
                        "port": "80",
                        "weight": "2", 
@@ -36,10 +36,54 @@
                        "rateConnection": "1000", 
                        "status": "INSERVICE",
                        "condition": "ENABLED",
-                       "cookieStr": "test-str"
-                    }, 
+                       "cookieStr": "test-str",
+		       "vm_instance": "RServer001"
+                    },
                     {
-                       "address": "10.1.1.20",
+                       "address": "100.1.1.21",
+                       "type": "host",
+                       "port": "80",
+                       "weight": "2",
+                       "minCon": "300000",
+                       "maxCon": "400000",
+                       "rateBandwidth": "12",
+                       "rateConnection": "1000",
+                       "status": "INSERVICE",
+                       "condition": "ENABLED",
+                       "cookieStr": "test-str",
+                       "vm_instance": "RServer003"
+                    },
+                    {
+                       "address": "100.1.1.21",
+                       "type": "host",
+                       "port": "80",
+                       "weight": "2",
+                       "minCon": "300000",
+                       "maxCon": "400000",
+                       "rateBandwidth": "12",
+                       "rateConnection": "1000",
+                       "status": "INSERVICE",
+                       "condition": "ENABLED",
+                       "cookieStr": "test-str",
+                       "vm_instance": "RServer003"
+                    },
+                    {
+                       "address": "100.1.1.22",
+                       "type": "host",
+                       "port": "80",
+                       "weight": "2",
+                       "minCon": "300000",
+                       "maxCon": "400000",
+                       "rateBandwidth": "12",
+                       "rateConnection": "1000",
+                       "status": "INSERVICE",
+                       "condition": "ENABLED",
+                       "cookieStr": "test-str",
+                       "vm_instance": "RServer004"
+                    },
+ 
+                    {
+                       "address": "100.1.1.20",
                        "type": "host",
                        "port": "180",
                        "description": "test server",
@@ -49,7 +93,8 @@
                        "rateBandwidth": "12", 
                        "rateConnection": "1000", 
                        "status": "INSERVICE",
-                       "condition": "ENABLED"
+                       "condition": "ENABLED",
+		       "vm_instance": "RServer002"
                     }
                   ], 
     "healthMonitor": [

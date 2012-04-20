@@ -50,7 +50,7 @@ class V1Client(base_client.BaseClient):
         return data
 
     def get_algorithms(self, **kwargs):
-        algorithms = ["RoundRobin",  "LeastConn",  "LeastLoaded",
+        algorithms = ["RoundRobin",  "LeastConnections",  "LeastLoaded",
 "LeastBandwidth"]
         return algorithms
 
@@ -73,6 +73,12 @@ class V1Client(base_client.BaseClient):
         data = self.do_request("POST", "loadbalancers",  post_body,
                               {'content-type': 'application/json'})
         return data
+        
+    def get_nodes_for_lb(self, lb_id):
+        res = self.do_request("GET", "loadbalancers/%s/nodes" % lb_id)
+        data = json.loads(res.read())
+        return data
+        
 
     def get_images(self, **kwargs):
         """Returns a list of image id/name mappings from Registry
