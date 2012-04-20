@@ -601,7 +601,7 @@ class LBAddSticky(SyncronousWorker):
         deploy.commands = commands
         deploy.execute()
         self._task.status = STATUS_DONE
-        return "probe: %s" % st.id
+        return "sticky: %s" % st.id
 
 
 class LBdeleteSticky(SyncronousWorker):
