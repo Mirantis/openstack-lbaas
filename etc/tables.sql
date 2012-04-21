@@ -1,4 +1,8 @@
-CREATE TABLE loadbalancers(id TEXT, name TEXT, protocol TEXT, transport TEXT, algorithm TEXT, status TEXT, created TEXT, updated TEXT, device_id TEXT);
+CREATE TABLE tenants(id TEXT, name TEXT);
+
+CREATE TABLE tenantdevices(tenant_id TEXT, device_id TEXT);
+
+CREATE TABLE loadbalancers(id TEXT, name TEXT, protocol TEXT, transport TEXT, algorithm TEXT, status TEXT, created TEXT, updated TEXT, device_id TEXT, tenant TEXT);
 
 CREATE TABLE serverfarms(id TEXT, lb_id TEXT,  name TEXT,
          type TEXT,  description TEXT, failAction TEXT, inbandHealthCheck TEXT, connFailureThreshCount TEXT,  resetTimeout TEXT,   resumeService TEXT,  transparent TEXT, 
@@ -11,7 +15,7 @@ CREATE TABLE predictors( type TEXT, id TEXT, name TEXT, maskType TEXT, ipNetmask
 
 CREATE TABLE rservers(id TEXT, sf_id TEXT, name TEXT,
          type TEXT, webHostRedir TEXT,   ipType TEXT,   address TEXT,  port TEXT,  state TEXT,   opstate TEXT,    description TEXT,   failOnAll TEXT,   minCon INT,  maxCon INT, 
-         weight INT,  probes TEXT, rateBandwidth INT,   rateConnection INT,    redirectionCode TEXT, backupRS TEXT,  backupRSport TEXT,  created TEXT,  updated TEXT, cookieStr TEXT, status TEXT, condition TEXT, vm_instance TEXT);
+         weight INT,  probes TEXT, rateBandwidth INT,   rateConnection INT,    redirectionCode TEXT, backupRS TEXT,  backupRSport TEXT,  created TEXT,  updated TEXT, cookieStr TEXT, status TEXT, condition TEXT, vm_instance TEXT, parent_id TEXT);
 
 
 CREATE TABLE transactions (id TEXT, status TEXT, action TEXT, params TEXT);

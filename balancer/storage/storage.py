@@ -197,6 +197,19 @@ class Reader(object):
         rs.loadFromDict(row)
         return rs
 
+    def getRServerByIP(self,  ip):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        if ip == None:
+            raise exception.NotFound("Empty device ip.")
+        cursor.execute('SELECT * FROM rservers WHERE address= "%s"' % ip)
+        row = cursor.fetchone()
+        if row == None:
+            raise exception.NotFound()
+        rs = RealServer()
+        rs.loadFromDict(row)
+        return rs
+        
     def getRServers(self):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()

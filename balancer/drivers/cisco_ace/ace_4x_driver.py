@@ -133,6 +133,17 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "</serverfarm>"
 
         return self.send_data(context,  XMLstr)
+        
+    def suspendRServerGlobal(self,  context,  rserver):
+        if not self.checkNone(rserver.name):
+            return 'RSERVER NAME ERROR'
+        
+        XMLstr = "<rserver name='" + rserver.name +"'>\r\n"
+        XMLstr = XMLstr + "<inservice sense='no'/>"
+        XMLstr = XMLstr +"</rserver>"
+        return self.send_data(context,  XMLstr)
+        
+        
 
     def createProbe(self,  context,  probe):
         if not self.checkNone(probe.name):

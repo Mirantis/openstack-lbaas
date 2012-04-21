@@ -15,6 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import balancer.common.utils
 import logging
 import openstack.common.exception
 #from balancer.loadbalancers.command import BaseCommand
@@ -41,6 +42,7 @@ class Balancer():
         self.rs = []
         self.probes = []
         self.vips = []
+        self.store = balancer.storage.storage.Storage()
 
     def parseParams(self, params):
 
@@ -66,6 +68,12 @@ class Balancer():
             for node in nodes:
                 rs = realserver.RealServer()
                 rs.loadFromDict(node)
+                # We need to check if there is already real server  with the same IP deployed
+                rd = self.store.getReader()
+                parent_rs = rd.getRServerByIP(rs.address)
+                if balancer.common.utils.checkNone(parent_rs.address) and parent_rs.address != "":
+                    rs.parent_id = parent_rs.id
+                
                 rs.sf_id = sf.id
                 rs.name = rs.id
                 self.rs.append(rs)
@@ -323,7 +331,9 @@ class CreateRServerCommand(object):
         self._rs = rs
 
     def execute(self):
-        self._driver.createRServer(self._context,  self._rs)
+        # We can't create multiple RS with the same IP. So parent_id points to RS which already deployed and has this IP
+        if self._rs.parent_id == "":
+            self._driver.createRServer(self._context,  self._rs)
 
     def undo(self):
         self._driver.deleteRServer(self._context,  self._rs)
@@ -336,7 +346,12 @@ class DeleteRServerCommand(object):
         self._rs = rs
 
     def execute(self):
-        self._driver.deleteRServer(self._context,   self._rs)
+        if self._rs.parent_id != "" and balancer.common.utils.checkNone(self._rs.parent_id):
+                pass
+        else:
+            # We need to check if there are reals who reference this rs as a parent
+            #self._driver.deleteRServer(self._context,   self._rs)
+            pass
 
 
 class CreateStickyCommand(object):
@@ -390,6 +405,10 @@ class AddRServerToSFCommand(object):
         self._rs = rs
 
     def execute(self):
+        if self._rs.parent_d != "":
+            #Nasty hack. We need to think how todo this more elegant
+            self._rs.name = self._rs.parent_id
+            
         self._driver.addRServerToSF(self._context,  self._sf,  self._rs)
 
     def undo(self):
