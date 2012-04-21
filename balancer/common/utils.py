@@ -83,7 +83,7 @@ class Singleton:
         raise TypeError(
             'Singletons must be accessed through the `Instance` method.')
 
-def checkNone(self, obj):
+def checkNone(obj):
        if bool(obj):
            if obj != 'None':
                return True

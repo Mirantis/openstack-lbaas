@@ -70,9 +70,14 @@ class Balancer():
                 rs.loadFromDict(node)
                 # We need to check if there is already real server  with the same IP deployed
                 rd = self.store.getReader()
-                parent_rs = rd.getRServerByIP(rs.address)
-                if balancer.common.utils.checkNone(parent_rs.address) and parent_rs.address != "":
-                    rs.parent_id = parent_rs.id
+                try:
+                    parent_rs = rd.getRServerByIP(rs.address)
+                except openstack.common.exception.NotFound:
+                    parent_rs=None
+                    pass
+                if balancer.common.utils.checkNone(parent_rs):
+                    if parent_rs.address != "":
+                       rs.parent_id = parent_rs.id
                 
                 rs.sf_id = sf.id
                 rs.name = rs.id
@@ -321,7 +326,7 @@ class Destructor(object):
             except:
 
                 logger.error("Got exception during deleting.")
-                raise openstack.common.exception.Error()
+                #raise openstack.common.exception.Error()
 
 
 class CreateRServerCommand(object):
@@ -332,11 +337,25 @@ class CreateRServerCommand(object):
 
     def execute(self):
         # We can't create multiple RS with the same IP. So parent_id points to RS which already deployed and has this IP
+        logger.debug("Creating rserver command execution with rserver: %s" % self._rs)
+        logger.debug("RServer parent_id: %s" % self._rs.parent_id)
         if self._rs.parent_id == "":
             self._driver.createRServer(self._context,  self._rs)
+            self._rs.deployed = 'True'
+            stor = balancer.storage.storage.Storage()
+            wr = stor.getWriter()
+            wr.updateDeployed(self._rs,  'True')
+            
 
     def undo(self):
-        self._driver.deleteRServer(self._context,  self._rs)
+        try:
+            self._driver.deleteRServer(self._context,  self._rs)
+            self._rs.deployed='False'
+            stor = balancer.storage.storage.Storage()
+            wr = stor.getWriter()
+            wr.updateDeployed(self._rs,  'False')
+        except:
+            pass
 
 
 class DeleteRServerCommand(object):
@@ -362,6 +381,10 @@ class CreateStickyCommand(object):
         
     def execute(self):
         self._driver.createStickiness(self._context,  self._sticky)
+        self._sticky.deployed='True'
+        stor = balancer.storage.storage.Storage()
+        wr = stor.getWriter()
+        wr.updateDeployed(self._sticky,  'True')
 
 
 class DeleteStickyCommand(object):
@@ -372,6 +395,10 @@ class DeleteStickyCommand(object):
         
     def execute(self):
         self._driver.deleteStickiness(self._context,  self._sticky)
+        self._sticky.deployed = 'False'
+        stor = balancer.storage.storage.Storage()
+        wr = stor.getWriter()
+        wr.updateDeployed(self._sticky,  'False')
 
 
 class CreateServerFarmCommand(object):
@@ -382,9 +409,20 @@ class CreateServerFarmCommand(object):
 
     def execute(self):
         self._driver.createServerFarm(self._context,  self._sf)
+        self._sf.deployed = 'True'
+        stor = balancer.storage.storage.Storage()
+        wr = stor.getWriter()
+        wr.updateDeployed(self._sf,  'True')
 
     def undo(self):
-        self._driver.deleteServerFarm(self._context,  self._sf)
+        try:
+            self._driver.deleteServerFarm(self._context,  self._sf)
+            self._sf.deployed='False'
+            stor = balancer.storage.storage.Storage()
+            wr = stor.getWriter()
+            wr.updateDeployed(self._sf,  'False')
+        except:
+            pass
 
 
 class DeleteServerFarmCommand(object):
@@ -395,7 +433,10 @@ class DeleteServerFarmCommand(object):
 
     def execute(self):
         self._driver.deleteServerFarm(self._context,  self._sf)
-
+        self._sf.deployed='False'
+        stor = balancer.storage.storage.Storage()
+        wr = stor.getWriter()
+        wr.updateDeployed(self._sf,  'False')
 
 class AddRServerToSFCommand(object):
     def __init__(self,  driver,  context,  sf, rs):
@@ -405,14 +446,17 @@ class AddRServerToSFCommand(object):
         self._rs = rs
 
     def execute(self):
-        if self._rs.parent_d != "":
+        if self._rs.parent_id != "":
             #Nasty hack. We need to think how todo this more elegant
             self._rs.name = self._rs.parent_id
             
         self._driver.addRServerToSF(self._context,  self._sf,  self._rs)
 
     def undo(self):
-        self._driver.deleteRServerFromSF(self._context,  self._sf,  self._rs)
+        try:
+            self._driver.deleteRServerFromSF(self._context,  self._sf,  self._rs)
+        except:
+            pass
 
 
 class DeleteRServerFromSFCommand(object):
@@ -434,9 +478,20 @@ class CreateProbeCommand(object):
 
     def execute(self):
         self._driver.createProbe(self._context, self._probe)
+        self._probe.deployed='True'
+        stor = balancer.storage.storage.Storage()
+        wr = stor.getWriter()
+        wr.updateDeployed(self._probe,  'True')
 
     def undo(self):
-        self._driver.deleteProbe(self._context, self._probe)
+        try:
+            self._driver.deleteProbe(self._context, self._probe)
+            self._probe.deployed='False'
+            stor = balancer.storage.storage.Storage()
+            wr = stor.getWriter()
+            wr.updateDeployed(self._probe,  'False')           
+        except:
+            pass
 
 
 class DeleteProbeCommand(object):
@@ -447,6 +502,10 @@ class DeleteProbeCommand(object):
 
     def execute(self):
         self._driver.deleteProbe(self._context, self._probe)
+        self._probe.deployed='False'
+        stor = balancer.storage.storage.Storage()
+        wr = stor.getWriter()
+        wr.updateDeployed(self._probe,  'False')
 
 
 class AddProbeToSFCommand(object):
@@ -460,7 +519,10 @@ class AddProbeToSFCommand(object):
         self._driver.addProbeToSF(self._context,  self._sf,  self._probe)
 
     def undo(self):
-        self._driver.deleteProbeFromSF(self._context,  self._sf,  self._probe)
+        try:
+            self._driver.deleteProbeFromSF(self._context,  self._sf,  self._probe)
+        except:
+            pass
 
 
 class DeleteProbeFromSFCommand(object):
@@ -483,9 +545,20 @@ class CreateVIPCommand(object):
 
     def execute(self):
         self._driver.createVIP(self._context,  self._vip,  self._sf)
+        self._vip.deployed='True'
+        stor = balancer.storage.storage.Storage()
+        wr = stor.getWriter()
+        wr.updateDeployed(self._vip,  'True')
 
     def undo(self):
-        self._driver.deleteVIP(self._context,  self._vip,  self._sf)
+        try:
+            self._driver.deleteVIP(self._context,  self._vip,  self._sf)
+            self._vip.deployed='False'
+            stor = balancer.storage.storage.Storage()
+            wr = stor.getWriter()
+            wr.updateDeployed(self._vip,  'False')
+        except:
+            pass
 
 
 class DeleteVIPCommand(object):
@@ -496,6 +569,10 @@ class DeleteVIPCommand(object):
 
     def execute(self):
         self._driver.deleteVIP(self._context,   self._vip)
+        self._vip.deployed='False'
+        stor = balancer.storage.storage.Storage()
+        wr = stor.getWriter()
+        wr.updateDeployed(self._vip,  'False')
 
 
 def createProbe(probe_type):

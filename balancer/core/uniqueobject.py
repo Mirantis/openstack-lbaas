@@ -21,6 +21,7 @@ import uuid
 class UniqueObject(object):
     def __init__(self):
         self.id = uuid.uuid1().hex
+        self.deployed = 'False'
 
     def createSame(self):
         return type(self)()

@@ -28,7 +28,7 @@
                     {
                        "address": "100.1.1.25",
                        "type": "host",
-                       "port": "80",
+                       "port": "8080",
                        "weight": "2", 
                        "minCon": "300000", 
                        "maxCon": "400000", 
@@ -36,41 +36,38 @@
                        "rateConnection": "1000", 
                        "status": "INSERVICE",
                        "condition": "ENABLED",
-                       "cookieStr": "test-str",
 		       "vm_instance": "RServer001"
                     },
                     {
                        "address": "100.1.1.21",
                        "type": "host",
-                       "port": "80",
-                       "weight": "2",
+                       "port": "8080",
+                       "weight": "10",
                        "minCon": "300000",
                        "maxCon": "400000",
                        "rateBandwidth": "12",
                        "rateConnection": "1000",
                        "status": "INSERVICE",
                        "condition": "ENABLED",
-                       "cookieStr": "test-str",
                        "vm_instance": "RServer003"
                     },
                     {
                        "address": "100.1.1.26",
                        "type": "host",
-                       "port": "80",
-                       "weight": "2",
+                       "port": "8080",
+                       "weight": "20",
                        "minCon": "300000",
                        "maxCon": "400000",
                        "rateBandwidth": "12",
                        "rateConnection": "1000",
                        "status": "INSERVICE",
                        "condition": "ENABLED",
-                       "cookieStr": "test-str",
                        "vm_instance": "RServer003"
                     },
                     {
                        "address": "100.1.1.27",
                        "type": "host",
-                       "port": "80",
+                       "port": "8080",
                        "weight": "2",
                        "minCon": "300000",
                        "maxCon": "400000",
@@ -78,14 +75,13 @@
                        "rateConnection": "1000",
                        "status": "INSERVICE",
                        "condition": "ENABLED",
-                       "cookieStr": "test-str",
                        "vm_instance": "RServer004"
                     },
  
                     {
                        "address": "100.1.1.28",
                        "type": "host",
-                       "port": "180",
+                       "port": "8080",
                        "description": "test server",
                        "weight": "5", 
                        "minCon": "400000", 
@@ -100,21 +96,21 @@
     "healthMonitor": [
                       { 
                         "type": "ICMP", 
-                        "delay": "10", 
-                        "attemptsBeforeDeactivation": "5", 
-                        "timeout": "10"
+                        "delay": "15", 
+                        "attemptsBeforeDeactivation": "6", 
+                        "timeout": "20"
                       }, 
                       { 
                         "type": "CONNECT", 
-                        "delay": "10", 
+                        "delay": "30", 
                         "attemptsBeforeDeactivation": "5", 
-                        "timeout": "10"
+                        "timeout": "30"
                       }, 
                      {  
                         "type": "HTTP", 
-                        "delay": "10", 
+                        "delay": "30", 
                         "attemptsBeforeDeactivation": "5", 
-                        "timeout": "10", 
+                        "timeout": "30", 
                         "method":  "GET", 
                         "path": "/index.html", 
                         "expected": "200-204"

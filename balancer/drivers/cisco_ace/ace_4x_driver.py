@@ -729,6 +729,16 @@ class AceDriver(BaseDriver):
         XMLstr = XMLstr + "</sticky>"
 
         return self.send_data(context,  XMLstr)
+        
+    def addACLEntry(self,  context,  vip):
+            XMLstr = "<access-list id='vip-acl' config-type='extended' \
+            perm-value='permit' protocol-name='ip' src-type='any' \
+            host_dest-addr='" + vip.address + "'/>\r\n"
+            try:
+                self.send_data(context,  XMLstr)
+            except:
+                logger.warning("Got exception during deploying ACL. It could be ok.")
+            
 
     def createVIP(self,  context, vip,  sfarm):
         if not self.checkNone(vip.name) or not self.checkNone(vip.name) \
@@ -742,9 +752,7 @@ class AceDriver(BaseDriver):
             pmap = "int-" + md5.new(vip.VLAN).hexdigest()
 
         #  Add a access-list
-        XMLstr = "<access-list id='vip-acl' config-type='extended' \
-            perm-value='permit' protocol-name='ip' src-type='any' \
-            host_dest-addr='" + vip.address + "'/>\r\n"
+        self.addACLEntry(context,  vip)
 
         # Add a policy-map
         if vip.appProto.lower() == "other" or vip.appProto.lower() == "http":
@@ -752,7 +760,7 @@ class AceDriver(BaseDriver):
         else:
             vip.appProto = "_" + vip.appProto.lower()
 
-        XMLstr = XMLstr + "<policy-map_lb type='loadbalance" + vip.appProto + \
+        XMLstr = "<policy-map_lb type='loadbalance" + vip.appProto + \
             "' match-type='first-match' pmap-name='" + vip.name + \
             "-l7slb'>\r\n"
         XMLstr = XMLstr + \
@@ -808,22 +816,39 @@ class AceDriver(BaseDriver):
                         "'>\r\n"
                     XMLstr = XMLstr + "<service-policy type='input' name='" + \
                         pmap + "'/>\r\n"
+                    XMLstr = XMLstr + "</interface>"
+                    tmp = s.deployConfig(context, XMLstr)
+                    
+                    XMLstr = "<interface type='vlan' number='" + str(i) + \
+                        "'>\r\n"
                     XMLstr = XMLstr + \
                         "<access-group access-type='input' \
                         name='vip-acl'/>\r\n"
                     XMLstr = XMLstr + "</interface>"
-                    tmp = s.deployConfig(context, XMLstr)
+                    try:
+                        #Try to add access list. if it is already assigned exception will occur
+                        tmp = s.deployConfig(context, XMLstr)
+                    except:
+                        logger.warning("Got exception on acl set")                    
+                    
             else:
                     XMLstr = "<interface type='vlan' number='" + \
                         str(vip.VLAN) + "'>\r\n"
                     XMLstr = XMLstr + \
                         "<service-policy type='input' name='" + \
                         pmap + "'/>\r\n"
+                    XMLstr = XMLstr + "</interface>"
+                    tmp = s.deployConfig(context, XMLstr)
+                    XMLstr = "<interface type='vlan' number='" + \
+                        str(vip.VLAN) + "'>\r\n"
                     XMLstr = XMLstr + \
                         "<access-group access-type='input' \
                         name='vip-acl'/>\r\n"
                     XMLstr = XMLstr + "</interface>"
-                    tmp = s.deployConfig(context, XMLstr)
+                    try:
+                        tmp = s.deployConfig(context, XMLstr)
+                    except:
+                       logger.warning("Got exception on acl set")                    
 
         return 'OK'
 

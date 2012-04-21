@@ -17,6 +17,7 @@
 
 import logging
 import sys
+import traceback
 
 import  balancer.loadbalancers.loadbalancer
 
@@ -91,8 +92,9 @@ class Controller(object):
                 self._service_controller.addTask(task)
                 return {'loadbalancers': {'id': lb.id}}
 
-        except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+        except exception.NotFound :
+            msg = "Exception occured " 
+            traceback.print_exc(file=sys.stdout)
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:

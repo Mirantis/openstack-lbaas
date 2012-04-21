@@ -202,7 +202,7 @@ class Reader(object):
         cursor = self._con.cursor()
         if ip == None:
             raise exception.NotFound("Empty device ip.")
-        cursor.execute('SELECT * FROM rservers WHERE address= "%s"' % ip)
+        cursor.execute('SELECT * FROM rservers WHERE address= "%s" and deployed="True"' % ip)
         row = cursor.fetchone()
         if row == None:
             raise exception.NotFound()
@@ -520,7 +520,7 @@ class Writer(object):
         cursor.execute(command)
         self._con.commit()
 
-    def updateObjectInTable(self,  obj):
+    def getTableForObject(self,  obj):
         table = ""
         if isinstance(obj, LoadBalancer):
             table = "loadbalancers"
@@ -540,7 +540,11 @@ class Writer(object):
             table = "probes"
         elif isinstance(obj, Sticky):
             table = "stickies"
-            
+        return table
+        
+    def updateObjectInTable(self,  obj):
+        table = self.getTableForObject(obj)
+                   
         if table != "":
             logger.debug("Updating table %s in DB." % table)
             dict = obj.convertToDict()
@@ -550,6 +554,12 @@ class Writer(object):
             cursor.execute(command)
         self._con.commit()
 
+    def updateDeployed(self,  obj,  status):
+            table = self.getTableForObject(obj)
+            cursor = self._con.cursor()
+            cursor.execute("UPDATE %s SET deployed='%s' WHERE id='%s'" % (table, status, obj.id))
+            self._con.commit()
+        
     def generateUpdateCommand(self,  table, dict,  id):
         command1 = "UPDATE %s SET " % table
 
