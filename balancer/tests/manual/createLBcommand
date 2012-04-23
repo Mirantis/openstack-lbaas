@@ -36,7 +36,8 @@
                        "rateConnection": "1000", 
                        "status": "INSERVICE",
                        "condition": "ENABLED",
-		       "vm_instance": "RServer001"
+		       "vm_instance": "RServer001",
+		       "vm_id": "1234-1234-1234-1234"
                     },
                     {
                        "address": "100.1.1.21",
@@ -49,7 +50,8 @@
                        "rateConnection": "1000",
                        "status": "INSERVICE",
                        "condition": "ENABLED",
-                       "vm_instance": "RServer003"
+                       "vm_instance": "RServer003",
+		       "vm_id": "1235-1235-1235-1235"
                     },
                     {
                        "address": "100.1.1.26",
@@ -62,7 +64,8 @@
                        "rateConnection": "1000",
                        "status": "INSERVICE",
                        "condition": "ENABLED",
-                       "vm_instance": "RServer003"
+                       "vm_instance": "RServer003",
+		       "vm_id": "1236-1236-1236-1236"
                     },
                     {
                        "address": "100.1.1.27",
@@ -75,7 +78,8 @@
                        "rateConnection": "1000",
                        "status": "INSERVICE",
                        "condition": "ENABLED",
-                       "vm_instance": "RServer004"
+                       "vm_instance": "RServer004",
+		       "vm_id": "1237-1237-1237-1237"
                     },
  
                     {
@@ -90,7 +94,8 @@
                        "rateConnection": "1000", 
                        "status": "INSERVICE",
                        "condition": "ENABLED",
-		       "vm_instance": "RServer002"
+		       "vm_instance": "RServer002",
+ 		       "vm_id": "1238-1238-1238-1238"
                     }
                   ], 
     "healthMonitor": [

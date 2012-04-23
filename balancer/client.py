@@ -79,7 +79,24 @@ class V1Client(base_client.BaseClient):
         data = json.loads(res.read())
         return data
         
-
+    def get_balancers_with_vm(self,  vm_id):
+        res = self.do_request("GET", "loadbalancers/find_for_VM/%s" % vm_id)
+        data = json.loads(res.read())['loadbalancers']
+        return data
+        
+    def activate_node_in_LB(self,  lb_id,  vm_id):
+        pass
+        
+    def suspend_node_in_LB(self,  lb_id,  vm_id):
+        pass
+        
+        
+    def add_node_to_LB(self,  lb_id,  node):
+        pass
+        
+    def delete_node_from_LB(self,  lb_id,  vm_id):
+        pass
+        
     def get_images(self, **kwargs):
         """Returns a list of image id/name mappings from Registry
 

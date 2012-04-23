@@ -43,6 +43,34 @@ class Controller(object):
         self.conf = conf
         self._service_controller = ServiceController.Instance()
         pass
+    
+    def findLBforVM(self,  req,   **args):
+        try:
+            msg = "Got index request. Request: %s" % req
+            logger.debug(msg)
+            task = self._service_controller.createTask()
+            params = args['vm_id']
+            task.parameters = params
+            mapper = LBActionMapper()
+            worker = mapper.getWorker(task, "findLBforVM")
+            if worker.type == SYNCHRONOUS_WORKER:
+                result = worker.run()
+                return {'loadbalancers': result}
+
+            if worker.type == ASYNCHRONOUS_WORKER:
+                task.worker = worker
+                self._service_controller.addTask(task)
+                return {'loadbalancers': task.id}
+
+        except exception.NotFound:
+            msg = "Image with identifier %s not found" % image_id
+            logger.debug(msg)
+            raise webob.exc.HTTPNotFound(msg)
+        except exception.NotAuthorized:
+            msg = _("Unauthorized image access")
+            logger.debug(msg)
+            raise webob.exc.HTTPForbidden(msg)
+        return {'loadbalancers': list}
 
     def index(self, req):
         try:

@@ -223,7 +223,35 @@ class Reader(object):
             rs.loadFromDict(row)
             list.append(rs)
         return list
+        
+    def getLoadBalancersByVMid(self,  vm_id):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT rservers.id, serverfarms.lb_id FROM rservers, serverfarms WHERE rservers.vm_id="%s" AND rservers.sf_id=serverfarms.id' % vm_id)
+        rows = cursor.fetchall()
+        if rows == None:
+            raise exception.NotFound()
+        list = []
+        for row in rows:
+            lb_id = row['lb_id']
+            lb = self.getLoadBalancerById(lb_id)
+            list.append(lb)
+        return list
 
+    def getRServersByVMid(selfself,  vm_id):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT * FROM rservers WHERE rservers.vm_id="%s"' % vm_id)
+        rows = cursor.fetchall()
+        if rows == None:
+            raise exception.NotFound()
+        list = []
+        for row in rows:
+            rs = RealServer()
+            rs.loadFromDict(row)
+            list.append(rs)
+        return list
+        
     def getPreditorById(self, id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()

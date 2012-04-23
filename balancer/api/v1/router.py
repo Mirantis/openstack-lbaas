@@ -46,6 +46,8 @@ class API(wsgi.Router):
 
         mapper.connect("/loadbalancers/", controller=lb_resource, \
         action="index")
+        mapper.connect("/loadbalancers/find_for_VM/{vm_id}", controller=lb_resource,
+                       action="findLBforVM", conditions=dict(method=["GET"]))
 
         mapper.connect("/loadbalancers/{id}", controller=lb_resource,
                        action="show", conditions=dict(method=["GET"]))

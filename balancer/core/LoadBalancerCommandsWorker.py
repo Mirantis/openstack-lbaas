@@ -53,7 +53,20 @@ class LBGetIndexWorker(SyncronousWorker):
         self._task.status = STATUS_DONE
         return list
 
+class LBFindforVM(SyncronousWorker):
+    def __init__(self,  task):
+        super(LBFindforVM, self).__init__(task)
+        self._t = 1
 
+    def run(self):
+        self._task.status = STATUS_PROGRESS
+        vm_id = self._task.parameters
+        store = Storage()
+        reader = store.getReader()
+        list = reader.getLoadBalancersByVMid(vm_id)
+        self._task.status = STATUS_DONE
+        return list
+        
 class LBGetDataWorker(SyncronousWorker):
     def __init__(self,  task):
         super(LBGetDataWorker, self).__init__(task)
@@ -683,3 +696,5 @@ class LBActionMapper(object):
             return LBAddSticky(task)
         if action == "deleteSticky":
             return LBdeleteSticky(task)            
+        if action == "findLBforVM":
+            return LBFindforVM(task)

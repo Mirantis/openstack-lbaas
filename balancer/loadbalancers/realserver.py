@@ -51,3 +51,4 @@ class RealServer(Serializeable,  UniqueObject):
         self.condition = "ENABLED"
         self.vm_instance = ""
         self.parent_id = ""
+        self.vm_id = ""
