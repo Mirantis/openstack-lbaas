@@ -551,8 +551,9 @@ class AceDriver(BaseDriver):
             return "ERROR"
 
         name = sticky.name
+        sticky_type = sticky.type.lower() 
 
-        if sticky.type.lower() == "httpcontent":
+        if sticky_type == "httpcontent":
             XMLstr = "<sticky http-content='http-content' \
                 sticky-group-name='" + name + "'>\r\n"
             if self.checkNone(sticky.offset) or self.checkNone(sticky.length) \
@@ -570,8 +571,7 @@ class AceDriver(BaseDriver):
                     self.checkNone(sticky.length):
                     XMLstr = XMLstr + " end-pattern_expression='eennndd'"
                 XMLstr = XMLstr + "/>\r\n"
-
-        if sticky.type.lower() == "httpcookie":
+        elif sticky_type == "httpcookie":
             XMLstr = "<sticky http-cookie='" + sticky.cookieName + \
                 "' sticky-group-name='" + name + "'>\r\n"
             if self.checkNone(sticky.enableInsert):
@@ -591,8 +591,7 @@ class AceDriver(BaseDriver):
             if self.checkNone(sticky.secondaryName):
                 XMLstr = XMLstr + "<cookie config-type='secondary' \
                     secondary-cookie-name='" + sticky.secondaryName + "'/>\r\n"
-
-        if sticky.type.lower() == "httpheader":
+        elif sticky_type == "httpheader":
             XMLstr = "<sticky http-header='" + sticky.headerName + \
                 "' sticky-group-name='" + name + "'>\r\n"
             if self.checkNone(sticky.offset) or self.checkNone(sticky.length):
@@ -602,8 +601,7 @@ class AceDriver(BaseDriver):
                 if self.checkNone(sticky.length):
                     XMLstr = XMLstr + " length='" + str(sticky.length) + "'"
                 XMLstr = XMLstr + "/>\r\n"
-
-        if sticky.type.lower() == "ipnetmask":
+        elif sticky_type == "ipnetmask":
             XMLstr = "<sticky sticky-type='ip-netmask' netmask='" + \
                 str(sticky.netmask) + "' address='" + \
                 sticky.addressType.lower() + "' sticky-group-name='" + \
@@ -611,8 +609,7 @@ class AceDriver(BaseDriver):
             if self.checkNone(sticky.ipv6PrefixLength):
                 XMLstr = XMLstr + "<v6-prefix prefix-length='" + \
                     str(sticky.ipv6PrefixLength) + "'/>\r\n"
-
-        if sticky.type.lower() == "v6prefix":
+        elif sticky_type == "v6prefix":
             XMLstr = "<sticky sticky-type='v6-prefix' prefix-length='" + \
                 str(sticky.prefixLength) + "' address='" + \
                 sticky.addressType.lower() + "' sticky-group-name='" + \
@@ -620,8 +617,7 @@ class AceDriver(BaseDriver):
             if self.checkNone(sticky):
                 XMLstr = XMLstr + "<ip-netmask netmask='" + \
                     str(sticky.netmask) + "'/>\r\n"
-
-        if sticky.type.lower() == "l4payload":
+        elif sticky_type == "l4payload":
             XMLstr = "<sticky sticky-group-name='" + name + "'>\r\n"
             if self.checkNone(sticky.enableStickyForResponse):
                 XMLstr = XMLstr + "<response response-info='sticky'/>\r\n"
@@ -640,12 +636,9 @@ class AceDriver(BaseDriver):
                     self.checkNone(sticky.length):
                     XMLstr = XMLstr + " end-pattern_expression='eennndd'"
                 XMLstr = XMLstr + "/>\r\n"
-
-        if sticky.type.lower() == "radius":
-        # without sticky.radiusTypes
+        elif sticky_type == "radius":
             XMLstr = "<sticky sticky-group-name='" + name + "'>\r\n"
-
-        if sticky.type.lower() == "rtspheader":
+        elif sticky_type == "rtspheader":
             XMLstr = "<sticky rtsp-header='Session' sticky-group-name='" + \
                 name + "'>\r\n"
             if boot(sticky.offset) or boot(sticky.length):
@@ -655,8 +648,7 @@ class AceDriver(BaseDriver):
                 if self.checkNone(sticky.length):
                     XMLstr = XMLstr + " length='" + str(sticky.length) + "'"
                 XMLstr = XMLstr + "/>\r\n"
-
-        if sticky.type.lower() == "sipheader":
+        elif sticky_type == "sipheader":
             XMLstr = "<sticky sip-header='Call-ID' sticky-group-name='" + \
                 name + "'>\r\n"
 
@@ -679,50 +671,42 @@ class AceDriver(BaseDriver):
             XMLstr = XMLstr + "/>\r\n"
         XMLstr = XMLstr + "</sticky>"
 
-        return self.send_data(context,  XMLstr)
+        return self.send_data(context, XMLstr)
 
     def deleteStickiness(self,  context,   sticky):
         if not self.checkNone(sticky.name):
             return "ERROR"
 
         name = sticky.name
+        sticky_type = sticky.type.lower()
 
-        if sticky.type.lower() == "httpcontent":
+        if sticky_type == "httpcontent":
             XMLstr = "<sticky sense='no' http-content='http-content' \
                 sticky-group-name='" + name + "'>\r\n"
-
-        if sticky.type.lower() == "httpcookie":
+        elif sticky_type == "httpcookie":
             XMLstr = "<sticky sense='no' http-cookie='" + sticky.cookieName + \
                 "' sticky-group-name='" + name + "'>\r\n"
-
-        if sticky.type.lower() == "httpheader":
+        elif sticky_type == "httpheader":
             XMLstr = "<sticky sense='no' http-header='" + sticky.headerName + \
                 "' sticky-group-name='" + name + "'>\r\n"
-
-        if sticky.type.lower() == "ipnetmask":
+        elif sticky_type == "ipnetmask":
             XMLstr = "<sticky sense='no' sticky-type='ip-netmask' netmask='" \
                 + str(sticky.netmask) + "' address='" + \
                 sticky.addressType.lower() + "' sticky-group-name='" + \
                 name + "'>\r\n"
-
-        if sticky.type.lower() == "v6prefix":
+        elif sticky_type == "v6prefix":
             XMLstr = "<sticky sense='no' sticky-type='v6-prefix' \
                 prefix-length='" + str(sticky.prefixLength) + "' address='" + \
                 sticky.addressType.lower() + "' sticky-group-name='" + \
                 name + "'>\r\n"
-
-        if sticky.type.lower() == "l4payload":
+        elif sticky_type == "l4payload":
             XMLstr = "<sticky sense='no' sticky-group-name='" + name + "'>\r\n"
-
-        if sticky.type.lower() == "radius":
-        # without sticky.radiusTypes
+        elif sticky_type == "radius":
             XMLstr = "<sticky sense='no' sticky-group-name='" + name + "'>\r\n"
-
-        if sticky.type.lower() == "rtspheader":
+        elif sticky_type == "rtspheader":
             XMLstr = "<sticky sense='no' rtsp-header='Session' \
                 sticky-group-name='" + name + "'>\r\n"
-
-        if sticky.type.lower() == "sipheader":
+        elif sticky_type == "sipheader":
             XMLstr = "<sticky sense='no' sip-header='Call-ID' \
                 sticky-group-name='" + name + "'>\r\n"
 
