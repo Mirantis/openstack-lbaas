@@ -64,6 +64,7 @@ class Balancer():
         sf.name = sf.id
         self.sf = sf
         device_id = params.get('device_id',  None)
+        logger.debug("Device ID = %s" % device_id)
         if device_id != None:
             self.lb.device_id = device_id
 
