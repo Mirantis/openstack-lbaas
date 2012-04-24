@@ -110,11 +110,12 @@ class Balancer():
         stic = params.get("sessionPersistence",  None)
         
         if stic != None:
-            st = createSticky(stic['type'])
-            st.loadFromDict(stic)
-            st.sf_id = sf.id
-            st.name = st.id
-            self.sf._sticky = st         
+            for st in stic:
+                st = createSticky(stic['type'])
+                st.loadFromDict(stic)
+                st.sf_id = sf.id
+                st.name = st.id
+                self.sf._sticky.append(st)
 
     def update(self):
         store = balancer.storage.storage.Storage()
@@ -140,7 +141,7 @@ class Balancer():
         wr.writeLoadBalancer(self.lb)
         wr.writeServerFarm(self.sf)
         wr.writePredictor(self.sf._predictor)
-        wr.writeSticky(self.sf._sticky)
+
         for rs in self.rs:
             wr.writeRServer(rs)
 
@@ -149,6 +150,9 @@ class Balancer():
 
         for vip in self.vips:
             wr.writeVirtualServer(vip)
+
+        for st in self.sf._sticky:
+            wr.writeSticky(st)
 
     def loadFromDB(self, lb_id):
         store = balancer.storage.storage.Storage()
@@ -159,14 +163,16 @@ class Balancer():
         predictor = rd.getPredictorBySFid(sf_id)
         self.sf._predictor = predictor
         self.rs = rd.getRServersBySFid(sf_id)
-        self.sticky = rd.getStickiesBySFid(sf_id)
-        self.sf._sticky = self.sticky
+        sticks = rd.getStickiesBySFid(sf_id)
+
         for rs in self.rs:
             self.sf._rservers.append(rs)
         self.probes = rd.getProbesBySFid(sf_id)
         for prob in self.probes:
             self.sf._probes.append(prob)
         self.vips = rd.getVIPsBySFid(sf_id)
+        for st in sticks:
+            self.sf._sticky.append(st)
 
     def removeFromDB(self):
         store = balancer.storage.storage.Storage()

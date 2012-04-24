@@ -600,8 +600,7 @@ class LBAddSticky(SyncronousWorker):
         st.sf_id = bal_instance.sf.id
         st.name = st.id
 
-        bal_instance.sticky = st
-        bal_instance.sf._sticky = st
+        bal_instance.sf._sticky.append(st)
         bal_instance.savetoDB()
 
         device = sched.getDeviceByID(bal_instance.lb.device_id)
