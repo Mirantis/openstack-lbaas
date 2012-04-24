@@ -117,17 +117,20 @@ class CreateLBWorker(SyncronousWorker):
     def run(self):
         self._task.status = STATUS_PROGRESS
         params = self._task.parameters
+        balancer_instance = Balancer()
+        #Step 1. Parse parameters came from request
+
+        balancer_instance.parseParams(params)
         sched = Scheduller()
-        device = sched.getDevice()
+        # device = sched.getDevice()
+        device = sched.getDeviceByID(balancer_instance.lb.device_id)
         devmap = DeviceMap()
         driver = devmap.getDriver(device)
         context = driver.getContext(device)
-        balancer_instance = Balancer()
 
-        #Step 1. Parse parameters came from request
-        balancer_instance.parseParams(params)
         lb = balancer_instance.getLB()
-        lb.device_id = device.id
+        # lb.device_id = device.id
+
         #Step 2. Save config in DB
         balancer_instance.savetoDB()
 

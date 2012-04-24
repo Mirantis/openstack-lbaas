@@ -47,9 +47,12 @@ class Scheduller(object):
         return self._device_map
 
     def getDeviceByID(self,  id):
-        dev = self._device_map.get(id,  None)
-        if dev == None:
-            raise  exception.NotFound()
+        if id == None:
+            dev = self._list[0]
+        else:
+            dev = self._device_map.get(id,  None)
+            if dev == None:
+                raise  exception.NotFound()
         return dev
 
     def getDevices(self):

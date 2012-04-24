@@ -63,6 +63,10 @@ class Balancer():
         
         sf.name = sf.id
         self.sf = sf
+        device_id = params.get('device_id',  None)
+        if device_id != None:
+            self.lb.device_id = device_id
+
         """ Parse RServer nodes and attach them to SF """
         if nodes != None:
             for node in nodes:
