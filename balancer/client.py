@@ -97,6 +97,12 @@ class V1Client(base_client.BaseClient):
     def delete_node_from_LB(self,  lb_id,  vm_id):
         pass
         
+    def get_devices(self):
+        res = self.do_request("GET", "devices")
+        data = json.loads(res.read())['devices']
+        return data
+        
+        
     def get_images(self, **kwargs):
         """Returns a list of image id/name mappings from Registry
 

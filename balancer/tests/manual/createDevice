@@ -6,7 +6,7 @@
  "requires_vip_ip": 1,
  "has_acl": 1,
  "supports_vlan": 1,
- "ip": "127.0.0.1",
+ "ip": "172.20.37.30",
  "port": "222",
  "user": "admin",
  "password": "cisco123",
