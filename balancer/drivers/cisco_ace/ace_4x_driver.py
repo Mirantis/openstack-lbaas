@@ -133,11 +133,11 @@ class AceDriver(BaseDriver):
 
         if (pr_type != 'vm'):
             if self.checkNone(probe.passDetectInterval):
-                cmd += "passdetect interval" + \
+                cmd += "passdetect interval " + \
                     str(probe.passDetectInterval) + "\n"
 
             if self.checkNone(probe.passDetectCount):
-                cmd += "passdetect count" + \
+                cmd += "passdetect count " + \
                     str(probe.passDetectCount) + "\n"
 
             if self.checkNone(probe.failDetect):
