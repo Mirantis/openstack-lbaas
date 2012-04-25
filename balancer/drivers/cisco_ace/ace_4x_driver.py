@@ -586,12 +586,14 @@ class AceDriver(BaseDriver):
                     
                     cmd = "interface vlan " + str(i) + "\n"
                     cmd += "access-group input vip-acl\n"
-                    try:
+                    tmp = s.deployConfig(context,  cmd)
+                    # WE DO NOT SHOULD CREATE ACCESS GROUP FOR EACH VLAN
+                    #try:
                         # Try to add access list. if it is already
                         # assigned exception will occur
-                        tmp = s.deployConfig(context,  cmd)
-                    except:
-                        logger.warning("Got exception on acl set")                    
+                    #    tmp = s.deployConfig(context,  cmd)
+                    #except:
+                    #    logger.warning("Got exception on acl set")                    
                     
             else:
                     cmd = "interface vlan " + str(vip.VLAN) + "\n"
