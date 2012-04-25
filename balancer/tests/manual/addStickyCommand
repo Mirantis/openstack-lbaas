@@ -1,6 +1,6 @@
 {
   "sessionPersistence": {
-			"type": "httpcookie",
+			"type": "http-cookie",
 			"cookieName": "testHTTPCookie",
 			"enableInsert": "true",
 			"browserExpire": "true",

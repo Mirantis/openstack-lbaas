@@ -426,7 +426,7 @@ class AceDriver(BaseDriver):
             cmd += sticky.cookieName + " " + name + "\n"
             if self.checkNone(sticky.enableInsert):
                 cmd += "cookie insert"
-                if self.checkNone(sticky.BrowserExp):
+                if self.checkNone(sticky.browserExpire):
                     cmd += " browser-expire"
                 cmd += "\n"
             if self.checkNone(sticky.offset):
