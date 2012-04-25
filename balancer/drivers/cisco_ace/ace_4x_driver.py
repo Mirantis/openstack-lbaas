@@ -318,10 +318,10 @@ class AceDriver(BaseDriver):
                         " reset " + str(serverfarm.resetTimeout) + "\n"
                 elif (h_check == "remove"):
                     if (self.checkNone(serverfarm.resetTimeout)):
-                    cmd += str(serverfarm.connFailureThreshCount) + \
+                        cmd += str(serverfarm.connFailureThreshCount) + \
                         " reset " + str(serverfarm.resetTimeout) + "\n"
                     if (self.checkNone(serverfarm.resumeService)):
-                    cmd += "" + str(serverfarm.connFailureThreshCount) + \
+                        cmd += "" + str(serverfarm.connFailureThreshCount) + \
                         " resume-service " + \
                         str(serverfarm.resumeService) + "\n"
 
@@ -430,14 +430,14 @@ class AceDriver(BaseDriver):
                     cmd += " browser-expire"
                 cmd += "\n"
             if self.checkNone(sticky.offset):
-                cmd += "cookie offset " str(sticky.offset)
+                cmd += "cookie offset " + str(sticky.offset)
                 if self.checkNone(sticky.length):
                     cmd += " length " + str(sticky.length)
                 cmd += "\n"
             if self.checkNone(sticky.secondaryName):
                 cmd += "cookie secondary " + sticky.secondaryName + "\n"
         elif sticky_type == "http-header":
-            cmd += sticky.headerName " " + name + "\n"
+            cmd += sticky.headerName + " " + name + "\n"
             if self.checkNone(sticky.offset):
                 cmd += "header offset " + str(sticky.offset)
                 if self.checkNone(sticky.length):
@@ -474,7 +474,7 @@ class AceDriver(BaseDriver):
                     cmd += " length='" + str(sticky.length)
             cmd += "\n"
         elif sticky_type == "sip-header":
-            cmd += " Call-ID" name + "\n"
+            cmd += " Call-ID" + name + "\n"
 
         if self.checkNone(sticky.timeout):
             cmd += "timeout " + str(sticky.timeout) + "\n"
@@ -512,7 +512,7 @@ class AceDriver(BaseDriver):
         if sticky_type == "sipheader":
             sticky_type = "sip-header"
 
-        cmd = "no sticky " + sticky_type + " " name + "\n"
+        cmd = "no sticky " + sticky_type + " " + name + "\n"
         return self.send_data(context,  cmd)
         
     def addACLEntry(self,  context,  vip):
@@ -655,7 +655,7 @@ class AceDriver(BaseDriver):
                         cmd += "no service-policy input " + pmap + "\n"
                         tmp = s.deployConfig(context,  cmd)
 
-                        cmd = "interface vlan " str(i) + "\n"
+                        cmd = "interface vlan " + str(i) + "\n"
                         cmd += "no access-group input vip-acl\n"
                         tmp = s.deployConfig(context,  cmd)
                 else:
