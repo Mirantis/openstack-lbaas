@@ -129,7 +129,7 @@ class CreateLBWorker(ASyncronousWorker):
         context = driver.getContext(device)
 
         lb = balancer_instance.getLB()
-        # lb.device_id = device.id
+        lb.device_id = device.id
 
         #Step 2. Save config in DB
         balancer_instance.savetoDB()

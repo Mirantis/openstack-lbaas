@@ -126,7 +126,9 @@ class Balancer():
         store = balancer.storage.storage.Storage()
         wr = store.getWriter()
         wr.updateObjectInTable(self.lb)
-        wr.updateObjectInTable(self.sf._sticky)
+        
+        for st in self.sf._sticky:
+            wr.updateObjectInTable(st)
         for rs in self.rs:
             wr.updateObjectInTable(rs)
 
