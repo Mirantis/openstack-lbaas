@@ -301,8 +301,15 @@ class AceDriver(BaseDriver):
         if self.checkNone(serverfarm.failAction):
             cmd += "failaction " + serverfarm.failAction + "\n"
 
-        if self.checkNone(serverfarm._predictor):
-            cmd += "predictor " + serverfarm._predictor.type.lower() + "\n"
+        if self.checkNone(serverfarm._predictor.type):
+    		pr = serverfarm._predictor.type.lower()
+            if (pr == "leastbandwidth"):
+                pr = "least-bandwidth"
+            elif (pr == "leastconnections"):
+                pr = "leastconns"
+            elif (pr == "leastloaded"):
+                pr = "least-loaded"
+            cmd += "predictor " + pr + "\n"
 
         if (sf_type == "host"):
             if self.checkNone(serverfarm.failOnAll):
