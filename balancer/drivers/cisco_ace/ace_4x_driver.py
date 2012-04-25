@@ -86,14 +86,23 @@ class AceDriver(BaseDriver):
 
     def activateRServer(self,  context,  serverfarm,  rserver):
         cmd = "serverfarm " + serverfarm.name + "\n"
-        cmd += "rserver " + rserver.name + "\n"
+        cmd += "rserver " + rserver.name
+        if self.checkNone(rserver.port):
+            cmd += " " + rserver.port
+        cmd += "\n"
         cmd += "inservice\n"
         return self.send_data(context,  cmd)
 
     def suspendRServer(self,  context,  serverfarm,  rserver):
         cmd = "serverfarm " + serverfarm.name + "\n"
-        cmd += "rserver " + rserver.name + "\n"
-        cmd += "no inservice"
+        cmd += "rserver " + rserver.name
+        if self.checkNone(rserver.port):
+            cmd += " " + rserver.port
+        cmd += "\n"
+        if (rserver.status == "standby")
+            cmd += "inservice standby\n"
+        else
+            cmd += "no inservice\n"
         return self.send_data(context,  cmd)
         
     def suspendRServerGlobal(self,  context,  rserver):
