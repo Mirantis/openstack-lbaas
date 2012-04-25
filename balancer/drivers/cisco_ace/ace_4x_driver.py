@@ -482,6 +482,10 @@ class AceDriver(BaseDriver):
             cmd += "timeout activeconns\n"
         if self.checkNone(sticky.replicateOnHAPeer):
             cmd += "replicate sticky\n"
+        # temparary issue
+        if self.checkNone(sticky.sf_id):
+            cmd += "serverfarm " + sticky.sf_id "\n"
+        #   
         if self.checkNone(sticky.serverFarm):
             cmd += "serverfarm " + sticky.serverFarm
             if self.checkNone(sticky.backupServerFarm):
