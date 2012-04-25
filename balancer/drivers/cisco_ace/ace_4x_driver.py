@@ -516,7 +516,7 @@ class AceDriver(BaseDriver):
         return self.send_data(context,  cmd)
         
     def addACLEntry(self,  context,  vip):
-        cmd = "access-list ANY extended permit ip any host " + \
+        cmd = "access-list vip-acl extended permit ip any host " + \
             vip.address + "\n"
         return self.send_data(context,  cmd)
             
