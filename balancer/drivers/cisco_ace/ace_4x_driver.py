@@ -340,7 +340,7 @@ class AceDriver(BaseDriver):
         cmd = "serverfarm " + serverfarm.name + "\n"
         cmd += "rserver " + rserver.name
         if self.checkNone(rserver.port):
-            cmd += rserver.port
+            cmd += " " + rserver.port
         cmd += "\n"
 
         if self.checkNone(rserver.weight):
