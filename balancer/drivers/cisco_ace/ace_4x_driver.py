@@ -548,13 +548,13 @@ class AceDriver(BaseDriver):
         # Add a class-map
         cmd += "class-map match-all " + vip.name + "\n"
         cmd += "match virtual-address " + vip.address + \
-            " " + str(vip.mask) + vip.proto.lower()
+            " " + str(vip.mask) + " " + vip.proto.lower()
         if vip.proto.lower() != "any":
             cmd += " eq " + str(vip.port)
         cmd += "\nexit\n"
 
         #  Add a policy-map (multimatch) with class-map
-        cmd += "policy-map multimatch" + pmap + "\n"
+        cmd += "policy-map multimatch " + pmap + "\n"
         cmd += "class " + vip.name + "\n"
 
         if self.checkNone(vip.status):
@@ -594,7 +594,7 @@ class AceDriver(BaseDriver):
                         logger.warning("Got exception on acl set")                    
                     
             else:
-                    cmd = "interface vlan" + str(vip.VLAN) + "\n"
+                    cmd = "interface vlan " + str(vip.VLAN) + "\n"
                     cmd += "service-policy input " + pmap + "\n"
                     tmp = s.deployConfig(context,  cmd)
                     cmd = "interface vlan " + str(vip.VLAN) + "\n"
@@ -642,7 +642,7 @@ class AceDriver(BaseDriver):
             # Remove service-policy from VLANs
             #(Perform if deleted last VIP with it service-policy)
             if self.checkNone(vip.allVLANs):
-                cmd = "no service-policy input" + pmap + "\n"
+                cmd = "no service-policy input " + pmap + "\n"
                 try:
                     tmp = s.deployConfig(context,  cmd)
                 except:
