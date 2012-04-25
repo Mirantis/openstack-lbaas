@@ -484,7 +484,7 @@ class AceDriver(BaseDriver):
             cmd += "replicate sticky\n"
         # temparary issue
         if self.checkNone(sticky.sf_id):
-            cmd += "serverfarm " + sticky.sf_id "\n"
+            cmd += "serverfarm " + sticky.sf_id + "\n"
         #   
         if self.checkNone(sticky.serverFarm):
             cmd += "serverfarm " + sticky.serverFarm
