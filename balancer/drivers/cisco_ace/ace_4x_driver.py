@@ -516,7 +516,26 @@ class AceDriver(BaseDriver):
         if sticky_type == "sipheader":
             sticky_type = "sip-header"
 
-        cmd = "no sticky " + sticky_type + " " + name + "\n"
+        cmd = "no sticky " + sticky_type + " "
+
+        if (sticky_type == "http-content"):
+            cmd += name + "\n"
+        elif sticky_type == "http-cookie":
+            cmd += sticky.cookieName + " " + name + "\n"
+        elif sticky_type == "http-header":
+            cmd += sticky.headerName + " " + name + "\n"
+        elif sticky_type == "ip-netmask":
+            cmd += str(sticky.netmask) + " address " + \
+                sticky.addrType + " " + name + "\n"
+        elif sticky_type == "layer4-payload":
+            cmd += name + "\n"
+        elif sticky_type == "radius":
+            cmd += name + "\n"
+        elif sticky_type == "rtsp-header":
+            cmd += " Session " + name + "\n"
+        elif sticky_type == "sip-header":
+            cmd += " Call-ID" + name + "\n"
+
         return self.send_data(context,  cmd)
         
     def addACLEntry(self,  context,  vip):
