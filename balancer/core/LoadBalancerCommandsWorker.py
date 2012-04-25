@@ -33,7 +33,7 @@ from balancer.loadbalancers.vserver import makeCreateLBCommandChain, \
 makeDeleteLBCommandChain, makeUpdateLBCommandChain, makeAddNodeToLBChain, \
 makeDeleteNodeFromLBChain, makeAddStickyToLBChain, makeDeleteStickyFromLBChain
 from balancer.loadbalancers.vserver import makeAddProbeToLBChain, \
-makeDeleteProbeFromLBChain
+makeDeleteProbeFromLBChain,  ActivateRServerCommand,  SuspendRServerCommand
 from balancer.loadbalancers.vserver import Deployer,  Destructor, \
 createPredictor,  createProbe,  createSticky
 
@@ -383,23 +383,27 @@ class LBChangeNodeStatus(SyncronousWorker):
         deleter = store.getDeleter()
 
         rs = reader.getRServerById(nodeID)
+        sf = bal_instance.sf
         if rs.state == nodeStatus:
             return "OK"
-        logger.debug("Got rs description %s" % rs.convertToDict())
+        
+        commands =[]
         rs.state = nodeStatus
-        rsprop = rs.convertToDict()
-        deleter.deleteRSbyID(nodeID)
-        logger.debug("Write updated rs as %s" % rs.convertToDict())
-        writer.writeRServer(rs)
-        new_rs = RealServer()
-        new_rs.loadFromDict(rsprop)
+        rsname = rs.name
+        if rs.parent_id !="":
+                rs.name = rs.parent_id
+        logger.debug("Changing RServer status to: %s" % nodeStatus)
+        if nodeStatus == "inservice":
+            commands.append(ActivateRServerCommand(driver,  context, sf, rs))
+        else:
+            commands.append(SuspendRServerCommand(driver,  context, sf, rs))
 
         deploy = Deployer()
-        commands = \
-            makeDeleteNodeFromLBChain(bal_instance, driver, context, rs)\
-            + makeAddNodeToLBChain(bal_instance, driver, context, new_rs)
+
         deploy.commands = commands
         deploy.execute()
+        rs.name = rsname
+        writer.updateObjectInTable(rs)
         self._task.status = STATUS_DONE
         msg = "Node %s has status %s" % (nodeID, rs.state)
         return msg

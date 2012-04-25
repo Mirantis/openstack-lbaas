@@ -112,10 +112,9 @@ class AceDriver(BaseDriver):
 
         XMLstr = "<serverfarm type='" + serverfarm.type.lower() + \
             "' name='" + serverfarm.name + "'>"
-        XMLstr = XMLstr + "  <rserver name='" + rserver.name + "'>\r\n  \
-            </rserver>"
-        XMLstr = XMLstr + "    <inservice/>\r\n"
-        XMLstr = XMLstr + "  </rserver_sfarm>\r\n"
+        XMLstr = XMLstr + "  <rserver name='" + rserver.name + "'>\r\n \
+        <inservice/>\r\n \
+        </rserver>"
         XMLstr = XMLstr + "</serverfarm>"
 
         return self.send_data(context,  XMLstr)
@@ -127,9 +126,8 @@ class AceDriver(BaseDriver):
         XMLstr = "<serverfarm type='" + serverfarm.type.lower() + \
             "' name='" + serverfarm.name + "'>"
         XMLstr = XMLstr + "<rserver name='" + rserver.name + "'>\r\n  \
-            </rserver>"
-        XMLstr = XMLstr + "<inservice sense='no'/>\r\n"
-        XMLstr = XMLstr + "</rserver_sfarm>\r\n"
+        <inservice sense='no'/>\r\n \
+        </rserver>"
         XMLstr = XMLstr + "</serverfarm>"
 
         return self.send_data(context,  XMLstr)

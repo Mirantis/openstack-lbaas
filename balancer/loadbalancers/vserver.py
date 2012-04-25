@@ -545,6 +545,27 @@ class DeleteProbeFromSFCommand(object):
 
     def execute(self):
         self._driver.deleteProbeFromSF(self._context,  self._sf,  self._probe)
+        
+class ActivateRServerCommand(object):
+    def __init__(self,  driver,  context,  sf,  rs):
+        self._driver = driver
+        self._context = context
+        self._rs = rs
+        self._sf = sf
+
+    def execute(self):
+        self._driver.activateRServer(self._context,  self._sf,  self._rs)
+
+class SuspendRServerCommand(object):
+    def __init__(self,  driver,  context,  sf,  rs):
+        self._driver = driver
+        self._context = context
+        self._rs = rs
+        self._sf = sf
+
+    def execute(self):
+        self._driver.suspendRServer(self._context,  self._sf,  self._rs)
+
 
 
 class CreateVIPCommand(object):

@@ -84,19 +84,40 @@ class V1Client(base_client.BaseClient):
         data = json.loads(res.read())['loadbalancers']
         return data
         
-    def activate_node_in_LB(self,  lb_id,  vm_id):
-        pass
+    def activate_node(self,  node_id,  lb_id):
+        res = self.do_request("PUT", "/loadbalancers/%s/nodes/%s/inservice" % (lb_id,  node_id))
+        return res
         
-    def suspend_node_in_LB(self,  lb_id,  vm_id):
-        pass
+    def suspend_node(self,  node_id,  lb_id):
+        res = self.do_request("PUT", "/loadbalancers/%s/nodes/%s/outofservice" % (lb_id,  node_id))
+        return res        
         
-        
-    def add_node_to_LB(self,  lb_id,  node):
-        pass
-        
-    def delete_node_from_LB(self,  lb_id,  vm_id):
-        pass
-        
+    def activate_vmnode_in_lbs(self,   vmnode_id,  lb_id_list):
+        for lb_id in lb_id_list:
+            nodes = self.get_nodes_for_lb(lb_id)
+            
+            for node in nodes:
+                if node['vm_id'] == vmnode_id:
+                    self.activate_node(node['id'],  lb_id)
+            
+    
+    def suspend_vmnode_in_lbs(self,   vmnode_id,  lb_id_list):
+        for lb_id in lb_id_list:
+            nodes = self.get_nodes_for_lb(lb_id)
+            
+            for node in nodes:
+                if node['vm_id'] == vmnode_id:
+                    self.suspend_node(node['id'],  lb_id)
+    
+    def activate_vmnode(self,  vmnode_id):
+        return balancerclient(request).activate_node(node_id)
+    
+    def suspend_vmnode(self,  vmnode_id):
+        return balancerclient(request).suspend_node(node_id)
+       
+    def remove_vmnode_from_lbs(self,   vmnode_id,  lb_id_list):
+        return balancerclient(request).remove_node_from_lbs(node_id,  lb_id_list)
+     
     def get_devices(self):
         res = self.do_request("GET", "devices")
         data = json.loads(res.read())['devices']

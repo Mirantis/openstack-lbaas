@@ -238,7 +238,8 @@ class Reader(SQLExecute):
     def getLoadBalancersByVMid(self,  vm_id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
-        cursor.execute('SELECT rservers.id, serverfarms.lb_id FROM rservers, serverfarms WHERE rservers.vm_id="%s" AND rservers.sf_id=serverfarms.id' % vm_id)
+        cursor.execute('SELECT rservers.id, serverfarms.lb_id FROM rservers, \
+        serverfarms WHERE rservers.vm_id="%s" AND rservers.sf_id=serverfarms.id' % vm_id)
         rows = cursor.fetchall()
         if rows == None:
             raise exception.NotFound()
@@ -253,6 +254,21 @@ class Reader(SQLExecute):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
         cursor.execute('SELECT * FROM rservers WHERE rservers.vm_id="%s"' % vm_id)
+        rows = cursor.fetchall()
+        if rows == None:
+            raise exception.NotFound()
+        list = []
+        for row in rows:
+            rs = RealServer()
+            rs.loadFromDict(row)
+            list.append(rs)
+        return list
+
+    def getRServersByVMidForLB(selfself,  vm_id,  lb_id):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        cursor.execute('SELECT rservers.* FROM rservers, serverfarms WHERE \
+        rservers.vm_id="%s" and rservers.sf_id=serverfarms.id and serverframs.lb_id="%s" ' % (vm_id,  lb_id))
         rows = cursor.fetchall()
         if rows == None:
             raise exception.NotFound()
