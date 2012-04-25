@@ -554,7 +554,7 @@ class AceDriver(BaseDriver):
         cmd += "\nexit\n"
 
         #  Add a policy-map (multimatch) with class-map
-        cmd += "policy-map multimatch " + pmap + "\n"
+        cmd += "policy-map multi-match " + pmap + "\n"
         cmd += "class " + vip.name + "\n"
 
         if self.checkNone(vip.status):
