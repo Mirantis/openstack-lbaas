@@ -55,7 +55,7 @@ class V1Client(base_client.BaseClient):
         return algorithms
 
     def get_probe_types(self, **kwargs):
-        probes = ["TCP",  "HTTP",  "HTTPS",  "ICMP"]
+        probes = ["CONNECT",  "HTTP",  "HTTPS",  "ICMP"]
         return probes
 
     def get_loadbalancer_details(self, lb_id):
