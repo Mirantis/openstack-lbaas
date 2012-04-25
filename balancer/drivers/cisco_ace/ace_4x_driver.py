@@ -410,7 +410,7 @@ class AceDriver(BaseDriver):
         if sticky_type == "sipheader":
             sticky_type = "sip-header"
 
-        cmd = "sticky " + sticky_type
+        cmd = "sticky " + sticky_type + " "
         if (sticky_type == "http-content"):
             cmd += name + "\n"
             if self.checkNone(sticky.offset):
