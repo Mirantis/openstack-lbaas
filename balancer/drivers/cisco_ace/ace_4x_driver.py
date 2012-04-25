@@ -292,7 +292,7 @@ class AceDriver(BaseDriver):
         if self.checkNone(serverfarm.failAction):
             cmd += "failaction " + serverfarm.failAction + "\n"
 
-        if self.checkNone(serverfarm.predictor):
+        if self.checkNone(serverfarm._predictor):
             cmd += "predictor " + serverfarm._predictor.type.lower() + "\n"
 
         if (sf_type == "host"):
