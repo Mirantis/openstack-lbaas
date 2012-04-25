@@ -485,16 +485,16 @@ class AceDriver(BaseDriver):
         # temparary issue
         if self.checkNone(sticky.sf_id):
             cmd += "serverfarm " + sticky.sf_id + "\n"
-        #   
-        if self.checkNone(sticky.serverFarm):
-            cmd += "serverfarm " + sticky.serverFarm
-            if self.checkNone(sticky.backupServerFarm):
-                cmd += " backup " + sticky.backupServerFarm
-                if self.checkNone(sticky.enableStyckyOnBackupSF):
-                    cmd += " sticky"
-                if self.checkNone(sticky.aggregateState):
-                    cmd += " aggregate-state"
-            cmd += "\n"
+        # Please, do not remove it  
+        #if self.checkNone(sticky.serverFarm):
+        #    cmd += "serverfarm " + sticky.serverFarm
+        #    if self.checkNone(sticky.backupServerFarm):
+        #        cmd += " backup " + sticky.backupServerFarm
+        #        if self.checkNone(sticky.enableStyckyOnBackupSF):
+        #            cmd += " sticky"
+        #        if self.checkNone(sticky.aggregateState):
+        #            cmd += " aggregate-state"
+        #    cmd += "\n"
 
         return self.send_data(context, cmd)
 
