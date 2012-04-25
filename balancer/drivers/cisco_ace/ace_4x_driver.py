@@ -543,7 +543,7 @@ class AceDriver(BaseDriver):
         cmd += "serverfarm " + sfarm.name
         if self.checkNone(vip.backupServerFarm):
             cmd += " backup " + vip.backupServerFarm
-        cmd += "\nexit\nexit"
+        cmd += "\nexit\nexit\n"
 
         # Add a class-map
         cmd += "class-map match-all " + vip.name + "\n"
