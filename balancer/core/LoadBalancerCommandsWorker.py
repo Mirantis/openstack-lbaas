@@ -109,7 +109,7 @@ class LBshowDetails(SyncronousWorker):
         return lbobj
 
 
-class CreateLBWorker(SyncronousWorker):
+class CreateLBWorker(ASyncronousWorker):
     def __init__(self,  task):
         super(CreateLBWorker, self).__init__(task)
         self._command_queue = Queue.LifoQueue()

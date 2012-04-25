@@ -16,7 +16,7 @@
 #    under the License.
 
 import sqlite3
-
+import threading 
 from balancer.loadbalancers.loadbalancer import *
 from openstack.common import exception
 from balancer.devices.device import LBDevice
@@ -30,8 +30,19 @@ from balancer.loadbalancers.virtualserver import VirtualServer
 from balancer.loadbalancers.vlan import VLAN
 logger = logging.getLogger(__name__)
 
+class SQLExecute(object):
+    def execute(self,cursor,  command):
+        executed = False
+        while (not executed):
+            try:
+                cursor.execute(command)
+                executed = True
+            except OperationalError:
+                logger.info("Got database locked exception. Waiting a bit and resubmit again")
+                
+                
 
-class Reader(object):
+class Reader(SQLExecute):
     """ Reader class is used for db read opreations"""
     def __init__(self,  db):
         logger.debug("Reader: connecting to db: %s" % db)
@@ -436,10 +447,12 @@ class Reader(object):
         return list
 
 
-class Writer(object):
+class Writer(SQLExecute):
     def __init__(self,  db):
         logger.debug("Writer: connecting to db: %s" % db)
         self._con = sqlite3.connect(db)
+    
+             
 
     def writeLoadBalancer(self,  lb):
         logger.debug("Saving LoadBalancer instance in DB.")
@@ -448,7 +461,7 @@ class Writer(object):
         command = self.generateCommand("INSERT INTO loadbalancers (", dict)
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def writeDevice(self,  device):
@@ -458,7 +471,7 @@ class Writer(object):
         command = self.generateCommand(" INSERT INTO devices (", dict)
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def writeProbe(self, prb):
@@ -468,7 +481,7 @@ class Writer(object):
         command = self.generateCommand(" INSERT INTO probes (", dict)
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
         
     def writeSticky(self, st):
@@ -480,7 +493,7 @@ class Writer(object):
         command = self.generateCommand(" INSERT INTO stickies (", dict)
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def generateCommand(self, start, dict):
@@ -505,7 +518,7 @@ class Writer(object):
         command = self.generateCommand(" INSERT INTO rservers (", dict)
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def writePredictor(self, prd):
@@ -515,7 +528,7 @@ class Writer(object):
         command = self.generateCommand("INSERT INTO predictors (", dict)
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def writeServerFarm(self, sf):
@@ -525,7 +538,7 @@ class Writer(object):
         command = self.generateCommand("INSERT INTO serverfarms (", dict)
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def writeVirtualServer(self, vs):
@@ -535,7 +548,7 @@ class Writer(object):
         command = self.generateCommand("INSERT INTO vips (", dict)
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def writeVLAN(self, vlan):
@@ -545,7 +558,7 @@ class Writer(object):
         command = self.generateCommand("INSERT INTO vlans (", dict)
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def getTableForObject(self,  obj):
@@ -579,7 +592,7 @@ class Writer(object):
             command = self.generateUpdateCommand(table,  dict,  obj.id)
             cursor = self._con.cursor()
             logger.debug("Executing command: %s" % command)
-            cursor.execute(command)
+            self.execute(cursor, command)
         self._con.commit()
 
     def updateDeployed(self,  obj,  status):
@@ -605,7 +618,7 @@ class Writer(object):
         return command
 
 
-class Deleter(object):
+class Deleter(SQLExecute):
     def __init__(self,  db):
         logger.debug("Deleter: connecting to db: %s" % db)
         self._con = sqlite3.connect(db)
@@ -615,7 +628,7 @@ class Deleter(object):
         command = "DELETE from rservers where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def deleteRSsBySFid(self, id):
@@ -623,7 +636,7 @@ class Deleter(object):
         command = "DELETE from rservers where  sf_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def deleteVSbyID(self, id):
@@ -631,7 +644,7 @@ class Deleter(object):
         command = "DELETE from vips where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def deleteVSsBySFid(self,  id):
@@ -639,7 +652,7 @@ class Deleter(object):
         command = "DELETE from vips where  sf_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def deleteProbeByID(self,  id):
@@ -647,7 +660,7 @@ class Deleter(object):
         command = "DELETE from probes where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def deleteProbesBySFid(self, id):
@@ -655,7 +668,7 @@ class Deleter(object):
         command = "DELETE from probes where probes.sf_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def deleteStickyByID(self,  id):
@@ -663,7 +676,7 @@ class Deleter(object):
         command = "DELETE from stickies where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def deleteStickiesBySFid(self, id):
@@ -671,7 +684,7 @@ class Deleter(object):
         command = "DELETE from stickies where sf_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def deleteLBbyID(self,  id):
@@ -679,7 +692,7 @@ class Deleter(object):
         command = "DELETE from loadbalancers where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def deleteDeviceByID(self, id):
@@ -687,7 +700,7 @@ class Deleter(object):
         command = "DELETE from devices where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def deletePredictorByID(self, id):
@@ -695,7 +708,7 @@ class Deleter(object):
         command = "DELETE from predictors where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def deletePredictorBySFid(self, id):
@@ -703,7 +716,7 @@ class Deleter(object):
         command = "DELETE from predictors where sf_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def deleteSFbyID(self, id):
@@ -711,7 +724,7 @@ class Deleter(object):
         command = "DELETE from serverfarms where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def deleteSFbyLBid(self, id):
@@ -719,7 +732,7 @@ class Deleter(object):
         command = "DELETE from serverfarms where lb_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
     def deleteVLANbyID(self,  id):
@@ -727,7 +740,7 @@ class Deleter(object):
         command = "DELETE from vlans where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
-        cursor.execute(command)
+        self.execute(cursor, command)
         self._con.commit()
 
 

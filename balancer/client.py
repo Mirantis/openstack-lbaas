@@ -65,7 +65,7 @@ class V1Client(base_client.BaseClient):
 
     def get_loadbalancer(self, lb_id):
         res = self.do_request("GET", "loadbalancers/%s" % lb_id)
-        data = json.loads(res.read())
+        data = json.loads(res.read())['loadbalancer']
         return data
 
     def create_lb(self, body):
@@ -76,7 +76,7 @@ class V1Client(base_client.BaseClient):
         
     def get_nodes_for_lb(self, lb_id):
         res = self.do_request("GET", "loadbalancers/%s/nodes" % lb_id)
-        data = json.loads(res.read())
+        data = json.loads(res.read())['nodes']
         return data
         
     def get_balancers_with_vm(self,  vm_id):
