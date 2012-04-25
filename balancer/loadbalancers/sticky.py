@@ -27,8 +27,8 @@ class Sticky(Serializeable,  UniqueObject):
         self.sf_id = ""
         self.name = ""
         self.type = ""
-        self.serverFarm = ""
-        self.backupServerFarm = ""
+        # self.serverFarm = ""
+        # self.backupServerFarm = ""
         self.aggregateState = None
         self.enableStyckyOnBackupSF = None
         self.replicateOnHAPeer = None
