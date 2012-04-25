@@ -99,7 +99,7 @@ class AceDriver(BaseDriver):
         if self.checkNone(rserver.port):
             cmd += " " + rserver.port
         cmd += "\n"
-        if (rserver.status == "standby")
+        if (rserver.state == "standby"):
             cmd += "inservice standby\n"
         else
             cmd += "no inservice\n"
