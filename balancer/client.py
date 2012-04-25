@@ -55,7 +55,7 @@ class V1Client(base_client.BaseClient):
         return algorithms
 
     def get_probe_types(self, **kwargs):
-        probes = ["CONNECT",  "HTTP",  "HTTPS",  "ICMP"]
+        probes = ["TCP",  "HTTP",  "HTTPS",  "ICMP"]
         return probes
 
     def get_loadbalancer_details(self, lb_id):
@@ -117,7 +117,7 @@ class V1Client(base_client.BaseClient):
        
     def remove_vmnode_from_lbs(self,   vmnode_id,  lb_id_list):
         return balancerclient(request).remove_node_from_lbs(node_id,  lb_id_list)
-     
+
     def get_devices(self):
         res = self.do_request("GET", "devices")
         data = json.loads(res.read())['devices']
