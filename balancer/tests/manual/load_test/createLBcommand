@@ -1,0 +1,73 @@
+{ 
+  
+    "name": "testLB_load_%IP%",
+    "protocol": "HTTP",
+    "transport": "TCP", 
+    "algorithm": "RoundRobin",
+    
+    "virtualIps": [
+                    {
+                      "address": "200.1.1.%IP%",
+                      "mask": "255.255.255.255", 
+                      "type": "PUBLIC",
+                      "ipVersion": "IPv4", 
+                      "VLAN": "200",
+                      "port": "80",
+		      "ICMPreply": "True"
+                    }
+                  ],
+    "nodes":      [
+                    {
+                       "address": "100.1.%IP%.1",
+                       "type": "host",
+                       "port": "8080",
+                       "weight": "2", 
+                       "minCon": "300000", 
+                       "maxCon": "400000", 
+                       "rateBandwidth": "12", 
+                       "rateConnection": "1000", 
+                       "status": "INSERVICE",
+                       "condition": "ENABLED",
+		       "vm_instance": "RServer_%IP%_1",
+		       "vm_id": "1234-1234-1234-1234"
+                    },
+                    {
+                       "address": "100.1.%IP%.2",
+                       "type": "host",
+                       "port": "8080",
+                       "weight": "10",
+                       "minCon": "300000",
+                       "maxCon": "400000",
+                       "rateBandwidth": "12",
+                       "rateConnection": "1000",
+                       "status": "INSERVICE",
+                       "condition": "ENABLED",
+                       "vm_instance": "RServer_%IP%_2",
+		       "vm_id": "1235-1235-1235-1235"
+                    }
+                  ], 
+    "healthMonitor": [
+                      { 
+                        "type": "ICMP", 
+                        "delay": "15", 
+                        "attemptsBeforeDeactivation": "6", 
+                        "timeout": "20"
+                      }, 
+                      { 
+                        "type": "CONNECT", 
+                        "delay": "30", 
+                        "attemptsBeforeDeactivation": "5", 
+                        "timeout": "30"
+                      }, 
+                     {  
+                        "type": "HTTP", 
+                        "delay": "30", 
+                        "attemptsBeforeDeactivation": "5", 
+                        "timeout": "30", 
+                        "method":  "GET", 
+                        "path": "/index.html", 
+                        "expected": "200-204"
+                      }
+                      ]
+    
+}
