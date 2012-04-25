@@ -30,703 +30,498 @@ class AceDriver(BaseDriver):
     def __init__(self):
         pass
 
-    def send_data(self,  context,  XMLstr):
+    def send_data(self,  context,  cmd):
         s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)
+        tmp = s.deployConfig(context,  cmd)
         if (tmp == 'OK'):
             return tmp
         else:
             raise openstack.common.exception.Invalid(tmp)
 
-    def getContext(self, dev):
+    def getContext(self,  dev):
         logger.debug("Creating context with params: IP %s, Port: %s" % \
             (dev.ip,  dev.port))
         return Context(dev.ip, dev.port, dev.user,  dev.password)
 
-    def createRServer(self, context, rserver):
-        logger.debug("Creating the Real Server\n")
-        if not self.checkNone(rserver.name):
-            logger.error("Can't find rserver name")
-            return 'RSERVER NAME ERROR'
+    def createRServer(self,  context,  rserver):
+        srv_type = rserver.type.lower()
 
-        XMLstr = "<rserver type='" + rserver.type.lower() + "' name='" + \
-            rserver.name + "'>\r\n"
+        cmd = "rserver " + srv_type + " " + rserver.name + "\n"
 
         if self.checkNone(rserver.description):
-            XMLstr = XMLstr + "  <description descr-string='" + \
-                rserver.description + "'/>\r\n"
+            cmd += "description " + rserver.description + "\n"
 
-        if (rserver.type.lower() == "host"):
+        if (srv_type == "host"):
             if self.checkNone(rserver.address):
-                XMLstr = XMLstr + "  <ip_address  "
-                if (rserver.ipType.lower() == 'ipv4'):
-                    XMLstr = XMLstr + "address='"
-                else:
-                    XMLstr = XMLstr + "ipv6-address='"
-                XMLstr = XMLstr + rserver.address + "'/>\r\n"
-
+                cmd += "ip address " + rserver.address + "\n"
             if self.checkNone(rserver.failOnAll):
-                XMLstr = XMLstr + "  <fail-on-all/>\r\n"
-
-            XMLstr = XMLstr + "  <weight value='" + str(rserver.weight) + \
-                "'/>\r\n"
+                cmd += "fail-on-all\n"
+            cmd += "weight " + str(rserver.weight) + "\n"
         else:
             if self.checkNone(rserver.webHostRedir):
-                XMLstr = XMLstr + "  <webhost-redirection relocation-string='"\
-                    + rserver.webHostRedir + "'/>\r\n"
+                cmd += "webhost-redirection " + rserver.webHostRedir
                 if self.checkNone(rserver.redirectionCode):
-                    XMLstr = XMLstr + \
-                    "  <webhost-redirection redirection-code='" + \
-                    rserver.redirectionCode + "'/>\r\n"
+                    cmd += " " + rserver.redirectionCode
+                cmd += "\n"
 
         if (self.checkNone(rserver.maxCon) and self.checkNone(rserver.minCon)):
-            XMLstr = XMLstr + "  <conn-limit max='" + str(rserver.maxCon) + \
-                "' min='" + str(rserver.minCon) + "'/>\r\n"
+            cmd += "conn-limit max " + str(rserver.maxCon) + \
+                " min " + str(rserver.minCon) + "\n"
 
         if self.checkNone(rserver.rateConnection):
-            XMLstr = XMLstr + "  <rate-limit type='connection' value='" + \
-                str(rserver.rateConnection) + "'/>\r\n"
+            cmd += "rate-limit connection " + \
+                str(rserver.rateConnection) + "\n"
         if self.checkNone(rserver.rateBandwidth):
-            XMLstr = XMLstr + "  <rate-limit type='bandwidth' value='" + \
-                str(rserver.rateBandwidth) + "'/>\r\n"
+            cmd += "rate-limit bandwidth " + \
+                str(rserver.rateBandwidth) + "\n"
 
         if (rserver.state == "In Service"):
-            XMLstr = XMLstr + "  <inservice/>\r\n"
+            cmd += "inservice\n"
 
-        XMLstr = XMLstr + "</rserver>"
-
-        return self.send_data(context,  XMLstr)
+        return self.send_data(context,  cmd)
 
     def deleteRServer(self, context, rserver):
-        if not self.checkNone(rserver.name):
-            return 'RSERVER NAME ERROR'
-
-        XMLstr = "<rserver sense='no' type='" + rserver.type.lower() + \
-            "' name='" + rserver.name + "'></rserver>"
-
-        return self.send_data(context,  XMLstr)
+        cmd = "no rserver " + rserver.name + "\n"
+        return self.send_data(context,  cmd)
 
     def activateRServer(self,  context,  serverfarm,  rserver):
-        if not self.checkNone(rserver.name):
-            return 'RSERVER NAME ERROR'
-
-        XMLstr = "<serverfarm type='" + serverfarm.type.lower() + \
-            "' name='" + serverfarm.name + "'>"
-        XMLstr = XMLstr + "  <rserver name='" + rserver.name + "'>\r\n \
-        <inservice/>\r\n \
-        </rserver>"
-        XMLstr = XMLstr + "</serverfarm>"
-
-        return self.send_data(context,  XMLstr)
+        cmd = "serverfarm " + serverfarm.name + "\n"
+        cmd += "rserver " + rserver.name + "\n"
+        cmd += "inservice\n"
+        return self.send_data(context,  cmd)
 
     def suspendRServer(self,  context,  serverfarm,  rserver):
-        if not self.checkNone(rserver.name):
-            return 'RSERVER NAME ERROR'
-
-        XMLstr = "<serverfarm type='" + serverfarm.type.lower() + \
-            "' name='" + serverfarm.name + "'>"
-        XMLstr = XMLstr + "<rserver name='" + rserver.name + "'>\r\n  \
-        <inservice sense='no'/>\r\n \
-        </rserver>"
-        XMLstr = XMLstr + "</serverfarm>"
-
-        return self.send_data(context,  XMLstr)
+        cmd = "serverfarm " + serverfarm.name + "\n"
+        cmd += "rserver " + rserver.name + "\n"
+        cmd += "no inservice"
+        return self.send_data(context,  cmd)
         
     def suspendRServerGlobal(self,  context,  rserver):
-        if not self.checkNone(rserver.name):
-            return 'RSERVER NAME ERROR'
-        
-        XMLstr = "<rserver name='" + rserver.name +"'>\r\n"
-        XMLstr = XMLstr + "<inservice sense='no'/>"
-        XMLstr = XMLstr +"</rserver>"
-        return self.send_data(context,  XMLstr)
-        
-        
+        cmd = "rserver " + rserver.name + "\n"
+        cmd += "no inservice\n"
+        return self.send_data(context,  cmd)
 
     def createProbe(self,  context,  probe):
-        if not self.checkNone(probe.name):
-            return 'PROBE NAME ERROR'
-        type = probe.type.lower()
-        if type == "connect":
-            type = "tcp"
+        pr_type = probe.type.lower()
+        if pr_type == "connect":
+            pr_type = "tcp"
+        if pr_type == "echo-tcp":
+            pr_type = "echo tcp"
+        if pr_type == "echo-udp":
+            pr_type = "echo udp"
+        if pr_type == "sip-tcp":
+            pr_type = "sip tcp"
+        if pr_type == "sip-udp":
+            pr_type = "sip udp"
+        """ probes_with_send_data """
+        pr_sd = ['echo udp',  'echo tcp',  'finger',  'tcp',  'udp']
+        """ probes_with_timeout """
+        pr_tm = ['echo tcp',  'finger',  'tcp',  'rtsp',  'http',
+                 'https',  'imap',  'pop',  'sip-tcp',  'smtp',  'telnet']
+        """ probes_with_credentials """
+        pr_cr = ['http',  'https',  'imap',  'pop', 'radius']
+        """ probes_with_regex """
+        pr_rg = ['http',  'https',  'sip-tcp',  'sup-udp',  'tcp',  'udp']
 
-        probes_with_send_data = ['echo-udp',  'echo-tcp',  'finger',  'tcp',
-                                'udp']
-        probes_with_timeout = ['echo-tcp',  'finger',  'tcp',  'rtsp',  'http',
-                                'https',  'imap',  'pop',  'sip-tcp',  'smtp',
-                                'telnet']
-        probes_with_credentials = ['http',  'https',  'imap',  'pop', 'radius']
-        probes_with_regex = ['http',  'https',  'sip-tcp',  'sup-udp',  'tcp',
-                                'udp']
-
-        if ((type != 'echo-tcp') and (type != 'echo-udp')):
-            XMLstr = "<probe_" + type + " type='" + type + "' name='" + \
-                probe.name + "'>\r\n"
-        else:
-            XMLstr = "<probe_echo type='echo' conn-type='"
-            if (type == 'echo-tcp'):
-                XMLstr = XMLstr + "tcp' name='"
-            else:
-                XMLstr = XMLstr + "udp' name='"
-            XMLstr = XMLstr + probe.name + "'>\r\n"
+        cmd = "probe " + pr_type + " " + probe.name + "\n"
 
         if self.checkNone(probe.description):
-            XMLstr = XMLstr + "  <description descr-string='" + \
-                probe.description + "'/>\r\n"
+            cmd += "description " + probe.description + "\n"
 
         if self.checkNone(probe.probeInterval):
-            XMLstr = XMLstr + "  <interval value='" + \
-                str(probe.probeInterval) + "'/>\r\n"
+            cmd += "interval " + str(probe.probeInterval) + "\n"
 
-        if (type != 'vm'):
+        if (pr_type != 'vm'):
             if self.checkNone(probe.passDetectInterval):
-                XMLstr = XMLstr + "  <passdetect interval='" + \
-                    str(probe.passDetectInterval) + "'/>\r\n"
+                cmd += "passdetect interval" + \
+                    str(probe.passDetectInterval) + "\n"
 
             if self.checkNone(probe.passDetectCount):
-                XMLstr = XMLstr + "  <passdetect count='" + \
-                    str(probe.passDetectCount) + "'/>\r\n"
+                cmd += "passdetect count" + \
+                    str(probe.passDetectCount) + "\n"
 
             if self.checkNone(probe.failDetect):
-                XMLstr = XMLstr + "  <faildetect retry-count='" + \
-                    str(probe.failDetect) + "'/>\r\n"
+                cmd += "faildetect " + str(probe.failDetect) + "\n"
 
             if self.checkNone(probe.receiveTimeout):
-                XMLstr = XMLstr + "  <receive timeout='" + \
-                    str(probe.receiveTimeout) + "'/>\r\n"
+                cmd += "receive " + str(probe.receiveTimeout) + "\n"
 
-            if ((type != 'icmp') and self.checkNone(probe.port)):
-                XMLstr = XMLstr + "  <port value='" + str(probe.port) + \
-                    "'/>\r\n"
+            if ((pr_type != 'icmp') and self.checkNone(probe.port)):
+                cmd += "port " + str(probe.port) + "\n"
 
-            if (type != 'scripted'):
+            if (pr_type != 'scripted'):
                 if (self.checkNone(probe.destIP)):
-                    XMLstr = XMLstr + "  <ip_address address='" + \
-                        probe.destIP + "'"
-                    if ((type != 'rtsp') and (type != 'sip-tcp') and \
-                        (type != 'sip-udp')):
-                        if self.checkNone(probe.isRouted):
-                            XMLstr = XMLstr + " routing-option='routed'"
-                    XMLstr = XMLstr + "/>\r\n"
+                    cmd += "ip address " + probe.destIP
+                    if ((pr_type != 'rtsp') and (pr_type != 'sip tcp') and \
+                        (pr_type != 'sip udp') and \
+                        self.checkNone(probe.isRouted)):
+                            cmd += " routed"
+                    cmd += "\n"
 
-            if (type == "dns"):
+            if (pr_type == "dns"):
                 if self.checkNone(probe.domainName):
-                    XMLstr = XMLstr + "  <domain domain-name='" + \
-                        probe.domainName + "'/>\r\n"
+                    cmd += "domain " + probe.domainName + "\n"
 
-            if (probes_with_send_data.count(type) > 0):
+            if (pr_sd.count(pr_type) > 0):
                 if self.checkNone(probe.sendData):
-                    XMLstr = XMLstr + "  <send-data data='" + \
-                        probe.sendData + "'/>\r\n"
+                    cmd += "send-data " + probe.sendData + "\n"
 
-            if (probes_with_timeout.count(type) > 0):
+            if (pr_tm.count(pr_type) > 0):
                 if self.checkNone(probe.openTimeout):
-                    XMLstr = XMLstr + "  <open timeout='" + \
-                        str(probe.openTimeout) + "'/>"
+                    cmd += "open " + str(probe.openTimeout) + "\n"
                 if self.checkNone(probe.tcpConnTerm):
-                    XMLstr = XMLstr + "  <connection_term term='forced'/>\r\n"
+                    cmd += "connection term forced\n"
 
-            if (probes_with_credentials.count(type) > 0):
+            if (pr_cr.count(pr_type) > 0):
                 if (self.checkNone(probe.userName) and \
                     self.checkNone(probe.password)):
-                    XMLstr = XMLstr + "  <credentials username='" + \
-                        probe.userName + "' password='" + probe.password
+                    cmd += "credentials " + probe.userName 
+                    cmd += " " + probe.password
                     if (type == 'radius'):
                         if self.checkNone(probe.userSecret):
-                            XMLstr = XMLstr + "' secret='" + probe.userSecret
-                    XMLstr = XMLstr + "'/>\r\n"
+                            cmd += " secret " + probe.userSecret
+                    cmd += "\n"
 
-            if (probes_with_regex.count(type) > 0):
-                    if self.checkNone(probe.expectRegExp):
-                        XMLstr = XMLstr + "  <expect_regex regex='" + \
-                            probe.expectRegExp + "'"
-                        if self.checkNone(probe.expectRegExpOffset):
-                            XMLstr = XMLstr + " offset='" + \
-                                str(probe.expectRegExpOffset) + "'"
-                        XMLstr = XMLstr + "/>\r\n"
+            if (pr_rg.count(pr_type) > 0):
+                if self.checkNone(probe.expectRegExp):
+                    cmd += "expect regex " + probe.expectRegExp
+                    if self.checkNone(probe.expectRegExpOffset):
+                        cmd += " offset " + str(probe.expectRegExpOffset)
+                    cmd += "\n"
 
-            if ((type == 'http') or (type == 'https')):
+            if ((pr_type == 'http') or (pr_type == 'https')):
                 if self.checkNone(probe.requestMethodType):
-                    XMLstr = XMLstr + "  <request method='" + \
-                        probe.requestMethodType.lower() + "' url='" + \
-                        probe.requestHTTPurl.lower() + "'/>\r\n"
+                    cmd += "request method " + \
+                        probe.requestMethodType.lower() + " url " + \
+                        probe.requestHTTPurl.lower() + "\n"
 
                 if self.checkNone(probe.appendPortHostTag):
-                    XMLstr = XMLstr + "  <append-port-hosttag/>\r\n"
+                    cmd += "append-port-hosttag\n"
 
                 if self.checkNone(probe.hash):
-                    XMLstr = XMLstr + "  <hash"
+                    cmd += "hash"
                     if self.checkNone(probe.hashString):
-                        XMLstr = XMLstr + " hash-string='" + \
-                            probe.hashString + "'"
-                    XMLstr = XMLstr + "/>\r\n"
+                        cmd += probe.hashString
+                    cmd += "\n"
 
-                if (type == 'https'):
+                if (pr_type == 'https'):
                     if self.checkNone(probe.cipher):
-                        XMLstr = XMLstr + "  <ssl cipher='" + \
-                            probe.cipher + "'/>\r\n"
+                        cmd += "ssl cipher " + probe.cipher + "\n"
                     if self.checkNone(probe.SSLversion):
-                        XMLstr = XMLstr + "  <ssl version='" + \
-                            probe.SSLversion + "'/>\r\n"
+                        cmd += "ssl version " + probe.SSLversion + "\n"
 
-            if ((type == 'pop') or (type == 'imap')):
+            if ((pr_type == 'pop') or (pr_type == 'imap')):
                 if self.checkNone(probe.requestCommand):
-                    XMLstr = XMLstr + "  <request command='" + \
-                        probe.requestCommand + "'/>\r\n"
-                if (type == 'imap'):
+                    cmd += "request command " + probe.requestCommand + "\n"
+                if (pr_type == 'imap'):
                     if self.checkNone(probe.maibox):
-                        XMLstr = XMLstr + "  <credentials mailbox='" + \
-                            probe.maibox + "'/>\r\n"
+                        cmd += "credentials mailbox" + probe.maibox + "\n"
 
-            if (type == 'radius'):
+            if (pr_type == 'radius'):
                 if self.checkNone(probe.NASIPaddr):
-                    XMLstr = XMLstr + "  <nas ip_address='" + \
-                        probe.NASIPaddr + "'/>\r\n"
+                    cmd += "nas ip address " + probe.NASIPaddr + "\n"
 
-            if (type == 'rtsp'):
+            if (pr_type == 'rtsp'):
                 if self.checkNone(probe.requareHeaderValue):
-                    XMLstr = XMLstr + \
-                        "  <header header-name='Require' header-value='" + \
-                        probe.requareHeaderValue + "'/>\r\n"
+                    cmd += "header require header-value " + \
+                        probe.requareHeaderValue + "\n"
 
                 if self.checkNone(probe.proxyRequareHeaderValue):
-                    XMLstr = XMLstr + \
-                        "  <header header-name='Proxy-Require' \
-                        header-value='" + probe.proxyRequareHeaderValue \
-                        + "'/>\r\n"
+                    cmd += "header proxy-require header-value " + \
+                        probe.proxyRequareHeaderValue + "\n"
 
                 if self.checkNone(probe.requestURL):
-                    XMLstr = XMLstr + "  <request "
                     if self.checkNone(probe.requestMethodType):
-                        XMLstr = XMLstr + "  method='" + \
-                            probe.requestMethodType + "' "
-                    XMLstr = XMLstr + "url='" + probe.requestURL + "'/>\r\n"
+                        cmd += "request method" + probe.requestMethodType
+                        cmd += " url " + probe.requestURL + "\n"
 
-            # Need add download script section for this type
-            if (type == 'scripted'):
+            if (pr_type == 'scripted'):
                 if self.checkNone(probe.scriptName):
-                    XMLstr = XMLstr + "  <script_elem script-name='" + \
-                        probe.scriptName
+                    cmd += "script " + probe.scriptName
                     if self.checkNone(probe.scriptArgv):
-                        XMLstr = XMLstr + "' script-arguments='" + \
-                           probe.scriptArgv
-                    XMLstr = XMLstr + "'/>\r\n"
+                        cmd += " " + probe.scriptArgv
+                    cmd += "\n"
 
-            if ((type == 'sip-udp') and self.checkNone(probe.Rport)):
-                XMLstr = XMLstr + "  <rport type='enable'/>\r\n"
+            if ((pr_type == 'sip-udp') and self.checkNone(probe.Rport)):
+                cmd += "rport enable\n"
 
             if (type == 'snmp'):
                 if self.checkNone(probe.SNMPver):
-                    XMLstr = XMLstr + "  <version value='" + probe.SNMPver + \
-                        "'/>\r\n"
+                    cmd += "version " + probe.SNMPver + "\n"
                     if self.checkNone(probe.SNMPComm):
-                        XMLstr = XMLstr + "  <community community-string='" + \
-                            probe.SNMPComm + "'/>\r\n"
+                        cmd += "community " + probe.SNMPComm + "\n"
 
         else:   # for type == vm
             if self.checkNone(probe.VMControllerName):
-                XMLstr = XMLstr + "  <vm-controller name='" + \
-                    probe.VMControllerName + "'/>\r\n"
-                if (self.checkNone(probe.maxCPUburstThresh) or \
+                cmd += "vm-controller " + probe.VMControllerName + "\n"
+                if (self.checkNone(probe.maxCPUburstThresh) and \
                     self.checkNone(probe.minCPUburstThresh)):
-                    XMLstr = XMLstr + \
-                        "  <load type='cpu' param='burst-threshold'"
-                    if self.checkNone(probe.maxCPUburstThresh):
-                        XMLstr = XMLstr + " max='" + \
-                            probe.maxCPUburstThresh + "'"
-                    if self.checkNone(probe.minCPUburstThresh):
-                        XMLstr = XMLstr + " min='" + \
-                            probe.minCPUburstThresh + "'"
-                    XMLstr = XMLstr + "/>\r\n"
-                if (self.checkNone(probe.maxMemBurstThresh) or \
+                    cmd += "load cpu burst-threshold max " + \
+                        probe.maxCPUburstThresh + " min " + \
+                        probe.minCPUburstThresh + "\n"
+                if (self.checkNone(probe.maxMemBurstThresh) and \
                     self.checkNone(probe.minMemBurstThresh)):
-                    XMLstr = XMLstr + \
-                        "  <load type='mem' param='burst-threshold'"
-                    if self.checkNone(probe.maxMemBurstThresh):
-                        XMLstr = XMLstr + " max='" + probe.maxMemBurstThresh \
-                            + "'"
-                    if self.checkNone(probe.minMemBurstThresh):
-                        XMLstr = XMLstr + " min='" + probe.minMemBurstThresh \
-                            + "'"
-                    XMLstr = XMLstr + "/>\r\n"
+                    cmd += "load mem burst-threshold max " + \
+                        probe.maxMemBurstThresh + " min " + \
+                        probe.minMemBurstThresh + "\n"
 
-        if ((type != 'echo-tcp') and (type != 'echo-udp')):
-            XMLstr = XMLstr + "</probe_" + type + ">\r\n"
-        else:
-            XMLstr = XMLstr + "</probe_echo>"
-
-        return self.send_data(context,  XMLstr)
+        return self.send_data(context,  cmd)
 
     def deleteProbe(self,  context,  probe):
-        if not self.checkNone(probe.name):
-            return 'PROBE NAME ERROR'
-        type = probe.type.lower()
-        if type == "connect":
-            type = "tcp"
-
-        if ((type != 'echo-tcp') and (type != 'echo-udp')):
-            XMLstr = "<probe_" + type + " type='" + type + "' name='" + \
-                probe.name + "' sense='no'>\r\n</probe_" + type + ">"
-        else:
-            XMLstr = "<probe_echo type='echo' conn-type='"
-            if (type == 'echo-tcp'):
-                XMLstr = XMLstr + "tcp' name='"
-            else:
-                XMLstr = XMLstr + "udp' name='"
-            XMLstr = XMLstr + probe.name + "' sense='no'>\r\n</probe_echo>"
-
-        return self.send_data(context,  XMLstr)
+        pr_type = probe.type.lower()
+        if pr_type == "connect":
+            pr_type = "tcp"
+        if pr_type == "echo-tcp":
+            pr_type = "echo tcp"
+        if pr_type == "echo-udp":
+            pr_type = "echo udp"
+        if pr_type == "sip-tcp":
+            pr_type = "sip tcp"
+        if pr_type == "sip-udp":
+            pr_type = "sip udp"
+        cmd = "no probe " + pr_type + " " + probe.name + "\n"
+        return self.send_data(context,  cmd)
 
     def createServerFarm(self,  context,  serverfarm):
-        if not self.checkNone(serverfarm.name):
-            return "SERVER FARM NAME ERROR"
-
-        XMLstr = "<serverfarm type='" + serverfarm.type.lower() + \
-            "' name='" + serverfarm.name + "'>\r\n"
+        sf_type = serverfarm.type.lower()
+        cmd = "serverfarm " + sf_type + " " + serverfarm.name + "\n"
 
         if self.checkNone(serverfarm.description):
-            XMLstr = XMLstr + "  <description descr-string='" + \
-                serverfarm.description + "'/> \r\n"
+            cmd += "description " + serverfarm.description + "\n"
 
         if self.checkNone(serverfarm.failAction):
-            XMLstr = XMLstr + "  <failaction failaction-type='" + \
-                serverfarm.failAction + "'/>\r\n"
+            cmd += "failaction " + serverfarm.failAction + "\n"
 
-        if self.checkNone(serverfarm._predictor):
-            XMLstr = XMLstr + "  <predictor predictor-method='" + \
-                serverfarm._predictor.type.lower() + "'/>\r\n"
+        if self.checkNone(serverfarm.predictor):
+            cmd += "predictor " + serverfarm._predictor.type.lower() + "\n"
 
-        if self.checkNone(serverfarm._probes):
-            for probe in serverfarm._probes:
-                XMLstr = XMLstr + "  <probe_sfarm probe-name='" + \
-                    probe.name + "'/>\r\n"
-
-        if serverfarm.type.lower() == "host":
+        if (sf_type == "host"):
             if self.checkNone(serverfarm.failOnAll):
-                XMLstr = XMLstr + "  <probe_sfarm probe-name='fail-on-all'/>\r\n"
+                cmd += "fail-on-all\n"
 
             if self.checkNone(serverfarm.transparent):
-                XMLstr = XMLstr + "  <transparent/>\r\n"
+                cmd += "transparent\n"
 
             if self.checkNone(serverfarm.partialThreshPercentage) and \
                 self.checkNone(serverfarm.backInservice):
-                XMLstr = XMLstr + "  <partial-threshold value='" + \
-                    serverfarm.partialThreshPercentage + "' back-inservice='" \
-                    + serverfarm.backInservice + "'/>\r\n"
+                cmd += "partial-threshold " + \
+                    str(serverfarm.partialThreshPercentage) + \
+                    " back-inservice " + str(serverfarm.backInservice) + "\n"
 
             if self.checkNone(serverfarm.inbandHealthCheck):
-                XMLstr = XMLstr + "  <inband-health check='" + \
-                    serverfarm.inbandHealthCheck + "'"
-                if serverfarm.inbandHealthCheck.lower == "log":
-                    XMLstr = XMLstr + "threshold='" + \
-                        str(serverfarm.connFailureThreshCount) + \
-                        "' reset='" + str(serverfarm.resetTimeout) + \
-                        "'"
-                        #Do deploy if  resetTimeout='' ?
-
-                if serverfarm.inbandHealthCheck.lower == "remove":
-                    XMLstr = XMLstr + "threshold='" + \
-                        str(serverfarm.connFailureThreshCount) + \
-                        "' reset='" + str(serverfarm.resetTimeout) + \
-                        "'  resume-service='" + \
-                        str(serverfarm.resumeService) + "'"
-                        #Do deploy if  resumeService='' ?
-                XMLstr = XMLstr + "/>\r\n"
+                cmd += "inband-health check " + \
+                    serverfarm.inbandHealthCheck + "\n"
+                h_check = serverfarm.inbandHealthCheck.lower()
+                if ((h_check == "log") and \
+                    self.checkNone(serverfarm.resetTimeout)):
+                    cmd += str(serverfarm.connFailureThreshCount) + \
+                        " reset " + str(serverfarm.resetTimeout) + "\n"
+                elif (h_check == "remove"):
+                    if (self.checkNone(serverfarm.resetTimeout)):
+                    cmd += str(serverfarm.connFailureThreshCount) + \
+                        " reset " + str(serverfarm.resetTimeout) + "\n"
+                    if (self.checkNone(serverfarm.resumeService)):
+                    cmd += "" + str(serverfarm.connFailureThreshCount) + \
+                        " resume-service " + \
+                        str(serverfarm.resumeService) + "\n"
 
             if self.checkNone(serverfarm.dynamicWorkloadScale):
-            # Need to upgrade (may include VM's)
-                XMLstr = XMLstr + "<dws type='" + serverfarm.failAction + \
-                    "'/>\r\n"
-
-        XMLstr = XMLstr + "</serverfarm>"
-
-        return self.send_data(context,  XMLstr)
+                cmd += "dws " + serverfarm.dynamicWorkloadScale
+                if (serverfarm.dynamicWorkloadScale == "burst"):
+                    cmd += " probe " + serverfarm.VMprobe
+                cmd += "\n"
+        return self.send_data(context,  cmd)
 
     def deleteServerFarm(self,  context,  serverfarm):
-        if not self.checkNone(serverfarm.name):
-            return 'SERVER FARM NAME ERROR'
-
-        XMLstr = "<serverfarm sense='no' name='" + serverfarm.name + \
-            "'></serverfarm>"
-
-        return self.send_data(context,  XMLstr)
+        cmd = "no serverfarm " + serverfarm.name + "\n"
+        return self.send_data(context,  cmd)
 
     def addRServerToSF(self,  context,  serverfarm,  rserver):
-    #rserver in sfarm may include many parameters !
-        if not self.checkNone(serverfarm.name) or not \
-            self.checkNone(rserver.name):
-            return "ERROR"
-
-        XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
-        XMLstr = XMLstr + "  <rserver_sfarm name='" + rserver.name + "'"
+        cmd = "serverfarm " + serverfarm.name + "\n"
+        cmd += "rserver " + rserver.name
         if self.checkNone(rserver.port):
-            XMLstr = XMLstr + " port='" + rserver.port + "'"
-        XMLstr = XMLstr + ">\r\n"
-        if self.checkNone(rserver.weight):
-            XMLstr = XMLstr + "    <weight value='" + str(rserver.weight) + \
-                "'/>\r\n"
-        if self.checkNone(rserver.backupRS):
-            XMLstr = XMLstr + "    <backup-rserver rserver-name='" + \
-                rserver.backupRS + "'"
-            if self.checkNone(rserver.backupRSport):
-                XMLstr = XMLstr + " port='" + rserver.backupRSport + "'"
-            XMLstr = XMLstr + "/>\r\n"
-        if self.checkNone(rserver.maxCon) and self.checkNone(rserver.minCon):
-            XMLstr = XMLstr + "    <conn-limit max='" + str(rserver.maxCon) + \
-                "' min='" + str(rserver.minCon) + "'/>\r\n"
+            cmd += rserver.port
+        cmd += "\n"
 
-        # this parameters does not work
-        #if self.checkNone(rserver.rateConnection):
-        #    XMLstr = XMLstr+"    <rate-limit type='connection' value='"
-        #+str(rserver.rateConnection)+"'/>\r\n"
-        #if self.checkNone(rserver.rateBandwidth):
-        #   XMLstr = XMLstr+"    <rate-limit type='bandwidth' value='bandwidth'
-        # value='"+str(rserver.rateBandwidth)+"'/>\r\n"
+        if self.checkNone(rserver.weight):
+            cmd += "weight " + str(rserver.weight) + "\n"
+        if self.checkNone(rserver.backupRS):
+            cmd += "backup-rserver " + rserver.backupRS
+            if self.checkNone(rserver.backupRSport):
+                cmd += " " + rserver.backupRSport
+            cmd += "\n"
+        if self.checkNone(rserver.maxCon) and self.checkNone(rserver.minCon):
+            cmd += "conn-limit max " + str(rserver.maxCon) + \
+                " min " + str(rserver.minCon) + "\n"
+
+        if self.checkNone(rserver.rateConnection):
+            cmd += "rate-limit connection " + \
+                str(rserver.rateConnection) + "\n"
+        if self.checkNone(rserver.rateBandwidth):
+            cmd += "rate-limit bandwidth " + \
+                str(rserver.rateBandwidth) + "\n"
 
         if self.checkNone(rserver.cookieStr):
-            XMLstr = XMLstr + "    <cookie-string cookie-value='" + \
-                rserver.cookieStr + "'/>\r\n"
+            cmd += "cookie-string " + rserver.cookieStr + "\n"
 
-#        for i in range(len(rserver._probes)):
-#            XMLstr = XMLstr + "    <probe_sfarm probe-name='" + \
-#               rserver._probes[i] + "'/>\r\n"
         if self.checkNone(rserver.failOnAll):
-            XMLstr = XMLstr + "    <probe_sfarm probe-name='fail-on-all'/>"
+            cmd += "fail-on-all\n"
         if self.checkNone(rserver.state):
-            if rserver.state.lower() == "inservice":
-                XMLstr = XMLstr + "    <inservice/>\r\n"
+            cmd += "inservice"
             if rserver.state.lower() == "standby":
-                XMLstr = XMLstr + "    <inservice mode='" + \
-                    rserver.state.lower() + "'/>\r\n"
-            if rserver.state.lower() == "outofservice":
-                XMLstr = XMLstr + "    <inservice sense='no'/>\r\n"
-        XMLstr = XMLstr + "  </rserver_sfarm>\r\n"
-        XMLstr = XMLstr + "</serverfarm>"
+                cmd += " standby"
+            cmd += "\n"
 
-        return self.send_data(context,  XMLstr)
+        return self.send_data(context,  cmd)
 
     def deleteRServerFromSF(self,  context,  serverfarm,  rserver):
-        if not self.checkNone(serverfarm.name) or not \
-            self.checkNone(rserver.name):
-            return "ERROR"
-
-        XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
-        XMLstr = XMLstr + "<rserver_sfarm sense='no' name='" + \
-            rserver.name + "'"
+        cmd = "serverfarm " + serverfarm.name + "\n"
+        cmd += "no rserver " + rserver.name
         if self.checkNone(rserver.port):
-            XMLstr = XMLstr + " port='" + rserver.port + "'"
-        XMLstr = XMLstr + ">\r\n"
-        XMLstr = XMLstr + "</rserver_sfarm>\r\n"
-        XMLstr = XMLstr + "</serverfarm>"
-
-        return self.send_data(context,  XMLstr)
+            cmd += " " + rserver.port
+        cmd += "\n"
+        return self.send_data(context,  cmd)
 
     def addProbeToSF(self,  context,  serverfarm,  probe):
-        if not self.checkNone(serverfarm.name) or not \
-            self.checkNone(probe.name):
-            return "ERROR"
-
-        XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
-        XMLstr = XMLstr + " <probe_sfarm probe-name='" + probe.name + "'/>\r\n"
-        XMLstr = XMLstr + "</serverfarm>"
-
-        return self.send_data(context,  XMLstr)
+        cmd = "serverfarm " + serverfarm.name + "\n"
+        cmd += "probe " + probe.name + "\n"
+        return self.send_data(context,  cmd)
 
     def deleteProbeFromSF(self,  context,  serverfarm,  probe):
-        if not self.checkNone(serverfarm.name) or not \
-            self.checkNone(probe.name):
-            return "ERROR"
-
-        XMLstr = "<serverfarm name='" + serverfarm.name + "'>\r\n"
-        XMLstr = XMLstr + " <probe_sfarm sense='no' probe-name='" + \
-            probe.name + "'/>\r\n"
-        XMLstr = XMLstr + "</serverfarm>"
-
+        cmd = "serverfarm " + serverfarm.name + "\n"
+        cmd += "no probe " + probe.name + "\n"
         return self.send_data(context,  XMLstr)
 
     def createStickiness(self,  context, sticky):
-        if not self.checkNone(sticky.name):
-            return "ERROR"
-
         name = sticky.name
         sticky_type = sticky.type.lower() 
-
         if sticky_type == "httpcontent":
-            XMLstr = "<sticky http-content='http-content' \
-                sticky-group-name='" + name + "'>\r\n"
-            if self.checkNone(sticky.offset) or self.checkNone(sticky.length) \
-                or self.checkNone(sticky.beginPattern) or \
-                self.checkNone(sticky.endPattern):
-                XMLstr = XMLstr + "<content "
-                if self.checkNone(sticky.offset):
-                    XMLstr = XMLstr + " offset='" + str(sticky.offset) + "'"
-                if self.checkNone(sticky.length):
-                    XMLstr = XMLstr + " length='" + str(sticky.length) + "'"
-                if self.checkNone(sticky.beginPattern):
-                    XMLstr = XMLstr + " begin-pattern_expression='" + \
-                        sticky.beginPattern + "'"
-                if self.checkNone(sticky.endPattern) and not \
-                    self.checkNone(sticky.length):
-                    XMLstr = XMLstr + " end-pattern_expression='eennndd'"
-                XMLstr = XMLstr + "/>\r\n"
-        elif sticky_type == "httpcookie":
-            XMLstr = "<sticky http-cookie='" + sticky.cookieName + \
-                "' sticky-group-name='" + name + "'>\r\n"
+            sticky_type = "http-content"
+        if sticky_type == "httpcookie":
+            sticky_type = "http-cookie"
+        if sticky_type == "httpheader":
+            sticky_type = "http-header"
+        if sticky_type == "ipnetmask":
+            sticky_type = "ip-netmask"
+        if sticky_type == "l4payload":
+            sticky_type = "layer4-payload"
+        if sticky_type == "rtspheader":
+            sticky_type = "rtsp-header"
+        if sticky_type == "sipheader":
+            sticky_type = "sip-header"
+
+        cmd = "sticky " + sticky_type
+        if (sticky_type == "http-content"):
+            cmd += name + "\n"
+            if self.checkNone(sticky.offset):
+                cmd += "content offset " + str(sticky.offset) + "\n"
+            if self.checkNone(sticky.length):
+                cmd += "content length " + str(sticky.length) + "\n"
+            if self.checkNone(sticky.beginPattern):
+                cmd += "content begin-pattern " + sticky.beginPattern
+                if self.checkNone(sticky.endPattern):
+                    cmd += " end-pattern " + sticky.endPattern
+                cmd += "\n"
+        elif sticky_type == "http-cookie":
+            cmd += sticky.cookieName + " " + name + "\n"
             if self.checkNone(sticky.enableInsert):
-                XMLstr = XMLstr + "<cookie config-type='insert'"
-                if self.checkNone(sticky.enableInsert):
-                    XMLstr = XMLstr + \
-                        " specify-expire-keyword='browser-expire'"
-                XMLstr = XMLstr + "/>\r\n"
-            if self.checkNone(sticky.offset) or self.checkNone(sticky.length):
-                XMLstr = XMLstr + "<cookie config-type='offset'"
-                if self.checkNone(sticky.offset):
-                    XMLstr = XMLstr + " offset-value='" + \
-                        str(sticky.offset) + "'"
+                cmd += "cookie insert"
+                if self.checkNone(sticky.BrowserExp):
+                    cmd += " browser-expire"
+                cmd += "\n"
+            if self.checkNone(sticky.offset):
+                cmd += "cookie offset " str(sticky.offset)
                 if self.checkNone(sticky.length):
-                    XMLstr = XMLstr + " length='" + str(sticky.length) + "'"
-                XMLstr = XMLstr + "/>\r\n"
+                    cmd += " length " + str(sticky.length)
+                cmd += "\n"
             if self.checkNone(sticky.secondaryName):
-                XMLstr = XMLstr + "<cookie config-type='secondary' \
-                    secondary-cookie-name='" + sticky.secondaryName + "'/>\r\n"
-        elif sticky_type == "httpheader":
-            XMLstr = "<sticky http-header='" + sticky.headerName + \
-                "' sticky-group-name='" + name + "'>\r\n"
-            if self.checkNone(sticky.offset) or self.checkNone(sticky.length):
-                XMLstr = XMLstr + "<header_offset"
-                if self.checkNone(sticky.offset):
-                    XMLstr = XMLstr + " offset='" + str(sticky.offset) + "'"
+                cmd += "cookie secondary " + sticky.secondaryName + "\n"
+        elif sticky_type == "http-header":
+            cmd += sticky.headerName " " + name + "\n"
+            if self.checkNone(sticky.offset):
+                cmd += "header offset " + str(sticky.offset)
                 if self.checkNone(sticky.length):
-                    XMLstr = XMLstr + " length='" + str(sticky.length) + "'"
-                XMLstr = XMLstr + "/>\r\n"
-        elif sticky_type == "ipnetmask":
-            XMLstr = "<sticky sticky-type='ip-netmask' netmask='" + \
-                str(sticky.netmask) + "' address='" + \
-                sticky.addressType.lower() + "' sticky-group-name='" + \
-                name + "'>\r\n"
-            if self.checkNone(sticky.ipv6PrefixLength):
-                XMLstr = XMLstr + "<v6-prefix prefix-length='" + \
-                    str(sticky.ipv6PrefixLength) + "'/>\r\n"
-        elif sticky_type == "v6prefix":
-            XMLstr = "<sticky sticky-type='v6-prefix' prefix-length='" + \
-                str(sticky.prefixLength) + "' address='" + \
-                sticky.addressType.lower() + "' sticky-group-name='" + \
-                name + "'>\r\n"
-            if self.checkNone(sticky):
-                XMLstr = XMLstr + "<ip-netmask netmask='" + \
-                    str(sticky.netmask) + "'/>\r\n"
-        elif sticky_type == "l4payload":
-            XMLstr = "<sticky sticky-group-name='" + name + "'>\r\n"
+                    cmd += " length " + str(sticky.length)
+                cmd += "\n"
+        elif sticky_type == "ip-netmask":
+            cmd += str(sticky.netmask) + " address " + \
+                sticky.addrType + " " + name + "\n"
+        elif sticky_type == "layer4-payload":
+            cmd += name + "\n"
             if self.checkNone(sticky.enableStickyForResponse):
-                XMLstr = XMLstr + "<response response-info='sticky'/>\r\n"
+                cmd += "response sticky\n"
             if self.checkNone(sticky.offset) or self.checkNone(sticky.length) \
                 or self.checkNone(sticky.beginPattern) or \
                 self.checkNone(sticky.endPattern):
-                XMLstr = XMLstr + "<l4payload "
+                cmd += "layer4-payload"
                 if self.checkNone(sticky.offset):
-                    XMLstr = XMLstr + " offset='" + str(sticky.offset) + "'"
+                    cmd += " offset " + str(sticky.offset)
                 if self.checkNone(sticky.length):
-                    XMLstr = XMLstr + " length='" + str(sticky.length) + "'"
+                    cmd += " length " + str(sticky.length)
                 if self.checkNone(sticky.beginPattern):
-                    XMLstr = XMLstr + " begin-pattern_expression='" + \
-                        sticky.beginPattern + "'"
+                    cmd += " begin-pattern " + sticky.beginPattern
                 if self.checkNone(sticky.endPattern) and not \
                     self.checkNone(sticky.length):
-                    XMLstr = XMLstr + " end-pattern_expression='eennndd'"
-                XMLstr = XMLstr + "/>\r\n"
+                    cmd += " end-pattern " + sticky.endPattern
+                cmd += "\n"
         elif sticky_type == "radius":
-            XMLstr = "<sticky sticky-group-name='" + name + "'>\r\n"
-        elif sticky_type == "rtspheader":
-            XMLstr = "<sticky rtsp-header='Session' sticky-group-name='" + \
-                name + "'>\r\n"
-            if boot(sticky.offset) or boot(sticky.length):
-                XMLstr = XMLstr + "<header_offset"
-                if self.checkNone(sticky.offset):
-                    XMLstr = XMLstr + " offset='" + str(sticky.offset) + "'"
+            cmd += name + "\n"
+        elif sticky_type == "rtsp-header":
+            cmd += " Session " + name + "\n"
+            if self.checkNone(sticky.offset):
+                cmd += "header offset='" + str(sticky.offset)
                 if self.checkNone(sticky.length):
-                    XMLstr = XMLstr + " length='" + str(sticky.length) + "'"
-                XMLstr = XMLstr + "/>\r\n"
-        elif sticky_type == "sipheader":
-            XMLstr = "<sticky sip-header='Call-ID' sticky-group-name='" + \
-                name + "'>\r\n"
+                    cmd += " length='" + str(sticky.length)
+            cmd += "\n"
+        elif sticky_type == "sip-header":
+            cmd += " Call-ID" name + "\n"
 
         if self.checkNone(sticky.timeout):
-            XMLstr = XMLstr + "<timeout timeout-value='" + \
-                str(sticky.timeout) + "'/>\r\n"
+            cmd += "timeout " + str(sticky.timeout) + "\n"
         if self.checkNone(sticky.timeoutActiveConn):
-            XMLstr = XMLstr + "<timeout config-type='activeconns'/>\r\n"
+            cmd += "timeout activeconns\n"
         if self.checkNone(sticky.replicateOnHAPeer):
-            XMLstr = XMLstr + "<replicate replicate-info='sticky'/>\r\n"
+            cmd += "replicate sticky\n"
         if self.checkNone(sticky.serverFarm):
-            XMLstr = XMLstr + "<serverfarm_sticky sfarm-name='" + \
-                sticky.serverFarm + "'"
+            cmd += "serverfarm " + sticky.serverFarm
             if self.checkNone(sticky.backupServerFarm):
-                XMLstr = XMLstr + " backup='" + sticky.backupServerFarm + "' "
+                cmd += " backup " + sticky.backupServerFarm
                 if self.checkNone(sticky.enableStyckyOnBackupSF):
-                    XMLstr = XMLstr + "sfarm-behaviour='sticky'"
+                    cmd += " sticky"
                 if self.checkNone(sticky.aggregateState):
-                    XMLstr = XMLstr + " backup-sfarm-state='aggregate-state'"
-            XMLstr = XMLstr + "/>\r\n"
-        XMLstr = XMLstr + "</sticky>"
+                    cmd += " aggregate-state"
+            cmd += "\n"
 
-        return self.send_data(context, XMLstr)
+        return self.send_data(context, cmd)
 
     def deleteStickiness(self,  context,   sticky):
-        if not self.checkNone(sticky.name):
-            return "ERROR"
-
         name = sticky.name
         sticky_type = sticky.type.lower()
-
         if sticky_type == "httpcontent":
-            XMLstr = "<sticky sense='no' http-content='http-content' \
-                sticky-group-name='" + name + "'>\r\n"
-        elif sticky_type == "httpcookie":
-            XMLstr = "<sticky sense='no' http-cookie='" + sticky.cookieName + \
-                "' sticky-group-name='" + name + "'>\r\n"
-        elif sticky_type == "httpheader":
-            XMLstr = "<sticky sense='no' http-header='" + sticky.headerName + \
-                "' sticky-group-name='" + name + "'>\r\n"
-        elif sticky_type == "ipnetmask":
-            XMLstr = "<sticky sense='no' sticky-type='ip-netmask' netmask='" \
-                + str(sticky.netmask) + "' address='" + \
-                sticky.addressType.lower() + "' sticky-group-name='" + \
-                name + "'>\r\n"
-        elif sticky_type == "v6prefix":
-            XMLstr = "<sticky sense='no' sticky-type='v6-prefix' \
-                prefix-length='" + str(sticky.prefixLength) + "' address='" + \
-                sticky.addressType.lower() + "' sticky-group-name='" + \
-                name + "'>\r\n"
-        elif sticky_type == "l4payload":
-            XMLstr = "<sticky sense='no' sticky-group-name='" + name + "'>\r\n"
-        elif sticky_type == "radius":
-            XMLstr = "<sticky sense='no' sticky-group-name='" + name + "'>\r\n"
-        elif sticky_type == "rtspheader":
-            XMLstr = "<sticky sense='no' rtsp-header='Session' \
-                sticky-group-name='" + name + "'>\r\n"
-        elif sticky_type == "sipheader":
-            XMLstr = "<sticky sense='no' sip-header='Call-ID' \
-                sticky-group-name='" + name + "'>\r\n"
+            sticky_type = "http-content"
+        if sticky_type == "httpcookie":
+            sticky_type = "http-cookie"
+        if sticky_type == "httpheader":
+            sticky_type = "http-header"
+        if sticky_type == "ipnetmask":
+            sticky_type = "ip-netmask"
+        if sticky_type == "l4payload":
+            sticky_type = "layer4-payload"
+        if sticky_type == "rtspheader":
+            sticky_type = "rtsp-header"
+        if sticky_type == "sipheader":
+            sticky_type = "sip-header"
 
-        XMLstr = XMLstr + "</sticky>"
-
-        return self.send_data(context,  XMLstr)
+        cmd = "no sticky " + sticky_type + " " name + "\n"
+        return self.send_data(context,  cmd)
         
     def addACLEntry(self,  context,  vip):
-            XMLstr = "<access-list id='vip-acl' config-type='extended' \
-            perm-value='permit' protocol-name='ip' src-type='any' \
-            host_dest-addr='" + vip.address + "'/>\r\n"
-            try:
-                self.send_data(context,  XMLstr)
-            except:
-                logger.warning("Got exception during deploying ACL. It could be ok.")
+        cmd = "access-list ANY extended permit ip any host " + \
+            vip.address + "\n"
+        return self.send_data(context,  cmd)
             
 
     def createVIP(self,  context, vip,  sfarm):
-        if not self.checkNone(vip.name) or not self.checkNone(vip.name) \
-            or not self.checkNone(vip.address):
-            return "ERROR"
-
         sn = "2"
         if self.checkNone(vip.allVLANs):
             pmap = "global"
@@ -742,96 +537,72 @@ class AceDriver(BaseDriver):
         else:
             vip.appProto = "_" + vip.appProto.lower()
 
-        XMLstr = "<policy-map_lb type='loadbalance" + vip.appProto + \
-            "' match-type='first-match' pmap-name='" + vip.name + \
-            "-l7slb'>\r\n"
-        XMLstr = XMLstr + \
-            "<class_pmap_lb match-cmap-default='class-default'>\r\n"
-        XMLstr = XMLstr + "<serverfarm_pmap sfarm-name='" + sfarm.name + "'"
+        cmd = "policy-map type loadbalance " + vip.appProto + \
+            " first-match " + vip.name + "-l7slb\n"
+        cmd += "class class-default\n"
+        cmd += "serverfarm " + sfarm.name
         if self.checkNone(vip.backupServerFarm):
-            XMLstr = XMLstr + " backup-name='" + vip.backupServerFarm + "'"
-        XMLstr = XMLstr + "/>\r\n"
-        XMLstr = XMLstr + "</class_pmap_lb>\r\n"
-        XMLstr = XMLstr + "</policy-map_lb>\r\n"
+            cmd += " backup " + vip.backupServerFarm
+        cmd += "\nexit\nexit"
 
         # Add a class-map
-        XMLstr = XMLstr + "<class-map match-type='match-all' name='" + \
-            vip.name + "'>\r\n"
-        XMLstr = XMLstr + "<match_virtual-addr seq-num='" + sn + \
-            "' virtual-address='" + vip.address + "' net-mask='" + \
-            str(vip.mask) + "'"
-        XMLstr = XMLstr + " protocol-type='" + vip.proto.lower() + "'"
+        cmd += "class-map match-all " + vip.name + "\n"
+        cmd += "match virtual-address " + vip.address + \
+            " " + str(vip.mask) + vip.proto.lower()
         if vip.proto.lower() != "any":
-            XMLstr = XMLstr + " operator='eq' port-1='" + str(vip.port) + "'"
-        XMLstr = XMLstr + "/>\r\n"
-        XMLstr = XMLstr + "</class-map>\r\n"
+            cmd += " eq " + str(vip.port)
+        cmd += "\nexit\n"
 
         #  Add a policy-map (multimatch) with class-map
-        XMLstr = XMLstr + "<policy-map_multimatch match-type='multi-match' \
-            pmap-name='" + pmap + "'>\r\n"
-        XMLstr = XMLstr + "<class match-cmap='" + vip.name + "'>\r\n"
+        cmd += "policy-map multimatch" + pmap + "\n"
+        cmd += "class " + vip.name + "\n"
 
         if self.checkNone(vip.status):
-            XMLstr = XMLstr + "<loadbalance vip_config-type='" + \
-                vip.status.lower() + "'/>\r\n"
+            cmd += "loadbalance vip " + vip.status.lower() + "\n"
 
-        XMLstr = XMLstr + "<loadbalance policy='" + vip.name + "-l7slb'/>\r\n"
+        cmd += "loadbalance policy " + vip.name + "-l7slb\n"
         if self.checkNone(vip.ICMPreply):
-            XMLstr = XMLstr + \
-                "<loadbalance vip_config-type='icmp-reply'/>\r\n"
+            cmd += "loadbalance vip icmp-reply\n"
 
-        XMLstr = XMLstr + "</class>\r\n"
-        XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
-
+        cmd += "exit\nexit\n"
         s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)
+        tmp = s.deployConfig(context,  cmd)
         if (tmp != 'OK'):
             raise openstack.common.exception.Invalid(tmp)
 
         if self.checkNone(vip.allVLANs):
-            XMLstr = "<service-policy type='input' name='" + pmap + "'/>"
+            cmd = "service-policy input " + pmap + "\n"
+            try:
+                tmp = s.deployConfig(context,  cmd)
+            except:
+                logger.warning("Got exception on acl set")       
         else:
             #  Add service-policy for necessary vlans
             if is_sequence(vip.VLAN):
                 for i in vip.VLAN:
-                    XMLstr = "<interface type='vlan' number='" + str(i) + \
-                        "'>\r\n"
-                    XMLstr = XMLstr + "<service-policy type='input' name='" + \
-                        pmap + "'/>\r\n"
-                    XMLstr = XMLstr + "</interface>"
-                    tmp = s.deployConfig(context, XMLstr)
+                    cmd = "interface vlan " + str(i) + "\n"
+                    cmd += "service-policy input " + pmap + "\n"
+                    tmp = s.deployConfig(context,  cmd)
                     
-                    XMLstr = "<interface type='vlan' number='" + str(i) + \
-                        "'>\r\n"
-                    XMLstr = XMLstr + \
-                        "<access-group access-type='input' \
-                        name='vip-acl'/>\r\n"
-                    XMLstr = XMLstr + "</interface>"
+                    cmd = "interface vlan " + str(i) + "\n"
+                    cmd += "access-group input vip-acl\n"
                     try:
-                        #Try to add access list. if it is already assigned exception will occur
-                        tmp = s.deployConfig(context, XMLstr)
+                        # Try to add access list. if it is already
+                        # assigned exception will occur
+                        tmp = s.deployConfig(context,  cmd)
                     except:
                         logger.warning("Got exception on acl set")                    
                     
             else:
-                    XMLstr = "<interface type='vlan' number='" + \
-                        str(vip.VLAN) + "'>\r\n"
-                    XMLstr = XMLstr + \
-                        "<service-policy type='input' name='" + \
-                        pmap + "'/>\r\n"
-                    XMLstr = XMLstr + "</interface>"
-                    tmp = s.deployConfig(context, XMLstr)
-                    XMLstr = "<interface type='vlan' number='" + \
-                        str(vip.VLAN) + "'>\r\n"
-                    XMLstr = XMLstr + \
-                        "<access-group access-type='input' \
-                        name='vip-acl'/>\r\n"
-                    XMLstr = XMLstr + "</interface>"
+                    cmd = "interface vlan" + str(vip.VLAN) + "\n"
+                    cmd += "service-policy input " + pmap + "\n"
+                    tmp = s.deployConfig(context,  cmd)
+                    cmd = "interface vlan " + str(vip.VLAN) + "\n"
+                    cmd += "access-group input vip-acl\n"
                     try:
-                        tmp = s.deployConfig(context, XMLstr)
+                        tmp = s.deployConfig(context,  cmd)
                     except:
                        logger.warning("Got exception on acl set")                    
-
         return 'OK'
 
     def deleteVIP(self,  context,  vip):
@@ -840,82 +611,56 @@ class AceDriver(BaseDriver):
         else:
             pmap = "int-" + md5.new(vip.VLAN).hexdigest()
 
-        XMLstr = "<policy-map_multimatch match-type='multi-match' \
-            pmap-name='" + pmap + "'>\r\n"
-        XMLstr = XMLstr + "<class sense='no' match-cmap='" + \
-            vip.name + "'>\r\n"
-        XMLstr = XMLstr + "</class>\r\n"
-        XMLstr = XMLstr + "</policy-map_multimatch>\r\n"
+        cmd = "policy-map multi-match " + pmap + "\n"
+        cmd += " no class " + vip.name + "\n"
         logger.debug("pmap name is %s" % pmap)
-        logger.debug("Trying to do %s" % XMLstr)
+        logger.debug("Trying to do %s" % cmd)
         s = XmlSender(context)
-        tmp = s.deployConfig(context, XMLstr)
+        tmp = s.deployConfig(context,  cmd)
         if (tmp != 'OK'):
             raise openstack.common.exception.Invalid(tmp)
 
-        #3) Delete policy-map, class-map and access-list
+        # Delete policy-map, class-map and access-list
         if vip.appProto.lower() == "other" or vip.appProto.lower() == "http":
             vip.appProto = ""
         else:
             vip.appProto = "_" + vip.appProto.lower()
-        XMLstr = "<policy-map_lb sense='no' type='loadbalance" + vip.appProto
-        XMLstr = XMLstr + "' match-type='first-match' pmap-name='" + \
-            vip.name + "-l7slb'>\r\n"
-        XMLstr = XMLstr + "</policy-map_lb>\r\n"
+        cmd = "no policy-map type loadbalance " + vip.appProto
+        cmd += " first-match " + vip.name + "-l7slb\n"
 
-        XMLstr = XMLstr + \
-            "<class-map sense='no' match-type='match-all' name='" + \
-            vip.name + "'>\r\n"
-        XMLstr = XMLstr + "</class-map>\r\n"
+        cmd += "no class-map match-all " + vip.name + "\n"
 
-        XMLstr = XMLstr + \
-            "<access-list sense='no' id='vip-acl' \
-            config-type='extended' perm-value='permit' "
-        XMLstr = XMLstr + \
-            "protocol-name='ip' src-type='any' host_dest-addr='" + \
-            vip.address + "'/>\r\n"
-
-        tmp = s.deployConfig(context, XMLstr)
+        tmp = s.deployConfig(context,  cmd)
         if (tmp != 'OK'):
             raise openstack.common.exception.Invalid(tmp)
 
-        XMLstr = 'show running-config policy-map %s' % pmap
+        cmd = 'show running-config policy-map %s' % pmap
         last_policy_map = \
-            self.checkNone(s.getConfig(context,  XMLstr).find('class'))
+            self.checkNone(s.getConfig(context,  cmd).find('class'))
 
         if (last_policy_map):
             # Remove service-policy from VLANs
             #(Perform if deleted last VIP with it service-policy)
             if self.checkNone(vip.allVLANs):
-                XMLstr = "<service-policy sense='no' type='input' name='" + \
-                    pmap + "'/>"
+                cmd = "no service-policy input" + pmap + "\n"
+                try:
+                    tmp = s.deployConfig(context,  cmd)
+                except:
+                    logger.warning("Got exception on acl set")  
             else:
                 #  Add service-policy for necessary vlans
                 if is_sequence(vip.VLAN):
                     for i in vip.VLAN:
-                        XMLstr = "<interface type='vlan' number='" + \
-                            str(i) + "'>\r\n"
-                        XMLstr = XMLstr + \
-                            "<service-policy sense='no' type='input' \
-                            name='" + pmap + "'/>\r\n"
-                        XMLstr = XMLstr + "</interface>"
-                        tmp = s.deployConfig(context, XMLstr)
+                        cmd = "interface vlan " + str(i) + "\n"
+                        cmd += "no service-policy input " + pmap + "\n"
+                        tmp = s.deployConfig(context,  cmd)
 
-                        XMLstr = "<interface type='vlan' number='" + \
-                            str(i) + "'>\r\n"
-                        XMLstr = XMLstr + \
-                            "<access-group sense='no' access-type='input' \
-                            name='vip-acl'/>\r\n"
-                        XMLstr = XMLstr + "</interface>"
-                        tmp = s.deployConfig(context, XMLstr)
+                        cmd = "interface vlan " str(i) + "\n"
+                        cmd += "no access-group input vip-acl\n"
+                        tmp = s.deployConfig(context,  cmd)
                 else:
-                        XMLstr = "<interface type='vlan' number='" + \
-                            str(vip.VLAN) + "'>\r\n"
-                        XMLstr = XMLstr + \
-                            "<service-policy sense='no' type='input' \
-                            name='" + pmap + "'/>\r\n"
-                        XMLstr = XMLstr + "<access-group sense='no' \
-                            access-type='input' name='vip-acl'/>\r\n"
-                        XMLstr = XMLstr + "</interface>"
-                        tmp = s.deployConfig(context, XMLstr)
+                        cmd = "interface vlan " + str(vip.VLAN) + "\n"
+                        cmd += "no service-policy input " + pmap + "\n"
+                        cmd += "no access-group input vip-acl\n"
+                        tmp = s.deployConfig(context,  cmd)
         return "OK"
