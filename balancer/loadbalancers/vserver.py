@@ -608,16 +608,16 @@ class DeleteVIPCommand(object):
 
 
 def createProbe(probe_type):
-    probeDict = {'DNS': probe.DNSprobe(), 'ECHOTCP': probe.ECHOTCPprobe(),
-                'ECHOUDP': probe.ECHOUDPprobe(), 'FINGER': probe.FINGERprobe(),
+    probeDict = {'DNS': probe.DNSprobe(), 'ECHO TCP': probe.ECHOTCPprobe(),
+                'ECHO UDP': probe.ECHOUDPprobe(), 'FINGER': probe.FINGERprobe(),
                 'FTP': probe.FTPprobe(), 'HTTPS': probe.HTTPSprobe(),
                 'HTTP': probe.HTTPprobe(), 'ICMP': probe.ICMPprobe(),
                 'IMAP': probe.IMAPprobe(), 'POP': probe.POPprobe(),
                 'RADIUS': probe.RADIUSprobe(), 'RTSP': probe.RTSPprobe(),
                 'SCRIPTED': probe.SCRIPTEDprobe(),
-                'SIPTCP': probe.SIPTCPprobe(),
-                'SIPUDP': probe.SIPUDPprobe(), 'SMTP': probe.SMTPprobe(),
-                'SNMP': probe.SNMPprobe(), 'CONNECT': probe.TCPprobe(),
+                'SIP TCP': probe.SIPTCPprobe(),
+                'SIP UDP': probe.SIPUDPprobe(), 'SMTP': probe.SMTPprobe(),
+                'SNMP': probe.SNMPprobe(), 'TCP': probe.TCPprobe(),
                 'TELNET': probe.TELNETprobe(), 'UDP': probe.UDPprobe(),
                 'VM': probe.VMprobe()}
     obj = probeDict.get(probe_type,  None)
@@ -648,14 +648,14 @@ def createPredictor(pr_type):
 
 
 def createSticky(st_type):
-    stickyDict = {'httpcontent': sticky.HTTPContentSticky(), \
-                        'httpcookie': sticky.HTTPCookieSticky(), \
-                        'httpheader': sticky.HTTPHeaderSticky(), \
-                        'ipnetmask': sticky.IPNetmaskSticky(), \
-                        'l4payload': sticky.L4PayloadSticky(), \
-                        'rtspheader': sticky.RTSPHeaderSticky(), \
+    stickyDict = {'http-content': sticky.HTTPContentSticky(), \
+                        'http-cookie': sticky.HTTPCookieSticky(), \
+                        'http-header': sticky.HTTPHeaderSticky(), \
+                        'ip-netmask': sticky.IPNetmaskSticky(), \
+                        'layer4-payload': sticky.L4PayloadSticky(), \
+                        'rtsp-header': sticky.RTSPHeaderSticky(), \
                         'radius': sticky.RadiusSticky(), \
-                        'sipheader': sticky.SIPHeaderSticky(), \
+                        'sip-header': sticky.SIPHeaderSticky(), \
                         'v6prefix': sticky.v6PrefixSticky()}
 
     obj = stickyDict.get(st_type,  None)

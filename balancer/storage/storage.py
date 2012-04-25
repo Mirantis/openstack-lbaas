@@ -47,15 +47,15 @@ class Reader(SQLExecute):
     def __init__(self,  db):
         logger.debug("Reader: connecting to db: %s" % db)
         self._con = sqlite3.connect(db)
-        self._probeDict = {'DNS': DNSprobe(), 'ECHOTCP': ECHOTCPprobe(), \
-                        'ECHOUDP': ECHOUDPprobe(), 'FINGER': FINGERprobe(), \
+        self._probeDict = {'DNS': DNSprobe(), 'ECHO TCP': ECHOTCPprobe(), \
+                        'ECHO-UDP': ECHOUDPprobe(), 'FINGER': FINGERprobe(), \
                         'FTP': FTPprobe(), 'HTTPS': HTTPSprobe(), \
                         'HTTP': HTTPprobe(), 'ICMP': ICMPprobe(), \
                         'IMAP': IMAPprobe(), 'POP': POPprobe(), \
                         'RADIUS': RADIUSprobe(), 'RTSP': RTSPprobe(), \
-                        'SCRIPTED': SCRIPTEDprobe(), 'SIPTCP': SIPTCPprobe(), \
-                        'SIPUDP': SIPUDPprobe(), 'SMTP': SMTPprobe(), \
-                        'SNMP': SNMPprobe(), 'CONNECT': TCPprobe(), \
+                        'SCRIPTED': SCRIPTEDprobe(), 'SIP TCP': SIPTCPprobe(), \
+                        'SIP UDP': SIPUDPprobe(), 'SMTP': SMTPprobe(), \
+                        'SNMP': SNMPprobe(), 'TCP': TCPprobe(), \
                         'TELNET': TELNETprobe(), 'UDP': UDPprobe(), \
                         'VM': VMprobe()}
         self._predictDict = {'HashAddrPredictor': HashAddrPredictor(), \
@@ -68,14 +68,14 @@ class Reader(SQLExecute):
                           'LeastLoaded': LeastLoaded(), \
                           'Response': Response(), 'RoundRobin': RoundRobin()}
                           
-        self._stickyDict = {'httpcontent': HTTPContentSticky(), \
-                                    'httpcookie': HTTPCookieSticky(), \
-                                    'httpheader': HTTPHeaderSticky(), \
-                                    'ipnetmask': IPNetmaskSticky(), \
-                                    'l4payload': L4PayloadSticky(), \
-                                    'rtspheader': RTSPHeaderSticky(), \
+        self._stickyDict = {'http-content': HTTPContentSticky(), \
+                                    'http-cookie': HTTPCookieSticky(), \
+                                    'http-header': HTTPHeaderSticky(), \
+                                    'ip-netmask': IPNetmaskSticky(), \
+                                    'layer4-payload': L4PayloadSticky(), \
+                                    'rtsp-header': RTSPHeaderSticky(), \
                                     'radius': RadiusSticky(), \
-                                    'sipheader': SIPHeaderSticky(), \
+                                    'sip-header': SIPHeaderSticky(), \
                                     'v6prefix': v6PrefixSticky()}
 
     def getLoadBalancers(self):
