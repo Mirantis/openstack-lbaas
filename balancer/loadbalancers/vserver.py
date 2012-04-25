@@ -624,8 +624,8 @@ def createProbe(probe_type):
                 'VM': probe.VMprobe()}
     obj = probeDict.get(probe_type,  None)
     if obj == None:
-        raise exception.NotFound("Can't create health monitoring probe \
-                                               of type %s" % probe_type)
+        raise openstack.common.exception.Invalid("Can't create health \
+			   monitoring probe of type %s" % probe_type)
     return obj.createSame()
 
 

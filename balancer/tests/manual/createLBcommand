@@ -106,7 +106,7 @@
                         "timeout": "20"
                       }, 
                       { 
-                        "type": "CONNECT", 
+                        "type": "TCP", 
                         "delay": "30", 
                         "attemptsBeforeDeactivation": "5", 
                         "timeout": "30"
