@@ -101,7 +101,7 @@ class AceDriver(BaseDriver):
         cmd += "\n"
         if (rserver.state == "standby"):
             cmd += "inservice standby\n"
-        else
+        else:
             cmd += "no inservice\n"
         return self.send_data(context,  cmd)
         
