@@ -55,7 +55,7 @@ class Reader(SQLExecute):
                         'RADIUS': RADIUSprobe(), 'RTSP': RTSPprobe(), \
                         'SCRIPTED': SCRIPTEDprobe(), 'SIP TCP': SIPTCPprobe(), \
                         'SIP UDP': SIPUDPprobe(), 'SMTP': SMTPprobe(), \
-                        'SNMP': SNMPprobe(), 'TCP': TCPprobe(), \
+                        'SNMP': SNMPprobe(), 'CONNECT': TCPprobe(), \
                         'TELNET': TELNETprobe(), 'UDP': UDPprobe(), \
                         'VM': VMprobe()}
         self._predictDict = {'HashAddrPredictor': HashAddrPredictor(), \

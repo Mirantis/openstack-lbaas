@@ -619,7 +619,7 @@ def createProbe(probe_type):
                 'SCRIPTED': probe.SCRIPTEDprobe(),
                 'SIP TCP': probe.SIPTCPprobe(),
                 'SIP UDP': probe.SIPUDPprobe(), 'SMTP': probe.SMTPprobe(),
-                'SNMP': probe.SNMPprobe(), 'TCP': probe.TCPprobe(),
+                'SNMP': probe.SNMPprobe(), 'CONNECT': probe.TCPprobe(),
                 'TELNET': probe.TELNETprobe(), 'UDP': probe.UDPprobe(),
                 'VM': probe.VMprobe()}
     obj = probeDict.get(probe_type,  None)
