@@ -123,91 +123,16 @@ class V1Client(base_client.BaseClient):
         data = json.loads(res.read())['devices']
         return data
         
+    def add_vmnode_to_lb(self,  node,  lb_id):
+        body = json.dumps(node)
+        res=self.do_request("PUT", "loadbalancers/%s/nodes" % lb_id, body,
+                        {'content-type': 'application/json'})
+        return res
         
-    def get_images(self, **kwargs):
-        """Returns a list of image id/name mappings from Registry
-
-        :param filters: dictionary of attributes by which the resulting
-                        collection of images should be filtered
-        :param marker: id after which to start the page of images
-        :param limit: maximum number of items to return
-        :param sort_key: results will be ordered by this image attribute
-        :param sort_dir: direction in which to to order results (asc, desc)"""
-
-        params = self._extract_params(kwargs, SUPPORTED_PARAMS)
-        res = self.do_request("GET", "loadbalancers", params=params)
-        data = json.loads(res.read())['loadbalancers']
-        return data
-
-    def get_images_detailed(self, **kwargs):
-        """
-        Returns a list of detailed image data mappings from Registry
-
-        :param filters: dictionary of attributes by which the resulting
-                        collection of images should be filtered
-        :param marker: id after which to start the page of images
-        :param limit: maximum number of items to return
-        :param sort_key: results will be ordered by this image attribute
-        :param sort_dir: direction in which to to order results (asc, desc)
-        """
-        params = self._extract_params(kwargs, SUPPORTED_PARAMS)
-        res = self.do_request("GET", "/images/detail", params=params)
-        data = json.loads(res.read())['images']
-        return data
-
-    def get_image(self, image_id):
-        """
-        Returns a tuple with the image's metadata and the raw disk image as
-        a mime-encoded blob stream for the supplied opaque image identifier.
-
-        :param image_id: The opaque image identifier
-
-        :retval Tuple containing (image_meta, image_blob)
-        :raises exception.NotFound if image is not found
-        """
-        res = self.do_request("GET", "/images/%s" % image_id)
-
-        image = utils.get_image_meta_from_headers(res)
-        return image, base_client.ImageBodyIterator(res)
-
-    def get_image_meta(self, image_id):
-        """
-        Returns a mapping of image metadata from Registry
-
-        :raises exception.NotFound if image is not in registry
-        """
-        res = self.do_request("HEAD", "/images/%s" % image_id)
-
-        image = utils.get_image_meta_from_headers(res)
-        return image
-
-    def _get_image_size(self, image_data):
-        """
-        Analyzes the incoming image file and attempts to determine
-        its size.
-
-        :param image_data: The input to the client, typically a file
-                           redirected from stdin.
-        :retval The image file's size or None if it cannot be determined.
-        """
-        # For large images, we need to supply the size of the
-        # image file. See LP Bugs #827660 and #845788.
-        if hasattr(image_data, 'seek') and hasattr(image_data, 'tell'):
-            try:
-                image_data.seek(0, os.SEEK_END)
-                image_size = image_data.tell()
-                image_data.seek(0)
-                return image_size
-            except IOError, e:
-                if e.errno == errno.ESPIPE:
-                    # Illegal seek. This means the user is trying
-                    # to pipe image data to the client, e.g.
-                    # echo testdata | bin/glance add blah..., or
-                    # that stdin is empty
-                    return None
-                else:
-                    raise
-
+    def delete_lb(self,  lb_id):
+        res=self.do_request("DELETE", "loadbalancers/%s" % lb_id)
+        return res
+    
     def add_image(self, image_meta=None, image_data=None, features=None):
         """
         Tells Glance about an image's metadata as well
