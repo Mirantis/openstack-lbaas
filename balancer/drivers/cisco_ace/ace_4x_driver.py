@@ -302,13 +302,17 @@ class AceDriver(BaseDriver):
             cmd += "failaction " + serverfarm.failAction + "\n"
 
         if self.checkNone(serverfarm._predictor.type):
-    		pr = serverfarm._predictor.type.lower()
+            pr = serverfarm._predictor.type.lower()
             if (pr == "leastbandwidth"):
                 pr = "least-bandwidth"
+                if self.CheckNone(serverfarm._predictor.accessTime):
+                    pr += " assess-time " + serverfarm._predictor.accessTime
+                if self.CheckNone(serverfarm.accessTime):
+                    pr += " samples " + serverfarm._predictor.sample
             elif (pr == "leastconnections"):
-                pr = "leastconns"
+                pr = "leastconns slowstart " + serverfarm._redictor.slowStartDur
             elif (pr == "leastloaded"):
-                pr = "least-loaded"
+                pr = "least-loaded probe " + serverfarm._predictor.snmpProbe
             cmd += "predictor " + pr + "\n"
 
         if (sf_type == "host"):
@@ -666,8 +670,8 @@ class AceDriver(BaseDriver):
             vip.appProto = ""
         else:
             vip.appProto = "_" + vip.appProto.lower()
-        cmd = "no policy-map type loadbalance " + vip.appProto
-        cmd += " first-match " + vip.name + "-l7slb\n"
+        cmd = "no policy-map type loadbalance " + \
+              "first-match " + vip.name + "-l7slb\n"
 
         cmd += "no class-map match-all " + vip.name + "\n"
 
