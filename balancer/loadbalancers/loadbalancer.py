@@ -40,3 +40,5 @@ class LoadBalancer(Serializeable,  UniqueObject):
         self.status = "ACTIVE"
         self.created = None
         self.updated = None
+        self.tenant_id=""
+        self.tenant_name=""

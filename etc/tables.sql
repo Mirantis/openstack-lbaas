@@ -2,7 +2,7 @@ CREATE TABLE tenants(id TEXT, name TEXT);
 
 CREATE TABLE tenantdevices(tenant_id TEXT, device_id TEXT);
 
-CREATE TABLE loadbalancers(id TEXT, name TEXT, protocol TEXT, transport TEXT, algorithm TEXT, status TEXT, created TEXT, updated TEXT, device_id TEXT, tenant TEXT, deployed TEXT);
+CREATE TABLE loadbalancers(id TEXT, name TEXT, protocol TEXT, transport TEXT, algorithm TEXT, status TEXT, created TEXT, updated TEXT, device_id TEXT, tenant TEXT, deployed TEXT, tenant_id TEXT, tenant_name TEXT);
 CREATE INDEX loadbalancers_id_idx ON loadbalancers (id);
 
 CREATE TABLE serverfarms(id TEXT, lb_id TEXT,  name TEXT,

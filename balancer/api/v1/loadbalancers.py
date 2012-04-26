@@ -49,7 +49,12 @@ class Controller(object):
             msg = "Got index request. Request: %s" % req
             logger.debug(msg)
             task = self._service_controller.createTask()
-            params = args['vm_id']
+            tenant_id = req.headers.get('X-Tenant-Id',  "") 
+            tenant_name = req.headers.get('X-Tenant-Name',  "") 
+            params={}
+            params['vm_id'] = args['vm_id']
+            params['tenant_id'] = tenant_id
+            params['tenant_name'] = tenant_name              
             task.parameters = params
             mapper = LBActionMapper()
             worker = mapper.getWorker(task, "findLBforVM")
@@ -76,7 +81,14 @@ class Controller(object):
         try:
             msg = "Got index request. Request: %s" % req
             logger.debug(msg)
+            tenant_id = req.headers.get('X-Tenant-Id',  "") 
+            tenant_name = req.headers.get('X-Tenant-Name',  "") 
+            param={}
+            param['tenant_id'] = tenant_id
+            param['tenant_name'] = tenant_name
+          
             task = self._service_controller.createTask()
+            task.parameters = param
             mapper = LBActionMapper()
             worker = mapper.getWorker(task, "index")
             if worker.type == SYNCHRONOUS_WORKER:
@@ -108,6 +120,10 @@ class Controller(object):
             params = args['body']
             # We need to create LB object and return its id
             lb = balancer.loadbalancers.loadbalancer.LoadBalancer()
+            tenant_id = req.headers.get('X-Tenant-Id',  "") 
+            tenant_name = req.headers.get('X-Tenant-Name',  "") 
+            lb.tenant_id = tenant_id
+            lb.tenant_name = tenant_name
             params['lb'] = lb
             task.parameters = params
             worker = mapper.getWorker(task, "create")

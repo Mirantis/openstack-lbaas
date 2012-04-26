@@ -49,7 +49,8 @@ class LBGetIndexWorker(SyncronousWorker):
         self._task.status = STATUS_PROGRESS
         store = Storage()
         reader = store.getReader()
-        list = reader.getLoadBalancers()
+        tenant_id = self._task.parameters.get('tenant_id',  "")
+        list = reader.getLoadBalancers(tenant_id)
         self._task.status = STATUS_DONE
         return list
 
@@ -60,10 +61,11 @@ class LBFindforVM(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        vm_id = self._task.parameters
+        vm_id = self._task.parameters['vm_id']
+        tenant_id = self._task.parameters.get('tenant_id', "")
         store = Storage()
         reader = store.getReader()
-        list = reader.getLoadBalancersByVMid(vm_id)
+        list = reader.getLoadBalancersByVMid(vm_id,  tenant_id)
         self._task.status = STATUS_DONE
         return list
         

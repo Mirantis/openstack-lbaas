@@ -17,6 +17,8 @@
 
 import sqlite3
 import threading 
+
+
 from balancer.loadbalancers.loadbalancer import *
 from openstack.common import exception
 from balancer.devices.device import LBDevice
@@ -37,8 +39,8 @@ class SQLExecute(object):
             try:
                 cursor.execute(command)
                 executed = True
-            except OperationalError:
-                logger.info("Got database locked exception. Waiting a bit and resubmit again")
+            except OperationalError as ex:
+                logger.info("Got database exception. Msg: %s" % ex.message)
                 
                 
 
@@ -78,10 +80,10 @@ class Reader(SQLExecute):
                                     'sip-header': SIPHeaderSticky(), \
                                     'v6prefix': v6PrefixSticky()}
 
-    def getLoadBalancers(self):
+    def getLoadBalancers(self,  tenant_id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM loadbalancers')
+        cursor.execute('SELECT * FROM loadbalancers WHERE tenant_id="%s"' % tenant_id)
         rows = cursor.fetchall()
         if rows == None:
             raise exception.NotFound()
@@ -235,11 +237,14 @@ class Reader(SQLExecute):
             list.append(rs)
         return list
         
-    def getLoadBalancersByVMid(self,  vm_id):
+    def getLoadBalancersByVMid(self,  vm_id,  tenant_id):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
-        cursor.execute('SELECT rservers.id, serverfarms.lb_id FROM rservers, \
-        serverfarms WHERE rservers.vm_id="%s" AND rservers.sf_id=serverfarms.id' % vm_id)
+        command = 'SELECT rservers.id, serverfarms.lb_id FROM rservers, \
+        serverfarms, loadbalancers WHERE rservers.vm_id="%s" AND rservers.sf_id=serverfarms.id AND \
+        loadbalancers.id = serverfarms.lb_id and loadbalancers.tenant_id="%s"' % (vm_id,  tenant_id)
+        logger.debug("Executing command to retrieve loadbalancer for vm: %s" % command)
+        cursor.execute(command)
         rows = cursor.fetchall()
         if rows == None:
             raise exception.NotFound()
@@ -766,7 +771,10 @@ class Storage(object):
         if conf == None:
             conf_data = Configuration.Instance()
             conf = conf_data.get()
-            db = conf.db_path
+            if isinstance(conf,  dict):
+                db = conf['db_path']
+            else:
+                db = conf.db_path                
         else:
             db = conf['db_path']
         self._db = db
