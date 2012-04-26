@@ -48,6 +48,7 @@ class DNSprobe(Probe):
     def __init__(self):
         Probe.__init__(self)
         self.domainName = ""
+        self.destIP = ""
 
 
 class ECHOUDPprobe(Probe):
