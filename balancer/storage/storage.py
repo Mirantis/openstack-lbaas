@@ -229,8 +229,8 @@ class Reader(SQLExecute):
         if id == None:
             raise exception.NotFound("Empty rservers ip.")
         cursor.execute('SELECT * FROM rservers WHERE parent_id= "%s"' % id)
-        row = cursor.fetchall()
-        if row == None:
+        rows = cursor.fetchall()
+        if rows == None:
             raise exception.NotFound()
         list = []
         for row in rows:
