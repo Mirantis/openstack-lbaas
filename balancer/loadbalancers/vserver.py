@@ -247,6 +247,9 @@ def makeDeleteLBCommandChain(bal,  driver,  context):
     for pr in bal.probes:
         list.append(DeleteProbeFromSFCommand(driver,  context,  bal.sf,  pr))
         list.append(DeleteProbeCommand(driver,  context,  pr))
+    if  len(bal.sf._sticky) > 0:
+        for st in bal.sf._sticky:
+            list.append(DeleteStickyCommand(driver, context, st))
     list.append(DeleteServerFarmCommand(driver, context,  bal.sf))
 
     return list
