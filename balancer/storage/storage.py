@@ -222,7 +222,23 @@ class Reader(SQLExecute):
         rs = RealServer()
         rs.loadFromDict(row)
         return rs
-        
+
+    def getRServersByParentID(self,  id):
+        self._con.row_factory = sqlite3.Row
+        cursor = self._con.cursor()
+        if id == None:
+            raise exception.NotFound("Empty rservers ip.")
+        cursor.execute('SELECT * FROM rservers WHERE parent_id= "%s"' % id)
+        row = cursor.fetchall()
+        if row == None:
+            raise exception.NotFound()
+        list = []
+        for row in rows:
+            rs = RealServer()
+            rs.loadFromDict(row)
+            list.append(rs)
+        return list
+
     def getRServers(self):
         self._con.row_factory = sqlite3.Row
         cursor = self._con.cursor()
