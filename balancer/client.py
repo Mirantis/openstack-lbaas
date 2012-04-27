@@ -132,7 +132,23 @@ class V1Client(base_client.BaseClient):
     def delete_lb(self,  lb_id):
         res=self.do_request("DELETE", "loadbalancers/%s" % lb_id)
         return res
+        
+    def get_sticky_list(self):
+        list =["http-cookie",  "ip-netmask",  "http-header"]
+        return list
     
+    def add_probe_to_lb(self,  probe,  lb_id):
+        body = json.dumps(probe)
+        res=self.do_request("PUT", "loadbalancers/%s/healthMonitoring" % lb_id, body,
+                        {'content-type': 'application/json'})
+        return True
+        
+    def add_sticky_to_lb(self,  sticky,  lb_id):
+        body = json.dumps(sticky)
+        res=self.do_request("PUT", "loadbalancers/%s/sessionPersistence" % lb_id, body,
+                        {'content-type': 'application/json'})
+        return True
+        
     def add_image(self, image_meta=None, image_data=None, features=None):
         """
         Tells Glance about an image's metadata as well
