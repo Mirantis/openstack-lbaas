@@ -307,7 +307,7 @@ class AceDriver(BaseDriver):
             cmd += "failaction " + serverfarm.failAction + "\n"
 
         if self.checkNone(serverfarm._predictor.type):
-    		pr = serverfarm._predictor.type.lower()
+    	    pr = serverfarm._predictor.type.lower()
             if (pr == "leastbandwidth"):
                 pr = "least-bandwidth"
             elif (pr == "leastconnections"):
