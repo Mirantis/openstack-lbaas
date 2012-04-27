@@ -383,16 +383,21 @@ class DeleteRServerCommand(object):
     def execute(self):
         store = balancer.storage.storage.Storage()
         reader = store.getReader()
+        logger.debug("Got delete RS request")
         if self._rs.parent_id != "" and balancer.common.utils.checkNone(self._rs.parent_id):
             # rs2
+            logger.debug("First branch of if")
             rss = reader.getRServersByParentID(self._rs.parent_id)
+            logger.debug("Length of rss = %s" % len(rss))
             if len(rss) == 1:
                 parent_rs = reader.getRServerById(self._rs.parent_id)
                 self._driver.deleteRServer(self._context,   parent_rs)
         else:
             # rs1
             # We need to check if there are reals who reference this rs as a parent
+            logger.debug("Second branch of if")
             rss = reader.getRServersByParentID(self._rs.id)
+            logger.debug("Length of rss = %s" % len(rss))
             if len(rss) == 0:
                 self._driver.deleteRServer(self._context,   self._rs)
             pass
