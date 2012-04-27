@@ -249,8 +249,8 @@ class DeleteLBWorker(SyncronousWorker):
         #Step 1. Parse parameters came from request
         #bal_deploy.parseParams(params)
 
-        #Step 2. Delete config in DB
-        balancer_instance.removeFromDB()
+#        #Step 2. Delete config in DB
+#        balancer_instance.removeFromDB()
 
         #Step 3. Destruct config at device
         commands = makeDeleteLBCommandChain(balancer_instance,  \
@@ -258,7 +258,8 @@ class DeleteLBWorker(SyncronousWorker):
         destruct = Destructor()
         destruct.commands = commands
         destruct.execute()
-
+        
+        balancer_instance.removeFromDB()
         self._task.status = STATUS_DONE
         return "OK"
 
