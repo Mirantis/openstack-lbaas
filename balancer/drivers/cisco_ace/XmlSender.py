@@ -43,7 +43,8 @@ class XmlSender:
 
         request.add_header("Authorization", authheader)
 
-        data = """xml_cmd=<request_raw>\nconfigure\n%s\nend\n</request_raw>""" % command
+        data = """xml_cmd=<request_raw>\nconfigure
+               \n%s\nend\n</request_raw>""" % command
         logger.debug("send data to ACE:\n" + data)
 
         try:
@@ -55,9 +56,7 @@ class XmlSender:
         logger.debug("data from ACE:\n" + s)
 
         if (s.find('XML_CMD_SUCCESS') > 0):
-            return 'OK'
-        else:
-            return s
+            raise openstack.common.exception.Invalid(s)
 
     def getConfig(self,  context,  command):
         request = urllib2.Request(self.url)
@@ -69,7 +68,8 @@ class XmlSender:
 
         request.add_header("Authorization", authheader)
 
-        data = """xml_cmd=<request_raw>\n%s\n</request_raw>""" % command
+        data = """xml_cmd=<request_raw>\nshow runn %s\n</request_raw>""" \
+               % command
         logger.debug("send data to ACE:\n" + data)
 
         try:
@@ -80,7 +80,4 @@ class XmlSender:
 
         logger.debug("data from ACE:\n" + s)
 
-        if (s.find('XML_CMD_SUCCESS') > 0):
-            return 'OK'
-        else:
-            return s
+        return s

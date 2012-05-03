@@ -33,10 +33,7 @@ class AceDriver(BaseDriver):
     def send_data(self,  context,  cmd):
         s = XmlSender(context)
         tmp = s.deployConfig(context,  cmd)
-        if (tmp == 'OK'):
-            return tmp
-        else:
-            raise openstack.common.exception.Invalid(tmp)
+        return tmp
 
     def getContext(self,  dev):
         logger.debug("Creating context with params: IP %s, Port: %s" % \
@@ -562,7 +559,11 @@ class AceDriver(BaseDriver):
         cmd = "access-list vip-acl extended permit ip any host " + \
             vip.address + "\n"
         return self.send_data(context,  cmd)
-            
+
+    def deleteACLEntry(self,  context,  vip):
+        cmd = "no access-list vip-acl extended permit ip any host " + \
+              vip.address + "\n"
+        return self.send_data(context,  cmd)
 
     def createVIP(self,  context, vip,  sfarm):
         sn = "2"
@@ -608,10 +609,7 @@ class AceDriver(BaseDriver):
             cmd += "loadbalance vip icmp-reply\n"
 
         cmd += "exit\nexit\n"
-        s = XmlSender(context)
-        tmp = s.deployConfig(context,  cmd)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
+        self.send_data(context,  cmd)
 
         if self.checkNone(vip.allVLANs):
             cmd = "service-policy input " + pmap + "\n"
@@ -625,29 +623,27 @@ class AceDriver(BaseDriver):
                 for i in vip.VLAN:
                     cmd = "interface vlan " + str(i) + "\n"
                     cmd += "service-policy input " + pmap + "\n"
-                    tmp = s.deployConfig(context,  cmd)
+                    self.send_data(context,  cmd)
                     
                     cmd = "interface vlan " + str(i) + "\n"
                     cmd += "access-group input vip-acl\n"
-                    tmp = s.deployConfig(context,  cmd)
-                    # WE DO NOT SHOULD CREATE ACCESS GROUP FOR EACH VLAN
-                    #try:
+                    try:
                         # Try to add access list. if it is already
                         # assigned exception will occur
-                    #    tmp = s.deployConfig(context,  cmd)
-                    #except:
-                    #    logger.warning("Got exception on acl set")                    
+                        self.send_data(context,  cmd)
+                    except:
+                        logger.warning("Got exception on acl set")                    
                     
             else:
                     cmd = "interface vlan " + str(vip.VLAN) + "\n"
                     cmd += "service-policy input " + pmap + "\n"
-                    tmp = s.deployConfig(context,  cmd)
+                    self.send_data(context,  cmd)
                     cmd = "interface vlan " + str(vip.VLAN) + "\n"
                     cmd += "access-group input vip-acl\n"
                     try:
-                        tmp = s.deployConfig(context,  cmd)
+                        self.send_data(context,  cmd)
                     except:
-                       logger.warning("Got exception on acl set")                    
+                        logger.warning("Got exception on acl set")                    
         return 'OK'
 
     def deleteVIP(self,  context,  vip):
@@ -658,54 +654,36 @@ class AceDriver(BaseDriver):
 
         cmd = "policy-map multi-match " + pmap + "\n"
         cmd += " no class " + vip.name + "\n"
-        logger.debug("pmap name is %s" % pmap)
-        logger.debug("Trying to do %s" % cmd)
-        s = XmlSender(context)
-        tmp = s.deployConfig(context,  cmd)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
+        self.send_data(context,  cmd)
 
-        # Delete policy-map, class-map and access-list
-        if vip.appProto.lower() == "other" or vip.appProto.lower() == "http":
-            vip.appProto = ""
-        else:
-            vip.appProto = "_" + vip.appProto.lower()
+        cmd = "no class-map match-all " + vip.name + "\n"
+        self.send_data(context,  cmd)
+
         cmd = "no policy-map type loadbalance " + \
               "first-match " + vip.name + "-l7slb\n"
 
-        cmd += "no class-map match-all " + vip.name + "\n"
+        self.send_data(context,  cmd)
 
-        tmp = s.deployConfig(context,  cmd)
-        if (tmp != 'OK'):
-            raise openstack.common.exception.Invalid(tmp)
+        cmd = "policy-map %s" % pmap 
+        tmp = s.getConfig(context,  cmd)
 
-        cmd = 'show running-config policy-map %s' % pmap
-        last_policy_map = \
-            self.checkNone(s.getConfig(context,  cmd).find('class'))
-
-        if (last_policy_map):
-            # Remove service-policy from VLANs
-            #(Perform if deleted last VIP with it service-policy)
+        if (tmp.find("class") <= 0):
             if self.checkNone(vip.allVLANs):
                 cmd = "no service-policy input " + pmap + "\n"
-                try:
-                    tmp = s.deployConfig(context,  cmd)
-                except:
-                    logger.warning("Got exception on acl set")  
+                self.send_data(context,  cmd)
             else:
-                #  Add service-policy for necessary vlans
                 if is_sequence(vip.VLAN):
                     for i in vip.VLAN:
                         cmd = "interface vlan " + str(i) + "\n"
                         cmd += "no service-policy input " + pmap + "\n"
-                        tmp = s.deployConfig(context,  cmd)
-
-                        cmd = "interface vlan " + str(i) + "\n"
-                        cmd += "no access-group input vip-acl\n"
-                        tmp = s.deployConfig(context,  cmd)
+                        self.send_data(context,  cmd)
                 else:
                         cmd = "interface vlan " + str(vip.VLAN) + "\n"
                         cmd += "no service-policy input " + pmap + "\n"
-                        cmd += "no access-group input vip-acl\n"
-                        tmp = s.deployConfig(context,  cmd)
+                        self.send_data(context,  cmd)
+            cmd = "no policy-map multi-match " + pmap + "\n"
+            self.send_data(context,  cmd)
+
+        self.deleteACLEntry(context,  vip)
+
         return "OK"
