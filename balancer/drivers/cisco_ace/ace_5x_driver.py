@@ -592,6 +592,7 @@ class AceDriver(BaseDriver):
 
         cmd = "policy-map type loadbalance " + vip.appProto + \
             " first-match " + vip.name + "-l7slb\n"
+        cmd += "description " + vip.description + "\n"
         cmd += "class class-default\n"
         cmd += "serverfarm " + sfarm.name
         if self.checkNone(vip.backupServerFarm):
@@ -600,6 +601,7 @@ class AceDriver(BaseDriver):
 
         # Add a class-map
         cmd += "class-map match-all " + vip.name + "\n"
+        cmd += "description " + vip.description + "\n"
         cmd += "match virtual-address " + vip.address + \
             " " + str(vip.mask) + " " + vip.proto.lower()
         if vip.proto.lower() != "any":
