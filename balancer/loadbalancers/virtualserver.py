@@ -27,6 +27,7 @@ class VirtualServer(Serializeable,  UniqueObject):
         Serializeable.__init__(self)
         UniqueObject.__init__(self)
         self.name = ""
+        self.description = ""
         self.ipVersion = "IPv4"
         self.address = ""
         self.mask = "255.255.255.255"
