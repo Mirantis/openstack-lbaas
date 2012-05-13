@@ -28,7 +28,8 @@ logger = logging.getLogger(__name__)
 
 class XmlSender:
     def __init__(self,  context):
-        self.url = "https://%s:10443/bin/xml_agent" % (context.ip)
+        #port 10443
+        self.url = "https://%s:%s/bin/xml_agent" % (context.ip,  context.port)
 
     def getParam(self, name):
         return self._params.get(name,  None)

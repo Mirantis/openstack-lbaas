@@ -301,8 +301,10 @@ def makeDeleteStickyFromLBChain(bal, driver, context, sticky):
 
 
 class Deployer(object):
-    def __init__(self):
+    def __init__(self,  device,  context):
         self.commands = []
+        self.device = device
+        self.context = context
 
     def execute(self):
         for index in range(len(self.commands)):
@@ -331,8 +333,9 @@ class Deployer(object):
 
 
 class Destructor(object):
-    def __init__(self):
+    def __init__(self,  device):
         self.commands = []
+        self.device = device
 
     def execute(self):
         for index in range(len(self.commands)):

@@ -87,7 +87,7 @@ class ServiceController():
         logger.debug("Service controller instance created.")
         self._tasks = {}
         self.lock = threading.Lock()
-        self._scheduller = Scheduller()
+        self._scheduller = Scheduller.Instance()
 
     @property
     def scheduller(self):

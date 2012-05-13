@@ -16,6 +16,7 @@
 #    under the License.
 
 import sqlite3
+import MySQLdb as mdb
 import threading 
 
 
@@ -32,6 +33,8 @@ from balancer.loadbalancers.virtualserver import VirtualServer
 from balancer.loadbalancers.vlan import VLAN
 logger = logging.getLogger(__name__)
 
+
+DATABASE_TYPE = 'mysql'
 class SQLExecute(object):
     def execute(self,cursor,  command):
         executed = False
@@ -48,7 +51,10 @@ class Reader(SQLExecute):
     """ Reader class is used for db read opreations"""
     def __init__(self,  db):
         logger.debug("Reader: connecting to db: %s" % db)
-        self._con = sqlite3.connect(db)
+        if DATABASE_TYPE =='mysql':
+            self._con = mdb.connect('localhost',  'root',  'swordfish',  'balancer')
+        else:
+            self._con = sqlite3.connect(db)
         self._probeDict = {'DNS': DNSprobe(), 'ECHO TCP': ECHOTCPprobe(), \
                         'ECHO-UDP': ECHOUDPprobe(), 'FINGER': FINGERprobe(), \
                         'FTP': FTPprobe(), 'HTTPS': HTTPSprobe(), \
@@ -82,7 +88,10 @@ class Reader(SQLExecute):
 
     def getLoadBalancers(self,  tenant_id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM loadbalancers WHERE tenant_id="%s"' % tenant_id)
         rows = cursor.fetchall()
         if rows == None:
@@ -96,7 +105,10 @@ class Reader(SQLExecute):
 
     def getLoadBalancerById(self,  id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM loadbalancers WHERE id = "%s"' % id)
         row = cursor.fetchone()
         if row == None:
@@ -107,7 +119,10 @@ class Reader(SQLExecute):
 
     def getDeviceById(self,  id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         if id == None:
             raise exception.NotFound("Empty device id.")
         cursor.execute('SELECT * FROM devices WHERE id = "%s"' % id)
@@ -120,7 +135,10 @@ class Reader(SQLExecute):
 
     def getDeviceByLBid(self,  id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         if id == None:
             raise exception.NotFound("Empty device id.")
         cursor.execute('SELECT * FROM loadbalancers WHERE id = "%s"' % id)
@@ -135,7 +153,10 @@ class Reader(SQLExecute):
 
     def getDevices(self):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM devices')
         rows = cursor.fetchall()
         if rows == None:
@@ -149,7 +170,10 @@ class Reader(SQLExecute):
 
     def getProbeById(self, id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM probes WHERE id = "%s"' % id)
         row = cursor.fetchone()
         if row == None:
@@ -160,7 +184,10 @@ class Reader(SQLExecute):
 
     def getProbes(self):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM probes')
         rows = cursor.fetchall()
         if rows == None:
@@ -174,7 +201,10 @@ class Reader(SQLExecute):
 
     def getStickyById(self, id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+             cursor = self._con.cursor()
         cursor.execute('SELECT * FROM stickies WHERE id = "%s"' % id)
         row = cursor.fetchone()
         if row == None:
@@ -185,7 +215,10 @@ class Reader(SQLExecute):
 
     def getStickies(self):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM stickies')
         rows = cursor.fetchall()
         if rows == None:
@@ -199,7 +232,10 @@ class Reader(SQLExecute):
         
     def getRServerById(self,  id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         if id == None:
             raise exception.NotFound("Empty device id.")
         cursor.execute('SELECT * FROM rservers WHERE id = "%s"' % id)
@@ -212,7 +248,10 @@ class Reader(SQLExecute):
 
     def getRServerByIP(self,  ip):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         if ip == None:
             raise exception.NotFound("Empty device ip.")
         cursor.execute('SELECT * FROM rservers WHERE address= "%s" and deployed="True"' % ip)
@@ -225,7 +264,10 @@ class Reader(SQLExecute):
 
     def getRServersByParentID(self,  id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         if id == None:
             raise exception.NotFound("Empty rservers ip.")
         cursor.execute('SELECT * FROM rservers WHERE parent_id= "%s"' % id)
@@ -241,7 +283,10 @@ class Reader(SQLExecute):
 
     def getRServers(self):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM rservers')
         rows = cursor.fetchall()
         if rows == None:
@@ -255,7 +300,10 @@ class Reader(SQLExecute):
         
     def getLoadBalancersByVMid(self,  vm_id,  tenant_id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = 'SELECT rservers.id, serverfarms.lb_id FROM rservers, \
         serverfarms, loadbalancers WHERE rservers.vm_id="%s" AND rservers.sf_id=serverfarms.id AND \
         loadbalancers.id = serverfarms.lb_id and loadbalancers.tenant_id="%s"' % (vm_id,  tenant_id)
@@ -273,7 +321,10 @@ class Reader(SQLExecute):
 
     def getRServersByVMid(selfself,  vm_id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM rservers WHERE rservers.vm_id="%s"' % vm_id)
         rows = cursor.fetchall()
         if rows == None:
@@ -287,7 +338,10 @@ class Reader(SQLExecute):
 
     def getRServersByVMidForLB(selfself,  vm_id,  lb_id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT rservers.* FROM rservers, serverfarms WHERE \
         rservers.vm_id="%s" and rservers.sf_id=serverfarms.id and serverframs.lb_id="%s" ' % (vm_id,  lb_id))
         rows = cursor.fetchall()
@@ -302,7 +356,10 @@ class Reader(SQLExecute):
         
     def getPreditorById(self, id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM predictors WHERE id = "%s"' % id)
         row = cursor.fetchone()
         if row == None:
@@ -313,7 +370,10 @@ class Reader(SQLExecute):
 
     def getPredictors(self):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM predictors')
         rows = cursor.fetchall()
         if rows == None:
@@ -327,7 +387,10 @@ class Reader(SQLExecute):
 
     def getServerFarmById(self, id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM serverfarms WHERE id = "%s"' % id)
         row = cursor.fetchone()
         if row == None:
@@ -338,7 +401,10 @@ class Reader(SQLExecute):
 
     def getServerFarms(self):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM serverfarms')
         rows = cursor.fetchall()
         if rows == None:
@@ -352,7 +418,10 @@ class Reader(SQLExecute):
 
     def getVirtualServerById(self, id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM vips WHERE id = "%s"' % id)
         row = cursor.fetchone()
         if row == None:
@@ -363,7 +432,10 @@ class Reader(SQLExecute):
 
     def getVirtualServers(self):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM vips')
         rows = cursor.fetchall()
         if rows == None:
@@ -377,7 +449,10 @@ class Reader(SQLExecute):
 
     def getServerFarms(self):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM serverfarms')
         rows = cursor.fetchall()
         if rows == None:
@@ -391,7 +466,10 @@ class Reader(SQLExecute):
 
     def getVLANbyId(self, id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM vlans WHERE id = "%s"' % id)
         row = cursor.fetchone()
         if row == None:
@@ -402,7 +480,10 @@ class Reader(SQLExecute):
 
     def getVLANs(self):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM vlans')
         rows = cursor.fetchall()
         if rows == None:
@@ -416,7 +497,10 @@ class Reader(SQLExecute):
 
     def getSFByLBid(self,  id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM loadbalancers WHERE id = "%s"' % id)
         dict = cursor.fetchone()
         cursor.execute('SELECT * FROM serverfarms WHERE lb_id = "%s"' % \
@@ -428,7 +512,10 @@ class Reader(SQLExecute):
 
     def getRServersBySFid(self, id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM rservers WHERE sf_id = "%s"' % id)
         rows = cursor.fetchall()
         list = []
@@ -440,7 +527,10 @@ class Reader(SQLExecute):
 
     def getStickiesBySFid(self, id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM stickies WHERE sf_id = "%s"' % id)
         rows = cursor.fetchall()
         list = []
@@ -452,7 +542,10 @@ class Reader(SQLExecute):
         
     def getProbesBySFid(self, id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM probes WHERE sf_id = "%s"' % id)
         rows = cursor.fetchall()
         list = []
@@ -464,7 +557,10 @@ class Reader(SQLExecute):
 
     def getPredictorBySFid(self, id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM predictors WHERE sf_id = "%s"' % id)
         rows = cursor.fetchone()
         pred = self._predictDict[rows['type']].createSame()
@@ -473,7 +569,10 @@ class Reader(SQLExecute):
 
     def getVIPsBySFid(self, id):
         self._con.row_factory = sqlite3.Row
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         cursor.execute('SELECT * FROM vips WHERE sf_id = "%s"' % id)
         rows = cursor.fetchall()
         list = []
@@ -487,13 +586,19 @@ class Reader(SQLExecute):
 class Writer(SQLExecute):
     def __init__(self,  db):
         logger.debug("Writer: connecting to db: %s" % db)
-        self._con = sqlite3.connect(db)
+        if DATABASE_TYPE =='mysql':
+            self._con = mdb.connect('localhost',  'root',  'swordfish',  'balancer')
+        else:
+            self._con = sqlite3.connect(db)
     
              
 
     def writeLoadBalancer(self,  lb):
         logger.debug("Saving LoadBalancer instance in DB.")
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         dict = lb.convertToDict()
         command = self.generateCommand("INSERT INTO loadbalancers (", dict)
         msg = "Executing command: %s" % command
@@ -503,7 +608,10 @@ class Writer(SQLExecute):
 
     def writeDevice(self,  device):
         logger.debug("Saving Device instance in DB.")
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         dict = device.convertToDict()
         command = self.generateCommand(" INSERT INTO devices (", dict)
         msg = "Executing command: %s" % command
@@ -513,7 +621,10 @@ class Writer(SQLExecute):
 
     def writeProbe(self, prb):
         logger.debug("Saving Probe instance in DB.")
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         dict = prb.convertToDict()
         command = self.generateCommand(" INSERT INTO probes (", dict)
         msg = "Executing command: %s" % command
@@ -525,7 +636,10 @@ class Writer(SQLExecute):
         if st == None:
             return
         logger.debug("Saving Sticky instance in DB.")
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         dict = st.convertToDict()
         command = self.generateCommand(" INSERT INTO stickies (", dict)
         msg = "Executing command: %s" % command
@@ -550,7 +664,10 @@ class Writer(SQLExecute):
 
     def writeRServer(self,  rs):
         logger.debug("Saving RServer instance in DB.")
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         dict = rs.convertToDict()
         command = self.generateCommand(" INSERT INTO rservers (", dict)
         msg = "Executing command: %s" % command
@@ -560,7 +677,10 @@ class Writer(SQLExecute):
 
     def writePredictor(self, prd):
         logger.debug("Saving Predictor instance in DB.")
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         dict = prd.convertToDict()
         command = self.generateCommand("INSERT INTO predictors (", dict)
         msg = "Executing command: %s" % command
@@ -570,7 +690,10 @@ class Writer(SQLExecute):
 
     def writeServerFarm(self, sf):
         logger.debug("Saving ServerFarm instance in DB.")
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         dict = sf.convertToDict()
         command = self.generateCommand("INSERT INTO serverfarms (", dict)
         msg = "Executing command: %s" % command
@@ -580,7 +703,10 @@ class Writer(SQLExecute):
 
     def writeVirtualServer(self, vs):
         logger.debug("Saving VirtualServer instance in DB.")
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         dict = vs.convertToDict()
         command = self.generateCommand("INSERT INTO vips (", dict)
         msg = "Executing command: %s" % command
@@ -590,7 +716,10 @@ class Writer(SQLExecute):
 
     def writeVLAN(self, vlan):
         logger.debug("Saving VLAN instance in DB.")
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         dict = vlan.convertToDict()
         command = self.generateCommand("INSERT INTO vlans (", dict)
         msg = "Executing command: %s" % command
@@ -627,14 +756,20 @@ class Writer(SQLExecute):
             logger.debug("Updating table %s in DB." % table)
             dict = obj.convertToDict()
             command = self.generateUpdateCommand(table,  dict,  obj.id)
-            cursor = self._con.cursor()
+            if DATABASE_TYPE == 'mysql':
+                cursor = self._con.cursor(mdb.cursors.DictCursor)
+            else:
+                cursor = self._con.cursor()
             logger.debug("Executing command: %s" % command)
             self.execute(cursor, command)
         self._con.commit()
 
     def updateDeployed(self,  obj,  status):
             table = self.getTableForObject(obj)
-            cursor = self._con.cursor()
+            if DATABASE_TYPE == 'mysql':
+                cursor = self._con.cursor(mdb.cursors.DictCursor)
+            else:
+                cursor = self._con.cursor()
             cursor.execute("UPDATE %s SET deployed='%s' WHERE id='%s'" % (table, status, obj.id))
             self._con.commit()
         
@@ -658,10 +793,16 @@ class Writer(SQLExecute):
 class Deleter(SQLExecute):
     def __init__(self,  db):
         logger.debug("Deleter: connecting to db: %s" % db)
-        self._con = sqlite3.connect(db)
+        if DATABASE_TYPE =='mysql':
+            self._con = mdb.connect('localhost',  'root',  'swordfish',  'balancer')
+        else:
+            self._con = sqlite3.connect(db)
 
     def deleteRSbyID(self, id):
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = "DELETE from rservers where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
@@ -669,7 +810,10 @@ class Deleter(SQLExecute):
         self._con.commit()
 
     def deleteRSsBySFid(self, id):
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = "DELETE from rservers where  sf_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
@@ -677,7 +821,10 @@ class Deleter(SQLExecute):
         self._con.commit()
 
     def deleteVSbyID(self, id):
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = "DELETE from vips where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
@@ -685,7 +832,10 @@ class Deleter(SQLExecute):
         self._con.commit()
 
     def deleteVSsBySFid(self,  id):
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = "DELETE from vips where  sf_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
@@ -693,7 +843,10 @@ class Deleter(SQLExecute):
         self._con.commit()
 
     def deleteProbeByID(self,  id):
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = "DELETE from probes where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
@@ -701,7 +854,10 @@ class Deleter(SQLExecute):
         self._con.commit()
 
     def deleteProbesBySFid(self, id):
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = "DELETE from probes where probes.sf_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
@@ -709,7 +865,10 @@ class Deleter(SQLExecute):
         self._con.commit()
 
     def deleteStickyByID(self,  id):
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = "DELETE from stickies where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
@@ -717,7 +876,10 @@ class Deleter(SQLExecute):
         self._con.commit()
 
     def deleteStickiesBySFid(self, id):
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = "DELETE from stickies where sf_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
@@ -725,7 +887,10 @@ class Deleter(SQLExecute):
         self._con.commit()
 
     def deleteLBbyID(self,  id):
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = "DELETE from loadbalancers where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
@@ -733,7 +898,10 @@ class Deleter(SQLExecute):
         self._con.commit()
 
     def deleteDeviceByID(self, id):
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = "DELETE from devices where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
@@ -741,7 +909,10 @@ class Deleter(SQLExecute):
         self._con.commit()
 
     def deletePredictorByID(self, id):
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = "DELETE from predictors where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
@@ -749,7 +920,10 @@ class Deleter(SQLExecute):
         self._con.commit()
 
     def deletePredictorBySFid(self, id):
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = "DELETE from predictors where sf_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
@@ -757,7 +931,10 @@ class Deleter(SQLExecute):
         self._con.commit()
 
     def deleteSFbyID(self, id):
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = "DELETE from serverfarms where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
@@ -765,7 +942,10 @@ class Deleter(SQLExecute):
         self._con.commit()
 
     def deleteSFbyLBid(self, id):
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = "DELETE from serverfarms where lb_id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)
@@ -773,7 +953,10 @@ class Deleter(SQLExecute):
         self._con.commit()
 
     def deleteVLANbyID(self,  id):
-        cursor = self._con.cursor()
+        if DATABASE_TYPE == 'mysql':
+            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        else:
+            cursor = self._con.cursor()
         command = "DELETE from vlans where id = '%s'" % id
         msg = "Executing command: %s" % command
         logger.debug(msg)

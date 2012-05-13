@@ -116,17 +116,21 @@ class API(wsgi.Router):
 
         mapper.connect("/devices/{id}", controller=device_resource,
                        action="device_data")
-        mapper.connect("/devices/{id}/{info}", controller=device_resource,
+        mapper.connect("/devices/{id}/status", controller=device_resource,
+                       action="device_status")
+        mapper.connect("/devices/{id}/info", controller=device_resource,
                        action="device_info")
+        
 
         mapper.connect("/devices/",
                        controller=device_resource,
                        action="create",
                        conditions=dict(method=["POST"]))
+        
 
         tasks_resource = tasks.create_resource(self.conf)
-        mapper.resource("task", "tasks", controller=tasks_resource,
+        mapper.resource("tasks", "tasks", controller=tasks_resource,
                         collection={'detail': 'GET'})
-        mapper.connect("/tasks/", controller=tasks_resource, action="index")
+        mapper.connect("/service/processing", controller=tasks_resource, action="index_processing")
 
         super(API, self).__init__(mapper)

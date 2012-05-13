@@ -37,6 +37,10 @@ makeDeleteProbeFromLBChain,  ActivateRServerCommand,  SuspendRServerCommand
 from balancer.loadbalancers.vserver import Deployer,  Destructor, \
 createPredictor,  createProbe,  createSticky
 
+import balancer.processing.event
+from balancer.processing.processing import Processing
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -123,7 +127,7 @@ class CreateLBWorker(ASyncronousWorker):
         #Step 1. Parse parameters came from request
 
         balancer_instance.parseParams(params)
-        sched = Scheduller()
+        sched = Scheduller.Instance()
         # device = sched.getDevice()
         device = sched.getDeviceByID(balancer_instance.lb.device_id)
         devmap = DeviceMap()
@@ -139,10 +143,15 @@ class CreateLBWorker(ASyncronousWorker):
         #Step 3. Deploy config to device
         commands = makeCreateLBCommandChain(balancer_instance,  driver, \
         context)
-        deploy = Deployer()
+        context.addParam('balancer',  balancer_instance)
+        deploy = Deployer(device,  context)
         deploy.commands = commands
+        processing = Processing.Instance()
+        event = balancer.processing.event.Event( balancer.processing.event.EVENT_PROCESS, 
+                                                deploy,  2)
         try:
-            deploy.execute()
+            processing.put_event(event)
+            
         except openstack.common.exception.Error:
             balancer_instance.lb.status = \
                 balancer.loadbalancers.loadbalancer.LB_ERROR_STATUS
@@ -154,10 +163,10 @@ class CreateLBWorker(ASyncronousWorker):
             balancer_instance.update()
             return
 
-        balancer_instance.lb.status = \
-            balancer.loadbalancers.loadbalancer.LB_ACTIVE_STATUS
-        balancer_instance.update()
-        self._task.status = STATUS_DONE
+        #balancer_instance.lb.status = \
+         #   balancer.loadbalancers.loadbalancer.LB_ACTIVE_STATUS
+        #balancer_instance.update()
+        #self._task.status = STATUS_DONE
         return lb.id
 
 

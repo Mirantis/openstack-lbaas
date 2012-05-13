@@ -26,7 +26,7 @@ CREATE INDEX rservers_vm_id_idx ON rservers (vm_id);
 CREATE TABLE transactions (id TEXT, status TEXT, action TEXT, params TEXT);
 
 CREATE TABLE devices (id TEXT,  name  TEXT, type TEXT, version TEXT, supports_ipv6 INT, requires_vip_ip INT, has_acl INT, supports_vlan INT, ip TEXT, port TEXT, 
-        user TEXT, password TEXT, vip_vlan TEXT, localpath TEXT, configfilepath TEXT, remotepath TEXT, interface TEXT, deployed TEXT);
+        user TEXT, password TEXT, vip_vlan TEXT, localpath TEXT, configfilepath TEXT, remotepath TEXT, interface TEXT, deployed TEXT, concurrent_deploys TEXT);
 
 CREATE TABLE vips(id TEXT, sf_id TEXT, name TEXT, ipVersion TEXT, address TEXT, mask TEXT, proto TEXT, appProto TEXT, port TEXT, allVLANs TEXT, VLAN TEXT,
         connParameterMap  TEXT,  KALAPtagName TEXT,  KALAPprimaryOutOfServ TEXT,  ICMPreply TEXT,  status TEXT,  protocolInspect TEXT,  appAccelAndOpt TEXT,

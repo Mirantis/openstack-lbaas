@@ -48,7 +48,7 @@ class RealServer(Serializeable,  UniqueObject):
         self.updated = None
         self.status = None
         self.cookieStr = None
-        self.condition = "ENABLED"
+        self.adminstatus = "ENABLED"
         self.vm_instance = ""
         self.parent_id = ""
         self.vm_id = ""

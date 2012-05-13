@@ -21,6 +21,7 @@ from balancer.drivers.BaseDriver import BaseContext
 
 class Context(BaseContext):
     def __init__(self, ip, port, login, password):
+        BaseContext.__init__(self)
         self.ip = ip
         self.port = port
         self.login = login

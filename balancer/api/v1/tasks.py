@@ -25,6 +25,8 @@ from balancer.core.ServiceController import *
 from balancer.core.LoadBalancerCommandsWorker import *
 from balancer.core.Worker import *
 
+from balancer.processing.processing import Processing
+
 
 from balancer.core.ServiceController import (ServiceController,  ServiceTask)
 
@@ -40,13 +42,20 @@ class Controller(object):
         self.conf = conf
         self._service_controller = ServiceController.Instance()
 
-    def index(self, req):
+    def index_processing(self, req):
         try:
             msg = "Got index request. Request: %s" % req
             logger.debug(msg)
 
-            list = self._servicecontroller.getTasks()
-            return {'tasks': list}
+            proc = Processing.Instance()
+            status = {}
+            status['queue_size'] = proc.getQueueSize()
+            status['working_threads'] = proc.getThreadCount()
+            thr_stat = {}
+            for i in range(proc.getThreadCount()):
+                thr_stat[i] = proc.getThreadStatus(i)
+            status['thread_status'] = thr_stat
+            return {'processing_status': status}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id

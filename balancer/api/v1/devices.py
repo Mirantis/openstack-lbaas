@@ -26,6 +26,7 @@ from balancer.devices.device import LBDevice
 from balancer.core.ServiceController import *
 from balancer.core.deviceworkers import *
 from balancer.core.Worker import *
+from balancer.processing.sharedobjects import SharedObjects
 
 logger = logging.getLogger('balancer.api.v1.devices')
 
@@ -129,6 +130,33 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
         return {'devices': list}
+        
+    def device_status(self, req,  **args):
+        try:
+            shared = SharedObjects.Instance()
+            id = args['id']
+            pool = shared.getDevicePoolbyID(id)
+            stats = {}
+            thr_stat={}
+            if pool:
+                stats['command_queue_lenth'] = pool.getQueueSize()
+                stats['threads'] = pool.getThreadCount()
+                for i in range(pool.getThreadCount()):
+                    thr_stat[i] = pool.get_status(i)
+                stats['thread_status'] = thr_stat
+                return {'device_command_status' : stats}
+            else:
+                return {'device_command_status' : 'not available'}
+        except exception.NotFound:
+            msg = "Image with identifier %s not found" % image_id
+            logger.debug(msg)
+            raise webob.exc.HTTPNotFound(msg)
+        except exception.NotAuthorized:
+            msg = _("Unauthorized image access")
+            logger.debug(msg)
+            raise webob.exc.HTTPForbidden(msg)
+        finally:
+            pass
 
     def device_info(self, req, **args):
         try:

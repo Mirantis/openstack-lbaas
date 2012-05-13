@@ -1,15 +1,16 @@
 {
- "name": "ACE19",
+ "name": "ACE50_VC5",
  "type": "ACE",
  "version": "A422",
  "supports_ipv6": 0,
  "requires_vip_ip": 1,
  "has_acl": 1,
  "supports_vlan": 1,
- "ip": "172.20.37.30",
- "port": "10443",
+ "ip": "10.4.72.5",
+ "port": "443",
  "user": "admin",
  "password": "cisco123",
  "vip_vlan": "75"
- 
+
 }
+
