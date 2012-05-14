@@ -355,7 +355,7 @@ class HaproxyConfigFile:
 
     def FindStringInTheBlock(self,  block_type,  check_string):
         """
-            Find string in the blocks
+            Find string in the block
         """
         new_config_file = self._ReadConfigFile()
         for i in new_config_file.keys():

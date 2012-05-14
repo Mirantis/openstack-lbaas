@@ -61,6 +61,9 @@ class RemoteConfig(object):
 
 
 class RemoteService(object):
+    '''
+    Operations with haproxy daemon
+    '''
     def __init__(self, context):
         env.user = context.login
         env.hosts = []
@@ -118,6 +121,9 @@ class RemoteInterface(object):
 
 
 class RemoteSocketOperation(object):
+    '''
+    Remote operations via haproxy socket
+    '''
     def __init__(self, context,  backend,  rserver):
         env.user = context.login
         env.hosts = []
@@ -145,4 +151,18 @@ class RemoteSocketOperation(object):
             out = 'ok'
         logger.debug('[HAPROXY] enable server  %s/%s. Result is "%s"' % \
                       (self.backend_name,  self.rserver_name,  out))
+        disconnect_all()
+    
+    def getRserverStatistics(self):
+        out = sudo ('echo show stat | socat stdio unix-connect:%s | grep %s,%s ' % \
+                  (self.haproxy_socket,  self.backend_name, self.rserver_name ))
+        logger.debug ('[HAPROXY] get statistics about reserver %s/%s. Result is '  % \
+                      (self.backend_name,  self.rserver_name,  out))
+        disconnect_all()
+    
+    def getBackendStatistics(self):
+        out = sudo ('echo show stat | socat stdio unix-connect:%s | grep %s,BACKEND ' % \
+                  (self.haproxy_socket,  self.backend_name, self.rserver_name ))
+        logger.debug ('[HAPROXY] get statistics about backend %s. Result is '  % \
+                      (self.backend_name,  out))       
         disconnect_all()
