@@ -156,13 +156,13 @@ class RemoteSocketOperation(object):
     def getRserverStatistics(self):
         out = sudo ('echo show stat | socat stdio unix-connect:%s | grep %s,%s ' % \
                   (self.haproxy_socket,  self.backend_name, self.rserver_name ))
-        logger.debug ('[HAPROXY] get statistics about reserver %s/%s. Result is '  % \
+        logger.debug ('[HAPROXY] get statistics about reserver %s/%s. Result is %s '  % \
                       (self.backend_name,  self.rserver_name,  out))
         disconnect_all()
     
     def getBackendStatistics(self):
         out = sudo ('echo show stat | socat stdio unix-connect:%s | grep %s,BACKEND ' % \
                   (self.haproxy_socket,  self.backend_name, self.rserver_name ))
-        logger.debug ('[HAPROXY] get statistics about backend %s. Result is '  % \
+        logger.debug ('[HAPROXY] get statistics about backend %s. Result is %s'  % \
                       (self.backend_name,  out))       
         disconnect_all()
