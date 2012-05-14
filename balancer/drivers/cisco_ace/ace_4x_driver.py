@@ -40,6 +40,60 @@ class AceDriver(BaseDriver):
             (dev.ip,  dev.port))
         return Context(dev.ip, dev.port, dev.user,  dev.password)
 
+    def importCertificatesAndKeys(self,  context):
+        cmd = "do crypto import " + context.protocol
+        if self.checkNone(context.passphrase):
+            cmd += "passphrase " + context.passphrase + " "
+        cmd += context.server_ip + " "
+        cmd += context.server_user + " "
+        cmd += context.file_name + " " + context.file_name + "\n"
+        cmd += context.server_password + "\n"
+
+        return self.send_data(context,  cmd)
+
+    def createSSLProxy(self,  context,  SSLproxy):
+        cmd = "ssl-proxy service " + SSLproxy.name + "\n"
+        if self.checkNone(SSLproxy.cert):
+            cmd += "cert " + SSLproxy.cert + "\n"
+        if self.checkNone(SSLproxy.key):
+            cmd += "key " + SSLproxy.key + "\n"
+
+        if self.checkNone(SSLproxy.authGroup):
+            cmd += "authgroup " + SSLproxy.authGroup + "\n"
+        if self.checkNone(SSLproxy.ocspServer):
+            cmd += "ocspserver " + SSLproxy.ocspServer + "\n"
+        if self.checkNone(SSLproxy.ocspBestEffort):
+            cmd += "oscpserver " + SSLproxy.ocspBestEffort + "\n"
+        if self.checkNone(SSLproxy.crl):
+            cmd += "crl " + SSLproxy.crl + "\n"
+        if self.checkNone(SSLproxy.crlBestEffort):
+            cmd += "crl best-effort"
+        if self.checkNone(SSLproxy.chainGroup):
+            cmd += "chaingroup " + SSLproxy.chainGroup + "\n"
+        if self.checkNone(SSLproxy.CheckPriority):
+            cmd += "revcheckprion " + SSLproxy.CheckPriority + "\n"
+
+        return self.send_data(context,  cmd)
+
+    def deleteSSLProxy(self,  context,  SSLproxy):
+        cmd = "no ssl-proxy service " + SSLproxy.name + "\n"
+
+        return self.send_data(context,  cmd)
+
+    def addSSLProxyToVIP(self,  context,  vip,  SSLproxy):
+        cmd = "policy-map multi-match global\n"
+        cmd += "class " + vip.name + "\n"
+        cmd += "ssl-proxy server " + SSLproxy.name + "\n"
+        
+        return self.send_data(context,  cmd)
+
+    def removeSSLProxyFromVIP(self,  context,  vip,  SSLproxy):
+        cmd = "policy-map multi-match global\n"
+        cmd += "class " + vip.name + "\n"
+        cmd += "no ssl-proxy server " + SSLproxy.name + "\n"
+        
+        return self.send_data(context,  cmd)
+
     def createRServer(self,  context,  rserver):
         srv_type = rserver.type.lower()
 

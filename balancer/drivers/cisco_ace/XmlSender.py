@@ -44,12 +44,12 @@ class XmlSender:
 
         request.add_header("Authorization", authheader)
 
-        data = """xml_cmd=<request_raw>\nconfigure
-               \n%s\nend\n</request_raw>""" % command
-        logger.debug("send data to ACE:\n" + data)
+        d = """xml_cmd=<request_raw>\nconfigure\n%s\nend\n</request_raw>""" \
+            % command
+        logger.debug("send data to ACE:\n" + d)
 
         try:
-            message = urllib2.urlopen(request, data)
+            message = urllib2.urlopen(request, d)
             s = message.read()
         except (Exception):
             raise openstack.common.exception.Error(Exception)

@@ -15,23 +15,24 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from balancer.drivers.BaseDriver import BaseDriver
-from balancer.drivers.BaseDriver import BaseContext
+import logging
+
+from balancer.core.serializeable import Serializeable
+from balancer.core.uniqueobject import UniqueObject
 
 
-class Context(BaseContext):
-    def __init__(self, ip, port, login, password):
-        BaseContext.__init__(self)
-        self.ip = ip
-        self.port = port
-        self.login = login
-        self.password = password
+class SSLproxy(Serializeable,  UniqueObject):
+    def __init__(self):
 
-        ## variable for cert and key import
-        self.server_ip
-        self.server_user
-        self.server_password
-        self.file_name     # certificate or key file name
-                           # on remote server
-        self.protocol      # sftp, ftp, tftp
-        self.passphrase
+        Serializeable.__init__(self)
+        UniqueObject.__init__(self)
+        self.name = ""
+        self.cert = None
+        self.key = None
+        self.authGroup = None
+        self.ocspServer = None
+        self.ocspBestEffort = None
+        self.crl = None
+        self.crlBestEffort = None
+        self.chainGroup = None
+        self.CheckPriority = None

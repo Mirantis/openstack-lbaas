@@ -26,6 +26,21 @@ class BaseDriver(object):
                 return True
         return False
 
+    def importCertificatesAndKeys(self,  context):
+        pass
+
+    def createSSLProxy(self,  context,  SSLproxy):
+        pass
+
+    def deleteSSLProxy(self,  context,  SSLproxy):
+        pass
+
+    def addSSLProxyToVIP(self,  context,  vip,  SSLproxy):
+        pass
+
+    def removeSSLProxyFromVIP(self,  context,  vip,  SSLproxy):
+        pass
+
     def createRServer(self,  context,  rserver):
         pass
 
