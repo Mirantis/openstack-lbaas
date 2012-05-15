@@ -30,9 +30,9 @@ class Statistics(Serializeable,  UniqueObject):
         self.state = ""
         self.connCurrent = ""
         self.connTotal = ""
-        self.connFail
+        self.connFail = ""
         self.connMin = ""
         self.connMax = ""
         self.connRateLimit = ""
-        self.stickuConn = ""
+        self.stickyConn = ""
         self.bandwRateLimit = ""

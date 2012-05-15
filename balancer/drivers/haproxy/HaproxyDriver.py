@@ -23,6 +23,7 @@ import logging
 
 
 from balancer.drivers.BaseDriver import BaseDriver
+from balancer.loadbalancers.statistics import Statistics
 from balancer.drivers.haproxy.Context import Context
 from balancer.drivers.haproxy.RemoteControl import RemoteConfig
 from balancer.drivers.haproxy.RemoteControl import RemoteService
@@ -130,6 +131,28 @@ class HaproxyDriver(BaseDriver):
 
     def activateRServer(self,  context,  serverfarm,  rserver):
         self.operationWithRServer(context,  serverfarm,  rserver,  'activate')
+    
+    def getStatistics(self,  context, serverfarm, rserver):
+        haproxy_rserver = HaproxyRserver()
+        haproxy_rserver.name = rserver.name
+        haproxy_serverfarm = HaproxyBackend()
+        haproxy_serverfarm.name = serverfarm.name
+        remote_socket = RemoteSocketOperation(context, haproxy_serverfarm, \
+                                              haproxy_rserver)
+        out = remote_socket.getStatistics()
+        statistics = Statistics()
+        if out :
+            status_line = out.split(",")
+            statistics.weight = status_line[18]
+            statistics.state = status_line[17]
+            statistics.connCurrent = [4]
+            statistics.connTotal = [7]
+            statistics.connFail = [13]
+            statistics.connMax = [5]
+            statistics.connRateLimit = [34]
+            statistics.bandwRateLimit = [35]
+        logger.debug('[HAPROXY] statistics  rserver state is \'%s\'' % statistics.state )  
+        return statistics
 
     def operationWithRServer(self,  context,  serverfarm,  rserver,  \
                              type_of_operation):

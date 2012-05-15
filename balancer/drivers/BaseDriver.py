@@ -89,6 +89,8 @@ class BaseDriver(object):
     def deleteVIP(self,  context,  vip):
         pass
 
+    def getStatistics (self,  context,  serverfarm,  rserver):
+        pass
 
 class BaseContext(object):
     def __init__(self):

@@ -118,6 +118,17 @@ class HAproxyDriverTestCase (unittest.TestCase):
         driver.activateRServer(self.context,  self.server_farm,  self.rserver)
         self.assertTrue(True)
 
+    def test_getRServerStatistics(self):
+        driver = HaproxyDriver()
+        driver.getStatistics(self.context,  self.server_farm,  self.rserver)
+        self.assertTrue(True)
+        
+    def test_getSFStatistics(self):
+        driver = HaproxyDriver()
+        self.rserver.name = 'BACKEND'
+        driver.getStatistics(self.context,  self.server_farm,  self.rserver)
+        self.assertTrue(True)
+
     def test_FileName(self):
         filename = HaproxyConfigFile("/tmp/haproxy.cfg")
         self.assertEqual(filename.GetHAproxyConfigFileName(),  \
@@ -166,7 +177,7 @@ class HAproxyDriverTestCase (unittest.TestCase):
 
     def test_deleteVirtualServer(self):
         driver = HaproxyDriver()
-        driver.deleteVIP(self.context,  self.virtualserver,   self.server_farm)
+        driver.deleteVIP(self.context,  self.virtualserver)
         self.assertTrue(True)
 
     def test_addRServerToSF(self):
