@@ -41,7 +41,7 @@ class Controller(object):
         %s" % conf
         logger.debug(msg)
         self.conf = conf
-        self._service_controller = ServiceController.Instance()
+        self._service_controller = ServiceController.Instance(conf)
         pass
     
     def findLBforVM(self,  req,   **args):
@@ -57,7 +57,7 @@ class Controller(object):
             params['tenant_name'] = tenant_name              
             task.parameters = params
             mapper = LBActionMapper()
-            worker = mapper.getWorker(task, "findLBforVM")
+            worker = mapper.getWorker(task, "findLBforVM", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return {'loadbalancers': result}
@@ -90,7 +90,7 @@ class Controller(object):
             task = self._service_controller.createTask()
             task.parameters = param
             mapper = LBActionMapper()
-            worker = mapper.getWorker(task, "index")
+            worker = mapper.getWorker(task, "index", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return {'loadbalancers': result}
@@ -126,7 +126,7 @@ class Controller(object):
             lb.tenant_name = tenant_name
             params['lb'] = lb
             task.parameters = params
-            worker = mapper.getWorker(task, "create")
+            worker = mapper.getWorker(task, "create", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return {'loadbalancers': {"id": lb.id}}
@@ -156,7 +156,7 @@ class Controller(object):
             #params = args['body']
             params = args['id']
             task.parameters = params
-            worker = mapper.getWorker(task, "delete")
+            worker = mapper.getWorker(task, "delete", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return "OK"
@@ -180,7 +180,7 @@ class Controller(object):
             #params = args['body']
             params = args
             task.parameters = params
-            worker = mapper.getWorker(task, "show")
+            worker = mapper.getWorker(task, "show", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return{'loadbalancer': result}
@@ -204,7 +204,7 @@ class Controller(object):
             #params = args['body']
             params = args
             task.parameters = params
-            worker = mapper.getWorker(task, "showDetails")
+            worker = mapper.getWorker(task, "showDetails", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
@@ -231,7 +231,7 @@ class Controller(object):
             params['id'] = args['id']
             task.parameters = params
 
-            worker = mapper.getWorker(task, "update")
+            worker = mapper.getWorker(task, "update", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return {'loadbalancers': result}
@@ -264,7 +264,7 @@ class Controller(object):
             params['id'] = args['id']
             task.parameters = params
 
-            worker = mapper.getWorker(task, "addNode")
+            worker = mapper.getWorker(task, "addNode", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
@@ -295,7 +295,7 @@ class Controller(object):
             params['id'] = args['id']
             task.parameters = params
 
-            worker = mapper.getWorker(task, "showNodes")
+            worker = mapper.getWorker(task, "showNodes", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
@@ -326,7 +326,7 @@ class Controller(object):
             params['nodeID'] = args['nodeID']
             task.parameters = params
 
-            worker = mapper.getWorker(task, "deleteNode")
+            worker = mapper.getWorker(task, "deleteNode", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
@@ -358,7 +358,7 @@ class Controller(object):
             params['status'] = args['status']
             task.parameters = params
 
-            worker = mapper.getWorker(task, "changeNodeStatus")
+            worker = mapper.getWorker(task, "changeNodeStatus", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
@@ -391,7 +391,7 @@ class Controller(object):
             params['node'] = body['node']
             task.parameters = params
 
-            worker = mapper.getWorker(task, "updateNode")
+            worker = mapper.getWorker(task, "updateNode", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
@@ -422,7 +422,7 @@ class Controller(object):
             params['id'] = args['id']
             task.parameters = params
 
-            worker = mapper.getWorker(task, "showProbes")
+            worker = mapper.getWorker(task, "showProbes", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
@@ -454,7 +454,7 @@ class Controller(object):
             params['probe'] = body['healthMonitoring']
             task.parameters = params
 
-            worker = mapper.getWorker(task, "LBAddProbe")
+            worker = mapper.getWorker(task, "LBAddProbe", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
@@ -485,7 +485,7 @@ class Controller(object):
             params['probeID'] = args['probeID']
             task.parameters = params
 
-            worker = mapper.getWorker(task, "LBdeleteProbe")
+            worker = mapper.getWorker(task, "LBdeleteProbe", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
@@ -515,7 +515,7 @@ class Controller(object):
             params['id'] = args['id']
             task.parameters = params
 
-            worker = mapper.getWorker(task, "showSticky")
+            worker = mapper.getWorker(task, "showSticky", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
@@ -547,7 +547,7 @@ class Controller(object):
             params['sticky'] = body['sessionPersistence']
             task.parameters = params
 
-            worker = mapper.getWorker(task, "addSticky")
+            worker = mapper.getWorker(task, "addSticky", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result
@@ -578,7 +578,7 @@ class Controller(object):
             params['stickyID'] = args['stickyID']
             task.parameters = params
 
-            worker = mapper.getWorker(task, "deleteSticky")
+            worker = mapper.getWorker(task, "deleteSticky", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 return result

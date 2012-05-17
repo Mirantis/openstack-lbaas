@@ -83,11 +83,11 @@ class ServiceTask():
 @Singleton
 class ServiceController():
 
-    def __init__(self):
+    def __init__(self, conf):
         logger.debug("Service controller instance created.")
         self._tasks = {}
         self.lock = threading.Lock()
-        self._scheduller = Scheduller.Instance()
+        self._scheduller = Scheduller.Instance(conf)
 
     @property
     def scheduller(self):

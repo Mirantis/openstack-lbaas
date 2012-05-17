@@ -17,8 +17,6 @@
 
 
 import logging
-import sys
-import threading
 import Queue
 import balancer.loadbalancers.loadbalancer
 import openstack.common.exception
@@ -45,13 +43,13 @@ logger = logging.getLogger(__name__)
 
 
 class LBGetIndexWorker(SyncronousWorker):
-    def __init__(self,  task):
-        super(LBGetIndexWorker, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(LBGetIndexWorker, self).__init__(task, conf)
         self._t = 1
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        store = Storage()
+        store = Storage(self._conf)
         reader = store.getReader()
         tenant_id = self._task.parameters.get('tenant_id',  "")
         list = reader.getLoadBalancers(tenant_id)
@@ -59,28 +57,28 @@ class LBGetIndexWorker(SyncronousWorker):
         return list
 
 class LBFindforVM(SyncronousWorker):
-    def __init__(self,  task):
-        super(LBFindforVM, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(LBFindforVM, self).__init__(task, conf)
         self._t = 1
 
     def run(self):
         self._task.status = STATUS_PROGRESS
         vm_id = self._task.parameters['vm_id']
         tenant_id = self._task.parameters.get('tenant_id', "")
-        store = Storage()
+        store = Storage(self._conf)
         reader = store.getReader()
         list = reader.getLoadBalancersByVMid(vm_id,  tenant_id)
         self._task.status = STATUS_DONE
         return list
         
 class LBGetDataWorker(SyncronousWorker):
-    def __init__(self,  task):
-        super(LBGetDataWorker, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(LBGetDataWorker, self).__init__(task, conf)
         self._t = 1
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        store = Storage()
+        store = Storage(self._conf)
         reader = store.getReader()
 
         id = self._task.parameters['id']
@@ -92,16 +90,16 @@ class LBGetDataWorker(SyncronousWorker):
 
 
 class LBshowDetails(SyncronousWorker):
-    def __init__(self,  task):
-        super(LBshowDetails, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(LBshowDetails, self).__init__(task, conf)
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        store = Storage()
+        store = Storage(self._conf)
         reader = store.getReader()
 
         id = self._task.parameters['id']
-        lb = Balancer()
+        lb = Balancer(self._conf)
         lb.loadFromDB(id)
         obj = {'loadbalancer':  lb.lb.convertToDict()}
         lbobj = obj['loadbalancer']
@@ -116,18 +114,18 @@ class LBshowDetails(SyncronousWorker):
 
 
 class CreateLBWorker(ASyncronousWorker):
-    def __init__(self,  task):
-        super(CreateLBWorker, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(CreateLBWorker, self).__init__(task, conf)
         self._command_queue = Queue.LifoQueue()
 
     def run(self):
         self._task.status = STATUS_PROGRESS
         params = self._task.parameters
-        balancer_instance = Balancer()
+        balancer_instance = Balancer(self._conf)
         #Step 1. Parse parameters came from request
 
         balancer_instance.parseParams(params)
-        sched = Scheduller.Instance()
+        sched = Scheduller.Instance(self._conf)
         # device = sched.getDevice()
         device = sched.getDeviceByID(balancer_instance.lb.device_id)
         devmap = DeviceMap()
@@ -142,11 +140,11 @@ class CreateLBWorker(ASyncronousWorker):
 
         #Step 3. Deploy config to device
         commands = makeCreateLBCommandChain(balancer_instance,  driver, \
-        context)
+        context, self._conf)
         context.addParam('balancer',  balancer_instance)
         deploy = Deployer(device,  context)
         deploy.commands = commands
-        processing = Processing.Instance()
+        processing = Processing.Instance(self._conf)
         event = balancer.processing.event.Event( balancer.processing.event.EVENT_PROCESS, 
                                                 deploy,  2)
         try:
@@ -171,20 +169,20 @@ class CreateLBWorker(ASyncronousWorker):
 
 
 class UpdateLBWorker(ASyncronousWorker):
-    def __init__(self,  task):
-        super(UpdateLBWorker, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(UpdateLBWorker, self).__init__(task, conf)
         self._command_queue = Queue.LifoQueue()
 
     def run(self):
         self._task.status = STATUS_PROGRESS
         params = self._task.parameters
         lb_id = params['id']
-        sched = Scheduller()
+        sched = Scheduller(self._conf)
 
         #Step1. Load LB from DB
 
-        old_balancer_instance = Balancer()
-        balancer_instance = Balancer()
+        old_balancer_instance = Balancer(self._conf)
+        balancer_instance = Balancer(self._conf)
         logger.debug("Loading LB data from DB for Lb id: %s" % lb_id)
         #TODO add clone function to Balancer in order to avoid double read
         balancer_instance.loadFromDB(lb_id)
@@ -220,7 +218,7 @@ class UpdateLBWorker(ASyncronousWorker):
 
         #Step 4. Deploy new config to device
         commands = makeUpdateLBCommandChain(old_balancer_instance, \
-                balancer_instance,  driver,  context)
+                balancer_instance,  driver,  context, self._conf)
         deploy = Deployer()
         deploy.commands = commands
         try:
@@ -239,15 +237,15 @@ class UpdateLBWorker(ASyncronousWorker):
 
 
 class DeleteLBWorker(SyncronousWorker):
-    def __init__(self,  task):
-        super(DeleteLBWorker, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(DeleteLBWorker, self).__init__(task, conf)
         self._command_queue = Queue.LifoQueue()
 
     def run(self):
         self._task.status = STATUS_PROGRESS
         lb_id = self._task.parameters
-        sched = Scheduller()
-        balancer_instance = Balancer()
+        sched = Scheduller(self._conf)
+        balancer_instance = Balancer(self._conf)
         balancer_instance.loadFromDB(lb_id)
 
         device = sched.getDeviceByID(balancer_instance.lb.device_id)
@@ -263,7 +261,7 @@ class DeleteLBWorker(SyncronousWorker):
 
         #Step 3. Destruct config at device
         commands = makeDeleteLBCommandChain(balancer_instance,  \
-                    driver,  context)
+                    driver,  context, self._conf)
         destruct = Destructor()
         destruct.commands = commands
         destruct.execute()
@@ -274,8 +272,8 @@ class DeleteLBWorker(SyncronousWorker):
 
 
 class LBaddNode(SyncronousWorker):
-    def __init__(self,  task):
-        super(LBaddNode, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(LBaddNode, self).__init__(task, conf)
         self._command_queue = Queue.LifoQueue()
 
     def run(self):
@@ -284,8 +282,8 @@ class LBaddNode(SyncronousWorker):
         node = self._task.parameters['node']
         logger.debug("Got new node description %s" % node)
         rs = RealServer()
-        sched = Scheduller()
-        bal_instance = Balancer()
+        sched = Scheduller(self._conf)
+        bal_instance = Balancer(self._conf)
 
         bal_instance.loadFromDB(lb_id)
         bal_instance.removeFromDB()
@@ -302,7 +300,7 @@ class LBaddNode(SyncronousWorker):
         driver = devmap.getDriver(device)
         context = driver.getContext(device)
 
-        commands = makeAddNodeToLBChain(bal_instance, driver, context, rs)
+        commands = makeAddNodeToLBChain(bal_instance, driver, context, rs, self._conf)
         deploy = Deployer()
         deploy.commands = commands
         deploy.execute()
@@ -310,16 +308,16 @@ class LBaddNode(SyncronousWorker):
         return "node: %s" % rs.id
 
 
-class LBShowNodes(SyncronousWorker):
+class LBShowNodes(SyncronousWorker, conf):
     def __init__(self,  task):
-        super(LBShowNodes, self).__init__(task)
+        super(LBShowNodes, self).__init__(task, conf)
         self._command_queue = Queue.LifoQueue()
 
     def run(self):
         self._task.status = STATUS_PROGRESS
         lb_id = self._task.parameters['id']
 
-        bal_instance = Balancer()
+        bal_instance = Balancer(self._conf)
         nodes = {'nodes': []}
 
         bal_instance.loadFromDB(lb_id)
@@ -331,8 +329,8 @@ class LBShowNodes(SyncronousWorker):
 
 
 class LBDeleteNode(SyncronousWorker):
-    def __init__(self,  task):
-        super(LBDeleteNode, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(LBDeleteNode, self).__init__(task, conf)
         self._command_queue = Queue.LifoQueue()
 
     def run(self):
@@ -340,15 +338,15 @@ class LBDeleteNode(SyncronousWorker):
         lb_id = self._task.parameters['id']
         nodeID = self._task.parameters['nodeID']
 
-        bal_instance = Balancer()
+        bal_instance = Balancer(self._conf)
         #Step 1: Load balancer from DB
         bal_instance.loadFromDB(lb_id)
-        sched = Scheduller()
+        sched = Scheduller(self._conf)
         device = sched.getDeviceByID(bal_instance.lb.device_id)
         devmap = DeviceMap()
         driver = devmap.getDriver(device)
         context = driver.getContext(device)
-        store = Storage()
+        store = Storage(self._conf)
 
         #Step 2: Get reader and writer
         rd = store.getReader()
@@ -361,7 +359,7 @@ class LBDeleteNode(SyncronousWorker):
 
         #Step 5: Make commands for deleting RS
 
-        commands = makeDeleteNodeFromLBChain(bal_instance, driver, context, rs)
+        commands = makeDeleteNodeFromLBChain(bal_instance, driver, context, rs, self._conf)
         destruct = Destructor()
         destruct.commands = commands
 
@@ -372,8 +370,8 @@ class LBDeleteNode(SyncronousWorker):
 
 
 class LBChangeNodeStatus(SyncronousWorker):
-    def __init__(self,  task):
-        super(LBChangeNodeStatus, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(LBChangeNodeStatus, self).__init__(task, conf)
         self._command_queue = Queue.LifoQueue()
 
     def run(self):
@@ -382,14 +380,14 @@ class LBChangeNodeStatus(SyncronousWorker):
         nodeID = self._task.parameters['nodeID']
         nodeStatus = self._task.parameters['status']
 
-        bal_instance = Balancer()
+        bal_instance = Balancer(self._conf)
         bal_instance.loadFromDB(lb_id)
-        sched = Scheduller()
+        sched = Scheduller(self._conf)
         device = sched.getDeviceByID(bal_instance.lb.device_id)
         devmap = DeviceMap()
         driver = devmap.getDriver(device)
         context = driver.getContext(device)
-        store = Storage()
+        store = Storage(self._conf)
         reader = store.getReader()
         writer = store.getWriter()
         deleter = store.getDeleter()
@@ -422,8 +420,8 @@ class LBChangeNodeStatus(SyncronousWorker):
 
 
 class LBUpdateNode(SyncronousWorker):
-    def __init__(self,  task):
-        super(LBUpdateNode, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(LBUpdateNode, self).__init__(task, conf)
         self._command_queue = Queue.LifoQueue()
 
     def run(self):
@@ -432,14 +430,14 @@ class LBUpdateNode(SyncronousWorker):
         nodeID = self._task.parameters['nodeID']
         node = self._task.parameters['node']
 
-        bal_instance = Balancer()
+        bal_instance = Balancer(self._conf)
         bal_instance.loadFromDB(lb_id)
-        sched = Scheduller()
+        sched = Scheduller(self._conf)
         device = sched.getDeviceByID(bal_instance.lb.device_id)
         devmap = DeviceMap()
         driver = devmap.getDriver(device)
         context = driver.getContext(device)
-        store = Storage()
+        store = Storage(self._conf)
         reader = store.getReader()
         writer = store.getWriter()
         deleter = store.getDeleter()
@@ -458,8 +456,8 @@ class LBUpdateNode(SyncronousWorker):
         writer.writeRServer(new_rs)
         deploy = Deployer()
         commands = \
-            makeDeleteNodeFromLBChain(bal_instance, driver, context,  rs) \
-            + makeAddNodeToLBChain(bal_instance, driver, context, new_rs)
+            makeDeleteNodeFromLBChain(bal_instance, driver, context,  rs, self._conf) \
+            + makeAddNodeToLBChain(bal_instance, driver, context, new_rs, self._conf)
         deploy.commands = commands
         deploy.execute()
         self._task.status = STATUS_DONE
@@ -468,14 +466,14 @@ class LBUpdateNode(SyncronousWorker):
 
 
 class LBShowProbes(SyncronousWorker):
-    def __init__(self,  task):
-        super(LBShowProbes, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(LBShowProbes, self).__init__(task, conf)
         self._command_queue = Queue.LifoQueue()
 
     def run(self):
         self._task.status = STATUS_PROGRESS
         lb_id = self._task.parameters['id']
-        store = Storage()
+        store = Storage(self._conf)
         reader = store.getReader()
 
         sf_id = reader.getSFByLBid(lb_id).id
@@ -491,8 +489,8 @@ class LBShowProbes(SyncronousWorker):
 
 
 class LBAddProbe(SyncronousWorker):
-    def __init__(self,  task):
-        super(LBAddProbe, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(LBAddProbe, self).__init__(task, conf)
         self._command_queue = Queue.LifoQueue()
 
     def run(self):
@@ -503,8 +501,8 @@ class LBAddProbe(SyncronousWorker):
         if probe['type'] == None:
             return
 
-        sched = Scheduller()
-        bal_instance = Balancer()
+        sched = Scheduller(self._conf)
+        bal_instance = Balancer(self._conf)
 
         bal_instance.loadFromDB(lb_id)
         bal_instance.removeFromDB()
@@ -522,7 +520,7 @@ class LBAddProbe(SyncronousWorker):
         driver = devmap.getDriver(device)
         context = driver.getContext(device)
 
-        commands = makeAddProbeToLBChain(bal_instance, driver, context, prb)
+        commands = makeAddProbeToLBChain(bal_instance, driver, context, prb, self._conf)
         deploy = Deployer()
         deploy.commands = commands
         deploy.execute()
@@ -531,8 +529,8 @@ class LBAddProbe(SyncronousWorker):
 
 
 class LBdeleteProbe(SyncronousWorker):
-    def __init__(self,  task):
-        super(LBdeleteProbe, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(LBdeleteProbe, self).__init__(task, conf)
         self._command_queue = Queue.LifoQueue()
 
     def run(self):
@@ -540,16 +538,16 @@ class LBdeleteProbe(SyncronousWorker):
         lb_id = self._task.parameters['id']
         probeID = self._task.parameters['probeID']
 
-        bal_instance = Balancer()
+        bal_instance = Balancer(self._conf)
         #Step 1: Load balancer from DB
         bal_instance.loadFromDB(lb_id)
-        sched = Scheduller()
+        sched = Scheduller(self._conf)
         device = sched.getDeviceByID(bal_instance.lb.device_id)
         devmap = DeviceMap()
         driver = devmap.getDriver(device)
         context = driver.getContext(device)
 
-        store = Storage()
+        store = Storage(self._conf)
 
         #Step 2: Get reader and writer
         rd = store.getReader()
@@ -563,7 +561,7 @@ class LBdeleteProbe(SyncronousWorker):
         #Step 5: Make commands for deleting probe
 
         commands = \
-            makeDeleteProbeFromLBChain(bal_instance, driver, context, prb)
+            makeDeleteProbeFromLBChain(bal_instance, driver, context, prb, self._conf)
         destruct = Destructor()
         destruct.commands = commands
 
@@ -574,14 +572,14 @@ class LBdeleteProbe(SyncronousWorker):
 
 
 class LBShowSticky(SyncronousWorker):
-    def __init__(self,  task):
-        super(LBShowSticky, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(LBShowSticky, self).__init__(task, conf)
         self._command_queue = Queue.LifoQueue()
 
     def run(self):
         self._task.status = STATUS_PROGRESS
         lb_id = self._task.parameters['id']
-        store = Storage()
+        store = Storage(self._conf)
         reader = store.getReader()
 
         sf_id = reader.getSFByLBid(lb_id).id
@@ -597,8 +595,8 @@ class LBShowSticky(SyncronousWorker):
 
 
 class LBAddSticky(SyncronousWorker):
-    def __init__(self,  task):
-        super(LBAddSticky, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(LBAddSticky, self).__init__(task, conf)
         self._command_queue = Queue.LifoQueue()
 
     def run(self):
@@ -609,8 +607,8 @@ class LBAddSticky(SyncronousWorker):
         if sticky['type'] == None:
             return
 
-        sched = Scheduller()
-        bal_instance = Balancer()
+        sched = Scheduller(self._conf)
+        bal_instance = Balancer(self._conf)
 
         bal_instance.loadFromDB(lb_id)
         bal_instance.removeFromDB()
@@ -627,7 +625,7 @@ class LBAddSticky(SyncronousWorker):
         driver = devmap.getDriver(device)
         context = driver.getContext(device)
 
-        commands = makeAddStickyToLBChain(bal_instance, driver, context, st)
+        commands = makeAddStickyToLBChain(bal_instance, driver, context, st, self._conf)
         deploy = Deployer()
         deploy.commands = commands
         deploy.execute()
@@ -636,8 +634,8 @@ class LBAddSticky(SyncronousWorker):
 
 
 class LBdeleteSticky(SyncronousWorker):
-    def __init__(self,  task):
-        super(LBdeleteSticky, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(LBdeleteSticky, self).__init__(task, conf)
         self._command_queue = Queue.LifoQueue()
 
     def run(self):
@@ -645,16 +643,16 @@ class LBdeleteSticky(SyncronousWorker):
         lb_id = self._task.parameters['id']
         stickyID = self._task.parameters['stickyID']
 
-        bal_instance = Balancer()
+        bal_instance = Balancer(self._conf)
         #Step 1: Load balancer from DB
         bal_instance.loadFromDB(lb_id)
-        sched = Scheduller()
+        sched = Scheduller(self._conf)
         device = sched.getDeviceByID(bal_instance.lb.device_id)
         devmap = DeviceMap()
         driver = devmap.getDriver(device)
         context = driver.getContext(device)
 
-        store = Storage()
+        store = Storage(self._conf)
 
         #Step 2: Get reader and writer
         rd = store.getReader()
@@ -668,7 +666,7 @@ class LBdeleteSticky(SyncronousWorker):
         #Step 5: Make commands for deleting probe
 
         commands = \
-            makeDeleteStickyFromLBChain(bal_instance, driver, context, st)
+            makeDeleteStickyFromLBChain(bal_instance, driver, context, st, self._conf)
         destruct = Destructor()
         destruct.commands = commands
 
@@ -679,40 +677,40 @@ class LBdeleteSticky(SyncronousWorker):
         
         
 class LBActionMapper(object):
-    def getWorker(self, task,  action,  params=None):
+    def getWorker(self, task,  action, conf,  params=None):
         if action == "index":
-            return LBGetIndexWorker(task)
+            return LBGetIndexWorker(task, conf)
         if action == "create":
-            return CreateLBWorker(task)
+            return CreateLBWorker(task, conf)
         if action == "delete":
-            return DeleteLBWorker(task)
+            return DeleteLBWorker(task, conf)
         if action == "show":
-            return LBGetDataWorker(task)
+            return LBGetDataWorker(task, conf)
         if action == "showDetails":
-            return LBshowDetails(task)
+            return LBshowDetails(task, conf)
         if action == "update":
-            return UpdateLBWorker(task)
+            return UpdateLBWorker(task, conf)
         if action == "addNode":
-            return LBaddNode(task)
+            return LBaddNode(task, conf)
         if action == "showNodes":
             return LBShowNodes(task)
         if action == "deleteNode":
-            return LBDeleteNode(task)
+            return LBDeleteNode(task, conf)
         if action == "changeNodeStatus":
-            return LBChangeNodeStatus(task)
+            return LBChangeNodeStatus(task, conf)
         if action == "updateNode":
-            return LBUpdateNode(task)
+            return LBUpdateNode(task, conf)
         if action == "showProbes":
-            return LBShowProbes(task)
+            return LBShowProbes(task, conf)
         if action == "LBAddProbe":
-            return LBAddProbe(task)
+            return LBAddProbe(task, conf)
         if action == "LBdeleteProbe":
-            return LBdeleteProbe(task)
+            return LBdeleteProbe(task, conf)
         if action == "showSticky":
-            return LBShowSticky(task)
+            return LBShowSticky(task, conf)
         if action == "addSticky":
-            return LBAddSticky(task)
+            return LBAddSticky(task, conf)
         if action == "deleteSticky":
-            return LBdeleteSticky(task)            
+            return LBdeleteSticky(task, conf)
         if action == "findLBforVM":
-            return LBFindforVM(task)
+            return LBFindforVM(task, conf)

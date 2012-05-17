@@ -15,8 +15,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-import sys
 import threading
 
 SYNCHRONOUS_WORKER = "SYNCHRONOUS"
@@ -27,9 +25,10 @@ STATUS_ERROR = "ERROR"
 
 
 class SyncronousWorker(object):
-    def __init__(self,  task):
+    def __init__(self,  task, conf):
         self._type = SYNCHRONOUS_WORKER
         self._task = task
+        self._conf = conf
 
     @property
     def type(self):
@@ -43,10 +42,11 @@ class SyncronousWorker(object):
 
 
 class ASyncronousWorker(threading.Thread):
-    def __init__(self,  task):
+    def __init__(self,  task, conf):
         threading.Thread.__init__(self)
         self._type = ASYNCHRONOUS_WORKER
         self._task = task
+        self._conf = conf
 
     @property
     def type(self):

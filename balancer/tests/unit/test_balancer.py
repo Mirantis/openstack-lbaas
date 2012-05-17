@@ -30,8 +30,8 @@ class BalancerTestCase(unittest.TestCase):
                            'transfer-encoding': 'chunked',  \
                            'Content-Type': 'application/json'}
 
-    def test_balancer_parse(self):
-        bl = Balancer()
+    def test_balancer_parse(self, conf):
+        bl = Balancer(conf)
         file = open("./balancer/tests/unit/createLBcommand")
         body = file.read()
         file.close()

@@ -8,7 +8,8 @@ import logging
 logger = logging.getLogger(__name__)
 @Singleton
 class SharedObjects:
-    def __init__(self):
+    def __init__(self, conf):
+        self._conf = conf
         self._device_thread_pool = {}
         self._event_queue = Queue.PriorityQueue()
         self._default_priority = 10

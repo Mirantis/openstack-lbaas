@@ -27,7 +27,6 @@ import predictor
 import probe
 import realserver
 import serverfarm
-import vlan
 import virtualserver
 import sticky
 
@@ -35,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 class Balancer():
-    def __init__(self):
+    def __init__(self, conf):
 
         """ This member contains LoadBalancer object """
         self.lb = None
@@ -43,7 +42,8 @@ class Balancer():
         self.rs = []
         self.probes = []
         self.vips = []
-        self.store = balancer.storage.storage.Storage()
+        self.conf = conf
+        self.store = balancer.storage.storage.Storage(conf)
 
     def parseParams(self, params):
 
@@ -124,7 +124,7 @@ class Balancer():
                 self.sf._sticky.append(st)
 
     def update(self):
-        store = balancer.storage.storage.Storage()
+        store = balancer.storage.storage.Storage(self.conf)
         wr = store.getWriter()
         wr.updateObjectInTable(self.lb)
         
@@ -143,7 +143,7 @@ class Balancer():
         return self.lb
 
     def savetoDB(self):
-        store = balancer.storage.storage.Storage()
+        store = balancer.storage.storage.Storage(self.conf)
         wr = store.getWriter()
 
         wr.writeLoadBalancer(self.lb)
@@ -163,7 +163,7 @@ class Balancer():
             wr.writeSticky(st)
 
     def loadFromDB(self, lb_id):
-        store = balancer.storage.storage.Storage()
+        store = balancer.storage.storage.Storage(self.conf)
         rd = store.getReader()
         self.lb = rd.getLoadBalancerById(lb_id)
         self.sf = rd.getSFByLBid(lb_id)
@@ -183,7 +183,7 @@ class Balancer():
             self.sf._sticky.append(st)
 
     def removeFromDB(self):
-        store = balancer.storage.storage.Storage()
+        store = balancer.storage.storage.Storage(self.conf)
         dl = store.getDeleter()
         lb_id = self.lb.id
         sf_id = self.sf.id
@@ -216,87 +216,87 @@ class Balancer():
 #            driver.createVIP(context,  vip,  self.sf)
 
 
-def makeCreateLBCommandChain(bal,  driver,  context):
+def makeCreateLBCommandChain(bal,  driver,  context, conf):
     list = []
 
     for pr in bal.probes:
-        list.append(CreateProbeCommand(driver,  context,  pr))
+        list.append(CreateProbeCommand(driver,  context,  pr, conf))
 
-    list.append(CreateServerFarmCommand(driver, context,  bal.sf))
+    list.append(CreateServerFarmCommand(driver, context,  bal.sf, conf))
     for rs in bal.rs:
-        list.append(CreateRServerCommand(driver,  context, rs))
+        list.append(CreateRServerCommand(driver,  context, rs, conf))
         list.append(AddRServerToSFCommand(driver, context, bal.sf,  rs))
 
 #    for pr in bal.probes:
 #        list.append(CreateProbeCommand(driver,  context,  pr))
 #        list.append(AddProbeToSFCommand(driver,  context,  bal.sf,  pr))
     for vip in bal.vips:
-        list.append(CreateVIPCommand(driver,  context,  vip,  bal.sf))
+        list.append(CreateVIPCommand(driver,  context,  vip,  bal.sf, conf))
     return list
 
 
-def makeDeleteLBCommandChain(bal,  driver,  context):
+def makeDeleteLBCommandChain(bal,  driver,  context, conf):
     list = []
     for vip in bal.vips:
-        list.append(DeleteVIPCommand(driver,  context,   vip))
+        list.append(DeleteVIPCommand(driver,  context,   vip, conf))
 #    for pr in bal.probes:
 #        list.append(DeleteProbeFromSFCommand(driver,  context,  bal.sf,  pr))
 #        list.append(DeleteProbeCommand(driver,  context,  pr))
     for rs in bal.rs:
         list.append(DeleteRServerFromSFCommand(driver, context, bal.sf,  rs))
-        list.append(DeleteRServerCommand(driver,  context, rs))
+        list.append(DeleteRServerCommand(driver,  context, rs, conf))
     for pr in bal.probes:
         list.append(DeleteProbeFromSFCommand(driver,  context,  bal.sf,  pr))
-        list.append(DeleteProbeCommand(driver,  context,  pr))
+        list.append(DeleteProbeCommand(driver,  context,  pr, conf))
     if  len(bal.sf._sticky) > 0:
         for st in bal.sf._sticky:
-            list.append(DeleteStickyCommand(driver, context, st))
-    list.append(DeleteServerFarmCommand(driver, context,  bal.sf))
+            list.append(DeleteStickyCommand(driver, context, st, conf))
+    list.append(DeleteServerFarmCommand(driver, context,  bal.sf, conf))
 
     return list
 
 
-def makeUpdateLBCommandChain(old_bal,  new_bal,  driver,  context):
+def makeUpdateLBCommandChain(old_bal,  new_bal,  driver,  context, conf):
     list = []
     if old_bal.lb.algorithm != new_bal.lb.algorithm:
-        list.append(CreateServerFarmCommand(driver, context,  new_bal.sf))
+        list.append(CreateServerFarmCommand(driver, context,  new_bal.sf, conf))
     return list
 
 
-def makeAddNodeToLBChain(bal, driver,  context,  rs):
+def makeAddNodeToLBChain(bal, driver,  context,  rs, conf):
     list = []
-    list.append(CreateRServerCommand(driver, context, rs))
+    list.append(CreateRServerCommand(driver, context, rs, conf))
     list.append(AddRServerToSFCommand(driver, context, bal.sf, rs))
     return list
 
 
-def makeDeleteNodeFromLBChain(bal, driver,  context,  rs):
+def makeDeleteNodeFromLBChain(bal, driver,  context,  rs, conf):
     list = []
     list.append(DeleteRServerFromSFCommand(driver, context, bal.sf, rs))
-    list.append(DeleteRServerCommand(driver, context, rs))
+    list.append(DeleteRServerCommand(driver, context, rs, conf))
     return list
 
 
-def makeAddProbeToLBChain(bal, driver, context,  probe):
+def makeAddProbeToLBChain(bal, driver, context,  probe, conf):
     list = []
-    list.append(CreateProbeCommand(driver, context, probe))
+    list.append(CreateProbeCommand(driver, context, probe, conf))
     list.append(AddProbeToSFCommand(driver, context, bal.sf, probe))
     return list
 
 
-def makeDeleteProbeFromLBChain(bal, driver, context, probe):
+def makeDeleteProbeFromLBChain(bal, driver, context, probe, conf):
     list = []
     list.append(DeleteProbeFromSFCommand(driver, context, bal.sf, probe))
-    list.append(DeleteProbeCommand(driver, context, probe))
+    list.append(DeleteProbeCommand(driver, context, probe, conf))
     return list
 
-def makeAddStickyToLBChain(bal, driver, context, sticky):
-    list = [CreateStickyCommand(driver, context, sticky)]
+def makeAddStickyToLBChain(bal, driver, context, sticky, conf):
+    list = [CreateStickyCommand(driver, context, sticky, conf)]
     return list
 
 
-def makeDeleteStickyFromLBChain(bal, driver, context, sticky):
-    list = [DeleteStickyCommand(driver, context, sticky)]
+def makeDeleteStickyFromLBChain(bal, driver, context, sticky, conf):
+    list = [DeleteStickyCommand(driver, context, sticky, conf)]
     return list
 
 
@@ -350,10 +350,11 @@ class Destructor(object):
 
 
 class CreateRServerCommand(object):
-    def __init__(self,  driver,  context,  rs):
+    def __init__(self,  driver,  context,  rs, conf):
         self._driver = driver
         self._context = context
         self._rs = rs
+        self._conf = conf
 
     def execute(self):
         # We can't create multiple RS with the same IP. So parent_id points to RS which already deployed and has this IP
@@ -362,7 +363,7 @@ class CreateRServerCommand(object):
         if self._rs.parent_id == "":
             self._driver.createRServer(self._context,  self._rs)
             self._rs.deployed = 'True'
-            stor = balancer.storage.storage.Storage()
+            stor = balancer.storage.storage.Storage(self._conf)
             wr = stor.getWriter()
             wr.updateDeployed(self._rs,  'True')
             
@@ -371,7 +372,7 @@ class CreateRServerCommand(object):
         try:
             self._driver.deleteRServer(self._context,  self._rs)
             self._rs.deployed='False'
-            stor = balancer.storage.storage.Storage()
+            stor = balancer.storage.storage.Storage(self._conf)
             wr = stor.getWriter()
             wr.updateDeployed(self._rs,  'False')
         except:
@@ -379,13 +380,14 @@ class CreateRServerCommand(object):
 
 
 class DeleteRServerCommand(object):
-    def __init__(self,  driver,  context,  rs):
+    def __init__(self,  driver,  context,  rs, conf):
         self._driver = driver
         self._context = context
         self._rs = rs
+        self._conf = conf
 
     def execute(self):
-        store = balancer.storage.storage.Storage()
+        store = balancer.storage.storage.Storage(self._conf)
         reader = store.getReader()
         rss = []
         pdb.set_trace()
@@ -407,43 +409,46 @@ class DeleteRServerCommand(object):
 
 
 class CreateStickyCommand(object):
-    def __init__(self, driver,  context,  sticky):
+    def __init__(self, driver,  context,  sticky, conf):
         self._driver = driver
         self._context = context
         self._sticky = sticky
+        self._conf = conf
         
     def execute(self):
         self._driver.createStickiness(self._context,  self._sticky)
         self._sticky.deployed='True'
-        stor = balancer.storage.storage.Storage()
+        stor = balancer.storage.storage.Storage(self._conf)
         wr = stor.getWriter()
         wr.updateDeployed(self._sticky,  'True')
 
 
 class DeleteStickyCommand(object):
-    def __init__(self, driver,  context,  sticky):
+    def __init__(self, driver,  context,  sticky, conf):
         self._driver = driver
         self._context = context
         self._sticky = sticky
+        self._conf = conf
         
     def execute(self):
         self._driver.deleteStickiness(self._context,  self._sticky)
         self._sticky.deployed = 'False'
-        stor = balancer.storage.storage.Storage()
+        stor = balancer.storage.storage.Storage(self._conf)
         wr = stor.getWriter()
         wr.updateDeployed(self._sticky,  'False')
 
 
 class CreateServerFarmCommand(object):
-    def __init__(self,  driver,  context,  sf):
+    def __init__(self,  driver,  context,  sf, conf):
         self._driver = driver
         self._context = context
         self._sf = sf
+        self._conf = conf
 
     def execute(self):
         self._driver.createServerFarm(self._context,  self._sf)
         self._sf.deployed = 'True'
-        stor = balancer.storage.storage.Storage()
+        stor = balancer.storage.storage.Storage(self._conf)
         wr = stor.getWriter()
         wr.updateDeployed(self._sf,  'True')
 
@@ -451,7 +456,7 @@ class CreateServerFarmCommand(object):
         try:
             self._driver.deleteServerFarm(self._context,  self._sf)
             self._sf.deployed='False'
-            stor = balancer.storage.storage.Storage()
+            stor = balancer.storage.storage.Storage(self._conf)
             wr = stor.getWriter()
             wr.updateDeployed(self._sf,  'False')
         except:
@@ -459,15 +464,16 @@ class CreateServerFarmCommand(object):
 
 
 class DeleteServerFarmCommand(object):
-    def __init__(self,  driver,  context,  sf):
+    def __init__(self,  driver,  context,  sf, conf):
         self._driver = driver
         self._context = context
         self._sf = sf
+        self._conf = conf
 
     def execute(self):
         self._driver.deleteServerFarm(self._context,  self._sf)
         self._sf.deployed='False'
-        stor = balancer.storage.storage.Storage()
+        stor = balancer.storage.storage.Storage(self._conf)
         wr = stor.getWriter()
         wr.updateDeployed(self._sf,  'False')
 
@@ -504,15 +510,16 @@ class DeleteRServerFromSFCommand(object):
 
 
 class CreateProbeCommand(object):
-    def __init__(self,  driver,  context,  probe):
+    def __init__(self,  driver,  context,  probe, conf):
         self._driver = driver
         self._context = context
         self._probe = probe
+        self._conf = conf
 
     def execute(self):
         self._driver.createProbe(self._context, self._probe)
         self._probe.deployed='True'
-        stor = balancer.storage.storage.Storage()
+        stor = balancer.storage.storage.Storage(self._conf)
         wr = stor.getWriter()
         wr.updateDeployed(self._probe,  'True')
 
@@ -520,7 +527,7 @@ class CreateProbeCommand(object):
         try:
             self._driver.deleteProbe(self._context, self._probe)
             self._probe.deployed='False'
-            stor = balancer.storage.storage.Storage()
+            stor = balancer.storage.storage.Storage(self._conf)
             wr = stor.getWriter()
             wr.updateDeployed(self._probe,  'False')           
         except:
@@ -528,15 +535,16 @@ class CreateProbeCommand(object):
 
 
 class DeleteProbeCommand(object):
-    def __init__(self,  driver,  context,  probe):
+    def __init__(self,  driver,  context,  probe, conf):
         self._driver = driver
         self._context = context
         self._probe = probe
+        self._conf = conf
 
     def execute(self):
         self._driver.deleteProbe(self._context, self._probe)
         self._probe.deployed='False'
-        stor = balancer.storage.storage.Storage()
+        stor = balancer.storage.storage.Storage(self._conf)
         wr = stor.getWriter()
         wr.updateDeployed(self._probe,  'False')
 
@@ -591,16 +599,17 @@ class SuspendRServerCommand(object):
 
 
 class CreateVIPCommand(object):
-    def __init__(self,  driver,  context,  vip,  sf):
+    def __init__(self,  driver,  context,  vip,  sf, conf):
         self._driver = driver
         self._context = context
         self._vip = vip
         self._sf = sf
+        self._conf = conf
 
     def execute(self):
         self._driver.createVIP(self._context,  self._vip,  self._sf)
         self._vip.deployed='True'
-        stor = balancer.storage.storage.Storage()
+        stor = balancer.storage.storage.Storage(self._conf)
         wr = stor.getWriter()
         wr.updateDeployed(self._vip,  'True')
 
@@ -608,7 +617,7 @@ class CreateVIPCommand(object):
         try:
             self._driver.deleteVIP(self._context,  self._vip,  self._sf)
             self._vip.deployed='False'
-            stor = balancer.storage.storage.Storage()
+            stor = balancer.storage.storage.Storage(self._conf)
             wr = stor.getWriter()
             wr.updateDeployed(self._vip,  'False')
         except:
@@ -616,15 +625,16 @@ class CreateVIPCommand(object):
 
 
 class DeleteVIPCommand(object):
-    def __init__(self,  driver,  context,  vip):
+    def __init__(self,  driver,  context,  vip, conf):
         self._driver = driver
         self._context = context
         self._vip = vip
+        self._conf = conf
 
     def execute(self):
         self._driver.deleteVIP(self._context,   self._vip)
         self._vip.deployed='False'
-        stor = balancer.storage.storage.Storage()
+        stor = balancer.storage.storage.Storage(self._conf)
         wr = stor.getWriter()
         wr.updateDeployed(self._vip,  'False')
 
