@@ -94,7 +94,9 @@ class CreateLBWorker(ASyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        return core_api.create_lb(self._conf, **self._task.parameters)
+        id = core_api.create_lb(self._conf, **self._task.parameters)
+        self._task.status = STATUS_DONE
+        return id
 
 class UpdateLBWorker(ASyncronousWorker):
     def __init__(self,  task, conf):
@@ -103,66 +105,10 @@ class UpdateLBWorker(ASyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        params = self._task.parameters
-        lb_id = params['id']
-        sched = Scheduller(self._conf)
-
-        #Step1. Load LB from DB
-
-        old_balancer_instance = Balancer(self._conf)
-        balancer_instance = Balancer(self._conf)
-        logger.debug("Loading LB data from DB for Lb id: %s" % lb_id)
-        #TODO add clone function to Balancer in order to avoid double read
-        balancer_instance.loadFromDB(lb_id)
-        old_balancer_instance.loadFromDB(lb_id)
-
-        #Step 1. Parse parameters came from request
-        body = params['body']
-        lb = balancer_instance.lb
-        old_predictor_id = None
-        port_updated = False
-        for key in body.keys():
-            if hasattr(lb, key):
-                logger.debug("updating attribute %s of LB. Value is %s" \
-                    % (key, body[key]))
-                setattr(lb, key, body[key])
-                if key.lower() == "algorithm":
-                    old_predictor_id = balancer_instance.sf._predictor.id
-                    balancer_instance.sf._predictor = \
-                        createPredictor(body[key])
-                else:
-                    logger.debug("Got unknown attribute %s of LB. Value is %s"\
-                        % (key, body[key]))
-        #Step2: Save updated data in DB
-        lb.status = \
-            balancer.loadbalancers.loadbalancer.LB_PENDING_UPDATE_STATUS
-        balancer_instance.update()
-        #Step3. Update device config
-
-        device = sched.getDeviceByID(lb.device_id)
-        devmap = DeviceMap()
-        driver = devmap.getDriver(device)
-        context = driver.getContext(device)
-
-        #Step 4. Deploy new config to device
-        commands = makeUpdateLBCommandChain(old_balancer_instance, \
-                balancer_instance,  driver,  context, self._conf)
-        deploy = Deployer()
-        deploy.commands = commands
-        try:
-            deploy.execute()
-        except:
-            old_balancer_instance.lb.status = \
-                balancer.loadbalancers.loadbalancer.LB_ERROR_STATUS
-            old_balancer_instance.update()
-            return
-
-        balancer_instance.lb.status = \
-            balancer.loadbalancers.loadbalancer.LB_ACTIVE_STATUS
-        balancer_instance.update()
+        id =  core_api.update_lb(self._conf, self._task.parameters['id'],
+                                             self._task.parameters['body'])
         self._task.status = STATUS_DONE
-        return lb.id
-
+        return id
 
 class DeleteLBWorker(SyncronousWorker):
     def __init__(self,  task, conf):
@@ -171,30 +117,7 @@ class DeleteLBWorker(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        lb_id = self._task.parameters
-        sched = Scheduller(self._conf)
-        balancer_instance = Balancer(self._conf)
-        balancer_instance.loadFromDB(lb_id)
-
-        device = sched.getDeviceByID(balancer_instance.lb.device_id)
-        devmap = DeviceMap()
-        driver = devmap.getDriver(device)
-        context = driver.getContext(device)
-
-        #Step 1. Parse parameters came from request
-        #bal_deploy.parseParams(params)
-
-#        #Step 2. Delete config in DB
-#        balancer_instance.removeFromDB()
-
-        #Step 3. Destruct config at device
-        commands = makeDeleteLBCommandChain(balancer_instance,  \
-                    driver,  context, self._conf)
-        destruct = Destructor()
-        destruct.commands = commands
-        destruct.execute()
-        
-        balancer_instance.removeFromDB()
+        core_api.delete_lb(self._conf, self._task.parameters['id'])
         self._task.status = STATUS_DONE
         return "OK"
 
@@ -206,34 +129,10 @@ class LBaddNode(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        lb_id = self._task.parameters['id']
-        node = self._task.parameters['node']
-        logger.debug("Got new node description %s" % node)
-        rs = RealServer()
-        sched = Scheduller(self._conf)
-        bal_instance = Balancer(self._conf)
-
-        bal_instance.loadFromDB(lb_id)
-        bal_instance.removeFromDB()
-        rs.loadFromDict(node)
-        rs.sf_id = bal_instance.sf.id
-        rs.name = rs.id
-
-        bal_instance.rs.append(rs)
-        bal_instance.sf._rservers.append(rs)
-        bal_instance.savetoDB()
-
-        device = sched.getDeviceByID(bal_instance.lb.device_id)
-        devmap = DeviceMap()
-        driver = devmap.getDriver(device)
-        context = driver.getContext(device)
-
-        commands = makeAddNodeToLBChain(bal_instance, driver, context, rs, self._conf)
-        deploy = Deployer()
-        deploy.commands = commands
-        deploy.execute()
+        id = core_api.lb_add_node(self._conf, self._task.parameters['id'],
+                                              self._task.parameters['node'])
         self._task.status = STATUS_DONE
-        return "node: %s" % rs.id
+        return "node: %s" % id
 
 
 class LBShowNodes(SyncronousWorker, conf):
@@ -243,15 +142,7 @@ class LBShowNodes(SyncronousWorker, conf):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        lb_id = self._task.parameters['id']
-
-        bal_instance = Balancer(self._conf)
-        nodes = {'nodes': []}
-
-        bal_instance.loadFromDB(lb_id)
-        for rs in bal_instance.rs:
-            nodes['nodes'].append(rs.convertToDict())
-
+        nodes = core_api.lb_show_nodes(self._conf, self._task.parameters['id'])
         self._task.status = STATUS_DONE
         return nodes
 
@@ -263,38 +154,11 @@ class LBDeleteNode(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        lb_id = self._task.parameters['id']
-        nodeID = self._task.parameters['nodeID']
-
-        bal_instance = Balancer(self._conf)
-        #Step 1: Load balancer from DB
-        bal_instance.loadFromDB(lb_id)
-        sched = Scheduller(self._conf)
-        device = sched.getDeviceByID(bal_instance.lb.device_id)
-        devmap = DeviceMap()
-        driver = devmap.getDriver(device)
-        context = driver.getContext(device)
-        store = Storage(self._conf)
-
-        #Step 2: Get reader and writer
-        rd = store.getReader()
-        dl = store.getDeleter()
-        #Step 3: Get RS object from DB
-        rs = rd.getRServerById(nodeID)
-
-        #Step 4: Delete RS from DB
-        dl.deleteRSbyID(nodeID)
-
-        #Step 5: Make commands for deleting RS
-
-        commands = makeDeleteNodeFromLBChain(bal_instance, driver, context, rs, self._conf)
-        destruct = Destructor()
-        destruct.commands = commands
-
-        #Step 6: Delete real server from device
-        destruct.execute()
+        lb_node_id = core_api.lb_delete_node(self._conf,
+                                             self._task.parameters['id'],
+                                             self._task.parameters['nodeID'])
         self._task.status = STATUS_DONE
-        return "Deleted node with id %s" % nodeID
+        return "Deleted node with id %s" % lb_node_id
 
 
 class LBChangeNodeStatus(SyncronousWorker):
@@ -304,46 +168,11 @@ class LBChangeNodeStatus(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        lb_id = self._task.parameters['id']
-        nodeID = self._task.parameters['nodeID']
-        nodeStatus = self._task.parameters['status']
-
-        bal_instance = Balancer(self._conf)
-        bal_instance.loadFromDB(lb_id)
-        sched = Scheduller(self._conf)
-        device = sched.getDeviceByID(bal_instance.lb.device_id)
-        devmap = DeviceMap()
-        driver = devmap.getDriver(device)
-        context = driver.getContext(device)
-        store = Storage(self._conf)
-        reader = store.getReader()
-        writer = store.getWriter()
-        deleter = store.getDeleter()
-
-        rs = reader.getRServerById(nodeID)
-        sf = bal_instance.sf
-        if rs.state == nodeStatus:
-            return "OK"
-        
-        commands =[]
-        rs.state = nodeStatus
-        rsname = rs.name
-        if rs.parent_id !="":
-                rs.name = rs.parent_id
-        logger.debug("Changing RServer status to: %s" % nodeStatus)
-        if nodeStatus == "inservice":
-            commands.append(ActivateRServerCommand(driver,  context, sf, rs))
-        else:
-            commands.append(SuspendRServerCommand(driver,  context, sf, rs))
-
-        deploy = Deployer()
-
-        deploy.commands = commands
-        deploy.execute()
-        rs.name = rsname
-        writer.updateObjectInTable(rs)
+        msg = core_api.lb_change_node_status(self._conf,
+                                             self._task.parameters['id'],
+                                             self._task.parameters['nodeID'],
+                                             self._task.parameters['status'])
         self._task.status = STATUS_DONE
-        msg = "Node %s has status %s" % (nodeID, rs.state)
         return msg
 
 
@@ -354,43 +183,12 @@ class LBUpdateNode(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        lb_id = self._task.parameters['id']
-        nodeID = self._task.parameters['nodeID']
-        node = self._task.parameters['node']
-
-        bal_instance = Balancer(self._conf)
-        bal_instance.loadFromDB(lb_id)
-        sched = Scheduller(self._conf)
-        device = sched.getDeviceByID(bal_instance.lb.device_id)
-        devmap = DeviceMap()
-        driver = devmap.getDriver(device)
-        context = driver.getContext(device)
-        store = Storage(self._conf)
-        reader = store.getReader()
-        writer = store.getWriter()
-        deleter = store.getDeleter()
-
-        rs = reader.getRServerById(nodeID)
-        dict = rs.convertToDict()
-        new_rs = RealServer()
-        new_rs.loadFromDict(dict)
-
-        for prop in node.keys():
-            if hasattr(rs, prop):
-                if dict[prop] != node[prop]:
-                    setattr(new_rs, prop, node[prop])
-
-        deleter.deleteRSbyID(nodeID)
-        writer.writeRServer(new_rs)
-        deploy = Deployer()
-        commands = \
-            makeDeleteNodeFromLBChain(bal_instance, driver, context,  rs, self._conf) \
-            + makeAddNodeToLBChain(bal_instance, driver, context, new_rs, self._conf)
-        deploy.commands = commands
-        deploy.execute()
+        msg = core_api.lb_update_node(self._conf,
+                                      self._task.parameters['id'],
+                                      self._task.parameters['nodeID'],
+                                      self._task.parameters['node'])
         self._task.status = STATUS_DONE
-        return "Node with id %s now has params %s" % \
-            (nodeID, new_rs.convertToDict())
+        return msg
 
 
 class LBShowProbes(SyncronousWorker):
@@ -400,19 +198,8 @@ class LBShowProbes(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        lb_id = self._task.parameters['id']
-        store = Storage(self._conf)
-        reader = store.getReader()
-
-        sf_id = reader.getSFByLBid(lb_id).id
-        probes = reader.getProbesBySFid(sf_id)
-
-        list = []
-        dict = {"healthMonitoring": {}}
-        for prb in probes:
-            list.append(prb.convertToDict())
+        dict = core_api.lb_show_probes(self._conf, self._task.parameters['id'])
         self._task.status = STATUS_DONE
-        dict['healthMonitoring'] = list
         return dict
 
 
