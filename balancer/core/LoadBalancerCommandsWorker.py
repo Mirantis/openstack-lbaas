@@ -49,10 +49,7 @@ class LBGetIndexWorker(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        store = Storage(self._conf)
-        reader = store.getReader()
-        tenant_id = self._task.parameters.get('tenant_id',  "")
-        list = reader.getLoadBalancers(tenant_id)
+        list = core_api.lb_get_index(self._conf, **self._task.parameters)
         self._task.status = STATUS_DONE
         return list
 
@@ -63,11 +60,7 @@ class LBFindforVM(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        vm_id = self._task.parameters['vm_id']
-        tenant_id = self._task.parameters.get('tenant_id', "")
-        store = Storage(self._conf)
-        reader = store.getReader()
-        list = reader.getLoadBalancersByVMid(vm_id,  tenant_id)
+        list = core_api.lb_find_for_vm(self._conf, **self._task.parameters)
         self._task.status = STATUS_DONE
         return list
         
@@ -78,13 +71,7 @@ class LBGetDataWorker(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        store = Storage(self._conf)
-        reader = store.getReader()
-
-        id = self._task.parameters['id']
-        logger.debug("Getting information about loadbalancer with id: %s" % id)
-        list = reader.getLoadBalancerById(id)
-        logger.debug("Got information: %s" % list)
+        list = core_api.lb_get_data(self._conf, self._task.parameters['id'])
         self._task.status = STATUS_DONE
         return list
 
@@ -95,20 +82,7 @@ class LBshowDetails(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        store = Storage(self._conf)
-        reader = store.getReader()
-
-        id = self._task.parameters['id']
-        lb = Balancer(self._conf)
-        lb.loadFromDB(id)
-        obj = {'loadbalancer':  lb.lb.convertToDict()}
-        lbobj = obj['loadbalancer']
-        lbobj['nodes'] = lb.rs
-        lbobj['virtualIps'] = lb.vips
-        lbobj['healthMonitor'] = lb.probes
-        logger.debug("Getting information about loadbalancer with id: %s" % id)
-        #list = reader.getLoadBalancerById(id)
-        logger.debug("Got information: %s" % lbobj)
+        lbobj = core_api.lb_show_details(self._conf, self._task.parameters['id'])
         self._task.status = STATUS_DONE
         return lbobj
 
@@ -120,53 +94,7 @@ class CreateLBWorker(ASyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        params = self._task.parameters
-        balancer_instance = Balancer(self._conf)
-        #Step 1. Parse parameters came from request
-
-        balancer_instance.parseParams(params)
-        sched = Scheduller.Instance(self._conf)
-        # device = sched.getDevice()
-        device = sched.getDeviceByID(balancer_instance.lb.device_id)
-        devmap = DeviceMap()
-        driver = devmap.getDriver(device)
-        context = driver.getContext(device)
-
-        lb = balancer_instance.getLB()
-        lb.device_id = device.id
-
-        #Step 2. Save config in DB
-        balancer_instance.savetoDB()
-
-        #Step 3. Deploy config to device
-        commands = makeCreateLBCommandChain(balancer_instance,  driver, \
-        context, self._conf)
-        context.addParam('balancer',  balancer_instance)
-        deploy = Deployer(device,  context)
-        deploy.commands = commands
-        processing = Processing.Instance(self._conf)
-        event = balancer.processing.event.Event( balancer.processing.event.EVENT_PROCESS, 
-                                                deploy,  2)
-        try:
-            processing.put_event(event)
-            
-        except openstack.common.exception.Error:
-            balancer_instance.lb.status = \
-                balancer.loadbalancers.loadbalancer.LB_ERROR_STATUS
-            balancer_instance.update()
-            return
-        except openstack.common.exception.Invalid:
-            balancer_instance.lb.status = \
-                balancer.loadbalancers.loadbalancer.LB_ERROR_STATUS
-            balancer_instance.update()
-            return
-
-        #balancer_instance.lb.status = \
-         #   balancer.loadbalancers.loadbalancer.LB_ACTIVE_STATUS
-        #balancer_instance.update()
-        #self._task.status = STATUS_DONE
-        return lb.id
-
+        return core_api.create_lb(self._conf, **self._task.parameters)
 
 class UpdateLBWorker(ASyncronousWorker):
     def __init__(self,  task, conf):
