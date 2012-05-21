@@ -24,7 +24,7 @@ import openstack.common.exception
 from balancer.core.Worker import *
 from balancer.core.LBCommands import *
 from balancer.storage.storage import *
-from balancer.core.scheduller import Scheduller
+from balancer.core.scheduler import Scheduler
 from balancer.devices.DeviceMap import DeviceMap
 from balancer.loadbalancers.vserver import Balancer
 from balancer.loadbalancers.vserver import makeCreateLBCommandChain, \
@@ -135,8 +135,8 @@ class LBaddNode(SyncronousWorker):
         return "node: %s" % id
 
 
-class LBShowNodes(SyncronousWorker, conf):
-    def __init__(self,  task):
+class LBShowNodes(SyncronousWorker):
+    def __init__(self,  task, conf):
         super(LBShowNodes, self).__init__(task, conf)
         self._command_queue = Queue.LifoQueue()
 
@@ -237,19 +237,8 @@ class LBShowSticky(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        lb_id = self._task.parameters['id']
-        store = Storage(self._conf)
-        reader = store.getReader()
-
-        sf_id = reader.getSFByLBid(lb_id).id
-        stickies = reader.getStickiesBySFid(sf_id)
-
-        list = []
-        dict = {"sessionPersistence": {}}
-        for st in stickies:
-            list.append(st.convertToDict())
+        dict = core_api.lb_show_sticky(self._conf, self._task.parameters['id'])
         self._task.status = STATUS_DONE
-        dict['sessionPersistence'] = list
         return dict
 
 
@@ -260,36 +249,10 @@ class LBAddSticky(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        lb_id = self._task.parameters['id']
-        sticky = self._task.parameters['sticky']
-        logger.debug("Got new sticky description %s" % sticky)
-        if sticky['type'] == None:
-            return
-
-        sched = Scheduller(self._conf)
-        bal_instance = Balancer(self._conf)
-
-        bal_instance.loadFromDB(lb_id)
-        bal_instance.removeFromDB()
-        st = createSticky(sticky['type'])
-        st.loadFromDict(sticky)
-        st.sf_id = bal_instance.sf.id
-        st.name = st.id
-
-        bal_instance.sf._sticky.append(st)
-        bal_instance.savetoDB()
-
-        device = sched.getDeviceByID(bal_instance.lb.device_id)
-        devmap = DeviceMap()
-        driver = devmap.getDriver(device)
-        context = driver.getContext(device)
-
-        commands = makeAddStickyToLBChain(bal_instance, driver, context, st, self._conf)
-        deploy = Deployer()
-        deploy.commands = commands
-        deploy.execute()
+        id = core_api.lb_add_sticky(self._conf, self._task.parameters['id'],
+                                                self._task.parameters['sticky'])
         self._task.status = STATUS_DONE
-        return "sticky: %s" % st.id
+        return "sticky: %s" % id
 
 
 class LBdeleteSticky(SyncronousWorker):
@@ -299,40 +262,11 @@ class LBdeleteSticky(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        lb_id = self._task.parameters['id']
-        stickyID = self._task.parameters['stickyID']
-
-        bal_instance = Balancer(self._conf)
-        #Step 1: Load balancer from DB
-        bal_instance.loadFromDB(lb_id)
-        sched = Scheduller(self._conf)
-        device = sched.getDeviceByID(bal_instance.lb.device_id)
-        devmap = DeviceMap()
-        driver = devmap.getDriver(device)
-        context = driver.getContext(device)
-
-        store = Storage(self._conf)
-
-        #Step 2: Get reader and writer
-        rd = store.getReader()
-        dl = store.getDeleter()
-        #Step 3: Get sticky object from DB
-        st = rd.getStickyById(stickyID)
-
-        #Step 4: Delete sticky from DB
-        dl.deleteStickyByID(stickyID)
-
-        #Step 5: Make commands for deleting probe
-
-        commands = \
-            makeDeleteStickyFromLBChain(bal_instance, driver, context, st, self._conf)
-        destruct = Destructor()
-        destruct.commands = commands
-
-        #Step 6: Delete real server from device
-        destruct.execute()
+        sticky_id = core_api.lb_delete_sticky(self._conf,
+                                              self._task.parameters['id'],
+                                              self._task.parameters['stickyID'])
         self._task.status = STATUS_DONE
-        return "Deleted sticky with id %s" % stickyID
+        return "Deleted sticky with id %s" % sticky_id
         
         
 class LBActionMapper(object):
@@ -352,7 +286,7 @@ class LBActionMapper(object):
         if action == "addNode":
             return LBaddNode(task, conf)
         if action == "showNodes":
-            return LBShowNodes(task)
+            return LBShowNodes(task, conf)
         if action == "deleteNode":
             return LBDeleteNode(task, conf)
         if action == "changeNodeStatus":
