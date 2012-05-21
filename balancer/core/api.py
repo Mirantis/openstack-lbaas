@@ -29,7 +29,8 @@ from balancer.loadbalancers.vserver import makeDeleteLBCommandChain,\
                                            makeDeleteProbeFromLBChain,\
                                            makeAddProbeToLBChain,\
                                            makeDeleteNodeFromLBChain,\
-                                           makeAddNodeToLBChain
+                                           makeAddNodeToLBChain,\
+                                           makeCreateLBCommandChain
 from balancer.loadbalancers.vserver import createSticky, createProbe,\
                                            createPredictor
 from balancer.loadbalancers.vserver import SuspendRServerCommand,\
@@ -487,17 +488,17 @@ def lb_delete_sticky(conf, lb_id, sticky_id):
     driver = devmap.getDriver(device)
     context = driver.getContext(device)
 
-    store = Storage(self._conf)
+    store = Storage(conf)
 
     #Step 2: Get reader and writer
     rd = store.getReader()
     dl = store.getDeleter()
 
     #Step 3: Get sticky object from DB
-    st = rd.getStickyById(stickyID)
+    st = rd.getStickyById(sticky_id)
 
     #Step 4: Delete sticky from DB
-    dl.deleteStickyByID(stickyID)
+    dl.deleteStickyByID(sticky_id)
 
     #Step 5: Make commands for deleting probe
     commands =\
