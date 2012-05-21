@@ -232,10 +232,10 @@ class LBAddSticky(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        id = core_api.lb_add_sticky(self._conf, self._task.parameters['id'],
-                                                self._task.parameters['sticky'])
+        st_id = core_api.lb_add_sticky(self._conf, self._task.parameters['id'],
+                                       self._task.parameters['sticky'])
         self._task.status = STATUS_DONE
-        return "sticky: %s" % id
+        return "sticky: %s" % st_id
 
 
 class LBdeleteSticky(SyncronousWorker):

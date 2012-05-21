@@ -51,7 +51,7 @@ class DeviceCreateWorker(SyncronousWorker):
         writer = store.getWriter()
         writer.writeDevice(dev)
         sc = ServiceController.Instance(self._conf)
-        sched = sc.scheduler
+        sched = sc.scheduller
         sched.addDevice(dev)
         self._task.status = STATUS_DONE
         return 'OK'
@@ -86,7 +86,7 @@ class DeviceDeleteWorker(SyncronousWorker):
         writer = store.getWriter()
         writer.writeDevice(dev)
         sc = ServiceController.Instance(self._conf)
-        sched = sc.scheduler
+        sched = sc.scheduller
         sched.addDevice(dev)
         self._task.status = STATUS_DONE
         return 'OK'

@@ -21,7 +21,7 @@ import threading
 
 from balancer.common.utils import Singleton
 from openstack.common import exception
-from  balancer.core.scheduler import Scheduler
+from  balancer.core.scheduller import Scheduller
 
 logger = logger = logging.getLogger(__name__)
 
@@ -87,11 +87,11 @@ class ServiceController():
         logger.debug("Service controller instance created.")
         self._tasks = {}
         self.lock = threading.Lock()
-        self._scheduler = Scheduler.Instance(conf)
+        self._scheduller = Scheduller.Instance(conf)
 
     @property
-    def scheduler(self):
-        return self._scheduler
+    def scheduller(self):
+        return self._scheduller
 
     def getTaskStatus(self,  id):
         #TODO thread safe ?

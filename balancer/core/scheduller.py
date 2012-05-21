@@ -27,7 +27,7 @@ from balancer.common.utils import Singleton
 logger = logging.getLogger(__name__)
 
 @Singleton
-class Scheduler(object):
+class Scheduller(object):
 
     def __init__(self, conf):
         self._device_map = {}
