@@ -210,37 +210,10 @@ class LBAddProbe(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        lb_id = self._task.parameters['id']
-        probe = self._task.parameters['probe']
-        logger.debug("Got new probe description %s" % probe)
-        if probe['type'] == None:
-            return
-
-        sched = Scheduller(self._conf)
-        bal_instance = Balancer(self._conf)
-
-        bal_instance.loadFromDB(lb_id)
-        bal_instance.removeFromDB()
-        prb = createProbe(probe['type'])
-        prb.loadFromDict(probe)
-        prb.sf_id = bal_instance.sf.id
-        prb.name = prb.id
-
-        bal_instance.probes.append(prb)
-        bal_instance.sf._probes.append(prb)
-        bal_instance.savetoDB()
-
-        device = sched.getDeviceByID(bal_instance.lb.device_id)
-        devmap = DeviceMap()
-        driver = devmap.getDriver(device)
-        context = driver.getContext(device)
-
-        commands = makeAddProbeToLBChain(bal_instance, driver, context, prb, self._conf)
-        deploy = Deployer()
-        deploy.commands = commands
-        deploy.execute()
+        id = core_api.lb_add_probe(self._conf, self._task.parameters['id'],
+                                   self._task.parameters['probe'])
         self._task.status = STATUS_DONE
-        return "probe: %s" % prb.id
+        return "probe: %s" % id
 
 
 class LBdeleteProbe(SyncronousWorker):
@@ -250,40 +223,11 @@ class LBdeleteProbe(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        lb_id = self._task.parameters['id']
-        probeID = self._task.parameters['probeID']
-
-        bal_instance = Balancer(self._conf)
-        #Step 1: Load balancer from DB
-        bal_instance.loadFromDB(lb_id)
-        sched = Scheduller(self._conf)
-        device = sched.getDeviceByID(bal_instance.lb.device_id)
-        devmap = DeviceMap()
-        driver = devmap.getDriver(device)
-        context = driver.getContext(device)
-
-        store = Storage(self._conf)
-
-        #Step 2: Get reader and writer
-        rd = store.getReader()
-        dl = store.getDeleter()
-        #Step 3: Get RS object from DB
-        prb = rd.getProbeById(probeID)
-
-        #Step 4: Delete RS from DB
-        dl.deleteProbeByID(probeID)
-
-        #Step 5: Make commands for deleting probe
-
-        commands = \
-            makeDeleteProbeFromLBChain(bal_instance, driver, context, prb, self._conf)
-        destruct = Destructor()
-        destruct.commands = commands
-
-        #Step 6: Delete real server from device
-        destruct.execute()
+        probe_id = core_api.lb_delete_probe(self._conf,
+                                            self._task.parameters['id'],
+                                            self._task.parameters['probeID'])
         self._task.status = STATUS_DONE
-        return "Deleted probe with id %s" % probeID
+        return "Deleted probe with id %s" % probe_id
 
 
 class LBShowSticky(SyncronousWorker):

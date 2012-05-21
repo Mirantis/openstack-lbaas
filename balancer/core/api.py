@@ -18,6 +18,7 @@
 import logging
 import functools
 import eventlet
+from balancer.core.scheduller import Scheduller
 from balancer.loadbalancers.vserver import Balancer
 
 logger = logging.getLogger(__name__)
@@ -73,7 +74,7 @@ def create_lb(conf, **params):
     #Step 1. Parse parameters came from request
 
     balancer_instance.parseParams(params)
-    sched = Scheduller(conf)
+    sched = Scheduller.Instance(conf)
     # device = sched.getDevice()
     device = sched.getDeviceByID(balancer_instance.lb.device_id)
     devmap = DeviceMap()
@@ -117,7 +118,7 @@ def create_lb(conf, **params):
 
 @asynchronous
 def update_lb(conf, lb_id, lb_body):
-    sched = Scheduller(conf)
+    sched = Scheduller.Instance(conf)
 
     #Step 1. Load LB from DB
     old_balancer_instance = Balancer(conf)
@@ -175,7 +176,7 @@ def update_lb(conf, lb_id, lb_body):
     return lb.id
 
 def delete_lb(conf, lb_id):
-    sched = Scheduller(conf)
+    sched = Scheduller.Instance(conf)
     balancer_instance = Balancer(conf)
     balancer_instance.loadFromDB(lb_id)
 
@@ -203,7 +204,7 @@ def delete_lb(conf, lb_id):
 def lb_add_node(conf, lb_id, lb_node):
     logger.debug("Got new node description %s" % lb_node)
     rs = RealServer()
-    sched = Scheduller(conf)
+    sched = Scheduller.Instance(conf)
     balancer_instance = Balancer(conf)
 
     balancer_instance.loadFromDB(lb_id)
@@ -240,7 +241,7 @@ def lb_delete_node(conf, lb_id, lb_node_id):
     balancer_instance = Balancer(conf)
     #Step 1: Load balancer from DB
     balancer_instance.loadFromDB(lb_id)
-    sched = Scheduller(conf)
+    sched = Scheduller.Instance(conf)
     device = sched.getDeviceByID(balancer_instance.lb.device_id)
     devmap = DeviceMap()
     driver = devmap.getDriver(device)
@@ -269,7 +270,7 @@ def lb_delete_node(conf, lb_id, lb_node_id):
 def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
     balancer_instance = Balancer(conf)
     balancer_instance.loadFromDB(lb_id)
-    sched = Scheduller(conf)
+    sched = Scheduller.Instance(conf)
     device = sched.getDeviceByID(balancer_instance.lb.device_id)
     devmap = DeviceMap()
     driver = devmap.getDriver(device)
@@ -306,7 +307,7 @@ def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
 def lb_update_node(conf, lb_id, lb_node_id, lb_node):
     balancer_instance = Balancer(conf)
     balancer_instance.loadFromDB(lb_id)
-    sched = Scheduller(conf)
+    sched = Scheduller.Instance(conf)
     device = sched.getDeviceByID(balancer_instance.lb.device_id)
     devmap = DeviceMap()
     driver = devmap.getDriver(device)
@@ -350,3 +351,66 @@ def lb_show_probes(conf, lb_id):
         list.append(prb.convertToDict())
     dict['healthMonitoring'] = list
     return dict
+
+def lb_add_probe(conf, lb_id, lb_probe):
+    logger.debug("Got new probe description %s" % lb_probe)
+    if lb_probe['type'] == None:
+        return
+
+    scheduller = Scheduller.Instance(conf)
+    balancer_instance = Balancer(conf)
+
+    balancer_instance.loadFromDB(lb_id)
+    balancer_instance.removeFromDB()
+    prb = createProbe(lb_probe['type'])
+    prb.loadFromDict(lb_probe)
+    prb.sf_id = balancer_instance.sf.id
+    prb.name = prb.id
+
+    balancer_instance.probes.append(prb)
+    balancer_instance.sf._probes.append(prb)
+    balancer_instance.savetoDB()
+
+    device = scheduller.getDeviceByID(balancer_instance.lb.device_id)
+    devmap = DeviceMap()
+    driver = devmap.getDriver(device)
+    context = driver.getContext(device)
+
+    commands = makeAddProbeToLBChain(balancer_instance, driver, context, prb, conf)
+    deploy = Deployer()
+    deploy.commands = commands
+    deploy.execute()
+    return prb.id
+
+def lb_delete_probe(conf, lb_id, probe_id):
+    balancer_instance = Balancer(conf)
+
+    #Step 1: Load balancer from DB
+    balancer_instance.loadFromDB(lb_id)
+    scheduller = Scheduller.Instance(conf)
+    device = scheduller.getDeviceByID(balancer_instance.lb.device_id)
+    devmap = DeviceMap()
+    driver = devmap.getDriver(device)
+    context = driver.getContext(device)
+
+    store = Storage(conf)
+
+    #Step 2: Get reader and writer
+    rd = store.getReader()
+    dl = store.getDeleter()
+
+    #Step 3: Get RS object from DB
+    prb = rd.getProbeById(probe_id)
+
+    #Step 4: Delete RS from DB
+    dl.deleteProbeByID(probe_id)
+
+    #Step 5: Make commands for deleting probe
+    commands =\
+    makeDeleteProbeFromLBChain(balancer_instance, driver, context, prb, conf)
+    destruct = Destructor()
+    destruct.commands = commands
+
+    #Step 6: Delete real server from device
+    destruct.execute()
+    return probe_id
