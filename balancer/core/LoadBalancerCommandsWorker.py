@@ -77,9 +77,8 @@ class CreateLBWorker(ASyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        id = core_api.create_lb(self._conf, **self._task.parameters)
-        self._task.status = STATUS_DONE
-        return id
+        lb_id = core_api.create_lb(self._conf, **self._task.parameters)
+        return lb_id
 
 class UpdateLBWorker(ASyncronousWorker):
     def __init__(self,  task, conf):
@@ -88,10 +87,9 @@ class UpdateLBWorker(ASyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        id =  core_api.update_lb(self._conf, self._task.parameters['id'],
+        lb_id =  core_api.update_lb(self._conf, self._task.parameters['id'],
                                              self._task.parameters['body'])
-        self._task.status = STATUS_DONE
-        return id
+        return lb_id
 
 class DeleteLBWorker(SyncronousWorker):
     def __init__(self,  task, conf):
@@ -112,10 +110,10 @@ class LBaddNode(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        id = core_api.lb_add_node(self._conf, self._task.parameters['id'],
+        rs_id = core_api.lb_add_node(self._conf, self._task.parameters['id'],
                                               self._task.parameters['node'])
         self._task.status = STATUS_DONE
-        return "node: %s" % id
+        return "node: %s" % rs_id
 
 
 class LBShowNodes(SyncronousWorker):
@@ -193,10 +191,10 @@ class LBAddProbe(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        id = core_api.lb_add_probe(self._conf, self._task.parameters['id'],
+        probe_id = core_api.lb_add_probe(self._conf, self._task.parameters['id'],
                                    self._task.parameters['probe'])
         self._task.status = STATUS_DONE
-        return "probe: %s" % id
+        return "probe: %s" % probe_id
 
 
 class LBdeleteProbe(SyncronousWorker):
