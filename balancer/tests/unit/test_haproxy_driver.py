@@ -19,7 +19,7 @@ from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation
 from balancer.loadbalancers.serverfarm import ServerFarm
 from balancer.loadbalancers.virtualserver import VirtualServer
 from balancer.loadbalancers.realserver import RealServer
-
+from balancer.loadbalancers.probe import HTTPprobe
 
 class HAproxyDriverTestCase (unittest.TestCase):
 
@@ -73,7 +73,31 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.rserver.weight = '8'
         self.rserver.maxCon = 30000
         #
+        self.probe= HTTPprobe()
+        self.probe.type = "http"
+        self.probe.requestMethodType = "GET"
+        self.probe.requestHTTPurl  = "/index.html"
+        self.probe.minExpectStatus  = "200"
 
+
+    def test_AddHTTPProbe(self):
+        driver = HaproxyDriver()
+        driver.addProbeToSF(self.context,  self.server_farm,  self.probe)
+        self.assertTrue(True)
+        
+        
+    def test_AddLinesToBackendBlock(self):
+        test = HaproxyConfigFile("/tmp/haproxy.cfg")
+        NewLines = ["option httpchk",  "http-check expect status 200"]
+        test.AddLinesToBackendBlock(self.backend, NewLines)
+        self.assertTrue(True)
+        
+    def test_DeleteLinesTFromBackendBlock(self):
+        test = HaproxyConfigFile("/tmp/haproxy.cfg")
+        DeletedLines = ["option httpchk",  "http-check expect status 200"]
+        test.DeleteLinesFromBackendBlock(self.backend, DeletedLines)
+        self.assertTrue(True)
+    
     def test_IPaddressAdd(self):
         interface = RemoteInterface(self.context,  self.frontend)
         interface.addIP()

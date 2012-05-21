@@ -37,6 +37,47 @@ class HaproxyDriver(BaseDriver):
     def __init__(self):
         pass
 
+    def addProbeToSF(self,  context,  serverfarm,  probe):
+        '''
+            Haproxy support only tcp (connect), http and https (limited) probes
+        '''
+        pr_type = probe.type.lower()
+        if (pr_type != 'http') and (pr_type != 'https') and (pr_type != 'tcp'):
+            logger.debug('[HAPROXY] unsupported probe type %s,  exit' % pr_type)
+            return
+        if pr_type == "http":
+            haproxy_serverfarm = HaproxyBackend()
+            haproxy_serverfarm.name = serverfarm.name
+            self.option_httpchk = "option httpchk"
+            if probe.requestMethodType != "":
+                self.option_httpchk = "%s %s " % (self.option_httpchk ,  probe.requestMethodType)
+            else:
+                self.option_httpchk = "%s  GET" % self.option_httpchk
+            if probe.requestHTTPurl != "":
+                self.option_httpchk = "%s %s " % (self.option_httpchk , probe.requestHTTPurl)
+            else:
+                self.option_httpchk = "%s  /" % self.option_httpchk
+            if probe.expectRegExp != "":
+                self.http_check = "http-check expect rstring %s" % probe.expectRegExp
+            elif probe.minExpectStatus != "":
+                self.http_check = "http-check expect status %s" % probe.minExpectStatus
+            self.new_lines = [self.option_httpchk ,  self.http_check]
+        elif pr_type == "tcp":
+            self.new_lines =  ["option httpchk"]
+        elif pr_type == "https":
+            self.new_lines =  ["option ssl-hello-chk"]
+        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  \
+                                        context.configfilename))
+        remote = RemoteConfig(context)
+        remote.getConfig()
+        config_file.AddLinesToBackendBlock(haproxy_serverfarm, self.new_lines)
+        remote.putConfig()
+ 
+    #def deleteProbeFromSF(self,  context,  serverfarm,  probe):
+    #    cmd = "serverfarm " + serverfarm.name + "\n"
+    #    cmd += "no probe " + probe.name + "\n"
+    #    return self.send_data(context,  XMLstr)
+
     def getContext(self,  dev):
         return Context(dev.ip, dev.port, dev.user, dev.password, \
                        dev.localpath, dev.configfilepath, \
@@ -259,7 +300,7 @@ class HaproxyRserver():
         self.source_max_port = ''
         self.track = ''
         self.weight = 1
-
+        
 
 class HaproxyConfigFile:
     def __init__(self, haproxy_config_file_path='/tmp/haproxy.cfg'):
@@ -267,6 +308,34 @@ class HaproxyConfigFile:
 
     def GetHAproxyConfigFileName(self):
         return self.haproxy_config_file_path
+    
+    def AddLinesToBackendBlock(self, HaproxyBackend,  NewLines):
+        '''
+             Add lines to backend section config file
+        '''
+        new_config_file = self._ReadConfigFile()
+        logger.debug('[HAPROXY] add lines to backend %s' % HaproxyBackend.name)
+        for i in new_config_file.keys():
+            if i.find(HaproxyBackend.type) == 0 and i.find('%s' % HaproxyBackend.name) >= 0:
+                for j in NewLines:
+                    new_config_file[i].append("\t%s" % j)
+        self._WriteConfigFile(new_config_file)   
+
+    def DeleteLinesFromBackendBlock(self, HaproxyBackend,  DeletedLines):
+        '''
+            Delete lines from backend section config file
+        '''
+        new_config_file = self._ReadConfigFile()
+        logger.debug('[HAPROXY] delete lines from backend %s' % HaproxyBackend.name)
+        for i in new_config_file.keys():
+            if i.find(HaproxyBackend.type) == 0 and i.find('%s' % HaproxyBackend.name) >= 0:
+                for s in DeletedLines:
+                    for j in new_config_file[i]:
+                        logger.debug('[HAPROXY] found %s' % new_config_file[i])
+                        logger.debug('[HAPROXY] delete line \'%s\'' % s)
+                        if j.find(s) >= 0:
+                            new_config_file[i].remove(j)
+        self._WriteConfigFile(new_config_file)  
 
     def AddRserverToBackendBlock(self,  HaproxyBackend,  HaproxyRserver):
         '''
