@@ -18,26 +18,9 @@
 
 import logging
 import Queue
-import balancer.loadbalancers.loadbalancer
-import openstack.common.exception
 
+from balancer.core import api as core_api
 from balancer.core.Worker import *
-from balancer.core.LBCommands import *
-from balancer.storage.storage import *
-from balancer.core.scheduler import Scheduler
-from balancer.devices.DeviceMap import DeviceMap
-from balancer.loadbalancers.vserver import Balancer
-from balancer.loadbalancers.vserver import makeCreateLBCommandChain, \
-makeDeleteLBCommandChain, makeUpdateLBCommandChain, makeAddNodeToLBChain, \
-makeDeleteNodeFromLBChain, makeAddStickyToLBChain, makeDeleteStickyFromLBChain
-from balancer.loadbalancers.vserver import makeAddProbeToLBChain, \
-makeDeleteProbeFromLBChain,  ActivateRServerCommand,  SuspendRServerCommand
-from balancer.loadbalancers.vserver import Deployer,  Destructor, \
-createPredictor,  createProbe,  createSticky
-
-import balancer.processing.event
-from balancer.processing.processing import Processing
-
 
 logger = logging.getLogger(__name__)
 

@@ -20,7 +20,22 @@ import functools
 import eventlet
 
 from balancer.core.scheduler import Scheduler
-from balancer.loadbalancers.vserver import Balancer
+from balancer.devices.DeviceMap import DeviceMap
+from balancer.loadbalancers.realserver import RealServer
+from balancer.loadbalancers.vserver import Balancer, Deployer, Destructor
+from balancer.loadbalancers.vserver import makeDeleteLBCommandChain,\
+                                           makeDeleteStickyFromLBChain,\
+                                           makeAddStickyToLBChain,\
+                                           makeDeleteProbeFromLBChain,\
+                                           makeAddProbeToLBChain,\
+                                           makeDeleteNodeFromLBChain,\
+                                           makeAddNodeToLBChain
+from balancer.loadbalancers.vserver import createSticky, createProbe,\
+                                           createPredictor
+from balancer.loadbalancers.vserver import SuspendRServerCommand,\
+                                           ActivateRServerCommand
+from balancer.processing.processing import Processing
+from balancer.storage.storage import Storage
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +70,7 @@ def lb_get_data(conf, lb_id):
 
 def lb_show_details(conf, lb_id):
     store = Storage(conf)
-    reader = store.getReader()
+    #reader = store.getReader()
 
     lb = Balancer(conf)
     lb.loadFromDB(lb_id)
@@ -72,8 +87,8 @@ def lb_show_details(conf, lb_id):
 @asynchronous
 def create_lb(conf, **params):
     balancer_instance = Balancer(conf)
-    #Step 1. Parse parameters came from request
 
+    #Step 1. Parse parameters came from request
     balancer_instance.parseParams(params)
     sched = Scheduler.Instance(conf)
     # device = sched.getDevice()
@@ -95,8 +110,9 @@ def create_lb(conf, **params):
     deploy = Deployer(device,  context)
     deploy.commands = commands
     processing = Processing.Instance(conf)
-    event = balancer.processing.event.Event( balancer.processing.event.EVENT_PROCESS, 
-                                            deploy,  2)
+    event = balancer.processing.event.Event(balancer.processing.event.\
+                                                                EVENT_PROCESS,
+                                                                deploy,  2)
     try:
         processing.put_event(event)
         
