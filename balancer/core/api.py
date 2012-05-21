@@ -30,7 +30,8 @@ from balancer.loadbalancers.vserver import makeDeleteLBCommandChain,\
                                            makeAddProbeToLBChain,\
                                            makeDeleteNodeFromLBChain,\
                                            makeAddNodeToLBChain,\
-                                           makeCreateLBCommandChain
+                                           makeCreateLBCommandChain,\
+                                           makeUpdateLBCommandChain
 from balancer.loadbalancers.vserver import createSticky, createProbe,\
                                            createPredictor
 from balancer.loadbalancers.vserver import SuspendRServerCommand,\
@@ -240,7 +241,8 @@ def lb_add_node(conf, lb_id, lb_node):
     driver = devmap.getDriver(device)
     context = driver.getContext(device)
 
-    commands = makeAddNodeToLBChain(balancer_instance, driver, context, rs, conf)
+    commands = makeAddNodeToLBChain(balancer_instance, driver, context, rs,
+                                                                        conf)
     deploy = Deployer()
     deploy.commands = commands
     deploy.execute()
@@ -300,7 +302,7 @@ def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
 
     rs = reader.getRServerById(lb_node_id)
     sf = balancer_instance.sf
-    if rs.state == nodeStatus:
+    if rs.state == lb_node_status:
         return "OK"
 
     commands =[]
@@ -394,7 +396,8 @@ def lb_add_probe(conf, lb_id, lb_probe):
     driver = devmap.getDriver(device)
     context = driver.getContext(device)
 
-    commands = makeAddProbeToLBChain(balancer_instance, driver, context, prb, conf)
+    commands = makeAddProbeToLBChain(balancer_instance, driver, context, prb,
+                                                                         conf)
     deploy = Deployer()
     deploy.commands = commands
     deploy.execute()

@@ -17,6 +17,7 @@
 
 import logging
 
+from balancer.core import api as core_api
 from balancer.core.Worker import *
 from balancer.storage.storage import *
 from balancer.core.ServiceController import *
