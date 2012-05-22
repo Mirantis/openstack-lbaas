@@ -42,7 +42,7 @@ class SQLExecute(object):
             try:
                 cursor.execute(command)
                 executed = True
-            except OperationalError as ex:
+            except Exception ex:
                 logger.info("Got database exception. Msg: %s" % ex.message)
                 
                 
