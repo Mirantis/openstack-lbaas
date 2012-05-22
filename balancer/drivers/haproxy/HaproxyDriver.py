@@ -41,43 +41,51 @@ class HaproxyDriver(BaseDriver):
         '''
             Haproxy support only tcp (connect), http and https (limited) probes
         '''
-        pr_type = probe.type.lower()
-        if (pr_type != 'http') and (pr_type != 'https') and (pr_type != 'tcp'):
-            logger.debug('[HAPROXY] unsupported probe type %s,  exit' % pr_type)
-            return
-        if pr_type == "http":
-            haproxy_serverfarm = HaproxyBackend()
-            haproxy_serverfarm.name = serverfarm.name
-            self.option_httpchk = "option httpchk"
-            if probe.requestMethodType != "":
-                self.option_httpchk = "%s %s " % (self.option_httpchk ,  probe.requestMethodType)
-            else:
-                self.option_httpchk = "%s  GET" % self.option_httpchk
-            if probe.requestHTTPurl != "":
-                self.option_httpchk = "%s %s " % (self.option_httpchk , probe.requestHTTPurl)
-            else:
-                self.option_httpchk = "%s  /" % self.option_httpchk
-            if probe.expectRegExp != "":
-                self.http_check = "http-check expect rstring %s" % probe.expectRegExp
-            elif probe.minExpectStatus != "":
-                self.http_check = "http-check expect status %s" % probe.minExpectStatus
-            self.new_lines = [self.option_httpchk ,  self.http_check]
-        elif pr_type == "tcp":
-            self.new_lines =  ["option httpchk"]
-        elif pr_type == "https":
-            self.new_lines =  ["option ssl-hello-chk"]
+        self.probeSF(context,  serverfarm,  probe,  'add')
+
+    def deleteProbeFromSF(self,  context,  serverfarm,  probe):
+       self.probeSF(context,  serverfarm,  probe,  'del')
+
+    def  probeSF  (self,  context,  serverfarm,  probe, type_of_operation):
+        haproxy_serverfarm = HaproxyBackend()
+        haproxy_serverfarm.name = serverfarm.name
+        self.del_lines = ['option httpchk', 'option ssl-hello-chk',  'http-check expect']
         config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  \
                                         context.configfilename))
         remote = RemoteConfig(context)
         remote.getConfig()
-        config_file.AddLinesToBackendBlock(haproxy_serverfarm, self.new_lines)
+        if type_of_operation == 'del':
+            config_file.DeleteLinesFromBackendBlock(haproxy_serverfarm, self.del_lines)
+        elif type_of_operation == 'add':
+            pr_type = probe.type.lower()
+            if (pr_type != 'http') and (pr_type != 'https') and (pr_type != 'tcp'):
+                logger.debug('[HAPROXY] unsupported probe type %s,  exit' % pr_type)
+                return
+            if pr_type == "http":
+                haproxy_serverfarm = HaproxyBackend()
+                haproxy_serverfarm.name = serverfarm.name
+                self.option_httpchk = "option httpchk"
+                if probe.requestMethodType != "":
+                    self.option_httpchk = "%s %s " % (self.option_httpchk ,  probe.requestMethodType)
+                else:
+                    self.option_httpchk = "%s  GET" % self.option_httpchk
+                if probe.requestHTTPurl != "":
+                    self.option_httpchk = "%s %s " % (self.option_httpchk , probe.requestHTTPurl)
+                else:
+                    self.option_httpchk = "%s  /" % self.option_httpchk
+                if probe.expectRegExp != "":
+                    self.http_check = "http-check expect rstring %s" % probe.expectRegExp
+                elif probe.minExpectStatus != "":
+                    self.http_check = "http-check expect status %s" % probe.minExpectStatus
+                self.new_lines = [self.option_httpchk ,  self.http_check]
+            elif pr_type == "tcp":
+                self.new_lines =  ["option httpchk"]
+            elif pr_type == "https":
+                self.new_lines =  ["option ssl-hello-chk"]
+            config_file.DeleteLinesFromBackendBlock(haproxy_serverfarm, self.del_lines)
+            config_file.AddLinesToBackendBlock(haproxy_serverfarm, self.new_lines)
         remote.putConfig()
- 
-    #def deleteProbeFromSF(self,  context,  serverfarm,  probe):
-    #    cmd = "serverfarm " + serverfarm.name + "\n"
-    #    cmd += "no probe " + probe.name + "\n"
-    #    return self.send_data(context,  XMLstr)
-
+        
     def getContext(self,  dev):
         return Context(dev.ip, dev.port, dev.user, dev.password, \
                        dev.localpath, dev.configfilepath, \
@@ -318,10 +326,11 @@ class HaproxyConfigFile:
         for i in new_config_file.keys():
             if i.find(HaproxyBackend.type) == 0 and i.find('%s' % HaproxyBackend.name) >= 0:
                 for j in NewLines:
+                    logger.debug('[HAPROXY] add line %s' % j)
                     new_config_file[i].append("\t%s" % j)
         self._WriteConfigFile(new_config_file)   
 
-    def DeleteLinesFromBackendBlock(self, HaproxyBackend,  DeletedLines):
+    def DeleteLinesFromBackendBlock(self, HaproxyBackend,  DelLines):
         '''
             Delete lines from backend section config file
         '''
@@ -329,11 +338,11 @@ class HaproxyConfigFile:
         logger.debug('[HAPROXY] delete lines from backend %s' % HaproxyBackend.name)
         for i in new_config_file.keys():
             if i.find(HaproxyBackend.type) == 0 and i.find('%s' % HaproxyBackend.name) >= 0:
-                for s in DeletedLines:
+                logger.debug('[HAPROXY] found %s' % new_config_file[i])
+                for s in DelLines:
                     for j in new_config_file[i]:
-                        logger.debug('[HAPROXY] found %s' % new_config_file[i])
-                        logger.debug('[HAPROXY] delete line \'%s\'' % s)
                         if j.find(s) >= 0:
+                            logger.debug('[HAPROXY] delete line \'%s\'' % s)
                             new_config_file[i].remove(j)
         self._WriteConfigFile(new_config_file)  
 

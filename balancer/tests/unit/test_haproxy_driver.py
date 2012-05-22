@@ -84,7 +84,11 @@ class HAproxyDriverTestCase (unittest.TestCase):
         driver = HaproxyDriver()
         driver.addProbeToSF(self.context,  self.server_farm,  self.probe)
         self.assertTrue(True)
-        
+    
+    def test_DelHTTPProbe(self):
+        driver = HaproxyDriver()
+        driver.deleteProbeFromSF(self.context,  self.server_farm,  self.probe)
+        self.assertTrue(True)        
         
     def test_AddLinesToBackendBlock(self):
         test = HaproxyConfigFile("/tmp/haproxy.cfg")
