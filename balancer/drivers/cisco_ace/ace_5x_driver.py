@@ -84,14 +84,14 @@ class AceDriver(BaseDriver):
         cmd = "policy-map multi-match global\n"
         cmd += "class " + vip.name + "\n"
         cmd += "ssl-proxy server " + SSLproxy.name + "\n"
-        
+
         return self.send_data(context,  cmd)
 
     def removeSSLProxyFromVIP(self,  context,  vip,  SSLproxy):
         cmd = "policy-map multi-match global\n"
         cmd += "class " + vip.name + "\n"
         cmd += "no ssl-proxy server " + SSLproxy.name + "\n"
-        
+
         return self.send_data(context,  cmd)
 
     def createRServer(self,  context,  rserver):
@@ -160,7 +160,7 @@ class AceDriver(BaseDriver):
         else:
             cmd += "no inservice\n"
         return self.send_data(context,  cmd)
-        
+
     def suspendRServerGlobal(self,  context,  rserver):
         cmd = "rserver " + rserver.name + "\n"
         cmd += "no inservice\n"
@@ -240,7 +240,7 @@ class AceDriver(BaseDriver):
             if (pr_cr.count(pr_type) > 0):
                 if (self.checkNone(probe.userName) and \
                     self.checkNone(probe.password)):
-                    cmd += "credentials " + probe.userName 
+                    cmd += "credentials " + probe.userName
                     cmd += " " + probe.password
                     if (type == 'radius'):
                         if self.checkNone(probe.userSecret):
@@ -358,7 +358,7 @@ class AceDriver(BaseDriver):
             cmd += "failaction " + serverfarm.failAction + "\n"
 
         if self.checkNone(serverfarm._predictor.type):
-    	    pr = serverfarm._predictor.type.lower()
+            pr = serverfarm._predictor.type.lower()
             if (pr == "leastbandwidth"):
                 pr = "least-bandwidth"
             elif (pr == "leastconnections"):
@@ -466,7 +466,7 @@ class AceDriver(BaseDriver):
 
     def createStickiness(self,  context, sticky):
         name = sticky.name
-        sticky_type = sticky.type.lower() 
+        sticky_type = sticky.type.lower()
         if sticky_type == "httpcontent":
             sticky_type = "http-content"
         if sticky_type == "httpcookie":
@@ -564,7 +564,7 @@ class AceDriver(BaseDriver):
         # temparary issue
         if self.checkNone(sticky.sf_id):
             cmd += "serverfarm " + sticky.sf_id + "\n"
-        # Please, do not remove it  
+        # Please, do not remove it
         #if self.checkNone(sticky.serverFarm):
         #    cmd += "serverfarm " + sticky.serverFarm
         #    if self.checkNone(sticky.backupServerFarm):
@@ -616,7 +616,6 @@ class AceDriver(BaseDriver):
             cmd += " Call-ID" + name + "\n"
 
         return self.send_data(context,  cmd)
-        
 
     def addACLEntry(self,  context,  vip):
         cmd = "access-list vip-acl extended permit ip any host " + \
@@ -681,7 +680,7 @@ class AceDriver(BaseDriver):
             try:
                 tmp = s.deployConfig(context,  cmd)
             except:
-                logger.warning("Got exception on acl set")       
+                logger.warning("Got exception on acl set")
         else:
             #  Add service-policy for necessary vlans
             if is_sequence(vip.VLAN):
@@ -689,7 +688,7 @@ class AceDriver(BaseDriver):
                     cmd = "interface vlan " + str(i) + "\n"
                     cmd += "service-policy input " + pmap + "\n"
                     self.send_data(context,  cmd)
-                    
+
                     cmd = "interface vlan " + str(i) + "\n"
                     cmd += "access-group input vip-acl\n"
                     try:
@@ -697,8 +696,8 @@ class AceDriver(BaseDriver):
                         # assigned exception will occur
                         self.send_data(context,  cmd)
                     except:
-                        logger.warning("Got exception on acl set")                    
-                    
+                        logger.warning("Got exception on acl set")
+
             else:
                     cmd = "interface vlan " + str(vip.VLAN) + "\n"
                     cmd += "service-policy input " + pmap + "\n"
@@ -708,7 +707,7 @@ class AceDriver(BaseDriver):
                     try:
                         self.send_data(context,  cmd)
                     except:
-                        logger.warning("Got exception on acl set")                    
+                        logger.warning("Got exception on acl set")
         return 'OK'
 
     def deleteVIP(self,  context,  vip):
@@ -729,7 +728,7 @@ class AceDriver(BaseDriver):
 
         self.send_data(context,  cmd)
 
-        cmd = "policy-map %s" % pmap 
+        cmd = "policy-map %s" % pmap
         tmp = s.getConfig(context,  cmd)
 
         if (tmp.find("class") <= 0):
