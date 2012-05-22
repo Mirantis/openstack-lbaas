@@ -37,7 +37,7 @@ class Controller(object):
         msg = "Creating device controller with config: %s" % conf
         logger.debug(msg)
         self.conf = conf
-        self._service_controller = ServiceController.Instance()
+        self._service_controller = ServiceController.Instance(conf)
         pass
 
     def index(self,  req):
@@ -46,7 +46,7 @@ class Controller(object):
             logger.debug(msg)
             task = self._service_controller.createTask()
             mapper = DeviceActionMapper()
-            worker = mapper.getWorker(task, "index")
+            worker = mapper.getWorker(task, "index", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
                 logger.debug("Obtained response: %s" % result)
@@ -79,7 +79,7 @@ class Controller(object):
             task = self._service_controller.createTask()
             task.parameters = params
             mapper = DeviceActionMapper()
-            worker = mapper.getWorker(task, "create")
+            worker = mapper.getWorker(task, "create", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
 
@@ -111,7 +111,7 @@ class Controller(object):
             task = self._service_controller.createTask()
             task.parameters = params
             mapper = DeviceActionMapper()
-            worker = mapper.getWorker(task, "show")
+            worker = mapper.getWorker(task, "show", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
 
@@ -133,7 +133,7 @@ class Controller(object):
         
     def device_status(self, req,  **args):
         try:
-            shared = SharedObjects.Instance()
+            shared = SharedObjects.Instance(self.conf)
             id = args['id']
             pool = shared.getDevicePoolbyID(id)
             stats = {}
@@ -165,7 +165,7 @@ class Controller(object):
             task.parameters = args
             task.parameters['query_params'] = req.GET
             mapper = DeviceActionMapper()
-            worker = mapper.getWorker(task, "info")
+            worker = mapper.getWorker(task, "info", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
 

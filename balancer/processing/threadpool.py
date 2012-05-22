@@ -196,7 +196,7 @@ class CommandExecutorThread(threading.Thread):
     def instance(self,  pool,  id):
         return CommandExecutorThread(pool,  id)
         
-    def run(self):
+    def run(self, conf):
 
         """ Until told to quit, retrieve the next task and execute
         it, calling the callback if any.  """
@@ -216,7 +216,7 @@ class CommandExecutorThread(threading.Thread):
                     commands.context.addParam('status',  'error')
                 logger.debug("Worker: Executing is done.")
                 event = balancer.processing.event.Event(balancer.processing.event.EVENT_DONE, commands, 2)
-                processing =  balancer.processing.processing.Processing.Instance()
+                processing =  balancer.processing.processing.Processing.Instance(conf)
                 processing.put_event(event)
                 self.__pool.set_status(self.id,  ThreadPool.STATE_WAITING)
         logger.debug("[%s]Finishing thread work." % threading.currentThread())

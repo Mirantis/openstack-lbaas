@@ -15,7 +15,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 from balancer.core.serializeable import Serializeable
 from balancer.core.uniqueobject import UniqueObject
 

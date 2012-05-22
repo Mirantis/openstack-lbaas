@@ -35,8 +35,6 @@ class API(wsgi.Router):
 
     def __init__(self, conf, **local_conf):
         self.conf = conf
-        config = Configuration.Instance()
-        config.put(conf)
         mapper = routes.Mapper()
 
         lb_resource = loadbalancers.create_resource(self.conf)

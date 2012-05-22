@@ -16,10 +16,8 @@
 #    under the License.
 
 import logging
-import sys
-import threading
-import Queue
 
+from balancer.core import api as core_api
 from balancer.core.Worker import *
 from balancer.storage.storage import *
 from balancer.core.ServiceController import *
@@ -28,12 +26,12 @@ logger = logging.getLogger(__name__)
 
 
 class DeviceGetIndexWorker(SyncronousWorker):
-    def __init__(self,  task):
-        super(DeviceGetIndexWorker,  self).__init__(task)
+    def __init__(self,  task, conf):
+        super(DeviceGetIndexWorker,  self).__init__(task, conf)
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        store = Storage()
+        store = Storage(self._conf)
         reader = store.getReader()
         list = reader.getDevices()
         self._task.status = STATUS_DONE
@@ -41,8 +39,8 @@ class DeviceGetIndexWorker(SyncronousWorker):
 
 
 class DeviceCreateWorker(SyncronousWorker):
-    def __init__(self,  task):
-        super(DeviceCreateWorker, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(DeviceCreateWorker, self).__init__(task, conf)
 
     def run(self):
         self._task.status = STATUS_PROGRESS
@@ -50,10 +48,10 @@ class DeviceCreateWorker(SyncronousWorker):
         dev = LBDevice()
         dev.loadFromDict(params)
 
-        store = Storage()
+        store = Storage(self._conf)
         writer = store.getWriter()
         writer.writeDevice(dev)
-        sc = ServiceController.Instance()
+        sc = ServiceController.Instance(self._conf)
         sched = sc.scheduller
         sched.addDevice(dev)
         self._task.status = STATUS_DONE
@@ -61,8 +59,8 @@ class DeviceCreateWorker(SyncronousWorker):
 
 
 class DeviceInfoWorker(SyncronousWorker):
-    def __init__(self,  task):
-        super(DeviceInfoWorker, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(DeviceInfoWorker, self).__init__(task, conf)
 
     def run(self):
         self._task.status = STATUS_PROGRESS
@@ -76,8 +74,8 @@ class DeviceInfoWorker(SyncronousWorker):
 
 
 class DeviceDeleteWorker(SyncronousWorker):
-    def __init__(self,  task):
-        super(DeviceDeleteWorker, self).__init__(task)
+    def __init__(self,  task, conf):
+        super(DeviceDeleteWorker, self).__init__(task, conf)
 
     def run(self):
         self._task.status = STATUS_PROGRESS
@@ -85,10 +83,10 @@ class DeviceDeleteWorker(SyncronousWorker):
         dev = LBDevice()
         dev.loadFromDict(params)
 
-        store = Storage()
+        store = Storage(self._conf)
         writer = store.getWriter()
         writer.writeDevice(dev)
-        sc = ServiceController.Instance()
+        sc = ServiceController.Instance(self._conf)
         sched = sc.scheduller
         sched.addDevice(dev)
         self._task.status = STATUS_DONE
@@ -96,12 +94,12 @@ class DeviceDeleteWorker(SyncronousWorker):
 
 
 class DeviceActionMapper(object):
-    def getWorker(self, task,  action,  params=None):
+    def getWorker(self, task,  action, conf,  params=None):
         if action == "index":
-            return DeviceGetIndexWorker(task)
+            return DeviceGetIndexWorker(task, conf)
         if action == "create":
-            return DeviceCreateWorker(task)
+            return DeviceCreateWorker(task, conf)
         if action == "info":
-            return DeviceInfoWorker(task)
+            return DeviceInfoWorker(task, conf)
         if action == "delete":
-            return DeviceDeleteWorker(task)
+            return DeviceDeleteWorker(task, conf)

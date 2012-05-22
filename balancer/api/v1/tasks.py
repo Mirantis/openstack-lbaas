@@ -40,14 +40,14 @@ class Controller(object):
         %s" % conf
         logger.debug(msg)
         self.conf = conf
-        self._service_controller = ServiceController.Instance()
+        self._service_controller = ServiceController.Instance(conf)
 
     def index_processing(self, req):
         try:
             msg = "Got index request. Request: %s" % req
             logger.debug(msg)
 
-            proc = Processing.Instance()
+            proc = Processing.Instance(self.conf)
             status = {}
             status['queue_size'] = proc.getQueueSize()
             status['working_threads'] = proc.getThreadCount()

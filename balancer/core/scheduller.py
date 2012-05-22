@@ -17,7 +17,6 @@
 
 
 import logging
-import sys
 import threading
 
 from openstack.common import exception
@@ -30,10 +29,10 @@ logger = logging.getLogger(__name__)
 @Singleton
 class Scheduller(object):
 
-    def __init__(self):
+    def __init__(self, conf):
         self._device_map = {}
         self._list = None
-        self.store = Storage()
+        self.store = Storage(conf)
         reader = self.store.getReader()
         list = reader.getDevices()
         self._list = list

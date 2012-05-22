@@ -97,6 +97,6 @@ class LoadbalancerRegistry(object):
 
 
 def getLBRegistry(conf):
-    lbr = LoadbalancerRegistry.Instance()
+    lbr = LoadbalancerRegistry.Instance(conf)
     lbr.init(conf)
     return lbr

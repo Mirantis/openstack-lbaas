@@ -7,10 +7,11 @@ logger = logging.getLogger(__name__)
 
 @Singleton
 class Processing:
-    def __init__(self):
+    def __init__(self, conf):
         
         self._workers = 4
         self._processing_pool = balancer.processing.threadpool.ThreadPool( self._workers,  EventWorkerThread())
+        self._conf = conf
         
     def put_event(self,  event):
         logger.debug("Putting event into queue")
@@ -35,5 +36,5 @@ class Processing:
         return self._processing_pool.getQueueSize()
         
 if __name__ == '__main__':
-    proc = Processing.Instance()
+    proc = Processing.Instance(None)
     quit()
