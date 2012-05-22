@@ -275,7 +275,7 @@ class AceDriver(BaseDriver):
                     cmd += "request command " + probe.requestCommand + "\n"
                 if (pr_type == 'imap'):
                     if self.checkNone(probe.maibox):
-                        cmd += "credentials mailbox" + probe.maibox + "\n"
+                        cmd += "credentials mailbox " + probe.maibox + "\n"
 
             if (pr_type == 'radius'):
                 if self.checkNone(probe.NASIPaddr):
