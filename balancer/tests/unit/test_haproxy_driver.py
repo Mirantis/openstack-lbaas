@@ -60,6 +60,7 @@ class HAproxyDriverTestCase (unittest.TestCase):
         #
         self.server_farm = ServerFarm()
         self.server_farm.name = 'SFname'
+        self.server_farm._predictor.type = 'HashAddrPredictor'
         #
         self.virtualserver = VirtualServer()
         self.virtualserver.name = 'VirtualServer'

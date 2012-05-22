@@ -68,9 +68,9 @@ class HaproxyDriver(BaseDriver):
                 if probe.requestMethodType != "":
                     self.option_httpchk = "%s %s " % (self.option_httpchk ,  probe.requestMethodType)
                 else:
-                    self.option_httpchk = "%s  GET" % self.option_httpchk
+                    self.option_httpchk = "%s GET" % self.option_httpchk
                 if probe.requestHTTPurl != "":
-                    self.option_httpchk = "%s %s " % (self.option_httpchk , probe.requestHTTPurl)
+                    self.option_httpchk = "%s %s" % (self.option_httpchk , probe.requestHTTPurl)
                 else:
                     self.option_httpchk = "%s  /" % self.option_httpchk
                 if probe.expectRegExp != "":
@@ -175,12 +175,6 @@ class HaproxyDriver(BaseDriver):
         config_file.DeleteBlock(haproxy_virtualserver)
         remote.putConfig()
 
-    def suspendRServer(self,  context,  serverfarm,  rserver):
-        self.operationWithRServer(context,  serverfarm,  rserver,  'suspend')
-
-    def activateRServer(self,  context,  serverfarm,  rserver):
-        self.operationWithRServer(context,  serverfarm,  rserver,  'activate')
-    
     def getStatistics(self,  context, serverfarm, rserver):
         haproxy_rserver = HaproxyRserver()
         haproxy_rserver.name = rserver.name
@@ -203,6 +197,12 @@ class HaproxyDriver(BaseDriver):
         logger.debug('[HAPROXY] statistics  rserver state is \'%s\'' % statistics.state )  
         return statistics
 
+    def suspendRServer(self,  context,  serverfarm,  rserver):
+        self.operationWithRServer(context,  serverfarm,  rserver,  'suspend')
+
+    def activateRServer(self,  context,  serverfarm,  rserver):
+        self.operationWithRServer(context,  serverfarm,  rserver,  'activate')
+    
     def operationWithRServer(self,  context,  serverfarm,  rserver,  \
                              type_of_operation):
         haproxy_rserver = HaproxyRserver()
@@ -231,6 +231,14 @@ class HaproxyDriver(BaseDriver):
             return 'SERVERFARM FARM NAME ERROR'
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
+        if serverfarm._predictor.type== 'RoundRobin':
+            haproxy_serverfarm.balance = 'roundrobin'
+        elif serverfarm._predictor.type == 'LeastConnections':
+            haproxy_serverfarm.balance = 'leastconn'
+        elif serverfarm._predictor.type == 'HashAddrPredictor':
+            haproxy_serverfarm.balance = 'source'
+        elif serverfarm._predictor.type == 'HashURL':
+            haproxy_serverfarm.balance = 'uri'
         config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  \
                                                 context.configfilename))
         remote = RemoteConfig(context)
@@ -271,7 +279,7 @@ class HaproxyBackend(HaproxyConfigBlock):
     def __init__(self):
         self.type = 'backend'
         self.mode = ''
-        self.balance = 'source'
+        self.balance = 'roundrobin'
 
 
 class HaproxyListen(HaproxyConfigBlock):
@@ -326,7 +334,7 @@ class HaproxyConfigFile:
         for i in new_config_file.keys():
             if i.find(HaproxyBackend.type) == 0 and i.find('%s' % HaproxyBackend.name) >= 0:
                 for j in NewLines:
-                    logger.debug('[HAPROXY] add line %s' % j)
+                    logger.debug('[HAPROXY] add line \'%s\'' % j)
                     new_config_file[i].append("\t%s" % j)
         self._WriteConfigFile(new_config_file)   
 
