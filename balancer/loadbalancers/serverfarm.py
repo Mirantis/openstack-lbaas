@@ -36,6 +36,7 @@ class ServerFarm(Serializeable,  UniqueObject):
         self.description = ""
         self.failAction = None
         self.inbandHealthCheck = None
+        self.inbandHealthMonitoringThreshold = 1
         self.connFailureThreshCount = ""
         self.resetTimeout = ""
         self.resumeService = ""

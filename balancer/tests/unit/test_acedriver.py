@@ -164,7 +164,7 @@ probe_http.password = "password"
 probe_http.expectRegExp = ".*"
 probe_http.expectRegExpOffset = 1
 probe_http.hash = True
-probe_http.hashString = "hashstring-hashstring-hashstring"
+probe_http.hashString = "01020304010203040102030401020304"
 
 probe_https = HTTPSprobe()
 probe_https.type = "HTTPS"
@@ -191,7 +191,7 @@ probe_https.password = "password"
 probe_https.expectRegExp = ".*"
 probe_https.expectRegExpOffset = 1
 probe_https.hash = True
-probe_https.hashString = "hashstring"
+probe_https.hashString = "01020304010203040102030401020304"
 
 probe_icmp = ICMPprobe()
 probe_icmp.type = "ICMP"
