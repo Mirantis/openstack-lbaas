@@ -702,13 +702,13 @@ class Ace_5x_DriverTestCase(unittest.TestCase):
         driver.suspendRServer(test_context, sf_host, rs_host)
 
     def test_08a_suspendRServerGlobal(self):
-        driver.suspendRServerGlobal(test_context, sf_host, rs_redirect)
+        driver.suspendRServerGlobal(test_context, rs_redirect)
 
     def test_09_activateRServer(self):
         driver.activateRServer(test_context, sf_host, rs_host)
 
     def test_09a_activateRServerGlobal(self):
-        driver.activateRServerGlobal(test_context, sf_host, rs_redirect)
+        driver.activateRServerGlobal(test_context, rs_redirect)
 
     def test_10a_deleteVIP_loadbalance(self):
         driver.deleteVIP(test_context, vip_loadbalance)

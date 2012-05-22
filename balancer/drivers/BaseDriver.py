@@ -50,7 +50,13 @@ class BaseDriver(object):
     def activateRServer(self,  context,  serverfarm,  rserver):
         pass
 
+    def activateRServerGlobal(self,  context,  rserver):
+        pass
+
     def suspendRServer(self,  context,  serverfarm,  rserver):
+        pass
+
+    def suspendRServerGlobal(self,  context,  rserver):
         pass
 
     def createProbe(self,  context,  probe):

@@ -548,9 +548,9 @@ class AceDriver(BaseDriver):
         elif sticky_type == "rtsp-header":
             cmd += " Session " + name + "\n"
             if self.checkNone(sticky.offset):
-                cmd += "header offset='" + str(sticky.offset)
+                cmd += "header offset='" + str(sticky.offset) + "'"
                 if self.checkNone(sticky.length):
-                    cmd += " length='" + str(sticky.length)
+                    cmd += " length='" + str(sticky.length) + "'"
             cmd += "\n"
         elif sticky_type == "sip-header":
             cmd += " Call-ID" + name + "\n"
@@ -633,7 +633,7 @@ class AceDriver(BaseDriver):
         if self.checkNone(vip.allVLANs):
             pmap = "global"
         else:
-            pmap = "int-" + md5.new(vip.VLAN).hexdigest()
+            pmap = "int-" + str(md5.new(vip.VLAN).hexdigest())
 
         #  Add a access-list
         self.addACLEntry(context,  vip)
@@ -715,7 +715,7 @@ class AceDriver(BaseDriver):
         if self.checkNone(vip.allVLANs):
             pmap = "global"
         else:
-            pmap = "int-" + md5.new(vip.VLAN).hexdigest()
+            pmap = "int-" + str(md5.new(vip.VLAN).hexdigest())
 
         cmd = "policy-map multi-match " + pmap + "\n"
         cmd += " no class " + vip.name + "\n"
