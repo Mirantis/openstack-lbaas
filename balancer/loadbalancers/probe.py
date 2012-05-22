@@ -152,7 +152,7 @@ class RTSPprobe(Probe):
         Probe.__init__(self)
         self.requareHeaderValue = ""
         self.proxyRequareHeaderValue = ""
-        self.requestMethodType = None
+        self.requestMethodType = ""
         self.requestURL = ""
         self.destIP = ""
         self.tcpConnTerm = None

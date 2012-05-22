@@ -164,7 +164,7 @@ probe_http.password = "password"
 probe_http.expectRegExp = ".*"
 probe_http.expectRegExpOffset = 1
 probe_http.hash = True
-probe_http.hashString = "hashstring"
+probe_http.hashString = "hashstring-hashstring-hashstring"
 
 probe_https = HTTPSprobe()
 probe_https.type = "HTTPS"
@@ -352,7 +352,7 @@ probe_smtp.tcpConnTerm = True
 probe_smtp.openTimeout = 60
 
 probe_snmp = SNMPprobe()
-probe_smtp.type = "SNMP"
+probe_snmp.type = "SNMP"
 probe_snmp.name = "LB_test_ProbeSNMP"
 probe_snmp.description = "Created by test. Probe type SNMP"
 probe_snmp.probeInterval = 30
