@@ -27,11 +27,11 @@ class Context(BaseContext):
         self.login = login
         self.password = password
 
-        ## variable for cert and key import
-        self.server_ip
-        self.server_user
-        self.server_password
-        self.file_name     # certificate or key file name
+        #variable for cert and key import
+        self.server_ip = ''
+        self.server_user = ''
+        self.server_password = ''
+        self.file_name = ''    # certificate or key file name
                            # on remote server
-        self.protocol      # sftp, ftp, tftp
-        self.passphrase
+        self.protocol  = ''     # sftp, ftp, tftp
+        self.passphrase = ''
