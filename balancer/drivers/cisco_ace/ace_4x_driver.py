@@ -259,7 +259,7 @@ class AceDriver(BaseDriver):
                     cmd += "append-port-hosttag\n"
 
                 if self.checkNone(probe.hash):
-                    cmd += "hash"
+                    cmd += "hash "
                     if self.checkNone(probe.hashString):
                         cmd += probe.hashString
                     cmd += "\n"
