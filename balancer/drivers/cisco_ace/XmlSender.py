@@ -57,6 +57,8 @@ class XmlSender:
         logger.debug("data from ACE:\n" + s)
 
         if (s.find('XML_CMD_SUCCESS') > 0):
+            return 'OK'
+        else:
             raise openstack.common.exception.Invalid(s)
 
     def getConfig(self,  context,  command):
