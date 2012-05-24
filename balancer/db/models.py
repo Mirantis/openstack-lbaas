@@ -55,16 +55,7 @@ class Device(Base):
     port = Column(Integer)
     user = Column(String(255))
     password = Column(String(255))
-    interface = Column(String(255))
-    supports_ipv6 = Column(Boolean, default=False) #SPEC UNUSED
-    requires_vip_ip = Column(Boolean, default=True) #SPEC UNUSED
-    has_acl = Column(Boolean, default=True) #SPEC UNUSED
-    supports_vlan = Column(Boolean, default=True) #SPEC UNISED
-    vip_vlan = Column(Integer, default=1) #SPEC UNUSED
-    localpath = Column(String(255)) #SPEC HAPROXY
-    configfilepath = Column(String(255)) #SPEC HAPROCE
-    remotepath = Column(String(255)) #SPEC HAPROXY
-    concurrent_deploys = Column(Integer, default=2) #SPEC MAYBEALL
+    extra = Column(JsonBlob())
 
 
 class LoadBalancer(Base):
@@ -74,11 +65,16 @@ class LoadBalancer(Base):
     id = Column(Integer, primary_key=True)
     device_id = Column(Integer, ForeignKey('device.id'))
     name = Column(String(255))
-    algorithm = Column(String(255), default='LEAST_CONNECTIONS')
-    protocol = Column(String(255), default='HTTP')
-    transport = Column(String(255), default='TCP')
-    status = Column(String(255), default='ACTIVE')
+    algorithm = Column(String(255))
+    protocol = Column(String(255))
+    transport = Column(String(255))
+    status = Column(String(255))
     project = Column(String(255))
+    created_at = Column(DateTime, default=datetime.datetime.utcnow,
+                        nullable=False)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow,
+                        nullable=False)
+    extra = Column(JsonBlob())
 
     device = relationship(Device,
                           backref=backref('loadbalancers', order_by=id),
@@ -92,21 +88,9 @@ class ServerFarm(Base):
     id = Column(Integer, primary_key=True)
     loadbalancer_id = Column(Integer, ForeignKey('loadbalancer.id'))
     name = Column(String(255))
-    type = Column(String(255), default='host')
-    status = Column(String(255), default='ACTIVE')
-    description = Column(String(255))
-    fail_action = Column(String(255)) #SPEC ACE
-    inband_health_check = Column(String(255)) #SPEC ACE
-    conn_failure_thresh_count = Column(Integer) #SPEC ACE
-    reset_timeout = Column(Integer) #SPEC ACE
-    resume_service = Column(String(255)) #SPEC ACE
-    transparent = Column(Boolean, default=False) #SPEC ACE
-    dynamic_workload_scale = Column(String(255)) #SPEC ACE
-    vm_probe_name = Column(String(255)) #SPEC UNUSED
-    fail_on_all = Column(Boolean, default=False) #SPEC ACE
-    partial_thresh_percentage = Column(Integer) #SPEC ACE
-    back_nservice = Column(Integer) #SPEC ACE
-    retcode_map = Column(String(255)) #SPEC UNUSED
+    type = Column(String(255))
+    status = Column(String(255))
+    extra = Column(JsonBlob())
 
     loadbalancer = relationship(LoadBalancer,
                                 backref=backref('serverfarms', order_by=id),
@@ -121,16 +105,11 @@ class VirtualServer(Base):
     serverfarm_id = Column(Integer, ForeignKey('serverfarm.id'))
     loadbalancer_id = Column(Integer, ForeignKey('loadbalancer.id'))
     name = Column(String(255))
-    ip_version = Column(String(255), default='IPv4')
+    ip_version = Column(String(255))
     address = Column(String(255))
-    mask = Column(String(255), default='255.255.255.255')
-    proto = Column(String(255), default='TCP')
-    app_proto = Column(String(255))
-    port = Column(String(255), default='any')
-    all_vlans = Column(Boolean, default=False)
-    vlans = Column(String(255))
-    icmp_reply = Column(Boolean, default=False)
-    status = Column(String(255), default='inservice')
+    mask = Column(String(255))
+    port = Column(String(255))
+    status = Column(String(255))
 
     serverfarm = relationship(ServerFarm,
                               backref=backref('virtualservers', order_by=id),
@@ -147,26 +126,15 @@ class Server(Base):
     id = Column(Integer, primary_key=True)
     serverfarm_id = Column(Integer, ForeignKey('serverfarm.id'))
     name = Column(String(255))
-    type = Column(String(255), default='Host')
-    description = Column(String(255))
-    ip_version = Column(String(255), default='IPv4')
+    type = Column(String(255))
+    ip_version = Column(String(255))
     address = Column(String(255))
-    port = Column(String(255), default='any')
-    min_conn = Column(Integer, default=40000)
-    max_conn = Column(Integer, default=40000)
-    weight = Column(Integer, default=8)
-    rate_bandwidth = Column(Integer)
-    rate_connection = Column(Integer)
+    port = Column(String(255))
+    weight = Column(Integer)
     status = Column(String(255))
-    webhost_redir = Column(String(255)) #SPEC ACE
-    redir_code = Column(Integer) #SPEC ACE
-    state = Column(String(255), default='inservice') #SPEC ACE,ANM
-    opstate = Column(String(255), default='inservice') #SPEC UNUSED
-    fail_on_all = Column(Boolean, default=False) #SPEC ACE
-    backup_server = Column(String(255)) #SPEC ACE
-    backup_port = Column(String(255)) #SPEC ACE
-    cookie_str = Column(String(255)) #SPEC ACE
-    parent_id = Column(Integer, ForeignKey('server.id')) #SPEC HACK
+    # NOTE(ash): parent_id keep compatibility because it is searchable field
+    parent_id = Column(Integer)
+    extra = Column(JsonBlob())
 
     serverfarm = relationship(ServerFarm,
                               backref=backref('servers', order_by=id),
@@ -180,17 +148,7 @@ class Probe(Base):
     serverfarm_id = Column(Integer, ForeignKey('serverfarm.id'))
     name = Column(String(255))
     type = Column(String(255))
-    description = Column(String(255))
-    port = Column(Integer)
-    probe_interval = Column(Integer, default=15) #SPEC ACE
-    pass_detect_interval = Column(Integer, default=60) #SPEC ACE
-    pass_detect_count = Column(Integer, default=3) #SPEC ACE
-    fail_detect = Column(Integer, default=3) #SPEC ACE
-    receive_timeout = Column(Integer, default=10) #SPEC ACE
-    is_routed = Column(Boolean, default=False) #SPEC ACE
-    delay = Column(Integer, default=15) #SPEC UNUSED
-    deactivation_attempts = Column(Integer, default=3) #SPEC UNUSED
-    timeout = Column(Integer, default=60) #SPEC UNUSED
+    extra = Column(JsonBlob())
 
     serverfarm = relationship(ServerFarm,
                               backref=backref('probes', order_by=id),
