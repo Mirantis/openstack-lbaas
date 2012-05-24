@@ -43,64 +43,7 @@ class JsonBlob(TypeDecorator):
         return json.loads(value)
 
 
-class ModelBase(object):
-    """Base class for Models."""
-    __table_args__ = {'mysql_engine': 'InnoDB'}
-    __table_initialized__ = False
-    __protected_attributes__ = set([
-        "created_at", "updated_at", "deleted_at", "deleted"])
-
-    created_at = Column(DateTime, default=datetime.datetime.utcnow,
-                        nullable=False)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow,
-                        nullable=False, onupdate=datetime.datetime.utcnow)
-    deleted_at = Column(DateTime)
-    deleted = Column(Boolean, nullable=False, default=False)
-
-    def save(self, session=None):
-        """Save this object"""
-        session.add(self)
-        session.flush()
-
-    def delete(self, session=None):
-        """Delete this object"""
-        self.deleted = True
-        self.deleted_at = datetime.datetime.utcnow()
-        self.save(session=session)
-
-    def update(self, values):
-        """dict.update() behaviour."""
-        for k, v in values.iteritems():
-            self[k] = v
-
-    def __setitem__(self, key, value):
-        setattr(self, key, value)
-
-    def __getitem__(self, key):
-        return getattr(self, key)
-
-    def __iter__(self):
-        self._i = iter(object_mapper(self).columns)
-        return self
-
-    def next(self):
-        n = self._i.next().name
-        return n, getattr(self, n)
-
-    def keys(self):
-        return self.__dict__.keys()
-
-    def values(self):
-        return self.__dict__.values()
-
-    def items(self):
-        return self.__dict__.items()
-
-    def to_dict(self):
-        return self.__dict__.copy()
-
-
-class Device(Base, ModelBase):
+class Device(Base):
     """Represents a load balancer appliance."""
 
     __tablename__ = 'device'
@@ -124,7 +67,7 @@ class Device(Base, ModelBase):
     concurrent_deploys = Column(Integer, default=2) #SPEC MAYBEALL
 
 
-class LoadBalancer(Base, ModelBase):
+class LoadBalancer(Base):
     """Represents an instance of load balancer applience for a tenant."""
 
     __tablename__ = 'loadbalancer'
@@ -142,7 +85,7 @@ class LoadBalancer(Base, ModelBase):
                           uselist=False)
 
 
-class ServerFarm(Base, ModelBase):
+class ServerFarm(Base):
     """Represents a server farm."""
 
     __tablename__ = 'serverfarm'
@@ -170,7 +113,7 @@ class ServerFarm(Base, ModelBase):
                                 uselist=False)
 
 
-class VirtualServer(Base, ModelBase):
+class VirtualServer(Base):
     """Represents a Virtual IP."""
 
     __tablename__ = 'virtualserver'
@@ -197,7 +140,7 @@ class VirtualServer(Base, ModelBase):
                                 uselist=False)
 
 
-class Server(Base, ModelBase):
+class Server(Base):
     """Represents a real server."""
 
     __tablename__ = 'server'
@@ -229,7 +172,7 @@ class Server(Base, ModelBase):
                               backref=backref('servers', order_by=id),
                               uselist=False)
 
-class Probe(Base, ModelBase):
+class Probe(Base):
     """Represents a health monitoring."""
 
     __tablename__ = 'probe'
@@ -254,7 +197,7 @@ class Probe(Base, ModelBase):
                               uselist=False)
 
 
-class Sticky(Base, ModelBase):
+class Sticky(Base):
     """Represents a persistent session."""
 
     __tablename__ = 'sticky'
@@ -292,7 +235,7 @@ class Sticky(Base, ModelBase):
         return extra_copy
 
 
-class Predictor(Base, ModelBase):
+class Predictor(Base):
     """Represents a algorithm of selecting server."""
 
     __tablename__ = 'predictor'
@@ -328,7 +271,4 @@ class Predictor(Base, ModelBase):
 def register_models(engine):
     """Create tables for models."""
 
-    models = (Device, LoadBalancer, ServerFarm, VirtualServer, Server, Probe,
-              Sticky, Predictor)
-    for model in models:
-        model.metadata.create_all(engine)
+    Base.metadata.create_all(engine)
