@@ -23,6 +23,8 @@ from openstack.common import exception
 
 from balancer.core.scheduller import Scheduller
 from balancer.devices.DeviceMap import DeviceMap
+from balancer.devices.device import LBDevice
+from balancer.core.ServiceController import ServiceController
 from balancer.loadbalancers.realserver import RealServer
 from balancer.loadbalancers.vserver import Balancer, Deployer, Destructor
 from balancer.loadbalancers.vserver import makeDeleteLBCommandChain,\
@@ -507,3 +509,40 @@ def lb_delete_sticky(conf, lb_id, sticky_id):
     #Step 6: Delete real server from device
     destruct.execute()
     return sticky_id
+
+def device_get_index(conf):
+    store = Storage(conf)
+    reader = store.getReader()
+    list = reader.getDevices()
+    return list
+
+def device_create(conf, **params):
+    device = LBDevice()
+    device.loadFromDict(params)
+
+    store = Storage(conf)
+    writer = store.getWriter()
+    writer.writeDevice(device)
+    sc = ServiceController.Instance(conf)
+    sched = sc.scheduller
+    sched.addDevice(device)
+    return 'OK'
+
+def device_info(params):
+    query = params['query_params']
+    msg = "DeviceInfoWorker start with Params: %s Query: %s"\
+    % (params,  query)
+    logger.debug(msg)
+    return
+
+def device_delete(conf, **params):
+    dev = LBDevice()
+    dev.loadFromDict(params)
+
+    store = Storage(conf)
+    writer = store.getWriter()
+    writer.writeDevice(dev)
+    sc = ServiceController.Instance(conf)
+    sched = sc.scheduller
+    sched.addDevice(dev)
+    return

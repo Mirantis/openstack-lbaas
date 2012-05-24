@@ -19,8 +19,6 @@ import logging
 
 from balancer.core import api as core_api
 from balancer.core.Worker import *
-from balancer.storage.storage import *
-from balancer.core.ServiceController import *
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +29,7 @@ class DeviceGetIndexWorker(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        store = Storage(self._conf)
-        reader = store.getReader()
-        list = reader.getDevices()
+        list = core_api.device_get_index(self._conf)
         self._task.status = STATUS_DONE
         return list
 
@@ -44,18 +40,9 @@ class DeviceCreateWorker(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        params = self._task.parameters
-        dev = LBDevice()
-        dev.loadFromDict(params)
-
-        store = Storage(self._conf)
-        writer = store.getWriter()
-        writer.writeDevice(dev)
-        sc = ServiceController.Instance(self._conf)
-        sched = sc.scheduller
-        sched.addDevice(dev)
+        msg = core_api.device_create(self._conf, **self._task.parameters)
         self._task.status = STATUS_DONE
-        return 'OK'
+        return msg
 
 
 class DeviceInfoWorker(SyncronousWorker):
@@ -64,11 +51,7 @@ class DeviceInfoWorker(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        params = self._task.parameters
-        query = params['query_params']
-        msg = "DeviceInfoWorker start with Params: %s Query: %s" \
-            % (params,  query)
-        logger.debug(msg)
+        core_api.device_info(self._task.parameters)
         self._task.status = STATUS_DONE
         return 'OK'
 
@@ -79,16 +62,7 @@ class DeviceDeleteWorker(SyncronousWorker):
 
     def run(self):
         self._task.status = STATUS_PROGRESS
-        params = self._task.parameters
-        dev = LBDevice()
-        dev.loadFromDict(params)
-
-        store = Storage(self._conf)
-        writer = store.getWriter()
-        writer.writeDevice(dev)
-        sc = ServiceController.Instance(self._conf)
-        sched = sc.scheduller
-        sched.addDevice(dev)
+        core_api.device_delete(self._conf, **self._task.parameters)
         self._task.status = STATUS_DONE
         return 'OK'
 
