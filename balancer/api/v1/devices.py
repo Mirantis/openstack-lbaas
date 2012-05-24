@@ -26,7 +26,6 @@ from balancer.devices.device import LBDevice
 from balancer.core.ServiceController import *
 from balancer.core.deviceworkers import *
 from balancer.core.Worker import *
-from balancer.processing.sharedobjects import SharedObjects
 
 logger = logging.getLogger('balancer.api.v1.devices')
 
@@ -132,6 +131,7 @@ class Controller(object):
         return {'devices': list}
         
     def device_status(self, req,  **args):
+        # NOTE(yorik-sar): broken, there is no processing anymore
         try:
             shared = SharedObjects.Instance(self.conf)
             id = args['id']

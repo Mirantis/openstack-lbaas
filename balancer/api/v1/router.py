@@ -20,7 +20,7 @@ import logging
 import routes
 import loadbalancers
 import devices
-import tasks
+#import tasks
 
 
 from openstack.common import wsgi
@@ -114,8 +114,9 @@ class API(wsgi.Router):
 
         mapper.connect("/devices/{id}", controller=device_resource,
                        action="device_data")
-        mapper.connect("/devices/{id}/status", controller=device_resource,
-                       action="device_status")
+        # NOTE(yorik-sar): broken
+        #mapper.connect("/devices/{id}/status", controller=device_resource,
+        #               action="device_status")
         mapper.connect("/devices/{id}/info", controller=device_resource,
                        action="device_info")
         
@@ -126,9 +127,10 @@ class API(wsgi.Router):
                        conditions=dict(method=["POST"]))
         
 
-        tasks_resource = tasks.create_resource(self.conf)
-        mapper.resource("tasks", "tasks", controller=tasks_resource,
-                        collection={'detail': 'GET'})
-        mapper.connect("/service/processing", controller=tasks_resource, action="index_processing")
+        # TODO(yorik-sar): tasks are broken, there is no processing anymore
+        #tasks_resource = tasks.create_resource(self.conf)
+        #mapper.resource("tasks", "tasks", controller=tasks_resource,
+        #                collection={'detail': 'GET'})
+        #mapper.connect("/service/processing", controller=tasks_resource, action="index_processing")
 
         super(API, self).__init__(mapper)

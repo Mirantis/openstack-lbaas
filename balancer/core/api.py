@@ -19,6 +19,8 @@ import logging
 import functools
 import eventlet
 
+from openstack.common import exception
+
 from balancer.core.scheduller import Scheduller
 from balancer.devices.DeviceMap import DeviceMap
 from balancer.loadbalancers.realserver import RealServer
@@ -36,7 +38,6 @@ from balancer.loadbalancers.vserver import createSticky, createProbe,\
                                            createPredictor
 from balancer.loadbalancers.vserver import SuspendRServerCommand,\
                                            ActivateRServerCommand
-from balancer.processing.processing import Processing
 from balancer.storage.storage import Storage
 
 logger = logging.getLogger(__name__)
@@ -111,23 +112,16 @@ def create_lb(conf, **params):
     context.addParam('balancer',  balancer_instance)
     deploy = Deployer(device,  context)
     deploy.commands = commands
-    processing = Processing.Instance(conf)
-    event = balancer.processing.event.Event(balancer.processing.event.\
-                                                                EVENT_PROCESS,
-                                                                deploy,  2)
+
     try:
-        processing.put_event(event)
-        
-    except openstack.common.exception.Error:
+        deploy.execute()
+    except (exception.Error, exception.Invalid):
         balancer_instance.lb.status = \
             balancer.loadbalancers.loadbalancer.LB_ERROR_STATUS
-        balancer_instance.update()
-        return
-    except openstack.common.exception.Invalid:
+    else:
         balancer_instance.lb.status = \
-            balancer.loadbalancers.loadbalancer.LB_ERROR_STATUS
-        balancer_instance.update()
-        return
+            balancer.loadbalancers.loadbalancer.LB_ACTIVE_STATUS
+    balancer_instance.update()
 
     #balancer_instance.lb.status = \
     #   balancer.loadbalancers.loadbalancer.LB_ACTIVE_STATUS
