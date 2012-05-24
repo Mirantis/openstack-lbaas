@@ -206,33 +206,10 @@ class Sticky(Base):
     name = Column(String(255))
     type = Column(String(255))
     extra = Column(JsonBlob())
-#    timeout = Column(Integer, default=1440) #SPEC ACE
-#    replicate = Column(Boolean, default=False) #SPEC ACE
 
     serverfarm = relationship(ServerFarm,
                               backref=backref('stickies', order_by=id),
                               uselist=False)
-
-
-    @classmethod
-    def from_dict(cls, sticky_dict):
-        sticky = {}
-        extra = {}
-        for key, value in sticky_dict.iteritems():
-            if key not in ['id', 'serverfarm_id', 'name', 'type', 'extra']:
-                extra[key] = value
-            elif key != 'extra':
-                sticky[key] = value
-        sticky['extra'] = extra
-        return sticky
-
-    def to_dict(self):
-        extra_copy = self.extra.copy()
-        extra_copy['id'] = self.id
-        extra_copy['name'] = self.name
-        extra_copy['type'] = self.type
-        extra_copy['serverfarm_id'] = self.serverfarm_id
-        return extra_copy
 
 
 class Predictor(Base):
@@ -247,25 +224,6 @@ class Predictor(Base):
     serverfarm = relationship(ServerFarm,
                               backref=backref('predictors', order_by=id),
                               uselist=False)
-
-    @classmethod
-    def from_dict(cls, predictor_dict):
-        predictor = {}
-        extra = {}
-        for key, value in predictor_dict.copy().iteritems():
-            if key not in ['id', 'serverfarm_id', 'type', 'extra']:
-                extra[key] = value
-            elif key != 'extra':
-                predictor[key] = value
-        predictor['extra'] = extra
-        return predictor
-
-    def to_dict(self):
-        extra_copy = self.extra.copy()
-        extra_copy['id'] = self.id
-        extra_copy['type'] = self.type
-        extra_copy['serverfarm_id'] = self.serverfarm_id
-        return extra_copy
 
 
 def register_models(engine):
