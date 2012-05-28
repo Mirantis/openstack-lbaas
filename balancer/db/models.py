@@ -67,9 +67,8 @@ class LoadBalancer(Base):
     name = Column(String(255))
     algorithm = Column(String(255))
     protocol = Column(String(255))
-    transport = Column(String(255))
     status = Column(String(255))
-    project = Column(String(255))
+    project_id = Column(String(255))
     created_at = Column(DateTime, default=datetime.datetime.utcnow,
                         nullable=False)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow,
