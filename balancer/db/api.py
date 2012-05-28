@@ -21,27 +21,36 @@
 
 from balancer.db import models
 from balancer.db.session import get_session
+from balancer import exception
 
 
-def device_create(conf):
+def device_create(conf, values):
     session = get_session(conf)
     with session.begin():
-        pass
+        device_ref = models.Device()
+        device_ref.update(values)
+        session.add(device_ref)
+        return device_ref
 
 
-def device_get(conf, device_id):
-    session = get_session(conf)
-    with session.begin():
-        pass
+def device_get(conf, device_id, session=None):
+    session = session or get_session(conf)
+    device_ref = session.query(models.Device).filter_by(id=device_id).first()
+    if not device_ref:
+        raise exception.DeviceNotFound(device_id=device_id)
+    return device_ref
 
 
 def device_destroy(conf, device_id):
     session = get_session(conf)
     with session.begin():
-        pass
+        device_ref = device_get(conf, device_id, session=session)
+        session.delete(device_ref)
 
 
-def device_update(conf, device_id):
+def device_update(conf, device_id, values):
     session = get_session(conf)
     with session.begin():
-        pass
+        device_ref = device_get(conf, device_id, session=session)
+        device_ref.update(values)
+        session.add(device_ref)
