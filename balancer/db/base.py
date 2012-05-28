@@ -45,12 +45,7 @@ class DictBase(object):
         return getattr(self, key, default)
 
     def __iter__(self):
-        self._i = iter(object_mapper(self).columns)
-        return self
-
-    def next(self):
-        n = self._i.next().name
-        return n
+        return (col.name for col in object_mapper(self).columns)
 
     def update(self, values):
         """Make the model object behave like a dict."""
@@ -58,12 +53,8 @@ class DictBase(object):
             setattr(self, k, v)
 
     def iteritems(self):
-        """Make the model object behave like a dict.
-
-        Includes attributes from joins.
-
-        """
-        return dict([(k, getattr(self, k)) for k in self])
+        """Make the model object behave like a dict."""
+        return dict([(k, getattr(self, k)) for k in self]).iteritems()
 
 
 class JsonBlob(TypeDecorator):
