@@ -35,10 +35,10 @@ CACHE = {
     'engine': None
 }
 
-DB_GROUP = 'sql'
+DB_GROUP_NAME = 'sql'
 DB_OPTIONS = (
     cfg.IntOpt('idle_timeout', default=3600),
-    cfg.StrOpt('connection', default='sqlite:///glance.sqlite'),
+    cfg.StrOpt('connection', default='sqlite:///balancer.sqlite'),
 )
 
 
@@ -80,8 +80,8 @@ def get_session(conf, autocommit=True, expire_on_commit=False):
         CACHE['maker'] = get_maker(CACHE['engine'], autocommit,
                                    expire_on_commit)
 
-    session = CACHE['maker']
-    return session
+    Session = CACHE['maker']
+    return Session()
 
 
 def get_engine(conf):
@@ -112,10 +112,8 @@ def get_maker(engine, autocommit=True, expire_on_commit=False):
                         expire_on_commit=expire_on_commit)
 
 
-def register_conf_opts(conf, options=DB_OPTIONS, group=DB_GROUP):
+def register_conf_opts(conf, options=DB_OPTIONS, group=DB_GROUP_NAME):
     """Register database options."""
 
     conf.register_group(cfg.OptGroup(name=group))
-    for option in options:
-        if option.name not in conf:
-            conf.register_opt(option)
+    conf.register_opts(options, group=group)
