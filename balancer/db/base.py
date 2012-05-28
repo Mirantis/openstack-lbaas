@@ -48,13 +48,19 @@ class DictBase(object):
         return (col.name for col in object_mapper(self).columns)
 
     def update(self, values):
-        """Make the model object behave like a dict."""
-        for k, v in values.iteritems():
-            setattr(self, k, v)
+        for key, value in values.iteritems():
+            if isinstance(value, dict):
+                value = value.copy()
+            setattr(self, key, value)
 
     def iteritems(self):
-        """Make the model object behave like a dict."""
-        return dict([(k, getattr(self, k)) for k in self]).iteritems()
+        items = []
+        for key in self:
+            value = getattr(self,  key)
+            if isinstance(value, dict):
+                value = value.copy()
+            items.append((key, value))
+        return iter(items)
 
 
 class JsonBlob(TypeDecorator):
