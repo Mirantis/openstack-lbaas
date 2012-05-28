@@ -27,11 +27,19 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 from sqlalchemy.exc import DisconnectionError
 
+from balancer.common import cfg
+
 
 CACHE = {
     'maker': None,
     'engine': None
 }
+
+DB_GROUP = 'sql'
+DB_OPTIONS = (
+    cfg.IntOpt('idle_timeout', default=3600),
+    cfg.StrOpt('connection', default='sqlite:///glance.sqlite'),
+)
 
 
 class MySQLPingListener(object):
@@ -79,6 +87,8 @@ def get_session(conf, autocommit=True, expire_on_commit=False):
 def get_engine(conf):
     """Return a SQLAlchemy engine."""
 
+    register_conf_opts(conf)
+
     connection_dict = make_url(conf.sql.connection)
 
     engine_args = {'pool_recycle': conf.sql.idle_timeout,
@@ -100,3 +110,12 @@ def get_maker(engine, autocommit=True, expire_on_commit=False):
 
     return sessionmaker(bind=engine, autocommit=autocommit,
                         expire_on_commit=expire_on_commit)
+
+
+def register_conf_opts(conf, options=DB_OPTIONS, group=DB_GROUP):
+    """Register database options."""
+
+    conf.register_group(cfg.OptGroup(name=group))
+    for option in options:
+        if option.name not in conf:
+            conf.register_opt(option)
