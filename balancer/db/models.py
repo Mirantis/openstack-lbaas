@@ -19,31 +19,16 @@
 #    under the License.
 """SQLAlchemy models for balancer data."""
 
-import json
 import datetime
 
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.types import TypeDecorator
-from sqlalchemy import (Column, ForeignKey, Integer, String, Boolean, Text,
+from sqlalchemy import (Column, ForeignKey, Integer, String, Boolean,
                         DateTime)
 
-
-Base = declarative_base()
-
-
-class JsonBlob(TypeDecorator):
-
-    impl = Text
-
-    def process_bind_param(self, value, dialect):
-        return json.dumps(value)
-
-    def process_result_value(self, value, dialect):
-        return json.loads(value)
+from balancer.db.base import Base, DictBase, JsonBlob
 
 
-class Device(Base):
+class Device(DictBase, Base):
     """Represents a load balancer appliance."""
 
     __tablename__ = 'device'
@@ -58,7 +43,7 @@ class Device(Base):
     extra = Column(JsonBlob())
 
 
-class LoadBalancer(Base):
+class LoadBalancer(DictBase, Base):
     """Represents an instance of load balancer applience for a tenant."""
 
     __tablename__ = 'loadbalancer'
@@ -80,7 +65,7 @@ class LoadBalancer(Base):
                           uselist=False)
 
 
-class ServerFarm(Base):
+class ServerFarm(DictBase, Base):
     """Represents a server farm."""
 
     __tablename__ = 'serverfarm'
@@ -96,7 +81,7 @@ class ServerFarm(Base):
                                 uselist=False)
 
 
-class VirtualServer(Base):
+class VirtualServer(DictBase, Base):
     """Represents a Virtual IP."""
 
     __tablename__ = 'virtualserver'
@@ -118,7 +103,7 @@ class VirtualServer(Base):
                                 uselist=False)
 
 
-class Server(Base):
+class Server(DictBase, Base):
     """Represents a real server."""
 
     __tablename__ = 'server'
@@ -139,7 +124,7 @@ class Server(Base):
                               backref=backref('servers', order_by=id),
                               uselist=False)
 
-class Probe(Base):
+class Probe(DictBase, Base):
     """Represents a health monitoring."""
 
     __tablename__ = 'probe'
@@ -154,7 +139,7 @@ class Probe(Base):
                               uselist=False)
 
 
-class Sticky(Base):
+class Sticky(DictBase, Base):
     """Represents a persistent session."""
 
     __tablename__ = 'sticky'
@@ -169,7 +154,7 @@ class Sticky(Base):
                               uselist=False)
 
 
-class Predictor(Base):
+class Predictor(DictBase, Base):
     """Represents a algorithm of selecting server."""
 
     __tablename__ = 'predictor'
