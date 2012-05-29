@@ -47,6 +47,9 @@ class DictBase(object):
     def __iter__(self):
         return (col.name for col in object_mapper(self).columns)
 
+    def keys(self):
+        return list(self)
+
     def update(self, values):
         for key, value in values.iteritems():
             if isinstance(value, dict):
