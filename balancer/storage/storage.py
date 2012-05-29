@@ -15,13 +15,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import sqlite3
-import MySQLdb as mdb
-import threading 
+#import sqlite3
+#import MySQLdb as mdb
+#import threading 
 
 
 from balancer.loadbalancers.loadbalancer import *
-from openstack.common import exception
+#from openstack.common import exception
 from balancer.devices.device import LBDevice
 from balancer.core.configuration import Configuration
 from balancer.loadbalancers.probe import *
@@ -31,7 +31,27 @@ from balancer.loadbalancers.predictor import *
 from balancer.loadbalancers.serverfarm import ServerFarm
 from balancer.loadbalancers.virtualserver import VirtualServer
 from balancer.loadbalancers.vlan import VLAN
+
+from balancer import db
+from balancer import exception
+
+
 logger = logging.getLogger(__name__)
+
+
+def load_to_old_model(object_ref, inst):
+    inst.loadFromDict(object_ref)
+    inst.id = object_ref['uuid']
+    if 'extra' in object_ref and object_ref['extra'] is not None:
+        inst.loadFromDict(object_ref['extra'])
+
+
+def extract_extra(object_ref, inst_dict):
+    extra_columns = set(inst_dict) - set(object_ref)
+    extra = {}
+    for col in extra_columns:
+        extra[col] = inst_dict[col]
+    return extra or None
 
 
 DATABASE_TYPE = 'mysql'
@@ -50,11 +70,13 @@ class SQLExecute(object):
 class Reader(SQLExecute):
     """ Reader class is used for db read opreations"""
     def __init__(self, conf, db):
+        self.conf = conf
         logger.debug("Reader: connecting to db: %s" % db)
-        if DATABASE_TYPE =='mysql':
-            self._con = mdb.connect('localhost',  'root',  'swordfish',  'balancer')
-        else:
-            self._con = sqlite3.connect(db)
+#        if DATABASE_TYPE =='mysql':
+#            self._con = mdb.connect('localhost',  'root',  'swordfish',  'balancer')
+#        else:
+#            self._con = sqlite3.connect(db)
+        self._con = None
         self._probeDict = {'DNS': DNSprobe(), 'ECHO TCP': ECHOTCPprobe(), \
                         'ECHO-UDP': ECHOUDPprobe(), 'FINGER': FINGERprobe(), \
                         'FTP': FTPprobe(), 'HTTPS': HTTPSprobe(), \
@@ -117,20 +139,13 @@ class Reader(SQLExecute):
         lb.loadFromDict(row)
         return lb
 
-    def getDeviceById(self,  id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        if id == None:
-            raise exception.NotFound("Empty device id.")
-        cursor.execute('SELECT * FROM devices WHERE id = "%s"' % id)
-        row = cursor.fetchone()
-        if row == None:
-            raise exception.NotFound()
+    def getDeviceById(self, id):
+        device_uuid = id
+
+        device_ref = db.device_get_by_uuid(self.conf, device_uuid)
+
         lb = LBDevice()
-        lb.loadFromDict(row)
+        load_to_old_model(device_ref, lb)
         return lb
 
     def getDeviceByLBid(self,  id):
@@ -587,12 +602,11 @@ class Writer(SQLExecute):
     def __init__(self, conf, db):
         self.conf = conf
         logger.debug("Writer: connecting to db: %s" % db)
-        if DATABASE_TYPE =='mysql':
-            self._con = mdb.connect('localhost',  'root',  'swordfish',  'balancer')
-        else:
-            self._con = sqlite3.connect(db)
-    
-             
+#        if DATABASE_TYPE =='mysql':
+#            self._con = mdb.connect('localhost',  'root',  'swordfish',  'balancer')
+#        else:
+#            self._con = sqlite3.connect(db)
+        self._con = None
 
     def writeLoadBalancer(self,  lb):
         logger.debug("Saving LoadBalancer instance in DB.")
@@ -608,17 +622,17 @@ class Writer(SQLExecute):
         self._con.commit()
 
     def writeDevice(self,  device):
-        logger.debug("Saving Device instance in DB.")
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
+        device_dict = device.convertToDict()
+        device_uuid = device_dict.pop('id')
+        device_dict['uuid'] = device_uuid
+        try:
+            device_ref = db.device_get_by_uuid(self.conf, device_uuid)
+        except exception.DeviceNotFound:
+            device_ref = db.device_create(self.conf, device_dict)
         else:
-            cursor = self._con.cursor()
-        dict = device.convertToDict()
-        command = self.generateCommand(" INSERT INTO devices (", dict)
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+            device_ref.update(device_dict)
+        device_ref['extra'] = extract_extra(device_ref, device_dict)
+        db.device_update(self.conf, device_ref['id'], device_ref)
 
     def writeProbe(self, prb):
         logger.debug("Saving Probe instance in DB.")
@@ -795,10 +809,10 @@ class Deleter(SQLExecute):
     def __init__(self, conf, db):
         self.conf = conf
         logger.debug("Deleter: connecting to db: %s" % db)
-        if DATABASE_TYPE =='mysql':
-            self._con = mdb.connect('localhost',  'root',  'swordfish',  'balancer')
-        else:
-            self._con = sqlite3.connect(db)
+#        if DATABASE_TYPE =='mysql':
+#            self._con = mdb.connect('localhost',  'root',  'swordfish',  'balancer')
+#        else:
+#            self._con = sqlite3.connect(db)
 
     def deleteRSbyID(self, id):
         if DATABASE_TYPE == 'mysql':
@@ -900,15 +914,10 @@ class Deleter(SQLExecute):
         self._con.commit()
 
     def deleteDeviceByID(self, id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from devices where id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        device_uuid = id
+
+        device_ref = db.device_get_by_uuid(self.conf, device_uuid)
+        db.device_destroy(self.conf, device_ref['id'])
 
     def deletePredictorByID(self, id):
         if DATABASE_TYPE == 'mysql':
@@ -969,15 +978,13 @@ class Deleter(SQLExecute):
 class Storage(object):
     def __init__(self,  conf):
         self.conf = conf
-        db = conf['db_path']
-        self._db = db
-        self._writer = Writer(conf, self._db)
+        self._writer = Writer(self.conf, None)
 
     def getReader(self):
-        return Reader(conf, self._db)
+        return Reader(self.conf, None)
 
     def getWriter(self):
         return self._writer
 
     def getDeleter(self):
-        return Deleter(conf, self._db)
+        return Deleter(self.conf, None)
