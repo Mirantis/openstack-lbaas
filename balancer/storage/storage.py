@@ -49,7 +49,7 @@ class SQLExecute(object):
 
 class Reader(SQLExecute):
     """ Reader class is used for db read opreations"""
-    def __init__(self,  db):
+    def __init__(self, conf, db):
         logger.debug("Reader: connecting to db: %s" % db)
         if DATABASE_TYPE =='mysql':
             self._con = mdb.connect('localhost',  'root',  'swordfish',  'balancer')
@@ -584,7 +584,8 @@ class Reader(SQLExecute):
 
 
 class Writer(SQLExecute):
-    def __init__(self,  db):
+    def __init__(self, conf, db):
+        self.conf = conf
         logger.debug("Writer: connecting to db: %s" % db)
         if DATABASE_TYPE =='mysql':
             self._con = mdb.connect('localhost',  'root',  'swordfish',  'balancer')
@@ -791,7 +792,8 @@ class Writer(SQLExecute):
 
 
 class Deleter(SQLExecute):
-    def __init__(self,  db):
+    def __init__(self, conf, db):
+        self.conf = conf
         logger.debug("Deleter: connecting to db: %s" % db)
         if DATABASE_TYPE =='mysql':
             self._con = mdb.connect('localhost',  'root',  'swordfish',  'balancer')
@@ -966,15 +968,16 @@ class Deleter(SQLExecute):
 
 class Storage(object):
     def __init__(self,  conf):
+        self.conf = conf
         db = conf['db_path']
         self._db = db
-        self._writer = Writer(self._db)
+        self._writer = Writer(conf, self._db)
 
     def getReader(self):
-        return Reader(self._db)
+        return Reader(conf, self._db)
 
     def getWriter(self):
         return self._writer
 
     def getDeleter(self):
-        return Deleter(self._db)
+        return Deleter(conf, self._db)
