@@ -33,6 +33,7 @@ class Device(DictBase, Base):
 
     __tablename__ = 'device'
     id = Column(Integer, primary_key=True)
+    uuid = Column(String(32))
     name = Column(String(255))
     type = Column(String(255))
     version = Column(String(255))
@@ -49,6 +50,7 @@ class LoadBalancer(DictBase, Base):
     __tablename__ = 'loadbalancer'
     id = Column(Integer, primary_key=True)
     device_id = Column(Integer, ForeignKey('device.id'))
+    uuid = Column(String(32))
     name = Column(String(255))
     algorithm = Column(String(255))
     protocol = Column(String(255))
@@ -71,6 +73,7 @@ class ServerFarm(DictBase, Base):
     __tablename__ = 'serverfarm'
     id = Column(Integer, primary_key=True)
     loadbalancer_id = Column(Integer, ForeignKey('loadbalancer.id'))
+    uuid = Column(String(32))
     name = Column(String(255))
     type = Column(String(255))
     status = Column(String(255))
@@ -88,12 +91,14 @@ class VirtualServer(DictBase, Base):
     id = Column(Integer, primary_key=True)
     serverfarm_id = Column(Integer, ForeignKey('serverfarm.id'))
     loadbalancer_id = Column(Integer, ForeignKey('loadbalancer.id'))
+    uuid = Column(String(32))
     name = Column(String(255))
     ip_version = Column(String(255))
     address = Column(String(255))
     mask = Column(String(255))
     port = Column(String(255))
     status = Column(String(255))
+    extra = Column(JsonBlob())
 
     serverfarm = relationship(ServerFarm,
                               backref=backref('virtualservers', order_by=id),
@@ -109,6 +114,7 @@ class Server(DictBase, Base):
     __tablename__ = 'server'
     id = Column(Integer, primary_key=True)
     serverfarm_id = Column(Integer, ForeignKey('serverfarm.id'))
+    uuid = Column(String(32))
     name = Column(String(255))
     type = Column(String(255))
     ip_version = Column(String(255))
@@ -130,6 +136,7 @@ class Probe(DictBase, Base):
     __tablename__ = 'probe'
     id = Column(Integer, primary_key=True)
     serverfarm_id = Column(Integer, ForeignKey('serverfarm.id'))
+    uuid = Column(String(32))
     name = Column(String(255))
     type = Column(String(255))
     extra = Column(JsonBlob())
@@ -145,6 +152,7 @@ class Sticky(DictBase, Base):
     __tablename__ = 'sticky'
     id = Column(Integer, primary_key=True)
     serverfarm_id = Column(Integer, ForeignKey('serverfarm.id'))
+    uuid = Column(String(32))
     name = Column(String(255))
     type = Column(String(255))
     extra = Column(JsonBlob())
@@ -160,6 +168,7 @@ class Predictor(DictBase, Base):
     __tablename__ = 'predictor'
     id = Column(Integer, primary_key=True)
     serverfarm_id = Column(Integer, ForeignKey('serverfarm.id'))
+    uuid = Column(String(32))
     type = Column(String(255))
     extra = Column(JsonBlob())
 
