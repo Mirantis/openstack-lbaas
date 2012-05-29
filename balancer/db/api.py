@@ -41,6 +41,15 @@ def device_get(conf, device_id, session=None):
     return device_ref
 
 
+def device_get_by_uuid(conf, device_uuid, session=None):
+    session = session or get_session(conf)
+    device_ref = session.query(models.Device).filter_by(uuid=device_uuid).\
+                         first()
+    if not device_ref:
+        raise exception.DeviceNotFound(device_uuid=device_uuid)
+    return device_ref
+
+
 def device_destroy(conf, device_id):
     session = get_session(conf)
     with session.begin():
