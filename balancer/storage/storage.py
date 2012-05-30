@@ -15,13 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import sqlite3
-import MySQLdb as mdb
-import threading 
-
-
 from balancer.loadbalancers.loadbalancer import *
-from openstack.common import exception
 from balancer.devices.device import LBDevice
 from balancer.core.configuration import Configuration
 from balancer.loadbalancers.probe import *
@@ -30,31 +24,51 @@ from balancer.loadbalancers.realserver import RealServer
 from balancer.loadbalancers.predictor import *
 from balancer.loadbalancers.serverfarm import ServerFarm
 from balancer.loadbalancers.virtualserver import VirtualServer
-from balancer.loadbalancers.vlan import VLAN
+
+from balancer import db
+from balancer import exception
+
+
 logger = logging.getLogger(__name__)
 
 
-DATABASE_TYPE = 'mysql'
-class SQLExecute(object):
-    def execute(self,cursor,  command):
-        executed = False
-        while (not executed):
-            try:
-                cursor.execute(command)
-                executed = True
-            except Exception ex:
-                logger.info("Got database exception. Msg: %s" % ex.message)
-                
-                
+def load_to_old_model(object_ref, inst):
+    inst.loadFromDict(object_ref)
+    if 'extra' in object_ref and object_ref['extra'] is not None:
+        inst.loadFromDict(object_ref['extra'])
 
-class Reader(SQLExecute):
+
+def extract_extra(object_ref, inst_dict):
+    extra_columns = set(inst_dict) - set(object_ref)
+    extra = {}
+    for col in extra_columns:
+        extra[col] = inst_dict[col]
+    return extra or None
+
+
+def get_db_funcs(obj):
+    if isinstance(obj, LoadBalancer):
+        return (db.loadbalancer_get, db.loadbalancer_update)
+    elif isinstance(obj, ServerFarm):
+        return (db.serverfarm_get, db.serverfarm_update)
+    elif isinstance(obj,  BasePredictor):
+        return (db.predictor_get, db.predictor_update)
+    elif isinstance(obj,  RealServer):
+        return (db.server_get, db.server_update)
+    elif isinstance(obj,  LBDevice):
+        return (db.device_get, db.device_update)
+    elif isinstance(obj,  VirtualServer):
+        return (db.virtualserver_get, db.virtualserver_update)
+    elif isinstance(obj, Probe):
+        return (db.probe_get, db.probe_update)
+    elif isinstance(obj, Sticky):
+        return (db.sticky_get, db.sticky_update)
+
+
+class Reader(object):
     """ Reader class is used for db read opreations"""
-    def __init__(self,  db):
-        logger.debug("Reader: connecting to db: %s" % db)
-        if DATABASE_TYPE =='mysql':
-            self._con = mdb.connect('localhost',  'root',  'swordfish',  'balancer')
-        else:
-            self._con = sqlite3.connect(db)
+    def __init__(self, conf):
+        self.conf = conf
         self._probeDict = {'DNS': DNSprobe(), 'ECHO TCP': ECHOTCPprobe(), \
                         'ECHO-UDP': ECHOUDPprobe(), 'FINGER': FINGERprobe(), \
                         'FTP': FTPprobe(), 'HTTPS': HTTPSprobe(), \
@@ -75,7 +89,6 @@ class Reader(SQLExecute):
                           'LeastConnections': LeastConn(), \
                           'LeastLoaded': LeastLoaded(), \
                           'Response': Response(), 'RoundRobin': RoundRobin()}
-                          
         self._stickyDict = {'http-content': HTTPContentSticky(), \
                                     'http-cookie': HTTPCookieSticky(), \
                                     'http-header': HTTPHeaderSticky(), \
@@ -86,895 +99,320 @@ class Reader(SQLExecute):
                                     'sip-header': SIPHeaderSticky(), \
                                     'v6prefix': v6PrefixSticky()}
 
-    def getLoadBalancers(self,  tenant_id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM loadbalancers WHERE tenant_id="%s"' % tenant_id)
-        rows = cursor.fetchall()
-        if rows == None:
-            raise exception.NotFound()
-        list = []
-        for row in rows:
+    def getLoadBalancers(self, tenant_id):
+        lbalancers = []
+        lb_refs = db.loadbalancer_get_all_by_project(self.conf, tenant_id)
+        for lb_ref in lb_refs:
             lb = LoadBalancer()
-            lb.loadFromDict(row)
-            list.append(lb)
-        return list
+            load_to_old_model(lb_ref, lb)
+            lbalancers.append(lb)
+        return lbalancers
 
-    def getLoadBalancerById(self,  id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM loadbalancers WHERE id = "%s"' % id)
-        row = cursor.fetchone()
-        if row == None:
-            raise exception.NotFound()
+    def getLoadBalancerById(self, id):
+        lb_ref = db.loadbalancer_get(self.conf, id)
         lb = LoadBalancer()
-        lb.loadFromDict(row)
+        load_to_old_model(lb_ref, lb)
         return lb
 
-    def getDeviceById(self,  id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        if id == None:
-            raise exception.NotFound("Empty device id.")
-        cursor.execute('SELECT * FROM devices WHERE id = "%s"' % id)
-        row = cursor.fetchone()
-        if row == None:
-            raise exception.NotFound()
-        lb = LBDevice()
-        lb.loadFromDict(row)
-        return lb
+    def getDeviceById(self, id):
+        device_ref = db.device_get(self.conf, id)
+        device = LBDevice()
+        load_to_old_model(device_ref, device)
+        return device
 
-    def getDeviceByLBid(self,  id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        if id == None:
-            raise exception.NotFound("Empty device id.")
-        cursor.execute('SELECT * FROM loadbalancers WHERE id = "%s"' % id)
-        row = cursor.fetchone()
-        cursor.execute('SELECT * FROM devices WHERE id = "%s"' % \
-                                                  row['device_id'])
-        dict = cursor.fetchone()
-        if dict == None:
-            raise exception.NotFound()
-        lb = LBDevice()
-        lb.loadFromDict(dict)
+    def getDeviceByLBid(self, id):
+        lb = self.getLoadBalancerById(id)
+        device = self.getDeviceById(lb.device_id)
+        return device
 
     def getDevices(self):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM devices')
-        rows = cursor.fetchall()
-        if rows == None:
-            raise exception.NotFound()
-        list = []
-        for row in rows:
-            lb = LBDevice()
-            lb.loadFromDict(row)
-            list.append(lb)
-        return list
+        devices = []
+        device_refs = db.device_get_all(self.conf)
+        for device_ref in device_refs:
+            device = LBDevice()
+            load_to_old_model(device_ref, device)
+            devices.append(device)
+        return devices
 
     def getProbeById(self, id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM probes WHERE id = "%s"' % id)
-        row = cursor.fetchone()
-        if row == None:
-            raise exception.NotFound()
-        prb = self._probeDict[row['type']].createSame()
-        prb.loadFromDict(row)
+        probe_ref = db.probe_get(self.conf, id)
+        prb = self._probeDict[probe_ref['type']].createSame()
+        load_to_old_model(probe_ref, prb)
         return prb
 
     def getProbes(self):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM probes')
-        rows = cursor.fetchall()
-        if rows == None:
-            raise exception.NotFound()
-        list = []
-        for row in rows:
-            prb = self._probeDict[row['type']].createSame()
-            prb.loadFromDict(row)
-            list.append(prb)
-        return list
+        probes = []
+        probe_refs = db.probe_get_all(self.conf)
+        for probe_ref in probe_refs:
+            prb = self._probeDict[probe_ref['type']].createSame()
+            load_to_old_model(probe_ref, prb)
+            probes.append(prb)
+        return probes
+
 
     def getStickyById(self, id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-             cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM stickies WHERE id = "%s"' % id)
-        row = cursor.fetchone()
-        if row == None:
-            raise exception.NotFound()
-        st = self._stickyDict[row['type']].createSame()
-        st.loadFromDict(row)
+        sticky_ref = db.sticky_get(self.conf, id)
+        st = self._stickyDict[sticky_ref['type']].createSame()
+        load_to_old_model(sticky_ref, st)
         return st
 
     def getStickies(self):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM stickies')
-        rows = cursor.fetchall()
-        if rows == None:
-            raise exception.NotFound()
-        list = []
-        for row in rows:
-            st = self._stickyDict[row['type']].createSame()
-            st.loadFromDict(row)
-            list.append(st)
-        return list
-        
-    def getRServerById(self,  id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        if id == None:
-            raise exception.NotFound("Empty device id.")
-        cursor.execute('SELECT * FROM rservers WHERE id = "%s"' % id)
-        row = cursor.fetchone()
-        if row == None:
-            raise exception.NotFound()
+        stickies = []
+        sticky_refs = db.sticky_get_all(self.conf)
+        for sticky_ref in sticky_refs:
+            st = self._stickyDict[sticky_ref['type']].createSame()
+            load_to_old_model(sticky_ref, st)
+            stickies.append(st)
+        return stickies
+
+    def getRServerById(self, id):
+        server_ref = db.server_get_by_uuid(self.conf, id)
         rs = RealServer()
-        rs.loadFromDict(row)
+        load_to_old_model(server_ref, rs)
         return rs
 
-    def getRServerByIP(self,  ip):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        if ip == None:
+    def getRServerByIP(self, ip):
+        server_address = ip
+        if server_address is None:
             raise exception.NotFound("Empty device ip.")
-        cursor.execute('SELECT * FROM rservers WHERE address= "%s" and deployed="True"' % ip)
-        row = cursor.fetchone()
-        if row == None:
-            raise exception.NotFound()
+        server_ref = db.server_get_by_address(self.conf, server_address)
         rs = RealServer()
-        rs.loadFromDict(row)
+        load_to_old_model(server_ref, rs)
         return rs
 
-    def getRServersByParentID(self,  id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        if id == None:
-            raise exception.NotFound("Empty rservers ip.")
-        cursor.execute('SELECT * FROM rservers WHERE parent_id= "%s"' % id)
-        rows = cursor.fetchall()
-        if rows == None:
-            raise exception.NotFound()
-        list = []
-        for row in rows:
+    def getRServersByParentID(self, id):
+        if id is None:
+            raise exception.NotFound("Empty rservers parent id.")
+        parent_ref = db.server_get(self.conf, id)
+        server_refs = db.server_get_all_by_parent_id(self.conf,
+                                                     parent_ref['id'])
+        servers = []
+        for server_ref in server_refs:
             rs = RealServer()
-            rs.loadFromDict(row)
-            list.append(rs)
-        return list
+            load_to_old_model(server_ref, rs)
+            servers.append(rs)
+        return servers
 
     def getRServers(self):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM rservers')
-        rows = cursor.fetchall()
-        if rows == None:
-            raise exception.NotFound()
-        list = []
-        for row in rows:
+        servers = []
+        server_refs = db.server_get_all(self.conf)
+        for server_ref in server_refs:
             rs = RealServer()
-            rs.loadFromDict(row)
-            list.append(rs)
-        return list
-        
-    def getLoadBalancersByVMid(self,  vm_id,  tenant_id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = 'SELECT rservers.id, serverfarms.lb_id FROM rservers, \
-        serverfarms, loadbalancers WHERE rservers.vm_id="%s" AND rservers.sf_id=serverfarms.id AND \
-        loadbalancers.id = serverfarms.lb_id and loadbalancers.tenant_id="%s"' % (vm_id,  tenant_id)
-        logger.debug("Executing command to retrieve loadbalancer for vm: %s" % command)
-        cursor.execute(command)
-        rows = cursor.fetchall()
-        if rows == None:
-            raise exception.NotFound()
-        list = []
-        for row in rows:
-            lb_id = row['lb_id']
-            lb = self.getLoadBalancerById(lb_id)
-            list.append(lb)
-        return list
+            load_to_old_model(server_ref, rs)
+            servers.append(rs)
+        return servers
 
-    def getRServersByVMid(selfself,  vm_id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM rservers WHERE rservers.vm_id="%s"' % vm_id)
-        rows = cursor.fetchall()
-        if rows == None:
-            raise exception.NotFound()
-        list = []
-        for row in rows:
-            rs = RealServer()
-            rs.loadFromDict(row)
-            list.append(rs)
-        return list
-
-    def getRServersByVMidForLB(selfself,  vm_id,  lb_id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT rservers.* FROM rservers, serverfarms WHERE \
-        rservers.vm_id="%s" and rservers.sf_id=serverfarms.id and serverframs.lb_id="%s" ' % (vm_id,  lb_id))
-        rows = cursor.fetchall()
-        if rows == None:
-            raise exception.NotFound()
-        list = []
-        for row in rows:
-            rs = RealServer()
-            rs.loadFromDict(row)
-            list.append(rs)
-        return list
-        
-    def getPreditorById(self, id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM predictors WHERE id = "%s"' % id)
-        row = cursor.fetchone()
-        if row == None:
-            raise exception.NotFound()
-        prd = self._predictDict[row['type']].createSame()
-        prd.loadFromDict(row)
-        return prd
-
-    def getPredictors(self):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM predictors')
-        rows = cursor.fetchall()
-        if rows == None:
-            raise exception.NotFound()
-        list = []
-        for row in rows:
-            prd = self._predictDict[row['type']].createSame()
-            prd.loadFromDict(row)
-            list.append(prd)
-        return list
-
-    def getServerFarmById(self, id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM serverfarms WHERE id = "%s"' % id)
-        row = cursor.fetchone()
-        if row == None:
-            raise exception.NotFound()
-        sf = ServerFarm()
-        sf.loadFromDict(row)
-        return sf
-
-    def getServerFarms(self):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM serverfarms')
-        rows = cursor.fetchall()
-        if rows == None:
-            raise exception.NotFound()
-        list = []
-        for row in rows:
-            sf = ServerFarm()
-            sf.loadFromDict(row)
-            list.append(sf)
-        return list
-
-    def getVirtualServerById(self, id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM vips WHERE id = "%s"' % id)
-        row = cursor.fetchone()
-        if row == None:
-            raise exception.NotFound()
-        vs = VirtualServer()
-        vs.loadFromDict(row)
-        return vs
-
-    def getVirtualServers(self):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM vips')
-        rows = cursor.fetchall()
-        if rows == None:
-            raise exception.NotFound()
-        list = []
-        for row in rows:
-            vs = VirtualServer()
-            vs.loadFromDict(row)
-            list.append(vs)
-        return list
-
-    def getServerFarms(self):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM serverfarms')
-        rows = cursor.fetchall()
-        if rows == None:
-            raise exception.NotFound()
-        list = []
-        for row in rows:
-            sf = ServerFarm()
-            sf.loadFromDict(row)
-            list.append(sf)
-        return list
-
-    def getVLANbyId(self, id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM vlans WHERE id = "%s"' % id)
-        row = cursor.fetchone()
-        if row == None:
-            raise exception.NotFound()
-        vlan = VLAN()
-        vlan.loadFromDict(row)
-        return vlan
-
-    def getVLANs(self):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM vlans')
-        rows = cursor.fetchall()
-        if rows == None:
-            raise exception.NotFound()
-        list = []
-        for row in rows:
-            vlan = VLAN()
-            vlan.loadFromDict(row)
-            list.append(vlan)
-        return list
+    def getLoadBalancersByVMid(self, vm_id, tenant_id):
+        lbalancers = []
+        lb_refs = db.loadbalancer_get_all_by_vm_id(self.conf, vm_id, tenant_id)
+        for lb_ref in lb_refs:
+            lb = LoadBalancer()
+            load_to_old_model(lb_ref, lb)
+            lbalancers.append(lb)
+        return lbalancers
 
     def getSFByLBid(self,  id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM loadbalancers WHERE id = "%s"' % id)
-        dict = cursor.fetchone()
-        cursor.execute('SELECT * FROM serverfarms WHERE lb_id = "%s"' % \
-                                                              dict['id'])
-        row = cursor.fetchone()
+        lb_ref = db.loadbalancer_get(self.conf, id)
+        sf_refs = db.serverfarm_get_all_by_lb_id(self.conf, lb_ref['id'])
         sf = ServerFarm()
-        sf.loadFromDict(row)
+        if sf_refs:
+            load_to_old_model(sf_refs[0], sf)
         return sf
 
     def getRServersBySFid(self, id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM rservers WHERE sf_id = "%s"' % id)
-        rows = cursor.fetchall()
-        list = []
-        for row in rows:
+        servers = []
+        server_refs = db.server_get_all_by_sf_id(self.conf, id)
+        for server_ref in server_refs:
             rs = RealServer()
-            rs.loadFromDict(row)
-            list.append(rs)
-        return list
+            load_to_old_model(server_ref, rs)
+            servers.append(rs)
+        return servers
 
     def getStickiesBySFid(self, id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM stickies WHERE sf_id = "%s"' % id)
-        rows = cursor.fetchall()
-        list = []
-        for row in rows:
-            st = self._stickyDict[row['type']].createSame()
-            st.loadFromDict(row)
-            list.append(st)
-        return list
-        
+        sticky_refs = db.sticky_get_all_by_sf_id(self.conf, id)
+        stickies = []
+        for sticky_ref in sticky_refs:
+            st = self._stickyDict[sticky_ref['type']].createSame()
+            load_to_old_model(sticky_ref, st)
+            stickies.append(st)
+        return stickies
+
     def getProbesBySFid(self, id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM probes WHERE sf_id = "%s"' % id)
-        rows = cursor.fetchall()
-        list = []
-        for row in rows:
-            pr = self._probeDict[row['type']].createSame()
-            pr.loadFromDict(row)
-            list.append(pr)
-        return list
+        probes = []
+        probe_refs = db.probe_get_all_by_sf_id(self.conf, id)
+        for probe_ref in probe_refs:
+            prb = self._probeDict[probe_ref['type']].createSame()
+            load_to_old_model(probe_ref, prb)
+            probes.append(prb)
+        return probes
 
     def getPredictorBySFid(self, id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM predictors WHERE sf_id = "%s"' % id)
-        rows = cursor.fetchone()
-        pred = self._predictDict[rows['type']].createSame()
-        pred.loadFromDict(rows)
-        return pred
+        predictors = []
+        predictor_refs = db.predictor_get_all_by_sf_id(self.conf, id)
+        for predictor_ref in predictor_refs:
+            pred = self._probeDict[predictor_ref['type']].createSame()
+            load_to_old_model(predictor_ref, pred)
+            predictors.append(pred)
+        return predictors
+
 
     def getVIPsBySFid(self, id):
-        self._con.row_factory = sqlite3.Row
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        cursor.execute('SELECT * FROM vips WHERE sf_id = "%s"' % id)
-        rows = cursor.fetchall()
-        list = []
-        for row in rows:
+        vservers = []
+        vserver_refs = db.virtualverser_get_all_by_sf_id(self.conf, id)
+        for vserver_ref in vserver_refs:
             vs = VirtualServer()
-            vs.loadFromDict(row)
-            list.append(vs)
-        return list
+            load_to_old_model(vserver_ref, vs)
+            vservers.append(vs)
+        return vservers
 
 
-class Writer(SQLExecute):
-    def __init__(self,  db):
-        logger.debug("Writer: connecting to db: %s" % db)
-        if DATABASE_TYPE =='mysql':
-            self._con = mdb.connect('localhost',  'root',  'swordfish',  'balancer')
-        else:
-            self._con = sqlite3.connect(db)
-    
-             
+class Writer(object):
+    def __init__(self, conf):
+        self.conf = conf
 
     def writeLoadBalancer(self,  lb):
         logger.debug("Saving LoadBalancer instance in DB.")
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        dict = lb.convertToDict()
-        command = self.generateCommand("INSERT INTO loadbalancers (", dict)
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        lb_dict = lb.convertToDict()
+        lb_ref = db.loadbalancer_create(self.conf, lb_dict)
+        lb_ref['extra'] = extract_extra(lb_ref, lb_dict)
+        db.loadbalancer_update(self.conf, lb_ref['id'], lb_ref)
 
     def writeDevice(self,  device):
         logger.debug("Saving Device instance in DB.")
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        dict = device.convertToDict()
-        command = self.generateCommand(" INSERT INTO devices (", dict)
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        device_dict = device.convertToDict()
+        device_ref = db.device_create(self.conf, device_dict)
+        device_ref['extra'] = extract_extra(device_ref, device_dict)
+        db.device_update(self.conf, device_ref['id'], device_ref)
 
     def writeProbe(self, prb):
         logger.debug("Saving Probe instance in DB.")
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        dict = prb.convertToDict()
-        command = self.generateCommand(" INSERT INTO probes (", dict)
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
-        
+        probe_dict = prb.convertToDict()
+        probe_ref = db.probe_create(self.conf, probe_dict)
+        probe_ref['extra'] = extract_extra(probe_ref, probe_dict)
+        db.probe_update(self.conf, probe_ref['id'], probe_ref)
+
     def writeSticky(self, st):
         if st == None:
             return
         logger.debug("Saving Sticky instance in DB.")
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        dict = st.convertToDict()
-        command = self.generateCommand(" INSERT INTO stickies (", dict)
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        sticky_dict = st.convertToDict()
+        sticky_ref = db.sticky_create(self.conf, sticky_dict)
+        sticky_ref['extra'] = extract_extra(sticky_ref, sticky_dict)
+        db.sticky_update(self.conf, sticky_ref['id'], sticky_ref)
 
-    def generateCommand(self, start, dict):
-        command1 = start
-        command2 = ""
-        i = 0
-        for key in dict.keys():
-            if i < len(dict) - 1:
-                command1 += key + ','
-                command2 += "'" + str(dict[key]) + "'" + ","
-            else:
-                command1 += key + ") VALUES("
-                command2 += "'" + str(dict[key]) + "'" + ");"
-            i += 1
-        command = command1 + command2
-        return command
-
-    def writeRServer(self,  rs):
+    def writeRServer(self, rs):
         logger.debug("Saving RServer instance in DB.")
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        dict = rs.convertToDict()
-        command = self.generateCommand(" INSERT INTO rservers (", dict)
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        server_dict = rs.convertToDict()
+        server_ref = db.server_create(self.conf, server_dict)
+        server_ref['extra'] = extract_extra(server_ref, server_dict)
+        db.server_update(self.conf, server_ref['id'], server_ref)
 
     def writePredictor(self, prd):
         logger.debug("Saving Predictor instance in DB.")
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        dict = prd.convertToDict()
-        command = self.generateCommand("INSERT INTO predictors (", dict)
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        predictor_dict = prd.convertToDict()
+        predictor_ref = db.predictor_create(self.conf, predictor_dict)
+        predictor_ref['extra'] = extract_extra(predictor_ref, predictor_dict)
+        db.predictor_update(self.conf, predictor_ref['id'], predictor_ref)
 
     def writeServerFarm(self, sf):
         logger.debug("Saving ServerFarm instance in DB.")
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        dict = sf.convertToDict()
-        command = self.generateCommand("INSERT INTO serverfarms (", dict)
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        serverfarm_dict = sf.convertToDict()
+        serverfarm_ref = db.serverfarm_create(self.conf, serverfarm_dict)
+        serverfarm_ref['extra'] = extract_extra(serverfarm_ref, serverfarm_dict)
+        db.serverfarm_update(self.conf, serverfarm_ref['id'], serverfarm_ref)
 
     def writeVirtualServer(self, vs):
         logger.debug("Saving VirtualServer instance in DB.")
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        dict = vs.convertToDict()
-        command = self.generateCommand("INSERT INTO vips (", dict)
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        virtualserver_dict = vs.convertToDict()
+        virtualserver_ref = db.virtualserver_create(self.conf, virtualserver_dict)
+        virtualserver_ref['extra'] = extract_extra(virtualserver_ref, virtualserver_dict)
+        db.virtualserver_update(self.conf, virtualserver_ref['id'], virtualserver_ref)
 
-    def writeVLAN(self, vlan):
-        logger.debug("Saving VLAN instance in DB.")
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        dict = vlan.convertToDict()
-        command = self.generateCommand("INSERT INTO vlans (", dict)
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+    def updateObjectInTable(self, obj):
+        (db_get_func, db_update_func) = get_db_funcs(obj)
 
-    def getTableForObject(self,  obj):
-        table = ""
-        if isinstance(obj, LoadBalancer):
-            table = "loadbalancers"
-        elif isinstance(obj, ServerFarm):
-            table = "serverfarms"
-        elif isinstance(obj,  BasePredictor):
-            table = "predictors"
-        elif isinstance(obj,  RealServer):
-            table = "rservers"
-        elif isinstance(obj,  LBDevice):
-            table = "devices"
-        elif isinstance(obj,  VirtualServer):
-            table = "vips"
-        elif isinstance(obj,  VLAN):
-            table = "vlans"
-        elif isinstance(obj, Probe):
-            table = "probes"
-        elif isinstance(obj, Sticky):
-            table = "stickies"
-        return table
-        
-    def updateObjectInTable(self,  obj):
-        table = self.getTableForObject(obj)
-                   
-        if table != "":
-            logger.debug("Updating table %s in DB." % table)
-            dict = obj.convertToDict()
-            command = self.generateUpdateCommand(table,  dict,  obj.id)
-            if DATABASE_TYPE == 'mysql':
-                cursor = self._con.cursor(mdb.cursors.DictCursor)
-            else:
-                cursor = self._con.cursor()
-            logger.debug("Executing command: %s" % command)
-            self.execute(cursor, command)
-        self._con.commit()
+        obj_dict = obj.convertToDict()
+        obj_ref = db_get_func(self.conf, obj_dict['id'])
+        obj_ref.update(obj_dict)
+        obj_ref['extra'] = extract_extra(obj_ref, obj_dict)
+        db_update_func(self.conf, obj_ref['id'], obj_ref)
 
-    def updateDeployed(self,  obj,  status):
-            table = self.getTableForObject(obj)
-            if DATABASE_TYPE == 'mysql':
-                cursor = self._con.cursor(mdb.cursors.DictCursor)
-            else:
-                cursor = self._con.cursor()
-            cursor.execute("UPDATE %s SET deployed='%s' WHERE id='%s'" % (table, status, obj.id))
-            self._con.commit()
-        
-    def generateUpdateCommand(self,  table, dict,  id):
-        command1 = "UPDATE %s SET " % table
-
-        i = 0
-        for key in dict.keys():
-            if i < len(dict) - 1:
-                if key != "id":
-                    command1 += key + '=\"' + str(dict[key]) + '\",'
-
-            else:
-                if key != "id":
-                    command1 += key + '=\"' + str(dict[key]) + '\"'
-            i += 1
-        command = command1 + " WHERE id = '" + str(id) + "'"
-        return command
+    def updateDeployed(self, obj, status):
+        obj['deployed'] = status
+        self.updateObjectInTable(obj)
 
 
-class Deleter(SQLExecute):
-    def __init__(self,  db):
-        logger.debug("Deleter: connecting to db: %s" % db)
-        if DATABASE_TYPE =='mysql':
-            self._con = mdb.connect('localhost',  'root',  'swordfish',  'balancer')
-        else:
-            self._con = sqlite3.connect(db)
+class Deleter(object):
+    def __init__(self, conf):
+        self.conf = conf
 
     def deleteRSbyID(self, id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from rservers where id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        db.server_destroy(self.conf, id)
 
     def deleteRSsBySFid(self, id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from rservers where  sf_id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        server_refs in db.server_get_all_by_sf_id(self.conf, id)
+        for server_ref in server_refs:
+            self.deleteRSbyID(server_ref['id'])
 
     def deleteVSbyID(self, id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from vips where id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        db.virtualserver_destroy(self.conf, id)
 
     def deleteVSsBySFid(self,  id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from vips where  sf_id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        vserver_refs = db.virtualserver_get_all_by_sf_id(self.conf, id)
+        for vserver_ref in vserver_refs:
+            self.deleteVSbyID(vserver_ref['id'])
 
     def deleteProbeByID(self,  id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from probes where id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        db.probe_destroy(self.conf, id)
+
 
     def deleteProbesBySFid(self, id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from probes where probes.sf_id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        probe_refs = db.probe_get_all_by_sf_id(self.conf, id)
+        for probe_ref in probe_refs:
+            self.deleteProbeByID(probe_ref['id'])
 
     def deleteStickyByID(self,  id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from stickies where id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        db.sticky_destroy(self.conf, id)
 
     def deleteStickiesBySFid(self, id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from stickies where sf_id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        sticky_refs = db.sticky_get_all_by_sf_id(self.conf, id)
+        for sticky_ref in sticky_refs:
+            self.deleteStickyByID(sticky_ref['id'])
+
 
     def deleteLBbyID(self,  id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from loadbalancers where id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        db.loadbalancer_destroy(self.conf, id)
 
     def deleteDeviceByID(self, id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from devices where id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        db.device_destroy(self.conf, id)
 
     def deletePredictorByID(self, id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from predictors where id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        db.predictor_destroy(self.conf, id)
 
     def deletePredictorBySFid(self, id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from predictors where sf_id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        predictor_refs = db.predictor_get_all_by_sf_id(self.conf, id)
+        for predictor_ref in predictor_refs:
+            self.deletePredictorByID(predictor_ref['id'])
 
     def deleteSFbyID(self, id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from serverfarms where id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        db.serverfarm_destroy(self.conf, id)
 
     def deleteSFbyLBid(self, id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from serverfarms where lb_id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
-
-    def deleteVLANbyID(self,  id):
-        if DATABASE_TYPE == 'mysql':
-            cursor = self._con.cursor(mdb.cursors.DictCursor)
-        else:
-            cursor = self._con.cursor()
-        command = "DELETE from vlans where id = '%s'" % id
-        msg = "Executing command: %s" % command
-        logger.debug(msg)
-        self.execute(cursor, command)
-        self._con.commit()
+        sf_refs = db.serverfarm_get_all_by_lb_id(self.conf, id)
+        for sf_ref in sf_refs:
+            self.deleteSFbyID(sf_ref['id'])
 
 
 class Storage(object):
     def __init__(self,  conf):
-        db = conf['db_path']
-        self._db = db
-        self._writer = Writer(self._db)
+        self.conf = conf
+        self._writer = Writer(self.conf)
 
     def getReader(self):
-        return Reader(self._db)
+        return Reader(self.conf)
 
     def getWriter(self):
         return self._writer
 
     def getDeleter(self):
-        return Deleter(self._db)
+        return Deleter(self.conf)
