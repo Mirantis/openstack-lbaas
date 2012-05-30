@@ -40,12 +40,7 @@ class RollbackContext(object):
             self.rollback_stack.pop()(good)
 
     def add_rollback(self, rollback):
-        try:
-            self.rollback_stack.append(rollback)
-        except Rollback:
-            pass
-        except Exception:
-            LOG.exception("Exception during rollback.")
+        self.rollback_stack.append(rollback)
 
 
 class Rollback(Exception):
@@ -69,7 +64,12 @@ def with_rollback(func):
                 if good:
                     gen.close()
                 else:
-                    gen.throw(Rollback)
+                    try:
+                        gen.throw(Rollback)
+                    except Rollback:
+                        pass
+                    except Exception:
+                        LOG.exception("Exception during rollback.")
             ctx.add_rollback(fin)
         return res
     return __inner
