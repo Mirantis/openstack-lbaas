@@ -20,6 +20,7 @@
 """SQLAlchemy models for balancer data."""
 
 import datetime
+import uuid
 
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy import (Column, ForeignKey, Integer, String, Boolean,
@@ -28,12 +29,15 @@ from sqlalchemy import (Column, ForeignKey, Integer, String, Boolean,
 from balancer.db.base import Base, DictBase, JsonBlob
 
 
+def create_uuid():
+    return uuid.uuid4().hex
+
+
 class Device(DictBase, Base):
     """Represents a load balancer appliance."""
 
     __tablename__ = 'device'
-    id = Column(Integer, primary_key=True)
-    uuid = Column(String(32))
+    id = Column(String(32), primary_key=True, default=create_uuid)
     name = Column(String(255))
     type = Column(String(255))
     version = Column(String(255))
@@ -48,14 +52,13 @@ class LoadBalancer(DictBase, Base):
     """Represents an instance of load balancer applience for a tenant."""
 
     __tablename__ = 'loadbalancer'
-    id = Column(Integer, primary_key=True)
-    device_id = Column(Integer, ForeignKey('device.id'))
-    uuid = Column(String(32))
+    id = Column(String(32), primary_key=True, default=create_uuid)
+    device_id = Column(String(32), ForeignKey('device.id'))
     name = Column(String(255))
     algorithm = Column(String(255))
     protocol = Column(String(255))
     status = Column(String(255))
-    project_id = Column(String(255))
+    tenant_id = Column(String(255))
     created_at = Column(DateTime, default=datetime.datetime.utcnow,
                         nullable=False)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow,
@@ -71,9 +74,8 @@ class ServerFarm(DictBase, Base):
     """Represents a server farm."""
 
     __tablename__ = 'serverfarm'
-    id = Column(Integer, primary_key=True)
-    loadbalancer_id = Column(Integer, ForeignKey('loadbalancer.id'))
-    uuid = Column(String(32))
+    id = Column(String(32), primary_key=True, default=create_uuid)
+    lb_id = Column(String(32), ForeignKey('loadbalancer.id'))
     name = Column(String(255))
     type = Column(String(255))
     status = Column(String(255))
@@ -88,12 +90,10 @@ class VirtualServer(DictBase, Base):
     """Represents a Virtual IP."""
 
     __tablename__ = 'virtualserver'
-    id = Column(Integer, primary_key=True)
-    serverfarm_id = Column(Integer, ForeignKey('serverfarm.id'))
-    loadbalancer_id = Column(Integer, ForeignKey('loadbalancer.id'))
-    uuid = Column(String(32))
+    id = Column(String(32), primary_key=True, default=create_uuid)
+    sf_id = Column(String(32), ForeignKey('serverfarm.id'))
+    lb_id = Column(String(32), ForeignKey('loadbalancer.id'))
     name = Column(String(255))
-    ip_version = Column(String(255))
     address = Column(String(255))
     mask = Column(String(255))
     port = Column(String(255))
@@ -112,18 +112,17 @@ class Server(DictBase, Base):
     """Represents a real server."""
 
     __tablename__ = 'server'
-    id = Column(Integer, primary_key=True)
-    serverfarm_id = Column(Integer, ForeignKey('serverfarm.id'))
-    uuid = Column(String(32))
+    id = Column(String(32), primary_key=True, default=create_uuid)
+    sf_id = Column(String(32), ForeignKey('serverfarm.id'))
     name = Column(String(255))
     type = Column(String(255))
-    ip_version = Column(String(255))
     address = Column(String(255))
     port = Column(String(255))
     weight = Column(Integer)
     status = Column(String(255))
-    # NOTE(ash): parent_id keep compatibility because it is searchable field
     parent_id = Column(Integer)
+    deployed = Column(Boolean, default=False)
+    vm_id = Column(Integer)
     extra = Column(JsonBlob())
 
     serverfarm = relationship(ServerFarm,
@@ -134,9 +133,8 @@ class Probe(DictBase, Base):
     """Represents a health monitoring."""
 
     __tablename__ = 'probe'
-    id = Column(Integer, primary_key=True)
-    serverfarm_id = Column(Integer, ForeignKey('serverfarm.id'))
-    uuid = Column(String(32))
+    id = Column(String(32), primary_key=True, default=create_uuid)
+    sf_id = Column(String(32), ForeignKey('serverfarm.id'))
     name = Column(String(255))
     type = Column(String(255))
     extra = Column(JsonBlob())
@@ -150,9 +148,8 @@ class Sticky(DictBase, Base):
     """Represents a persistent session."""
 
     __tablename__ = 'sticky'
-    id = Column(Integer, primary_key=True)
-    serverfarm_id = Column(Integer, ForeignKey('serverfarm.id'))
-    uuid = Column(String(32))
+    id = Column(String(32), primary_key=True, default=create_uuid)
+    sf_id = Column(String(32), ForeignKey('serverfarm.id'))
     name = Column(String(255))
     type = Column(String(255))
     extra = Column(JsonBlob())
@@ -166,9 +163,8 @@ class Predictor(DictBase, Base):
     """Represents a algorithm of selecting server."""
 
     __tablename__ = 'predictor'
-    id = Column(Integer, primary_key=True)
-    serverfarm_id = Column(Integer, ForeignKey('serverfarm.id'))
-    uuid = Column(String(32))
+    id = Column(String(32), primary_key=True, default=create_uuid)
+    sf_id = Column(String(32), ForeignKey('serverfarm.id'))
     type = Column(String(255))
     extra = Column(JsonBlob())
 
