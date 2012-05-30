@@ -297,7 +297,7 @@ class AceDriver(BaseDriver):
 
                 if self.checkNone(probe.requestURL):
                     if self.checkNone(probe.requestMethodType):
-                        cmd += "request method" + probe.requestMethodType
+                        cmd += "request method " + str(probe.requestMethodType)
                         cmd += " url " + probe.requestURL + "\n"
 
             if (pr_type == 'scripted'):
@@ -381,9 +381,9 @@ class AceDriver(BaseDriver):
                     " back-inservice " + str(serverfarm.backInservice) + "\n"
 
             if self.checkNone(serverfarm.inbandHealthCheck):
-                cmd += "inband-health check " + \
-                    serverfarm.inbandHealthCheck + "\n"
                 h_check = serverfarm.inbandHealthCheck.lower()
+                cmd += "inband-health check " + h_check + " " + \
+                       inbandHealthMonitoringThreshold + "\n"
                 if ((h_check == "log") and \
                     self.checkNone(serverfarm.resetTimeout)):
                     cmd += str(serverfarm.connFailureThreshCount) + \
@@ -544,13 +544,13 @@ class AceDriver(BaseDriver):
                     cmd += " end-pattern " + sticky.endPattern
                 cmd += "\n"
         elif sticky_type == "radius":
-            cmd += name + "\n"
+            cmd += "framed-ip " + name + "\n"
         elif sticky_type == "rtsp-header":
             cmd += " Session " + name + "\n"
             if self.checkNone(sticky.offset):
-                cmd += "header offset='" + str(sticky.offset) + "'"
+                cmd += "header offset " + str(sticky.offset)
                 if self.checkNone(sticky.length):
-                    cmd += " length='" + str(sticky.length) + "'"
+                    cmd += " length " + str(sticky.length)
             cmd += "\n"
         elif sticky_type == "sip-header":
             cmd += " Call-ID" + name + "\n"
