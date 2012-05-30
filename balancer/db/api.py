@@ -135,7 +135,7 @@ def probe_get_all(conf):
 
 def probe_get_all_by_sf_id(conf, sf_id):
     session = get_session(conf)
-    query = session.query(models.Probe).filter_by(sf_id=sf_is)
+    query = session.query(models.Probe).filter_by(sf_id=sf_id)
     return query.all()
 
 
@@ -180,7 +180,7 @@ def sticky_get_all(conf):
 
 def sticky_get_all_by_sf_id(conf, sf_id):
     session = get_session(conf)
-    query = session.query(models.Sticky).filter_by(sf_id=sf_is)
+    query = session.query(models.Sticky).filter_by(sf_id=sf_id)
     return query.all()
 
 
@@ -242,7 +242,7 @@ def server_get_all_by_parent_id(conf, parent_id):
 
 def server_get_all_by_sf_id(conf, sf_id):
     session = get_session(conf)
-    query = session.query(models.Server).filter_by(sf_id=sf_is)
+    query = session.query(models.Server).filter_by(sf_id=sf_id)
     return query.all()
 
 
@@ -281,7 +281,7 @@ def serverfarm_get(conf, serverfarm_id, session=None):
     return serverfarm_ref
 
 
-def serverfarm_get_all_by_lb_id(conf, ld_id):
+def serverfarm_get_all_by_lb_id(conf, lb_id):
     session = get_session(conf)
     query = session.query(models.ServerFarm).filter_by(loadbalancer_id=lb_id)
     return query.all()
@@ -323,7 +323,7 @@ def predictor_get(conf, predictor_id, session=None):
 
 def predictor_get_all_by_sf_id(conf, sf_id):
     session = get_session(conf)
-    query = session.query(models.Predictor).filter_by(sf_id=sf_is)
+    query = session.query(models.Predictor).filter_by(sf_id=sf_id)
     return query.all()
 
 
@@ -364,7 +364,7 @@ def virtualserver_get(conf, vserver_id, session=None):
 
 def virtualserver_get_all_by_sf_id(conf, sf_id):
     session = get_session(conf)
-    query = session.query(models.VirtualServer).filter_by(sf_id=sf_is)
+    query = session.query(models.VirtualServer).filter_by(sf_id=sf_id)
     return query.all()
 
 
@@ -380,7 +380,7 @@ def virtualserver_create(conf, values):
 def virtualserver_update(conf, vserver_id, values):
     session = get_session(conf)
     with session.begin():
-        vserver_ref = vserver_get(conf, vserver_id, session=session)
+        vserver_ref = virtualserver_get(conf, vserver_id, session=session)
         vserver_ref.update(values)
         session.add(vserver_ref)
 
@@ -388,5 +388,5 @@ def virtualserver_update(conf, vserver_id, values):
 def virtualserver_destroy(conf, vserver_id):
     session = get_session(conf)
     with session.begin():
-        vserver_ref = vserver_get(conf, vserver_id, session=session)
+        vserver_ref = virtualserver_get(conf, vserver_id, session=session)
         session.delete(vserver_ref)

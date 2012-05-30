@@ -250,7 +250,7 @@ class Reader(object):
         predictors = []
         predictor_refs = db.predictor_get_all_by_sf_id(self.conf, id)
         for predictor_ref in predictor_refs:
-            pred = self._probeDict[probe_ref['type']].createSame()
+            pred = self._probeDict[predictor_ref['type']].createSame()
             load_to_old_model(predictor_ref, pred)
             predictors.append(pred)
         return predictors
@@ -323,7 +323,7 @@ class Writer(object):
 
     def writeVirtualServer(self, vs):
         logger.debug("Saving VirtualServer instance in DB.")
-        virtualserver_dict = sf.convertToDict()
+        virtualserver_dict = vs.convertToDict()
         virtualserver_ref = db.virtualserver_create(self.conf, virtualserver_dict)
         virtualserver_ref['extra'] = extract_extra(virtualserver_ref, virtualserver_dict)
         db.virtualserver_update(self.conf, virtualserver_ref['id'], virtualserver_ref)
