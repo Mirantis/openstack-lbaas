@@ -20,7 +20,7 @@
 """Balancer base exception handling."""
 
 class NotFound(Exception):
-    message = "Resource not found."
+    message = 'Resource not found.'
 
     def __init__(self, message=None, **kwargs):
         super(NotFound, self).__init__(message)
@@ -28,4 +28,33 @@ class NotFound(Exception):
 
 
 class DeviceNotFound(NotFound):
-    message = "Device not found"
+    message = 'Device not found'
+
+
+class LoadBalancerNotFound(NotFound):
+    message = 'LoadBalancer not found'
+
+
+class ProbeNotFound(NotFound):
+    message = 'Probe not found'
+
+
+class StickyNotFound(NotFound):
+    message = 'Sticky not found'
+
+
+class ServerNotFound(NotFound):
+    message = 'Server not found'
+
+
+
+class ServerFarmNotFound(NotFound):
+    message = 'Server Farm not found'
+
+
+class PredictorNotFound(NotFound):
+    message = 'Predictor not found'
+
+
+class VirtualServerNotFound(NotFound):
+    message = 'Virtual Server not found'
