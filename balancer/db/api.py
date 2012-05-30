@@ -183,6 +183,30 @@ def sticky_get_all_by_sf_id(conf, sf_id):
     query = session.query(models.Sticky).filter_by(sf_id=sf_is)
     return query.all()
 
+
+def sticky_create(conf, values):
+    session = get_session(conf)
+    with session.begin():
+        sticky_ref = models.Sticky()
+        sticky_ref.update(values)
+        session.add(sticky_ref)
+        return sticky_ref
+
+
+def sticky_update(conf, sticky_id, values):
+    session = get_session(conf)
+    with session.begin():
+        sticky_ref = sticky_get(conf, sticky_id, session=session)
+        sticky_ref.update(values)
+        session.add(sticky_ref)
+
+
+def sticky_destroy(conf, sticky_id):
+    session = get_session(conf)
+    with session.begin():
+        sticky_ref = sticky_get(conf, sticky_id, session=session)
+        session.delete(sticky_ref)
+
 # Server
 
 def server_get(conf, server_id, session=None):
