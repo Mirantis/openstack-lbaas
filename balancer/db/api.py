@@ -23,6 +23,23 @@ from balancer.db import models
 from balancer.db.session import get_session
 from balancer import exception
 
+# Device
+
+def device_get(conf, device_id, session=None):
+    session = session or get_session(conf)
+    device_ref = session.query(models.Device).\
+                         filter_by(id=device_id).\
+                         first()
+    if not device_ref:
+        raise exception.DeviceNotFound(device_id=device_id)
+    return device_ref
+
+
+def device_get_all(conf):
+    session = get_session(conf)
+    query = session.query(models.Device)
+    return query.all()
+
 
 def device_create(conf, values):
     session = get_session(conf)
@@ -33,21 +50,12 @@ def device_create(conf, values):
         return device_ref
 
 
-def device_get(conf, device_id, session=None):
-    session = session or get_session(conf)
-    device_ref = session.query(models.Device).filter_by(id=device_id).first()
-    if not device_ref:
-        raise exception.DeviceNotFound(device_id=device_id)
-    return device_ref
-
-
-def device_get_by_uuid(conf, device_uuid, session=None):
-    session = session or get_session(conf)
-    device_ref = session.query(models.Device).filter_by(uuid=device_uuid).\
-                         first()
-    if not device_ref:
-        raise exception.DeviceNotFound(device_uuid=device_uuid)
-    return device_ref
+def device_update(conf, device_id, values):
+    session = get_session(conf)
+    with session.begin():
+        device_ref = device_get(conf, device_id, session=session)
+        device_ref.update(values)
+        session.add(device_ref)
 
 
 def device_destroy(conf, device_id):
@@ -56,10 +64,305 @@ def device_destroy(conf, device_id):
         device_ref = device_get(conf, device_id, session=session)
         session.delete(device_ref)
 
+# LoadBalancer
 
-def device_update(conf, device_id, values):
+def loadbalancer_get(conf, loadbalancer_id, session=None):
+    session = session or get_session(conf)
+    loadbalancer_ref = session.query(models.LoadBalancer).\
+                               filter_by(id=loadbalancer_id).\
+                               first()
+    if not loadbalancer_ref:
+        raise exception.LoadBalancerNotFound(loadbalancer_id=loadbalancer_id)
+    return loadbalancer_ref
+
+
+def loadbalancer_get_all_by_project(conf, tenant_id):
+    session = get_session(conf)
+    query = session.query(models.LoadBalancer).filter_by(tenant_id=tenant_id)
+    return query.all()
+
+
+def loadbalancer_get_all_by_vm_id(conf, vm_id, tenant_id):
+    session = get_session(conf)
+    query = session.query(models.LoadBalancer).distinct().\
+                    filter_by(tenant_id=tenant_id).\
+                    filter(models.LoadBalancer.id ==
+                           models.ServerFarm.loadbalancer_id).\
+                    filter(models.Server.serverfarm_id ==
+                           models.ServerFarm.id).\
+                    filter(models.Server.vm_id == vm_id)
+    return query.all()
+
+
+def loadbalancer_create(conf, values):
     session = get_session(conf)
     with session.begin():
-        device_ref = device_get(conf, device_id, session=session)
-        device_ref.update(values)
-        session.add(device_ref)
+        lb_ref = models.LoadBalancer()
+        lb_ref.update(values)
+        session.add(lb_ref)
+        return lb_ref
+
+
+def loadbalancer_update(conf, lb_id, values):
+    session = get_session(conf)
+    with session.begin():
+        lb_ref = loadbalancer_get(conf, lb_id, session=session)
+        lb_ref.update(values)
+        session.add(lb_ref)
+
+
+def loadbalancer_destroy(conf, lb_id):
+    session = get_session(conf)
+    with session.begin():
+        lb_ref = loadbalancer_get(conf, lb_id, session=session)
+        session.delete(lb_ref)
+
+# Probe
+
+def probe_get(conf, probe_id, session=None):
+    session = session or get_session(conf)
+    probe_ref = session.query(models.Probe).filter_by(id=probe_id).first()
+    if not probe_ref:
+        raise exception.ProbeNotFound(probe_id=probe_id)
+    return probe_ref
+
+
+def probe_get_all(conf):
+    session = get_session(conf)
+    query = session.query(models.Probe)
+    return query.all()
+
+
+def probe_get_all_by_sf_id(conf, sf_id):
+    session = get_session(conf)
+    query = session.query(models.Probe).filter_by(sf_id=sf_is)
+    return query.all()
+
+
+def probe_create(conf, values):
+    session = get_session(conf)
+    with session.begin():
+        probe_ref = models.Probe()
+        probe_ref.update(values)
+        session.add(probe_ref)
+        return probe_ref
+
+
+def probe_update(conf, probe_id, values):
+    session = get_session(conf)
+    with session.begin():
+        probe_ref = probe_get(conf, probe_id, session=session)
+        probe_ref.update(values)
+        session.add(probe_ref)
+
+
+def probe_destroy(conf, probe_id):
+    session = get_session(conf)
+    with session.begin():
+        probe_ref = probe_get(conf, probe_id, session=session)
+        session.delete(probe_ref)
+
+# Sticky
+
+def sticky_get(conf, sticky_id, session=None):
+    session = session or get_session(conf)
+    sticky_ref = session.query(models.Sticky).filter_by(id=sticky_id).first()
+    if not sticky_ref:
+        raise exception.StickyNotFound(sticky_id=sticky_id)
+    return sticky_ref
+
+
+def sticky_get_all(conf):
+    session = get_session(conf)
+    query = session.query(models.Sticky)
+    return query.all()
+
+
+def sticky_get_all_by_sf_id(conf, sf_id):
+    session = get_session(conf)
+    query = session.query(models.Sticky).filter_by(sf_id=sf_is)
+    return query.all()
+
+# Server
+
+def server_get(conf, server_id, session=None):
+    session = session or get_session(conf)
+    server_ref = session.query(models.Server).filter_by(id=server_id).first()
+    if not server_ref:
+        raise exception.ServerNotFound(server_id=server_id)
+    return server_ref
+
+
+def server_get_all(conf):
+    session = get_session(conf)
+    query = session.query(models.Server)
+    return query.all()
+
+
+def server_get_by_address(conf, server_address):
+    session = get_session(conf)
+    server_ref = session.query(models.Server).\
+                         filter_by(address=server_address).\
+                         filter_by(deployed=True).\
+                         first()
+    if not server_ref:
+        raise exception.ServerNotFound(server_address=server_address)
+    return server_ref
+
+
+def server_get_all_by_parent_id(conf, parent_id):
+    session = get_session(conf)
+    query = session.query(models.Server).filter_by(parent_id=parent_id)
+    return query.all()
+
+
+def server_get_all_by_sf_id(conf, sf_id):
+    session = get_session(conf)
+    query = session.query(models.Server).filter_by(sf_id=sf_is)
+    return query.all()
+
+
+def server_create(conf, values):
+    session = get_session(conf)
+    with session.begin():
+        server_ref = models.Server()
+        server_ref.update(values)
+        session.add(server_ref)
+        return server_ref
+
+
+def server_update(conf, server_id, values):
+    session = get_session(conf)
+    with session.begin():
+        server_ref = server_get(conf, server_id, session=session)
+        server_ref.update(values)
+        session.add(server_ref)
+
+
+def server_destroy(conf, server_id):
+    session = get_session(conf)
+    with session.begin():
+        server_ref = server_get(conf, server_id, session=session)
+        session.delete(server_ref)
+
+# ServerFarm
+
+def serverfarm_get(conf, serverfarm_id, session=None):
+    session = session or get_session(conf)
+    serverfarm_ref = session.query(models.ServerFarm).\
+                             filter_by(id=serverfarm_id).\
+                             first()
+    if not serverfarm_ref:
+        raise exception.ServerFarmNotFound(serverfarm_id=serverfarm_id)
+    return serverfarm_ref
+
+
+def serverfarm_get_all_by_lb_id(conf, ld_id):
+    session = get_session(conf)
+    query = session.query(models.ServerFarm).filter_by(loadbalancer_id=lb_id)
+    return query.all()
+
+
+def serverfarm_create(conf, values):
+    session = get_session(conf)
+    with session.begin():
+        serverfarm_ref = models.ServerFarm()
+        serverfarm_ref.update(values)
+        session.add(serverfarm_ref)
+        return serverfarm_ref
+
+
+def serverfarm_update(conf, serverfarm_id, values):
+    session = get_session(conf)
+    with session.begin():
+        serverfarm_ref = serverfarm_get(conf, serverfarm_id, session=session)
+        serverfarm_ref.update(values)
+        session.add(serverfarm_ref)
+
+
+def serverfarm_destroy(conf, serverfarm_id):
+    session = get_session(conf)
+    with session.begin():
+        serverfarm_ref = serverfarm_get(conf, serverfarm_id, session=session)
+        session.delete(serverfarm_ref)
+
+# Predictor
+
+def predictor_get(conf, predictor_id, session=None):
+    session = session or get_session(conf)
+    predictor_ref = session.query(models.Predictor).\
+                            filter_by(id=predictor_id).\
+                            first()
+    if not predictor_ref:
+        raise exception.PredictorNotFound(predictor_id=predictor_id)
+    return predictor_ref
+
+def predictor_get_all_by_sf_id(conf, sf_id):
+    session = get_session(conf)
+    query = session.query(models.Predictor).filter_by(sf_id=sf_is)
+    return query.all()
+
+
+def predictor_create(conf, values):
+    session = get_session(conf)
+    with session.begin():
+        predictor_ref = models.Predictor()
+        predictor_ref.update(values)
+        session.add(predictor_ref)
+        return predictor_ref
+
+
+def predictor_update(conf, predictor_id, values):
+    session = get_session(conf)
+    with session.begin():
+        predictor_ref = predictor_get(conf, predictor_id, session=session)
+        predictor_ref.update(values)
+        session.add(predictor_ref)
+
+
+def predictor_destroy(conf, predictor_id):
+    session = get_session(conf)
+    with session.begin():
+        predictor_ref = predictor_get(conf, predictor_id, session=session)
+        session.delete(predictor_ref)
+
+# VirtualServer
+
+def virtualserver_get(conf, vserver_id, session=None):
+    session = session or get_session(conf)
+    vserver_ref = session.query(models.VirtualServer).\
+                          filter_by(id=vserver_id).\
+                          first()
+    if not vserver_ref:
+        raise exception.VirtualServerNotFound(vserver_id=vserver_id)
+    return vserver_ref
+
+
+def virtualserver_get_all_by_sf_id(conf, sf_id):
+    session = get_session(conf)
+    query = session.query(models.VirtualServer).filter_by(sf_id=sf_is)
+    return query.all()
+
+
+def virtualserver_create(conf, values):
+    session = get_session(conf)
+    with session.begin():
+        vserver_ref = models.VirtualServer()
+        vserver_ref.update(values)
+        session.add(vserver_ref)
+        return vserver_ref
+
+
+def virtualserver_update(conf, vserver_id, values):
+    session = get_session(conf)
+    with session.begin():
+        vserver_ref = vserver_get(conf, vserver_id, session=session)
+        vserver_ref.update(values)
+        session.add(vserver_ref)
+
+
+def virtualserver_destroy(conf, vserver_id):
+    session = get_session(conf)
+    with session.begin():
+        vserver_ref = vserver_get(conf, vserver_id, session=session)
+        session.delete(vserver_ref)
