@@ -246,3 +246,70 @@ def delete_vip(ctx, conf, driver, vip):
     stor = storage.Storage(conf)
     wr = stor.getWriter()
     wr.updateDeployed(vip, 'False')
+
+
+def create_loadbalancer(ctx, conf, driver, balancer):
+    for probe in balancer.probes:
+        create_probe(ctx, conf, driver,  probe)
+
+    create_server_farm(ctx, conf, driver, balancer.sf)
+    for rserver in balancer.rs:
+        create_rserver(ctx, conf, driver, rserver)
+        add_rserver_to_server_farm(ctx, conf, driver, balancer.sf,  rserver)
+
+#    for pr in bal.probes:
+#        CreateProbeCommand(driver,  context,  pr)
+#        AddProbeToSFCommand(driver,  context,  bal.sf,  pr)
+    for vip in balancer.vips:
+        create_vip(ctx, conf, driver, vip, balancer.sf)
+
+
+def delete_loadbalancer(ctx, conf, driver, balancer):
+    for vip in balancer.vips:
+        delete_vip(ctx, conf, driver, vip)
+#    for pr in balancer.probes:
+#        DeleteProbeFromSFCommand(driver,  context,  balancer.sf,  pr)
+#        DeleteProbeCommand(driver,  context,  pr)
+    for rserver in balancer.rs:
+        delete_rserver_from_server_farm(ctx, conf, driver,
+                                        balancer.sf, rserver)
+        delete_rserver(ctx, conf, driver, rserver)
+    for probe in balancer.probes:
+        delete_probe_from_server_farm(ctx, conf, driver, balancer.sf, probe)
+        delete_probe(ctx, conf, driver, probe)
+    for sticky in balancer.sf._sticky:
+        delete_sticky(ctx, conf, driver, sticky)
+    delete_server_farm(ctx, conf, driver, balancer.sf)
+
+
+def update_loadbalancer(ctx, conf, driver, old_bal,  new_bal):
+    if old_bal.lb.algorithm != new_bal.lb.algorithm:
+        create_server_farm(ctx, conf, driver, new_bal.sf)
+
+
+def add_node_to_loadbalancer(ctx, conf, driver, balancer, rserver):
+    create_rserver(ctx, conf, driver, rserver)
+    add_rserver_to_server_farm(ctx, conf, driver, balancer.sf, rserver)
+
+
+def remove_node_from_loadbalancer(ctx, conf, driver, balancer, rserver):
+    delete_rserver_from_server_farm(ctx, conf, driver, balancer.sf, rserver)
+    delete_rserver(ctx, conf, driver, rserver)
+
+
+def add_probe_to_loadbalancer(ctx, conf, driver, balancer, probe):
+    create_probe(ctx, conf, driver, probe)
+    add_probe_to_server_farm(ctx, conf, driver, balancer.sf, probe)
+
+
+def makeDeleteProbeFromLBChain(ctx, conf, driver, balancer, probe):
+    delete_probe_from_server_farm(ctx, conf, driver, balancer.sf, probe)
+    delete_probe(ctx, conf, driver, probe)
+
+
+def add_sticky_to_loadbalancer(ctx, conf, driver, balancer, sticky):
+    create_sticky(ctx, conf, driver, sticky)
+
+
+def remove_sticky_from_loadbalancer(ctx, conf, driver, balancer, sticky):
+    delete_sticky(ctx, conf, driver, sticky)
