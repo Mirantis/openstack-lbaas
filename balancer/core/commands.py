@@ -149,6 +149,7 @@ def create_server_farm(ctx, conf, driver, sf):
         stor = storage.Storage(conf)
         wr = stor.getWriter()
         wr.updateDeployed(sf, 'False')
+        raise
 
 
 def delete_server_farm(ctx, conf, driver, sf):
@@ -170,6 +171,7 @@ def add_rserver_to_server_farm(ctx, conf, driver, server_farm, rserver):
         yield
     except Exception:
         driver.deleteRServerFromSF(ctx, server_farm, rserver)
+        raise
 
 
 def delete_rserver_from_server_farm(ctx, conf, driver, server_farm, rserver):
@@ -191,6 +193,7 @@ def create_probe(ctx, conf, driver, probe):
         stor = storage.Storage(conf)
         wr = stor.getWriter()
         wr.updateDeployed(probe, 'False')
+        raise
 
 
 def delete_probe(ctx, conf, driver, probe):
@@ -208,6 +211,7 @@ def add_probe_to_server_farm(ctx, conf, driver, server_farm, probe):
         yield
     except Exception:
         driver.deleteProbeFromSF(ctx, server_farm, probe)
+        raise
 
 
 @with_rollback
@@ -238,6 +242,7 @@ def create_vip(ctx, conf, driver, vip, server_farm):
         stor = storage.Storage(conf)
         wr = stor.getWriter()
         wr.updateDeployed(vip, 'False')
+        raise
 
 
 def delete_vip(ctx, conf, driver, vip):
