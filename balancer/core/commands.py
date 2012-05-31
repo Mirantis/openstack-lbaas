@@ -234,7 +234,7 @@ def add_probe_to_server_farm(ctx, conf, driver, server_farm, probe):
 
 
 @ignore_exceptions
-def delete_probe_from_server_farm(ctx, conf, driver, server_farm, probe):
+def remove_probe_from_server_farm(ctx, conf, driver, server_farm, probe):
     driver.deleteProbeFromSF(ctx, server_farm, probe)
 
 
@@ -300,7 +300,7 @@ def delete_loadbalancer(ctx, conf, driver, balancer):
                                         balancer.sf, rserver)
         delete_rserver(ctx, conf, driver, rserver)
     for probe in balancer.probes:
-        delete_probe_from_server_farm(ctx, conf, driver, balancer.sf, probe)
+        remove_probe_from_server_farm(ctx, conf, driver, balancer.sf, probe)
         delete_probe(ctx, conf, driver, probe)
     for sticky in balancer.sf._sticky:
         delete_sticky(ctx, conf, driver, sticky)
@@ -328,7 +328,7 @@ def add_probe_to_loadbalancer(ctx, conf, driver, balancer, probe):
 
 
 def makeDeleteProbeFromLBChain(ctx, conf, driver, balancer, probe):
-    delete_probe_from_server_farm(ctx, conf, driver, balancer.sf, probe)
+    remove_probe_from_server_farm(ctx, conf, driver, balancer.sf, probe)
     delete_probe(ctx, conf, driver, probe)
 
 
