@@ -30,6 +30,8 @@ class RollbackContext(object):
         self.rollback_stack = []
 
     def __enter__(self):
+        if self.rollback_stack:
+            raise RuntimeError("Rollback context can not be reused")
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
@@ -38,6 +40,8 @@ class RollbackContext(object):
             LOG.error("Rollback because of: %s", exc_value)
         while self.rollback_stack:
             self.rollback_stack.pop()(good)
+        if not good:
+            raise exc_type, exc_value, exc_tb
 
     def add_rollback(self, rollback):
         self.rollback_stack.append(rollback)
@@ -75,6 +79,16 @@ def with_rollback(func):
     return __inner
 
 
+def ignore_exceptions(func):
+    @functools.wraps(func)
+    def __inner(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception:
+            LOG.exception("Got exception while executing %s. Ignored.",
+                                                                 func.__name__)
+
+
 @with_rollback
 def create_rserver(ctx, conf, driver, rs):
     try:
@@ -98,6 +112,7 @@ def create_rserver(ctx, conf, driver, rs):
         raise
 
 
+@ignore_exceptions
 def delete_rserver(ctx, conf, driver, rs):
     store = storage.Storage(conf)
     reader = store.getReader()
@@ -126,6 +141,7 @@ def create_sticky(ctx, conf, driver, sticky):
     wr.updateDeployed(sticky, 'True')
 
 
+@ignore_exceptions
 def delete_sticky(ctx, conf, driver, sticky):
     driver.deleteStickiness(ctx, sticky)
     sticky.deployed = 'False'
@@ -152,6 +168,7 @@ def create_server_farm(ctx, conf, driver, sf):
         raise
 
 
+@ignore_exceptions
 def delete_server_farm(ctx, conf, driver, sf):
     driver.deleteServerFarm(ctx, sf)
     sf.deployed = 'False'
@@ -174,6 +191,7 @@ def add_rserver_to_server_farm(ctx, conf, driver, server_farm, rserver):
         raise
 
 
+@ignore_exceptions
 def delete_rserver_from_server_farm(ctx, conf, driver, server_farm, rserver):
     driver.deleteRServerFromSF(ctx, server_farm, rserver)
 
@@ -196,6 +214,7 @@ def create_probe(ctx, conf, driver, probe):
         raise
 
 
+@ignore_exceptions
 def delete_probe(ctx, conf, driver, probe):
     driver.deleteProbe(ctx, probe)
     probe.deployed = 'False'
@@ -214,7 +233,7 @@ def add_probe_to_server_farm(ctx, conf, driver, server_farm, probe):
         raise
 
 
-@with_rollback
+@ignore_exceptions
 def delete_probe_from_server_farm(ctx, conf, driver, server_farm, probe):
     driver.deleteProbeFromSF(ctx, server_farm, probe)
 
@@ -245,6 +264,7 @@ def create_vip(ctx, conf, driver, vip, server_farm):
         raise
 
 
+@ignore_exceptions
 def delete_vip(ctx, conf, driver, vip):
     driver.deleteVIP(ctx, vip)
     vip.deployed = 'False'
