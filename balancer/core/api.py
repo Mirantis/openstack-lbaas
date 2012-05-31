@@ -21,28 +21,20 @@ import eventlet
 
 from openstack.common import exception
 
+from balancer.core import commands
 from balancer.core.scheduller import Scheduller
 from balancer.devices.DeviceMap import DeviceMap
 from balancer.devices.device import LBDevice
 from balancer.core.ServiceController import ServiceController
+from balancer.loadbalancers import loadbalancer
 from balancer.loadbalancers.realserver import RealServer
-from balancer.loadbalancers.vserver import Balancer, Deployer, Destructor
-from balancer.loadbalancers.vserver import makeDeleteLBCommandChain,\
-                                           makeDeleteStickyFromLBChain,\
-                                           makeAddStickyToLBChain,\
-                                           makeDeleteProbeFromLBChain,\
-                                           makeAddProbeToLBChain,\
-                                           makeDeleteNodeFromLBChain,\
-                                           makeAddNodeToLBChain,\
-                                           makeCreateLBCommandChain,\
-                                           makeUpdateLBCommandChain
+from balancer.loadbalancers.vserver import Balancer
 from balancer.loadbalancers.vserver import createSticky, createProbe,\
                                            createPredictor
-from balancer.loadbalancers.vserver import SuspendRServerCommand,\
-                                           ActivateRServerCommand
 from balancer.storage.storage import Storage
 
 logger = logging.getLogger(__name__)
+
 
 def asynchronous(func):
     @functools.wraps(func)
@@ -54,15 +46,18 @@ def asynchronous(func):
 
     return _inner
 
+
 def lb_get_index(conf, tenant_id=''):
     store = Storage(conf)
     reader = store.getReader()
     return reader.getLoadBalancers(tenant_id)
 
+
 def lb_find_for_vm(conf, vm_id, tenant_id=''):
     store = Storage(conf)
     reader = store.getReader()
     return reader.getLoadBalancersByVMid(vm_id,  tenant_id)
+
 
 def lb_get_data(conf, lb_id):
     store = Storage(conf)
@@ -73,8 +68,9 @@ def lb_get_data(conf, lb_id):
     logger.debug("Got information: %s" % list)
     return list
 
+
 def lb_show_details(conf, lb_id):
-    store = Storage(conf)
+    #store = Storage(conf)
     #reader = store.getReader()
 
     lb = Balancer(conf)
@@ -88,6 +84,7 @@ def lb_show_details(conf, lb_id):
     #list = reader.getLoadBalancerById(id)
     logger.debug("Got information: %s" % lbobj)
     return lbobj
+
 
 @asynchronous
 def create_lb(conf, **params):
@@ -109,20 +106,15 @@ def create_lb(conf, **params):
     balancer_instance.savetoDB()
 
     #Step 3. Deploy config to device
-    commands = makeCreateLBCommandChain(balancer_instance,  driver, \
-    context, conf)
-    context.addParam('balancer',  balancer_instance)
-    deploy = Deployer(device,  context)
-    deploy.commands = commands
-
     try:
-        deploy.execute()
+        context.addParam('balancer',  balancer_instance)
+        with context:
+            commands.create_loadbalancer(context, conf, driver,
+                    balancer_instance)
     except (exception.Error, exception.Invalid):
-        balancer_instance.lb.status = \
-            balancer.loadbalancers.loadbalancer.LB_ERROR_STATUS
+        balancer_instance.lb.status = loadbalancer.LB_ERROR_STATUS
     else:
-        balancer_instance.lb.status = \
-            balancer.loadbalancers.loadbalancer.LB_ACTIVE_STATUS
+        balancer_instance.lb.status = loadbalancer.LB_ACTIVE_STATUS
     balancer_instance.update()
 
     #balancer_instance.lb.status = \
@@ -130,6 +122,7 @@ def create_lb(conf, **params):
     #balancer_instance.update()
     #self._task.status = STATUS_DONE
     return lb.id
+
 
 @asynchronous
 def update_lb(conf, lb_id, lb_body):
@@ -145,15 +138,15 @@ def update_lb(conf, lb_id, lb_body):
 
     #Step 2. Parse parameters came from request
     lb = balancer_instance.lb
-    old_predictor_id = None
-    port_updated = False
+    #old_predictor_id = None
+    #port_updated = False
     for key in lb_body.keys():
         if hasattr(lb, key):
             logger.debug("updating attribute %s of LB. Value is %s"\
             % (key, lb_body[key]))
             setattr(lb, key, lb_body[key])
             if key.lower() == "algorithm":
-                old_predictor_id = balancer_instance.sf._predictor.id
+                #old_predictor_id = balancer_instance.sf._predictor.id
                 balancer_instance.sf._predictor =\
                 createPredictor(lb_body[key])
             else:
@@ -161,8 +154,7 @@ def update_lb(conf, lb_id, lb_body):
                 % (key, lb_body[key]))
 
     #Step 3: Save updated data in DB
-    lb.status =\
-    balancer.loadbalancers.loadbalancer.LB_PENDING_UPDATE_STATUS
+    lb.status = loadbalancer.LB_PENDING_UPDATE_STATUS
     balancer_instance.update()
 
     #Step 4. Update device config
@@ -172,15 +164,12 @@ def update_lb(conf, lb_id, lb_body):
     context = driver.getContext(device)
 
     #Step 5. Deploy new config to device
-    commands = makeUpdateLBCommandChain(old_balancer_instance,\
-        balancer_instance,  driver,  context, conf)
-    deploy = Deployer()
-    deploy.commands = commands
     try:
-        deploy.execute()
+        with context:
+            commands.update_loadbalancer(context, conf, driver,
+                    old_balancer_instance, balancer_instance)
     except:
-        old_balancer_instance.lb.status =\
-        balancer.loadbalancers.loadbalancer.LB_ERROR_STATUS
+        old_balancer_instance.lb.status = loadbalancer.LB_ERROR_STATUS
         old_balancer_instance.update()
         return
 
@@ -189,6 +178,7 @@ def update_lb(conf, lb_id, lb_body):
     #balancer_instance.update()
     #self._task.status = STATUS_DONE
     return lb.id
+
 
 def delete_lb(conf, lb_id):
     sched = Scheduller.Instance(conf)
@@ -207,14 +197,11 @@ def delete_lb(conf, lb_id):
     #        balancer_instance.removeFromDB()
 
     #Step 3. Destruct config at device
-    commands = makeDeleteLBCommandChain(balancer_instance,\
-        driver,  context, conf)
-    destruct = Destructor()
-    destruct.commands = commands
-    destruct.execute()
+    commands.delete_loadbalancer(context, conf, driver, balancer_instance)
 
     balancer_instance.removeFromDB()
     return
+
 
 def lb_add_node(conf, lb_id, lb_node):
     logger.debug("Got new node description %s" % lb_node)
@@ -237,14 +224,14 @@ def lb_add_node(conf, lb_id, lb_node):
     driver = devmap.getDriver(device)
     context = driver.getContext(device)
 
-    commands = makeAddNodeToLBChain(balancer_instance, driver, context, rs,
-                                                                        conf)
-    deploy = Deployer()
-    deploy.commands = commands
-    deploy.execute()
+    with context:
+        commands.add_node_to_loadbalancer(context, conf, driver,
+                balancer_instance, rs)
+
     return  rs.id
 
-def lb_show_nodes (conf, lb_id):
+
+def lb_show_nodes(conf, lb_id):
     balancer_instance = Balancer(conf)
     nodes = {'nodes': []}
 
@@ -252,6 +239,7 @@ def lb_show_nodes (conf, lb_id):
     for rs in balancer_instance.rs:
         nodes['nodes'].append(rs.convertToDict())
     return nodes
+
 
 def lb_delete_node(conf, lb_id, lb_node_id):
     balancer_instance = Balancer(conf)
@@ -273,15 +261,11 @@ def lb_delete_node(conf, lb_id, lb_node_id):
     #Step 4: Delete RS from DB
     dl.deleteRSbyID(lb_node_id)
 
-    #Step 5: Make commands for deleting RS
-
-    commands = makeDeleteNodeFromLBChain(balancer_instance, driver, context, rs, conf)
-    destruct = Destructor()
-    destruct.commands = commands
-
-    #Step 6: Delete real server from device
-    destruct.execute()
+    #Step 5: Delete real server from device
+    commands.remove_node_from_loadbalancer(context, conf, driver,
+            balancer_instance, rs)
     return lb_node_id
+
 
 def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
     balancer_instance = Balancer(conf)
@@ -294,31 +278,28 @@ def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
     store = Storage(conf)
     reader = store.getReader()
     writer = store.getWriter()
-    deleter = store.getDeleter()
+    #deleter = store.getDeleter()
 
     rs = reader.getRServerById(lb_node_id)
     sf = balancer_instance.sf
     if rs.state == lb_node_status:
         return "OK"
 
-    commands =[]
     rs.state = lb_node_status
     rsname = rs.name
-    if rs.parent_id !="":
+    if rs.parent_id != "":
         rs.name = rs.parent_id
     logger.debug("Changing RServer status to: %s" % lb_node_status)
-    if lb_node_status == "inservice":
-        commands.append(ActivateRServerCommand(driver,  context, sf, rs))
-    else:
-        commands.append(SuspendRServerCommand(driver,  context, sf, rs))
+    with context:
+        if lb_node_status == "inservice":
+            commands.activate_rserver(context, conf, driver, sf, rs)
+        else:
+            commands.suspend_rserver(context, conf, driver, sf, rs)
 
-    deploy = Deployer()
-
-    deploy.commands = commands
-    deploy.execute()
     rs.name = rsname
     writer.updateObjectInTable(rs)
-    return "Node %s has status %s" % (nodeID, rs.state)
+    return "Node %s has status %s" % (lb_node_id, rs.state)
+
 
 def lb_update_node(conf, lb_id, lb_node_id, lb_node):
     balancer_instance = Balancer(conf)
@@ -343,16 +324,16 @@ def lb_update_node(conf, lb_id, lb_node_id, lb_node):
             if dict[prop] != lb_node[prop]:
                 setattr(new_rs, prop, lb_node[prop])
 
-    deleter.deleteRSbyID(nodeID)
+    deleter.deleteRSbyID(lb_node_id)
     writer.writeRServer(new_rs)
-    deploy = Deployer()
-    commands =\
-    makeDeleteNodeFromLBChain(balancer_instance, driver, context,  rs, conf)\
-    + makeAddNodeToLBChain(balancer_instance, driver, context, new_rs, conf)
-    deploy.commands = commands
-    deploy.execute()
+    with context:
+        commands.remove_node_from_loadbalancer(context, conf, driver,
+                balancer_instance, rs)
+        commands.add_node_to_loadbalancer(context, conf, driver,
+                balancer_instance, rs)
     return "Node with id %s now has params %s" %\
            (lb_node_id, new_rs.convertToDict())
+
 
 def lb_show_probes(conf, lb_id):
     store = Storage(conf)
@@ -367,6 +348,7 @@ def lb_show_probes(conf, lb_id):
         list.append(prb.convertToDict())
     dict['healthMonitoring'] = list
     return dict
+
 
 def lb_add_probe(conf, lb_id, lb_probe):
     logger.debug("Got new probe description %s" % lb_probe)
@@ -392,12 +374,12 @@ def lb_add_probe(conf, lb_id, lb_probe):
     driver = devmap.getDriver(device)
     context = driver.getContext(device)
 
-    commands = makeAddProbeToLBChain(balancer_instance, driver, context, prb,
-                                                                         conf)
-    deploy = Deployer()
-    deploy.commands = commands
-    deploy.execute()
+    with context:
+        commands.add_probe_to_loadbalancer(context, conf, driver,
+                balancer_instance, prb)
+
     return prb.id
+
 
 def lb_delete_probe(conf, lb_id, probe_id):
     balancer_instance = Balancer(conf)
@@ -422,15 +404,12 @@ def lb_delete_probe(conf, lb_id, probe_id):
     #Step 4: Delete RS from DB
     dl.deleteProbeByID(probe_id)
 
-    #Step 5: Make commands for deleting probe
-    commands =\
-    makeDeleteProbeFromLBChain(balancer_instance, driver, context, prb, conf)
-    destruct = Destructor()
-    destruct.commands = commands
-
-    #Step 6: Delete real server from device
-    destruct.execute()
+    #Step 5: Delete real server from device
+    with context:
+        commands.remove_probe_from_server_farm(context, conf, driver,
+                balancer_instance, prb)
     return probe_id
+
 
 def lb_show_sticky(conf, lb_id):
     store = Storage(conf)
@@ -445,6 +424,7 @@ def lb_show_sticky(conf, lb_id):
         list.append(st.convertToDict())
     dict['sessionPersistence'] = list
     return dict
+
 
 def lb_add_sticky(conf, lb_id, sticky):
     logger.debug("Got new sticky description %s" % sticky)
@@ -469,12 +449,12 @@ def lb_add_sticky(conf, lb_id, sticky):
     driver = devmap.getDriver(device)
     context = driver.getContext(device)
 
-    commands = makeAddStickyToLBChain(balancer_instance, driver, context, st,
-                                                                          conf)
-    deploy = Deployer()
-    deploy.commands = commands
-    deploy.execute()
+    with context:
+        commands.add_sticky_to_loadbalancer(context, conf, driver,
+                balancer_instance, st)
+
     return st.id
+
 
 def lb_delete_sticky(conf, lb_id, sticky_id):
     balancer_instance = Balancer(conf)
@@ -499,22 +479,20 @@ def lb_delete_sticky(conf, lb_id, sticky_id):
     #Step 4: Delete sticky from DB
     dl.deleteStickyByID(sticky_id)
 
-    #Step 5: Make commands for deleting probe
-    commands =\
-    makeDeleteStickyFromLBChain(balancer_instance, driver, context, st,
-                                                                    conf)
-    destruct = Destructor()
-    destruct.commands = commands
+    #Step 5: Delete real server from device
+    with context:
+        commands.remove_sticky_from_loadbalancer(context, conf, driver,
+                balancer_instance, st)
 
-    #Step 6: Delete real server from device
-    destruct.execute()
     return sticky_id
+
 
 def device_get_index(conf):
     store = Storage(conf)
     reader = store.getReader()
     list = reader.getDevices()
     return list
+
 
 def device_create(conf, **params):
     device = LBDevice()
@@ -528,12 +506,14 @@ def device_create(conf, **params):
     sched.addDevice(device)
     return 'OK'
 
+
 def device_info(params):
     query = params['query_params']
     msg = "DeviceInfoWorker start with Params: %s Query: %s"\
     % (params,  query)
     logger.debug(msg)
     return
+
 
 def device_delete(conf, **params):
     dev = LBDevice()
