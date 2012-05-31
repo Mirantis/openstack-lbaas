@@ -14,6 +14,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from balancer.core import commands
 
 
 class BaseDriver(object):
@@ -98,7 +99,7 @@ class BaseDriver(object):
     def getStatistics (self,  context,  serverfarm,  rserver):
         pass
 
-class BaseContext(object):
+class BaseContext(commands.RollbackContext):
     def __init__(self):
         self._params = {}
 
