@@ -18,31 +18,28 @@
 
 import urllib2
 import base64
-import re
 import logging
-from balancer.drivers.cisco_ace.Context import Context
 import openstack.common.exception
 
 logger = logging.getLogger(__name__)
 
 
 class XmlSender:
-    def __init__(self,  context):
+    def __init__(self, device_ref):
         #port 10443
-        self.url = "https://%s:%s/bin/xml_agent" % (context.ip,  context.port)
+        self.url = "https://%s:%s/bin/xml_agent" % (device_ref.ip,
+                                                    device_ref.port)
+        base64str = base64.encodestring('%s:%s' % \
+            (device_ref.login, device_ref.password))[:-1]
+
+        self.authheader = "Basic %s" % base64str
 
     def getParam(self, name):
-        return self._params.get(name,  None)
+        return self._params.get(name, None)
 
-    def deployConfig(self,  context,  command):
+    def deployConfig(self, command):
         request = urllib2.Request(self.url)
-
-        base64str = base64.encodestring('%s:%s' % \
-            (context.login, context.password))[:-1]
-
-        authheader = "Basic %s" % base64str
-
-        request.add_header("Authorization", authheader)
+        request.add_header("Authorization", self.authheader)
 
         d = """xml_cmd=<request_raw>\nconfigure\n%s\nend\n</request_raw>""" \
             % command
@@ -61,15 +58,9 @@ class XmlSender:
         else:
             raise openstack.common.exception.Invalid(s)
 
-    def getConfig(self,  context,  command):
+    def getConfig(self, command):
         request = urllib2.Request(self.url)
-
-        base64str = base64.encodestring('%s:%s' % \
-            (context.login, context.password))[:-1]
-
-        authheader = "Basic %s" % base64str
-
-        request.add_header("Authorization", authheader)
+        request.add_header("Authorization", self.authheader)
 
         data = """xml_cmd=<request_raw>\nshow runn %s\n</request_raw>""" \
                % command

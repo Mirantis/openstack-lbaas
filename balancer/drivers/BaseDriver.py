@@ -17,9 +17,20 @@
 from balancer.core import commands
 
 
+class DeviceRequestContext(commands.RollbackContext):
+    def __init__(self, conf, device):
+        self.conf = conf
+        self.device = device
+
+
 class BaseDriver(object):
-    def getContext(self):
-        return BaseContext()
+    def __init__(self, conf, device_ref):
+        self.conf = conf
+        self.device_ref = device_ref
+
+    def request_context(self):
+        return commands.RollbackContextManager(
+                DeviceRequestContext(self.conf, self))
 
     def checkNone(self, obj):
         if bool(obj):
@@ -27,87 +38,77 @@ class BaseDriver(object):
                 return True
         return False
 
-    def importCertificatesAndKeys(self,  context):
+    def importCertificatesAndKeys(self):
         pass
 
-    def createSSLProxy(self,  context,  SSLproxy):
+    def createSSLProxy(self, SSLproxy):
         pass
 
-    def deleteSSLProxy(self,  context,  SSLproxy):
+    def deleteSSLProxy(self, SSLproxy):
         pass
 
-    def addSSLProxyToVIP(self,  context,  vip,  SSLproxy):
+    def addSSLProxyToVIP(self, vip, SSLproxy):
         pass
 
-    def removeSSLProxyFromVIP(self,  context,  vip,  SSLproxy):
+    def removeSSLProxyFromVIP(self, vip, SSLproxy):
         pass
 
-    def createRServer(self,  context,  rserver):
+    def createRServer(self, rserver):
         pass
 
-    def deleteRServer(self,  context,  rserver):
+    def deleteRServer(self, rserver):
         pass
 
-    def activateRServer(self,  context,  serverfarm,  rserver):
+    def activateRServer(self, serverfarm, rserver):
         pass
 
-    def activateRServerGlobal(self,  context,  rserver):
+    def activateRServerGlobal(self, rserver):
         pass
 
-    def suspendRServer(self,  context,  serverfarm,  rserver):
+    def suspendRServer(self, serverfarm, rserver):
         pass
 
-    def suspendRServerGlobal(self,  context,  rserver):
+    def suspendRServerGlobal(self, rserver):
         pass
 
-    def createProbe(self,  context,  probe):
+    def createProbe(self, probe):
         pass
 
-    def deleteProbe(self,  context,  probe):
+    def deleteProbe(self, probe):
         pass
 
-    def createServerFarm(self,  context,  serverfarm):
+    def createServerFarm(self, serverfarm):
         pass
 
-    def deleteServerFarm(self,  context,  serverfarm):
+    def deleteServerFarm(self, serverfarm):
         pass
 
-    def addRServerToSF(self,  context,  serverfarm,  rserver):
+    def addRServerToSF(self, serverfarm, rserver):
         pass
 
-    def deleteRServerFromSF(self, context,  serverfarm,  rserver):
+    def deleteRServerFromSF(self, serverfarm, rserver):
         pass
 
-    def addProbeToSF(self,  context,  serverfarm,  probe):
+    def addProbeToSF(self, serverfarm, probe):
         pass
 
-    def deleteProbeFromSF(self,  context,  serverfarm,  probe):
+    def deleteProbeFromSF(self, serverfarm, probe):
         pass
 
-    def createStickiness(self,  context,  sticky):
+    def createStickiness(self, sticky):
         pass
 
-    def deleteStickiness(self,  context,  sticky):
+    def deleteStickiness(self, sticky):
         pass
 
-    def createVIP(self,  context,  vip,  sfarm):
+    def createVIP(self, vip, sfarm):
         pass
 
-    def deleteVIP(self,  context,  vip):
+    def deleteVIP(self, vip):
         pass
 
-    def getStatistics (self,  context,  serverfarm,  rserver):
+    def getStatistics (self, serverfarm, rserver):
         pass
-
-class BaseContext(commands.RollbackContext):
-    def __init__(self):
-        self._params = {}
-
-    def addParam(self,  name,  param):
-        self._params[name] = param
-
-    def getParam(self, name):
-        return self._params.get(name,  None)
 
 
 def is_sequence(arg):

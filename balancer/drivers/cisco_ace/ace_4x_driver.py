@@ -18,8 +18,7 @@
 import md5
 import logging
 
-from balancer.drivers.BaseDriver import (BaseDriver,  is_sequence)
-from balancer.drivers.cisco_ace.Context import Context
+from balancer.drivers.BaseDriver import (BaseDriver, is_sequence)
 from balancer.drivers.cisco_ace.XmlSender import XmlSender
 import openstack.common.exception
 
@@ -27,31 +26,27 @@ logger = logging.getLogger(__name__)
 
 
 class AceDriver(BaseDriver):
-    def __init__(self):
-        pass
+    def __init__(self, conf, device_ref):
+        super(self, AceDriver).__init__(conf, device_ref)
+        self.xmlsender = XmlSender(device_ref)
 
-    def send_data(self,  context,  cmd):
-        s = XmlSender(context)
-        tmp = s.deployConfig(context,  cmd)
+    def send_data(self, cmd):
+        tmp = self.xmlsender.deployConfig(cmd)
         return tmp
 
-    def getContext(self,  dev):
-        logger.debug("Creating context with params: IP %s, Port: %s" % \
-            (dev.ip,  dev.port))
-        return Context(dev.ip, dev.port, dev.user,  dev.password)
+    def importCertificatesAndKeys(self):
+        cmd = "do crypto import " + self.device_ref.protocol
+        if self.checkNone(self.device_ref.passphrase):
+            cmd += "passphrase " + self.device_ref.passphrase + " "
+        cmd += self.device_ref.server_ip + " "
+        cmd += self.device_ref.server_user + " "
+        cmd += self.device_ref.file_name + " "
+        cmd += self.device_ref.file_name + "\n"
+        cmd += self.device_ref.server_password + "\n"
 
-    def importCertificatesAndKeys(self,  context):
-        cmd = "do crypto import " + context.protocol
-        if self.checkNone(context.passphrase):
-            cmd += "passphrase " + context.passphrase + " "
-        cmd += context.server_ip + " "
-        cmd += context.server_user + " "
-        cmd += context.file_name + " " + context.file_name + "\n"
-        cmd += context.server_password + "\n"
+        return self.send_data(cmd)
 
-        return self.send_data(context,  cmd)
-
-    def createSSLProxy(self,  context,  SSLproxy):
+    def createSSLProxy(self, SSLproxy):
         cmd = "ssl-proxy service " + SSLproxy.name + "\n"
         if self.checkNone(SSLproxy.cert):
             cmd += "cert " + SSLproxy.cert + "\n"
@@ -73,28 +68,28 @@ class AceDriver(BaseDriver):
         if self.checkNone(SSLproxy.CheckPriority):
             cmd += "revcheckprion " + SSLproxy.CheckPriority + "\n"
 
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def deleteSSLProxy(self,  context,  SSLproxy):
+    def deleteSSLProxy(self, SSLproxy):
         cmd = "no ssl-proxy service " + SSLproxy.name + "\n"
 
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def addSSLProxyToVIP(self,  context,  vip,  SSLproxy):
+    def addSSLProxyToVIP(self, vip,  SSLproxy):
         cmd = "policy-map multi-match global\n"
         cmd += "class " + vip.name + "\n"
         cmd += "ssl-proxy server " + SSLproxy.name + "\n"
 
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def removeSSLProxyFromVIP(self,  context,  vip,  SSLproxy):
+    def removeSSLProxyFromVIP(self, vip,  SSLproxy):
         cmd = "policy-map multi-match global\n"
         cmd += "class " + vip.name + "\n"
         cmd += "no ssl-proxy server " + SSLproxy.name + "\n"
 
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def createRServer(self,  context,  rserver):
+    def createRServer(self, rserver):
         srv_type = rserver.type.lower()
 
         cmd = "rserver " + srv_type + " " + rserver.name + "\n"
@@ -129,27 +124,27 @@ class AceDriver(BaseDriver):
         if (rserver.state == "In Service"):
             cmd += "inservice\n"
 
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def deleteRServer(self, context, rserver):
+    def deleteRServer(self, rserver):
         cmd = "no rserver " + rserver.name + "\n"
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def activateRServer(self,  context,  serverfarm,  rserver):
+    def activateRServer(self, serverfarm,  rserver):
         cmd = "serverfarm " + serverfarm.name + "\n"
         cmd += "rserver " + rserver.name
         if self.checkNone(rserver.port):
             cmd += " " + rserver.port
         cmd += "\n"
         cmd += "inservice\n"
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def activateRServerGlobal(self,  context,  rserver):
+    def activateRServerGlobal(self, rserver):
         cmd = "rserver " + rserver.name + "\n"
         cmd += "inservice\n"
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def suspendRServer(self,  context,  serverfarm,  rserver):
+    def suspendRServer(self, serverfarm,  rserver):
         cmd = "serverfarm " + serverfarm.name + "\n"
         cmd += "rserver " + rserver.name
         if self.checkNone(rserver.port):
@@ -159,14 +154,14 @@ class AceDriver(BaseDriver):
             cmd += "inservice standby\n"
         else:
             cmd += "no inservice\n"
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def suspendRServerGlobal(self,  context,  rserver):
+    def suspendRServerGlobal(self, rserver):
         cmd = "rserver " + rserver.name + "\n"
         cmd += "no inservice\n"
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def createProbe(self,  context,  probe):
+    def createProbe(self, probe):
         pr_type = probe.type.lower()
         if pr_type == "connect":
             pr_type = "tcp"
@@ -179,14 +174,14 @@ class AceDriver(BaseDriver):
         if pr_type == "sip-udp":
             pr_type = "sip udp"
         """ probes_with_send_data """
-        pr_sd = ['echo udp',  'echo tcp',  'finger',  'tcp',  'udp']
+        pr_sd = ['echo udp', 'echo tcp',  'finger',  'tcp',  'udp']
         """ probes_with_timeout """
-        pr_tm = ['echo tcp',  'finger',  'tcp',  'rtsp',  'http',
-                 'https',  'imap',  'pop',  'sip-tcp',  'smtp',  'telnet']
+        pr_tm = ['echo tcp', 'finger',  'tcp',  'rtsp',  'http',
+                 'https', 'imap',  'pop',  'sip-tcp',  'smtp',  'telnet']
         """ probes_with_credentials """
-        pr_cr = ['http',  'https',  'imap',  'pop', 'radius']
+        pr_cr = ['http', 'https',  'imap',  'pop', 'radius']
         """ probes_with_regex """
-        pr_rg = ['http',  'https',  'sip-tcp',  'sup-udp',  'tcp',  'udp']
+        pr_rg = ['http', 'https',  'sip-tcp',  'sup-udp',  'tcp',  'udp']
 
         cmd = "probe " + pr_type + " " + probe.name + "\n"
 
@@ -316,7 +311,7 @@ class AceDriver(BaseDriver):
                     if self.checkNone(probe.SNMPComm):
                         cmd += "community " + probe.SNMPComm + "\n"
 
-        else:   # for type == vm
+        else: # for type == vm
             if self.checkNone(probe.VMControllerName):
                 cmd += "vm-controller " + probe.VMControllerName + "\n"
                 if (self.checkNone(probe.maxCPUburstThresh) and \
@@ -330,9 +325,9 @@ class AceDriver(BaseDriver):
                         probe.maxMemBurstThresh + " min " + \
                         probe.minMemBurstThresh + "\n"
 
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def deleteProbe(self,  context,  probe):
+    def deleteProbe(self, probe):
         pr_type = probe.type.lower()
         if pr_type == "connect":
             pr_type = "tcp"
@@ -345,9 +340,9 @@ class AceDriver(BaseDriver):
         if pr_type == "sip-udp":
             pr_type = "sip udp"
         cmd = "no probe " + pr_type + " " + probe.name + "\n"
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def createServerFarm(self,  context,  serverfarm):
+    def createServerFarm(self, serverfarm):
         sf_type = serverfarm.type.lower()
         cmd = "serverfarm " + sf_type + " " + serverfarm.name + "\n"
 
@@ -407,13 +402,13 @@ class AceDriver(BaseDriver):
                 if (serverfarm.dynamicWorkloadScale == "burst"):
                     cmd += " probe " + serverfarm.VMprobe
                 cmd += "\n"
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def deleteServerFarm(self,  context,  serverfarm):
+    def deleteServerFarm(self, serverfarm):
         cmd = "no serverfarm " + serverfarm.name + "\n"
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def addRServerToSF(self,  context,  serverfarm,  rserver):
+    def addRServerToSF(self, serverfarm,  rserver):
         cmd = "serverfarm " + serverfarm.name + "\n"
         cmd += "rserver " + rserver.name
         if self.checkNone(rserver.port):
@@ -449,27 +444,27 @@ class AceDriver(BaseDriver):
                 cmd += " standby"
             cmd += "\n"
 
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def deleteRServerFromSF(self,  context,  serverfarm,  rserver):
+    def deleteRServerFromSF(self, serverfarm,  rserver):
         cmd = "serverfarm " + serverfarm.name + "\n"
         cmd += "no rserver " + rserver.name
         if self.checkNone(rserver.port):
             cmd += " " + rserver.port
         cmd += "\n"
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def addProbeToSF(self,  context,  serverfarm,  probe):
+    def addProbeToSF(self, serverfarm,  probe):
         cmd = "serverfarm " + serverfarm.name + "\n"
         cmd += "probe " + probe.name + "\n"
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def deleteProbeFromSF(self,  context,  serverfarm,  probe):
+    def deleteProbeFromSF(self, serverfarm,  probe):
         cmd = "serverfarm " + serverfarm.name + "\n"
         cmd += "no probe " + probe.name + "\n"
-        return self.send_data(context,  XMLstr)
+        return self.send_data(XMLstr)
 
-    def createStickiness(self,  context, sticky):
+    def createStickiness(self, sticky):
         name = sticky.name
         sticky_type = sticky.type.lower()
         if sticky_type == "httpcontent":
@@ -573,9 +568,9 @@ class AceDriver(BaseDriver):
         #            cmd += " aggregate-state"
         #    cmd += "\n"
 
-        return self.send_data(context, cmd)
+        return self.send_data(cmd)
 
-    def deleteStickiness(self,  context,   sticky):
+    def deleteStickiness(self, sticky):
         name = sticky.name
         sticky_type = sticky.type.lower()
         if sticky_type == "httpcontent":
@@ -613,27 +608,27 @@ class AceDriver(BaseDriver):
         elif sticky_type == "sip-header":
             cmd += " Call-ID" + name + "\n"
 
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def addACLEntry(self,  context,  vip):
+    def addACLEntry(self, vip):
         cmd = "access-list vip-acl extended permit ip any host " + \
             vip.address + "\n"
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def deleteACLEntry(self,  context,  vip):
+    def deleteACLEntry(self, vip):
         cmd = "no access-list vip-acl extended permit ip any host " + \
               vip.address + "\n"
-        return self.send_data(context,  cmd)
+        return self.send_data(cmd)
 
-    def createVIP(self,  context, vip,  sfarm):
+    def createVIP(self, vip, sfarm):
         sn = "2"
         if self.checkNone(vip.allVLANs):
             pmap = "global"
         else:
             pmap = "int-" + str(md5.new(vip.VLAN).hexdigest())
 
-        #  Add a access-list
-        self.addACLEntry(context,  vip)
+        # Add a access-list
+        self.addACLEntry(vip)
 
         # Add a policy-map
         if vip.appProto.lower() == "other" or vip.appProto.lower() == "http":
@@ -659,7 +654,7 @@ class AceDriver(BaseDriver):
             cmd += " eq " + str(vip.port)
         cmd += "\nexit\n"
 
-        #  Add a policy-map (multimatch) with class-map
+        # Add a policy-map (multimatch) with class-map
         cmd += "policy-map multi-match " + pmap + "\n"
         cmd += "class " + vip.name + "\n"
 
@@ -671,44 +666,44 @@ class AceDriver(BaseDriver):
             cmd += "loadbalance vip icmp-reply\n"
 
         cmd += "exit\nexit\n"
-        self.send_data(context,  cmd)
+        self.send_data(cmd)
 
         if self.checkNone(vip.allVLANs):
             cmd = "service-policy input " + pmap + "\n"
             try:
-                tmp = s.deployConfig(context,  cmd)
+                tmp = self.xmlsender.deployConfig(cmd)
             except:
                 logger.warning("Got exception on acl set")
         else:
-            #  Add service-policy for necessary vlans
+            # Add service-policy for necessary vlans
             if is_sequence(vip.VLAN):
                 for i in vip.VLAN:
                     cmd = "interface vlan " + str(i) + "\n"
                     cmd += "service-policy input " + pmap + "\n"
-                    self.send_data(context,  cmd)
+                    self.send_data(cmd)
 
                     cmd = "interface vlan " + str(i) + "\n"
                     cmd += "access-group input vip-acl\n"
                     try:
                         # Try to add access list. if it is already
                         # assigned exception will occur
-                        self.send_data(context,  cmd)
+                        self.send_data(cmd)
                     except:
                         logger.warning("Got exception on acl set")
 
             else:
                     cmd = "interface vlan " + str(vip.VLAN) + "\n"
                     cmd += "service-policy input " + pmap + "\n"
-                    self.send_data(context,  cmd)
+                    self.send_data(cmd)
                     cmd = "interface vlan " + str(vip.VLAN) + "\n"
                     cmd += "access-group input vip-acl\n"
                     try:
-                        self.send_data(context,  cmd)
+                        self.send_data(cmd)
                     except:
                         logger.warning("Got exception on acl set")
         return 'OK'
 
-    def deleteVIP(self,  context,  vip):
+    def deleteVIP(self, vip):
         if self.checkNone(vip.allVLANs):
             pmap = "global"
         else:
@@ -716,36 +711,36 @@ class AceDriver(BaseDriver):
 
         cmd = "policy-map multi-match " + pmap + "\n"
         cmd += " no class " + vip.name + "\n"
-        self.send_data(context,  cmd)
+        self.send_data(cmd)
 
         cmd = "no class-map match-all " + vip.name + "\n"
-        self.send_data(context,  cmd)
+        self.send_data(cmd)
 
         cmd = "no policy-map type loadbalance " + \
               "first-match " + vip.name + "-l7slb\n"
 
-        self.send_data(context,  cmd)
+        self.send_data(cmd)
 
         cmd = "policy-map %s" % pmap
-        tmp = s.getConfig(context,  cmd)
+        tmp = self.xmlsender.getConfig(cmd)
 
         if (tmp.find("class") <= 0):
             if self.checkNone(vip.allVLANs):
                 cmd = "no service-policy input " + pmap + "\n"
-                self.send_data(context,  cmd)
+                self.send_data(cmd)
             else:
                 if is_sequence(vip.VLAN):
                     for i in vip.VLAN:
                         cmd = "interface vlan " + str(i) + "\n"
                         cmd += "no service-policy input " + pmap + "\n"
-                        self.send_data(context,  cmd)
+                        self.send_data(cmd)
                 else:
                         cmd = "interface vlan " + str(vip.VLAN) + "\n"
                         cmd += "no service-policy input " + pmap + "\n"
-                        self.send_data(context,  cmd)
+                        self.send_data(cmd)
             cmd = "no policy-map multi-match " + pmap + "\n"
-            self.send_data(context,  cmd)
+            self.send_data(cmd)
 
-        self.deleteACLEntry(context,  vip)
+        self.deleteACLEntry(vip)
 
         return "OK"
