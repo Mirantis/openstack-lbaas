@@ -53,7 +53,7 @@ gettext.install('balancer', unicode=1)
 
 def do_db_sync(conf):
     register_conf_opts(conf)
-    repo_path = os.path.dirname(migrate_repo.__file__)
+    repo_path = os.path.abspath(os.path.dirname(migrate_repo.__file__))
     try:
         versioning_api.db_version(conf.sql.connection, repo_path)
     except versioning_exceptions.DatabaseNotControlledError:
