@@ -1093,7 +1093,6 @@ class CommonConfigOpts(ConfigOpts):
                 short='v',
                 default=False,
                 help='Print more verbose output'),
-        StrOpt('db_path')
         ]
 
     logging_cli_opts = [
