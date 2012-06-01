@@ -509,9 +509,8 @@ def device_create(conf, **params):
 
 def device_info(params):
     query = params['query_params']
-    msg = "DeviceInfoWorker start with Params: %s Query: %s"\
-    % (params,  query)
-    logger.debug(msg)
+    logger.debug("DeviceInfoWorker start with Params: %s Query: %s",
+                                                                params, query)
     return
 
 
