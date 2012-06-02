@@ -24,7 +24,7 @@ import devices
 
 
 from openstack.common import wsgi
-from balancer.core.configuration import Configuration
+
 
 logger = logging.getLogger(__name__)
 
