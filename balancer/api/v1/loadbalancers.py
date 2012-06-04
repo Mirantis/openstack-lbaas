@@ -19,15 +19,14 @@ import logging
 import sys
 import traceback
 
-import  balancer.loadbalancers.loadbalancer
+import balancer.loadbalancers.loadbalancer
 
 from openstack.common import exception
 from openstack.common import wsgi
 
-from balancer.core.ServiceController import *
-from balancer.core.LoadBalancerCommandsWorker import *
-from balancer.core.Worker import *
 import webob
+
+from balancer.core import api as core_api
 
 logger = logging.getLogger('balancer.api.v1.loadbalancers')
 SUPPORTED_PARAMS = balancer.api.v1.SUPPORTED_PARAMS
@@ -37,36 +36,21 @@ SUPPORTED_FILTERS = balancer.api.v1.SUPPORTED_FILTERS
 class Controller(object):
 
     def __init__(self, conf):
-        msg = "Creating loadbalancers controller with config:loadbalancers.py \
-        %s" % conf
-        logger.debug(msg)
+        logger.debug("Creating loadbalancers controller with config:"
+                                                "loadbalancers.py %s", conf)
         self.conf = conf
-        self._service_controller = ServiceController.Instance(conf)
-        pass
-    
-    def findLBforVM(self,  req,   **args):
+
+    def findLBforVM(self, req, **args):
         try:
-            msg = "Got index request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            tenant_id = req.headers.get('X-Tenant-Id',  "") 
-            tenant_name = req.headers.get('X-Tenant-Name',  "") 
-            params={}
+            logger.debug("Got index request. Request: %s", req)
+            tenant_id = req.headers.get('X-Tenant-Id', "")
+            tenant_name = req.headers.get('X-Tenant-Name', "")
+            params = {}
             params['vm_id'] = args['vm_id']
             params['tenant_id'] = tenant_id
-            params['tenant_name'] = tenant_name              
-            task.parameters = params
-            mapper = LBActionMapper()
-            worker = mapper.getWorker(task, "findLBforVM", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return {'loadbalancers': result}
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'loadbalancers': task.id}
-
+            params['tenant_name'] = tenant_name
+            result = core_api.lb_find_for_vm(self.conf, **params)
+            return {'loadbalancers': result}
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
@@ -75,30 +59,17 @@ class Controller(object):
             msg = _("Unauthorized image access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
-        return {'loadbalancers': list}
 
     def index(self, req):
         try:
-            msg = "Got index request. Request: %s" % req
-            logger.debug(msg)
-            tenant_id = req.headers.get('X-Tenant-Id',  "") 
-            tenant_name = req.headers.get('X-Tenant-Name',  "") 
-            param={}
+            logger.debug("Got index request. Request: %s", req)
+            tenant_id = req.headers.get('X-Tenant-Id', "")
+            tenant_name = req.headers.get('X-Tenant-Name', "")
+            param = {}
             param['tenant_id'] = tenant_id
             param['tenant_name'] = tenant_name
-          
-            task = self._service_controller.createTask()
-            task.parameters = param
-            mapper = LBActionMapper()
-            worker = mapper.getWorker(task, "index", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return {'loadbalancers': result}
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'loadbalancers': task.id}
+            result = core_api.lb_get_index(self.conf, **param)
+            return {'loadbalancers': result}
 
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
@@ -112,32 +83,20 @@ class Controller(object):
 
     def create(self, req, **args):
         try:
-            msg = "Got create request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
+            logger.debug("Got create request. Request: %s", req)
             #here we need to decide which device should be used
             params = args['body']
             # We need to create LB object and return its id
             lb = balancer.loadbalancers.loadbalancer.LoadBalancer()
-            tenant_id = req.headers.get('X-Tenant-Id',  "") 
-            tenant_name = req.headers.get('X-Tenant-Name',  "") 
+            tenant_id = req.headers.get('X-Tenant-Id', "")
+            tenant_name = req.headers.get('X-Tenant-Name', "")
             lb.tenant_id = tenant_id
             lb.tenant_name = tenant_name
             params['lb'] = lb
-            task.parameters = params
-            worker = mapper.getWorker(task, "create", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return {'loadbalancers': {"id": lb.id}}
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'loadbalancers': {'id': lb.id}}
-
-        except exception.NotFound :
-            msg = "Exception occured " 
+            core_api.create_lb(self.conf, **params)
+            return {'loadbalancers': {'id': lb.id}}
+        except exception.NotFound:
+            msg = "Exception occured "
             traceback.print_exc(file=sys.stdout)
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
@@ -148,21 +107,12 @@ class Controller(object):
 
     def delete(self, req, **args):
         try:
-            msg = "Got delete request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
-            #here we need to decide which device should be used
-            #params = args['body']
-            params = args['id']
-            task.parameters = params
-            worker = mapper.getWorker(task, "delete", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return "OK"
+            logger.debug("Got delete request. Request: %s", req)
+            core_api.delete_lb(self.conf, args['id'])
+            return "OK"
 
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % params
+            msg = "Image with identifier %s not found" % args['id']
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
@@ -172,21 +122,11 @@ class Controller(object):
 
     def show(self, req, **args):
         try:
-            msg = "Got loadbalancerr info request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
-            #here we need to decide which device should be used
-            #params = args['body']
-            params = args
-            task.parameters = params
-            worker = mapper.getWorker(task, "show", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return{'loadbalancer': result}
-
+            logger.debug("Got loadbalancerr info request. Request: %s", req)
+            result = core_api.lb_get_data(self._conf, args['id'])
+            return {'loadbalancer': result}
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % params
+            msg = "Image with identifier %s not found" % args['id']
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
@@ -196,21 +136,11 @@ class Controller(object):
 
     def showDetails(self, req, **args):
         try:
-            msg = "Got loadbalancerr info request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
-            #here we need to decide which device should be used
-            #params = args['body']
-            params = args
-            task.parameters = params
-            worker = mapper.getWorker(task, "showDetails", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return result
-
+            logger.debug("Got loadbalancerr info request. Request: %s", req)
+            result = core_api.lb_show_details(self.conf, args['id'])
+            return result
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % params
+            msg = "Image with identifier %s not found" % args['id']
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
@@ -220,27 +150,9 @@ class Controller(object):
 
     def update(self, req, **args):
         try:
-            msg = "Got update request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
-
-            #here we need to decide which device should be used
-            params = {}
-            params['body'] = args['body']
-            params['id'] = args['id']
-            task.parameters = params
-
-            worker = mapper.getWorker(task, "update", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return {'loadbalancers': result}
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'loadbalancers': "OK"}
-
+            logger.debug("Got update request. Request: %s", req)
+            core_api.update_lb(self._conf, args['id'], args['body'])
+            return {'loadbalancers': "OK"}
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
@@ -252,28 +164,9 @@ class Controller(object):
 
     def addNode(self, req, **args):
         try:
-            msg = "Got addNode request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
-
-            #here we need to decide which device should be used
-            params = {}
-            body = args['body']
-            params['node'] = body['node']
-            params['id'] = args['id']
-            task.parameters = params
-
-            worker = mapper.getWorker(task, "addNode", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return result
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'loadbalancers': "OK"}
-
+            logger.debug("Got addNode request. Request: %s", req)
+            return core_api.lb_add_node(self.conf, args['id'],
+                    args['body']['node'])
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
@@ -285,26 +178,8 @@ class Controller(object):
 
     def showNodes(self, req, **args):
         try:
-            msg = "Got showNodes request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
-
-            #here we need to decide which device should be used
-            params = {}
-            params['id'] = args['id']
-            task.parameters = params
-
-            worker = mapper.getWorker(task, "showNodes", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return result
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'loadbalancers': "OK"}
-
+            logger.debug("Got showNodes request. Request: %s", req)
+            return core_api.lb_show_nodes(self.conf, args['id'])
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
@@ -316,26 +191,10 @@ class Controller(object):
 
     def deleteNode(self, req, **args):
         try:
-            msg = "Got deleteNode request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
-
-            params = {}
-            params['id'] = args['id']
-            params['nodeID'] = args['nodeID']
-            task.parameters = params
-
-            worker = mapper.getWorker(task, "deleteNode", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return result
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'loadbalancers': "OK"}
-
+            logger.debug("Got deleteNode request. Request: %s", req)
+            lb_node_id = core_api.lb_delete_node(self.conf, args['id'],
+                                                            args['nodeID'])
+            return "Deleted node with id %s" % lb_node_id
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
@@ -347,27 +206,11 @@ class Controller(object):
 
     def changeNodeStatus(self, req, **args):
         try:
-            msg = "Got changeNodeStatus request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
-
-            params = {}
-            params['id'] = args['id']
-            params['nodeID'] = args['nodeID']
-            params['status'] = args['status']
-            task.parameters = params
-
-            worker = mapper.getWorker(task, "changeNodeStatus", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return result
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'loadbalancers': "OK"}
-
+            logger.debug("Got changeNodeStatus request. Request: %s", req)
+            msg = core_api.lb_change_node_status(self._conf, args['id'],
+                                                             args['nodeID'],
+                                                             args['status'])
+            return msg
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
@@ -379,31 +222,13 @@ class Controller(object):
 
     def updateNode(self, req, **args):
         try:
-            msg = "Got updateNode request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
-
-            params = {}
-            params['id'] = args['id']
-            params['nodeID'] = args['nodeID']
-            body = args['body']
-            params['node'] = body['node']
-            task.parameters = params
-
-            worker = mapper.getWorker(task, "updateNode", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return result
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'loadbalancers': "OK"}
-
+            logger.debug("Got updateNode request. Request: %s", req)
+            msg = core_api.lb_update_node(self._conf, args['id'],
+                                          args['nodeID'], args['body']['node'])
+            return msg
         except exception.NotFound:
             msg = "LB with identifier %s or node with id %s not found" \
-            % (args['id'],  args['nodeID'])
+            % (args['id'], args['nodeID'])
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
@@ -413,25 +238,9 @@ class Controller(object):
 
     def showMonitoring(self, req, **args):
         try:
-            msg = "Got showMonitoring request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
-
-            params = {}
-            params['id'] = args['id']
-            task.parameters = params
-
-            worker = mapper.getWorker(task, "showProbes", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return result
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'loadbalancers': "OK"}
-
+            logger.debug("Got showMonitoring request. Request: %s", req)
+            result = core_api.lb_show_probes(self.conf, args['id'])
+            return result
         except exception.NotFound:
             msg = "LB with identifier %s not found" % args['id']
             logger.debug(msg)
@@ -443,27 +252,10 @@ class Controller(object):
 
     def addProbe(self, req, **args):
         try:
-            msg = "Got addProbe request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
-
-            params = {}
-            params['id'] = args['id']
-            body = args['body']
-            params['probe'] = body['healthMonitoring']
-            task.parameters = params
-
-            worker = mapper.getWorker(task, "LBAddProbe", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return result
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'loadbalancers': "OK"}
-
+            logger.debug("Got addProbe request. Request: %s", req)
+            probe_id = core_api.lb_add_probe(self.conf, args['id'],
+                                   args['body']['healthMonitoring']['probe'])
+            return "probe: %s" % probe_id
         except exception.NotFound:
             msg = "LB with identifier %s not found" % args['id']
             logger.debug(msg)
@@ -475,26 +267,10 @@ class Controller(object):
 
     def deleteProbe(self, req, **args):
         try:
-            msg = "Got deleteProbe request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
-
-            params = {}
-            params['id'] = args['id']
-            params['probeID'] = args['probeID']
-            task.parameters = params
-
-            worker = mapper.getWorker(task, "LBdeleteProbe", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return result
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'loadbalancers': "OK"}
-
+            logger.debug("Got deleteProbe request. Request: %s", req)
+            probe_id = core_api.lb_delete_probe(self.conf, args['id'],
+                                                           args['probeID'])
+            return "Deleted probe with id %s" % probe_id
         except exception.NotFound:
             msg = "LB with identifier %s not found" % args['id']
             logger.debug(msg)
@@ -506,25 +282,9 @@ class Controller(object):
 
     def showStickiness(self, req, **args):
         try:
-            msg = "Got showStickiness request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
-
-            params = {}
-            params['id'] = args['id']
-            task.parameters = params
-
-            worker = mapper.getWorker(task, "showSticky", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return result
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'loadbalancers': "OK"}
-
+            logger.debug("Got showStickiness request. Request: %s", req)
+            result = core_api.lb_show_sticky(self.conf, args['id'])
+            return result
         except exception.NotFound:
             msg = "LB with identifier %s not found" % args['id']
             logger.debug(msg)
@@ -536,27 +296,10 @@ class Controller(object):
 
     def addSticky(self, req, **args):
         try:
-            msg = "Got addSticky request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
-
-            params = {}
-            params['id'] = args['id']
-            body = args['body']
-            params['sticky'] = body['sessionPersistence']
-            task.parameters = params
-
-            worker = mapper.getWorker(task, "addSticky", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return result
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'loadbalancers': "OK"}
-
+            logger.debug("Got addSticky request. Request: %s", req)
+            st_id = core_api.lb_add_sticky(self._conf, args['id'],
+                                           args['body']['sessionPersistence'])
+            return "sticky: %s" % st_id
         except exception.NotFound:
             msg = "LB with identifier %s not found" % args['id']
             logger.debug(msg)
@@ -568,26 +311,10 @@ class Controller(object):
 
     def deleteSticky(self, req, **args):
         try:
-            msg = "Got deleteSticky request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = LBActionMapper()
-
-            params = {}
-            params['id'] = args['id']
-            params['stickyID'] = args['stickyID']
-            task.parameters = params
-
-            worker = mapper.getWorker(task, "deleteSticky", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return result
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'loadbalancers': "OK"}
-
+            logger.debug("Got deleteSticky request. Request: %s", req)
+            sticky_id = core_api.lb_delete_sticky(self.conf, args['id'],
+                                                             args['stickyID'])
+            return "Deleted sticky with id %s" % sticky_id
         except exception.NotFound:
             msg = "LB with identifier %s not found" % args['id']
             logger.debug(msg)
@@ -596,7 +323,6 @@ class Controller(object):
             msg = _("Unauthorized image access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
-
 
     def _get_query_params(self, req):
         """
@@ -631,7 +357,7 @@ class Controller(object):
 
 
 def create_resource(conf):
-    """Loadbalancers  resource factory method"""
+    """Loadbalancers resource factory method"""
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = wsgi.JSONResponseSerializer()
     return wsgi.Resource(Controller(conf), deserializer, serializer)

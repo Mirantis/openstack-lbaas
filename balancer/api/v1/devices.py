@@ -16,46 +16,26 @@
 #    under the License.
 
 import logging
-import sys
-import  balancer.loadbalancers
 
 from openstack.common import exception
 from openstack.common import wsgi
-from balancer.devices.device import LBDevice
 
-from balancer.core.ServiceController import *
-from balancer.core.deviceworkers import *
-from balancer.core.Worker import *
+from balancer.core import api as core_api
 
 logger = logging.getLogger('balancer.api.v1.devices')
 
 
 class Controller(object):
-
     def __init__(self, conf):
-        msg = "Creating device controller with config: %s" % conf
-        logger.debug(msg)
+        logger.debug("Creating device controller with config: %s", conf)
         self.conf = conf
-        self._service_controller = ServiceController.Instance(conf)
-        pass
 
     def index(self,  req):
         try:
-            msg = "Got index request. Request: %s" % req
-            logger.debug(msg)
-            task = self._service_controller.createTask()
-            mapper = DeviceActionMapper()
-            worker = mapper.getWorker(task, "index", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                logger.debug("Obtained response: %s" % result)
-                return {'devices': result}
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'task_id': task.id}
-
+            logger.debug("Got index request. Request: %s", req)
+            result = core_api.device_get_index(self.conf)
+            logger.debug("Obtained response: %s" % result)
+            return {'devices': result}
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
@@ -65,29 +45,14 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
-        pass
-
     def create(self, req, **args):
-        msg = "Got create request. Request: %s" % req
-        logger.debug(msg)
+        logger.debug("Got create request. Request: %s", req)
         try:
             params = args['body']
-            msg = "Request params: %s" % params
-            logger.debug(msg)
+            logger.debug("Request params: %s", params)
             self._validate_params(params)
-            task = self._service_controller.createTask()
-            task.parameters = params
-            mapper = DeviceActionMapper()
-            worker = mapper.getWorker(task, "create", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-
-                return {'devices': result}
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'task_id': task.id}
+            result = core_api.device_create(self.conf, **params)
+            return {'devices': result}
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
@@ -99,12 +64,12 @@ class Controller(object):
         return {'devices': list}
 
     def show(self, req, **args):
-        msg = "Got device data request. Request: %s Arguments: %s" \
-        % (req, args)
-        logger.debug(msg)
+        logger.debug("Got device data request. Request: %s Arguments: %s" % \
+                                                                   (req, args))
         try:
 
             return {"list": "OK"}
+            # TODO(yorik-sar): actually implement method
             logger.debug(msg)
             self._validate_params(params)
             task = self._service_controller.createTask()
@@ -129,24 +94,24 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
         return {'devices': list}
-        
-    def device_status(self, req,  **args):
+
+    def device_status(self, req, **args):
         # NOTE(yorik-sar): broken, there is no processing anymore
         try:
             shared = SharedObjects.Instance(self.conf)
             id = args['id']
             pool = shared.getDevicePoolbyID(id)
             stats = {}
-            thr_stat={}
+            thr_stat = {}
             if pool:
                 stats['command_queue_lenth'] = pool.getQueueSize()
                 stats['threads'] = pool.getThreadCount()
                 for i in range(pool.getThreadCount()):
                     thr_stat[i] = pool.get_status(i)
                 stats['thread_status'] = thr_stat
-                return {'device_command_status' : stats}
+                return {'device_command_status': stats}
             else:
-                return {'device_command_status' : 'not available'}
+                return {'device_command_status': 'not available'}
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
@@ -160,21 +125,10 @@ class Controller(object):
 
     def device_info(self, req, **args):
         try:
-
-            task = self._service_controller.createTask()
-            task.parameters = args
-            task.parameters['query_params'] = req.GET
-            mapper = DeviceActionMapper()
-            worker = mapper.getWorker(task, "info", self.conf)
+            args['query_params'] = req.GET
             if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-
+                result = core_api.device_info(args)
                 return {'devices': result}
-
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'task_id': task.id}
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
             logger.debug(msg)
