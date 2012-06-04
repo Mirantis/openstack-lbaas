@@ -23,7 +23,7 @@ from openstack.common import exception
 
 from balancer.core import commands
 from balancer.core.scheduller import Scheduller
-from balancer.devices.DeviceMap import DeviceMap
+from balancer import drivers
 from balancer.devices.device import LBDevice
 from balancer.core.ServiceController import ServiceController
 from balancer.loadbalancers import loadbalancer
@@ -95,9 +95,6 @@ def create_lb(conf, **params):
     bal_instance = Scheduller.Instance(conf)
     # device = sched.getDevice()
     device = bal_instance.getDeviceByID(balancer_instance.lb.device_id)
-    devmap = DeviceMap()
-    driver = devmap.getDriver(device)
-    context = driver.getContext(device)
 
     lb = balancer_instance.getLB()
     lb.device_id = device.id
@@ -106,11 +103,10 @@ def create_lb(conf, **params):
     balancer_instance.savetoDB()
 
     #Step 3. Deploy config to device
+    device_driver = drivers.get_device_driver(device.id)
     try:
-        context.addParam('balancer',  balancer_instance)
-        with context:
-            commands.create_loadbalancer(context, conf, driver,
-                    balancer_instance)
+        with device_driver.request_context() as ctx:
+            commands.create_loadbalancer(ctx, balancer_instance)
     except (exception.Error, exception.Invalid):
         balancer_instance.lb.status = loadbalancer.LB_ERROR_STATUS
     else:
@@ -126,8 +122,6 @@ def create_lb(conf, **params):
 
 @asynchronous
 def update_lb(conf, lb_id, lb_body):
-    sched = Scheduller.Instance(conf)
-
     #Step 1. Load LB from DB
     old_balancer_instance = Balancer(conf)
     balancer_instance = Balancer(conf)
@@ -157,17 +151,12 @@ def update_lb(conf, lb_id, lb_body):
     lb.status = loadbalancer.LB_PENDING_UPDATE_STATUS
     balancer_instance.update()
 
-    #Step 4. Update device config
-    device = sched.getDeviceByID(lb.device_id)
-    devmap = DeviceMap()
-    driver = devmap.getDriver(device)
-    context = driver.getContext(device)
-
     #Step 5. Deploy new config to device
+    device_driver = drivers.get_device_driver(lb.device_id)
     try:
-        with context:
-            commands.update_loadbalancer(context, conf, driver,
-                    old_balancer_instance, balancer_instance)
+        with device_driver.request_context() as ctx:
+            commands.update_loadbalancer(ctx, old_balancer_instance,
+                    balancer_instance)
     except:
         old_balancer_instance.lb.status = loadbalancer.LB_ERROR_STATUS
         old_balancer_instance.update()
@@ -181,14 +170,8 @@ def update_lb(conf, lb_id, lb_body):
 
 
 def delete_lb(conf, lb_id):
-    sched = Scheduller.Instance(conf)
     balancer_instance = Balancer(conf)
     balancer_instance.loadFromDB(lb_id)
-
-    device = sched.getDeviceByID(balancer_instance.lb.device_id)
-    devmap = DeviceMap()
-    driver = devmap.getDriver(device)
-    context = driver.getContext(device)
 
     #Step 1. Parse parameters came from request
     #bal_deploy.parseParams(params)
@@ -197,7 +180,9 @@ def delete_lb(conf, lb_id):
     #        balancer_instance.removeFromDB()
 
     #Step 3. Destruct config at device
-    commands.delete_loadbalancer(context, conf, driver, balancer_instance)
+    device_driver = drivers.get_device_driver(balancer_instance.lb.device_id)
+    with device_driver.request_context() as ctx:
+        commands.delete_loadbalancer(ctx, balancer_instance)
 
     balancer_instance.removeFromDB()
     return
@@ -206,7 +191,6 @@ def delete_lb(conf, lb_id):
 def lb_add_node(conf, lb_id, lb_node):
     logger.debug("Got new node description %s" % lb_node)
     rs = RealServer()
-    sched = Scheduller.Instance(conf)
     balancer_instance = Balancer(conf)
 
     balancer_instance.loadFromDB(lb_id)
@@ -219,14 +203,10 @@ def lb_add_node(conf, lb_id, lb_node):
     balancer_instance.sf._rservers.append(rs)
     balancer_instance.savetoDB()
 
-    device = sched.getDeviceByID(balancer_instance.lb.device_id)
-    devmap = DeviceMap()
-    driver = devmap.getDriver(device)
-    context = driver.getContext(device)
-
-    with context:
-        commands.add_node_to_loadbalancer(context, conf, driver,
-                balancer_instance, rs)
+    device_driver = drivers.get_device_driver(balancer_instance.lb.device_id)
+    with device_driver.request_context() as ctx:
+        commands.delete_loadbalancer(ctx, balancer_instance)
+        commands.add_node_to_loadbalancer(ctx, balancer_instance, rs)
 
     return  rs.id
 
@@ -245,11 +225,6 @@ def lb_delete_node(conf, lb_id, lb_node_id):
     balancer_instance = Balancer(conf)
     #Step 1: Load balancer from DB
     balancer_instance.loadFromDB(lb_id)
-    sched = Scheduller.Instance(conf)
-    device = sched.getDeviceByID(balancer_instance.lb.device_id)
-    devmap = DeviceMap()
-    driver = devmap.getDriver(device)
-    context = driver.getContext(device)
     store = Storage(conf)
 
     #Step 2: Get reader and writer
@@ -262,19 +237,15 @@ def lb_delete_node(conf, lb_id, lb_node_id):
     dl.deleteRSbyID(lb_node_id)
 
     #Step 5: Delete real server from device
-    commands.remove_node_from_loadbalancer(context, conf, driver,
-            balancer_instance, rs)
+    device_driver = drivers.get_device_driver(balancer_instance.lb.device_id)
+    with device_driver.request_context() as ctx:
+        commands.remove_node_from_loadbalancer(ctx, balancer_instance, rs)
     return lb_node_id
 
 
 def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
     balancer_instance = Balancer(conf)
     balancer_instance.loadFromDB(lb_id)
-    sched = Scheduller.Instance(conf)
-    device = sched.getDeviceByID(balancer_instance.lb.device_id)
-    devmap = DeviceMap()
-    driver = devmap.getDriver(device)
-    context = driver.getContext(device)
     store = Storage(conf)
     reader = store.getReader()
     writer = store.getWriter()
@@ -290,11 +261,12 @@ def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
     if rs.parent_id != "":
         rs.name = rs.parent_id
     logger.debug("Changing RServer status to: %s" % lb_node_status)
-    with context:
+    device_driver = drivers.get_device_driver(balancer_instance.lb.device_id)
+    with device_driver.request_context() as ctx:
         if lb_node_status == "inservice":
-            commands.activate_rserver(context, conf, driver, sf, rs)
+            commands.activate_rserver(ctx, sf, rs)
         else:
-            commands.suspend_rserver(context, conf, driver, sf, rs)
+            commands.suspend_rserver(ctx, sf, rs)
 
     rs.name = rsname
     writer.updateObjectInTable(rs)
@@ -304,11 +276,6 @@ def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
 def lb_update_node(conf, lb_id, lb_node_id, lb_node):
     balancer_instance = Balancer(conf)
     balancer_instance.loadFromDB(lb_id)
-    sched = Scheduller.Instance(conf)
-    device = sched.getDeviceByID(balancer_instance.lb.device_id)
-    devmap = DeviceMap()
-    driver = devmap.getDriver(device)
-    context = driver.getContext(device)
     store = Storage(conf)
     reader = store.getReader()
     writer = store.getWriter()
@@ -326,11 +293,10 @@ def lb_update_node(conf, lb_id, lb_node_id, lb_node):
 
     deleter.deleteRSbyID(lb_node_id)
     writer.writeRServer(new_rs)
-    with context:
-        commands.remove_node_from_loadbalancer(context, conf, driver,
-                balancer_instance, rs)
-        commands.add_node_to_loadbalancer(context, conf, driver,
-                balancer_instance, rs)
+    device_driver = drivers.get_device_driver(balancer_instance.lb.device_id)
+    with device_driver.request_context() as ctx:
+        commands.remove_node_from_loadbalancer(ctx, balancer_instance, rs)
+        commands.add_node_to_loadbalancer(ctx, balancer_instance, rs)
     return "Node with id %s now has params %s" %\
            (lb_node_id, new_rs.convertToDict())
 
@@ -355,7 +321,6 @@ def lb_add_probe(conf, lb_id, lb_probe):
     if lb_probe['type'] == None:
         return
 
-    scheduller = Scheduller.Instance(conf)
     balancer_instance = Balancer(conf)
 
     balancer_instance.loadFromDB(lb_id)
@@ -369,14 +334,9 @@ def lb_add_probe(conf, lb_id, lb_probe):
     balancer_instance.sf._probes.append(prb)
     balancer_instance.savetoDB()
 
-    device = scheduller.getDeviceByID(balancer_instance.lb.device_id)
-    devmap = DeviceMap()
-    driver = devmap.getDriver(device)
-    context = driver.getContext(device)
-
-    with context:
-        commands.add_probe_to_loadbalancer(context, conf, driver,
-                balancer_instance, prb)
+    device_driver = drivers.get_device_driver(balancer_instance.lb.device_id)
+    with device_driver.request_context() as ctx:
+        commands.add_probe_to_loadbalancer(ctx, balancer_instance, prb)
 
     return prb.id
 
@@ -386,11 +346,6 @@ def lb_delete_probe(conf, lb_id, probe_id):
 
     #Step 1: Load balancer from DB
     balancer_instance.loadFromDB(lb_id)
-    scheduller = Scheduller.Instance(conf)
-    device = scheduller.getDeviceByID(balancer_instance.lb.device_id)
-    devmap = DeviceMap()
-    driver = devmap.getDriver(device)
-    context = driver.getContext(device)
 
     store = Storage(conf)
 
@@ -405,9 +360,9 @@ def lb_delete_probe(conf, lb_id, probe_id):
     dl.deleteProbeByID(probe_id)
 
     #Step 5: Delete real server from device
-    with context:
-        commands.remove_probe_from_server_farm(context, conf, driver,
-                balancer_instance, prb)
+    device_driver = drivers.get_device_driver(balancer_instance.lb.device_id)
+    with device_driver.request_context() as ctx:
+        commands.remove_probe_from_server_farm(ctx, balancer_instance, prb)
     return probe_id
 
 
@@ -431,7 +386,6 @@ def lb_add_sticky(conf, lb_id, sticky):
     if sticky['type'] == None:
         return
 
-    sched = Scheduller(conf)
     balancer_instance = Balancer(conf)
 
     balancer_instance.loadFromDB(lb_id)
@@ -444,14 +398,9 @@ def lb_add_sticky(conf, lb_id, sticky):
     balancer_instance.sf._sticky.append(st)
     balancer_instance.savetoDB()
 
-    device = sched.getDeviceByID(balancer_instance.lb.device_id)
-    devmap = DeviceMap()
-    driver = devmap.getDriver(device)
-    context = driver.getContext(device)
-
-    with context:
-        commands.add_sticky_to_loadbalancer(context, conf, driver,
-                balancer_instance, st)
+    device_driver = drivers.get_device_driver(balancer_instance.lb.device_id)
+    with device_driver.request_context() as ctx:
+        commands.add_sticky_to_loadbalancer(ctx, balancer_instance, st)
 
     return st.id
 
@@ -461,12 +410,6 @@ def lb_delete_sticky(conf, lb_id, sticky_id):
 
     #Step 1: Load balancer from DB
     balancer_instance.loadFromDB(lb_id)
-    sched = Scheduller(conf)
-    device = sched.getDeviceByID(balancer_instance.lb.device_id)
-    devmap = DeviceMap()
-    driver = devmap.getDriver(device)
-    context = driver.getContext(device)
-
     store = Storage(conf)
 
     #Step 2: Get reader and writer
@@ -480,9 +423,9 @@ def lb_delete_sticky(conf, lb_id, sticky_id):
     dl.deleteStickyByID(sticky_id)
 
     #Step 5: Delete real server from device
-    with context:
-        commands.remove_sticky_from_loadbalancer(context, conf, driver,
-                balancer_instance, st)
+    device_driver = drivers.get_device_driver(balancer_instance.lb.device_id)
+    with device_driver.request_context() as ctx:
+        commands.remove_sticky_from_loadbalancer(ctx, balancer_instance, st)
 
     return sticky_id
 

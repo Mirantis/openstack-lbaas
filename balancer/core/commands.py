@@ -29,22 +29,29 @@ class RollbackContext(object):
     def __init__(self):
         self.rollback_stack = []
 
+    def add_rollback(self, rollback):
+        self.rollback_stack.append(rollback)
+
+
+class RollbackContextManager(object):
+    def __init__(self, context=None):
+        if context is None:
+            self.context = RollbackContext()
+        else:
+            self.context = context
+
     def __enter__(self):
-        if self.rollback_stack:
-            raise RuntimeError("Rollback context can not be reused")
-        return self
+        return self.context
 
     def __exit__(self, exc_type, exc_value, exc_tb):
         good = exc_type is None
         if not good:
             LOG.error("Rollback because of: %s", exc_value)
-        while self.rollback_stack:
-            self.rollback_stack.pop()(good)
+        rollback_stack = self.context.rollback_stack
+        while rollback_stack:
+            rollback_stack.pop()(good)
         if not good:
             raise exc_type, exc_value, exc_tb
-
-    def add_rollback(self, rollback):
-        self.rollback_stack.append(rollback)
 
 
 class Rollback(Exception):
@@ -90,31 +97,31 @@ def ignore_exceptions(func):
 
 
 @with_rollback
-def create_rserver(ctx, conf, driver, rs):
+def create_rserver(ctx, rs):
     try:
         # We can't create multiple RS with the same IP. So parent_id points to
         # RS which already deployed and has this IP
         LOG.debug("Creating rserver command execution with rserver: %s", rs)
         LOG.debug("RServer parent_id: %s", rs.parent_id)
         if rs.parent_id == "":
-            driver.createRServer(ctx, rs)
+            ctx.device.createRServer(rs)
             rs.deployed = 'True'
-            stor = storage.Storage(conf)
+            stor = storage.Storage(ctx.conf)
             wr = stor.getWriter()
             wr.updateDeployed(rs, 'True')
         yield
     except Exception:
-        driver.deleteRServer(ctx, rs)
+        ctx.device.deleteRServer(rs)
         rs.deployed = 'False'
-        stor = storage.Storage(conf)
+        stor = storage.Storage(ctx.conf)
         wr = stor.getWriter()
         wr.updateDeployed(rs, 'False')
         raise
 
 
 @ignore_exceptions
-def delete_rserver(ctx, conf, driver, rs):
-    store = storage.Storage(conf)
+def delete_rserver(ctx, rs):
+    store = storage.Storage(ctx.conf)
     reader = store.getReader()
     rss = []
     LOG.debug("Got delete RS request")
@@ -123,218 +130,218 @@ def delete_rserver(ctx, conf, driver, rs):
         LOG.debug("List servers %s", rss)
         if len(rss) == 1:
             parent_rs = reader.getRServerById(rs.parent_id)
-            driver.deleteRServer(ctx, parent_rs)
+            ctx.device.deleteRServer(parent_rs)
     else:
         # rs1
         # We need to check if there are reals who reference this rs as a parent
         rss = reader.getRServersByParentID(rs.id)
         LOG.debug("List servers %s", rss)
         if len(rss) == 0:
-            driver.deleteRServer(ctx, rs)
+            ctx.device.deleteRServer(rs)
 
 
-def create_sticky(ctx, conf, driver, sticky):
-    driver.createStickiness(ctx, sticky)
+def create_sticky(ctx, sticky):
+    ctx.device.createStickiness(sticky)
     sticky.deployed = 'True'
-    stor = storage.Storage(conf)
+    stor = storage.Storage(ctx.conf)
     wr = stor.getWriter()
     wr.updateDeployed(sticky, 'True')
 
 
 @ignore_exceptions
-def delete_sticky(ctx, conf, driver, sticky):
-    driver.deleteStickiness(ctx, sticky)
+def delete_sticky(ctx, sticky):
+    ctx.device.deleteStickiness(sticky)
     sticky.deployed = 'False'
-    stor = storage.Storage(conf)
+    stor = storage.Storage(ctx.conf)
     wr = stor.getWriter()
     wr.updateDeployed(sticky, 'False')
 
 
 @with_rollback
-def create_server_farm(ctx, conf, driver, sf):
+def create_server_farm(ctx, sf):
     try:
-        driver.createServerFarm(ctx, sf)
+        ctx.device.createServerFarm(sf)
         sf.deployed = 'True'
-        stor = storage.Storage(conf)
+        stor = storage.Storage(ctx.conf)
         wr = stor.getWriter()
         wr.updateDeployed(sf, 'True')
         yield
     except Exception:
-        driver.deleteServerFarm(ctx, sf)
+        ctx.device.deleteServerFarm(sf)
         sf.deployed = 'False'
-        stor = storage.Storage(conf)
+        stor = storage.Storage(ctx.conf)
         wr = stor.getWriter()
         wr.updateDeployed(sf, 'False')
         raise
 
 
 @ignore_exceptions
-def delete_server_farm(ctx, conf, driver, sf):
-    driver.deleteServerFarm(ctx, sf)
+def delete_server_farm(ctx, sf):
+    ctx.device.deleteServerFarm(sf)
     sf.deployed = 'False'
-    stor = storage.Storage(conf)
+    stor = storage.Storage(ctx.conf)
     wr = stor.getWriter()
     wr.updateDeployed(sf, 'False')
 
 
 @with_rollback
-def add_rserver_to_server_farm(ctx, conf, driver, server_farm, rserver):
+def add_rserver_to_server_farm(ctx, server_farm, rserver):
     try:
         if rserver.parent_id != "":
             #Nasty hack. We need to think how todo this more elegant
             rserver.name = rserver.parent_id
 
-        driver.addRServerToSF(ctx, server_farm, rserver)
+        ctx.device.addRServerToSF(server_farm, rserver)
         yield
     except Exception:
-        driver.deleteRServerFromSF(ctx, server_farm, rserver)
+        ctx.device.deleteRServerFromSF(server_farm, rserver)
         raise
 
 
 @ignore_exceptions
-def delete_rserver_from_server_farm(ctx, conf, driver, server_farm, rserver):
-    driver.deleteRServerFromSF(ctx, server_farm, rserver)
+def delete_rserver_from_server_farm(ctx, server_farm, rserver):
+    ctx.device.deleteRServerFromSF(server_farm, rserver)
 
 
 @with_rollback
-def create_probe(ctx, conf, driver, probe):
+def create_probe(ctx, probe):
     try:
-        driver.createProbe(ctx, probe)
+        ctx.device.createProbe(probe)
         probe.deployed = 'True'
-        stor = storage.Storage(conf)
+        stor = storage.Storage(ctx.conf)
         wr = stor.getWriter()
         wr.updateDeployed(probe, 'True')
         yield
     except Exception:
-        driver.deleteProbe(ctx, probe)
+        ctx.device.deleteProbe(probe)
         probe.deployed = 'False'
-        stor = storage.Storage(conf)
+        stor = storage.Storage(ctx.conf)
         wr = stor.getWriter()
         wr.updateDeployed(probe, 'False')
         raise
 
 
 @ignore_exceptions
-def delete_probe(ctx, conf, driver, probe):
-    driver.deleteProbe(ctx, probe)
+def delete_probe(ctx, probe):
+    ctx.device.deleteProbe(probe)
     probe.deployed = 'False'
-    stor = storage.Storage(conf)
+    stor = storage.Storage(ctx.conf)
     wr = stor.getWriter()
     wr.updateDeployed(probe, 'False')
 
 
 @with_rollback
-def add_probe_to_server_farm(ctx, conf, driver, server_farm, probe):
+def add_probe_to_server_farm(ctx, server_farm, probe):
     try:
-        driver.addProbeToSF(ctx, server_farm, probe)
+        ctx.device.addProbeToSF(server_farm, probe)
         yield
     except Exception:
-        driver.deleteProbeFromSF(ctx, server_farm, probe)
+        ctx.device.deleteProbeFromSF(server_farm, probe)
         raise
 
 
 @ignore_exceptions
-def remove_probe_from_server_farm(ctx, conf, driver, server_farm, probe):
-    driver.deleteProbeFromSF(ctx, server_farm, probe)
+def remove_probe_from_server_farm(ctx, server_farm, probe):
+    ctx.device.deleteProbeFromSF(server_farm, probe)
 
 
-def activate_rserver(ctx, conf, driver, server_farm, rserver):
-    driver.activateRServer(ctx, server_farm, rserver)
+def activate_rserver(ctx, server_farm, rserver):
+    ctx.device.activateRServer(server_farm, rserver)
 
 
-def suspend_rserver(ctx, conf, driver, server_farm, rserver):
-    driver.suspendRServer(ctx, server_farm, rserver)
+def suspend_rserver(ctx, server_farm, rserver):
+    ctx.device.suspendRServer(server_farm, rserver)
 
 
 @with_rollback
-def create_vip(ctx, conf, driver, vip, server_farm):
+def create_vip(ctx, vip, server_farm):
     try:
-        driver.createVIP(ctx, vip, server_farm)
+        ctx.device.createVIP(vip, server_farm)
         vip.deployed = 'True'
-        stor = storage.Storage(conf)
+        stor = storage.Storage(ctx.conf)
         wr = stor.getWriter()
         wr.updateDeployed(vip, 'True')
         yield
     except Exception:
-        driver.deleteVIP(ctx, vip, server_farm)
+        ctx.device.deleteVIP(vip, server_farm)
         vip.deployed = 'False'
-        stor = storage.Storage(conf)
+        stor = storage.Storage(ctx.conf)
         wr = stor.getWriter()
         wr.updateDeployed(vip, 'False')
         raise
 
 
 @ignore_exceptions
-def delete_vip(ctx, conf, driver, vip):
-    driver.deleteVIP(ctx, vip)
+def delete_vip(ctx, vip):
+    ctx.device.deleteVIP(vip)
     vip.deployed = 'False'
-    stor = storage.Storage(conf)
+    stor = storage.Storage(ctx.conf)
     wr = stor.getWriter()
     wr.updateDeployed(vip, 'False')
 
 
-def create_loadbalancer(ctx, conf, driver, balancer):
+def create_loadbalancer(ctx, balancer):
     for probe in balancer.probes:
-        create_probe(ctx, conf, driver,  probe)
+        create_probe(ctx,  probe)
 
-    create_server_farm(ctx, conf, driver, balancer.sf)
+    create_server_farm(ctx, balancer.sf)
     for rserver in balancer.rs:
-        create_rserver(ctx, conf, driver, rserver)
-        add_rserver_to_server_farm(ctx, conf, driver, balancer.sf,  rserver)
+        create_rserver(ctx, rserver)
+        add_rserver_to_server_farm(ctx, balancer.sf,  rserver)
 
 #    for pr in bal.probes:
 #        CreateProbeCommand(driver,  context,  pr)
 #        AddProbeToSFCommand(driver,  context,  bal.sf,  pr)
     for vip in balancer.vips:
-        create_vip(ctx, conf, driver, vip, balancer.sf)
+        create_vip(ctx, vip, balancer.sf)
 
 
-def delete_loadbalancer(ctx, conf, driver, balancer):
+def delete_loadbalancer(ctx, balancer):
     for vip in balancer.vips:
-        delete_vip(ctx, conf, driver, vip)
+        delete_vip(ctx, vip)
 #    for pr in balancer.probes:
 #        DeleteProbeFromSFCommand(driver,  context,  balancer.sf,  pr)
 #        DeleteProbeCommand(driver,  context,  pr)
     for rserver in balancer.rs:
-        delete_rserver_from_server_farm(ctx, conf, driver,
+        delete_rserver_from_server_farm(ctx,
                                         balancer.sf, rserver)
-        delete_rserver(ctx, conf, driver, rserver)
+        delete_rserver(ctx, rserver)
     for probe in balancer.probes:
-        remove_probe_from_server_farm(ctx, conf, driver, balancer.sf, probe)
-        delete_probe(ctx, conf, driver, probe)
+        remove_probe_from_server_farm(ctx, balancer.sf, probe)
+        delete_probe(ctx, probe)
     for sticky in balancer.sf._sticky:
-        delete_sticky(ctx, conf, driver, sticky)
-    delete_server_farm(ctx, conf, driver, balancer.sf)
+        delete_sticky(ctx, sticky)
+    delete_server_farm(ctx, balancer.sf)
 
 
-def update_loadbalancer(ctx, conf, driver, old_bal,  new_bal):
+def update_loadbalancer(ctx, old_bal,  new_bal):
     if old_bal.lb.algorithm != new_bal.lb.algorithm:
-        create_server_farm(ctx, conf, driver, new_bal.sf)
+        create_server_farm(ctx, new_bal.sf)
 
 
-def add_node_to_loadbalancer(ctx, conf, driver, balancer, rserver):
-    create_rserver(ctx, conf, driver, rserver)
-    add_rserver_to_server_farm(ctx, conf, driver, balancer.sf, rserver)
+def add_node_to_loadbalancer(ctx, balancer, rserver):
+    create_rserver(ctx, rserver)
+    add_rserver_to_server_farm(ctx, balancer.sf, rserver)
 
 
-def remove_node_from_loadbalancer(ctx, conf, driver, balancer, rserver):
-    delete_rserver_from_server_farm(ctx, conf, driver, balancer.sf, rserver)
-    delete_rserver(ctx, conf, driver, rserver)
+def remove_node_from_loadbalancer(ctx, balancer, rserver):
+    delete_rserver_from_server_farm(ctx, balancer.sf, rserver)
+    delete_rserver(ctx, rserver)
 
 
-def add_probe_to_loadbalancer(ctx, conf, driver, balancer, probe):
-    create_probe(ctx, conf, driver, probe)
-    add_probe_to_server_farm(ctx, conf, driver, balancer.sf, probe)
+def add_probe_to_loadbalancer(ctx, balancer, probe):
+    create_probe(ctx, probe)
+    add_probe_to_server_farm(ctx, balancer.sf, probe)
 
 
-def makeDeleteProbeFromLBChain(ctx, conf, driver, balancer, probe):
-    remove_probe_from_server_farm(ctx, conf, driver, balancer.sf, probe)
-    delete_probe(ctx, conf, driver, probe)
+def makeDeleteProbeFromLBChain(ctx, balancer, probe):
+    remove_probe_from_server_farm(ctx, balancer.sf, probe)
+    delete_probe(ctx, probe)
 
 
-def add_sticky_to_loadbalancer(ctx, conf, driver, balancer, sticky):
-    create_sticky(ctx, conf, driver, sticky)
+def add_sticky_to_loadbalancer(ctx, balancer, sticky):
+    create_sticky(ctx, sticky)
 
 
-def remove_sticky_from_loadbalancer(ctx, conf, driver, balancer, sticky):
-    delete_sticky(ctx, conf, driver, sticky)
+def remove_sticky_from_loadbalancer(ctx, balancer, sticky):
+    delete_sticky(ctx, sticky)

@@ -17,16 +17,12 @@
 #    under the License
 
 
-import sys
-import os
 import logging
 
 
 from balancer.drivers.BaseDriver import BaseDriver
 from balancer.loadbalancers.statistics import Statistics
-from balancer.drivers.haproxy.Context import Context
 from balancer.drivers.haproxy.RemoteControl import RemoteConfig
-from balancer.drivers.haproxy.RemoteControl import RemoteService
 from balancer.drivers.haproxy.RemoteControl import RemoteInterface
 from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation
 
@@ -34,64 +30,79 @@ logger = logging.getLogger(__name__)
 
 
 class HaproxyDriver(BaseDriver):
-    def __init__(self):
-        pass
+    def __init__(self, device_ref):
+        super(HaproxyDriver, self).__init__(device_ref)
+        if (device_ref.localpath is None) or (device_ref.localpath == "None"):
+            self.localpath = '/tmp/'
+        else:
+            self.localpath = device_ref.localpath
+        if (device_ref.remotepath is None) or \
+                (device_ref.remotepath == "None"):
+            self.remotepath = '/etc/haproxy/'
+        else:
+            self.remotepath = device_ref.remotepath
+        if (device_ref.configfilepath is None) or \
+                (device_ref.configfilepath == "None"):
+            self.configfilename = 'haproxy.cfg'
+        else:
+            self.configfilename = device_ref.configfilename
+        if (device_ref.interface is None) or (device_ref.interface == "None"):
+            self.interface = 'eth0'
+        else:
+            self.interface = device_ref.interface
+        self.haproxy_socket = '/tmp/haproxy.sock'
 
-    def addProbeToSF(self,  context,  serverfarm,  probe):
+    def addProbeToSF(self, serverfarm, probe):
         '''
             Haproxy support only tcp (connect), http and https (limited) probes
         '''
-        self.probeSF(context,  serverfarm,  probe,  'add')
+        self.probeSF(serverfarm, probe, 'add')
 
-    def deleteProbeFromSF(self,  context,  serverfarm,  probe):
-       self.probeSF(context,  serverfarm,  probe,  'del')
+    def deleteProbeFromSF(self, serverfarm, probe):
+        self.probeSF(serverfarm, probe, 'del')
 
-    def  probeSF  (self,  context,  serverfarm,  probe, type_of_operation):
+    def probeSF(self, serverfarm, probe, type_of_operation):
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
-        self.del_lines = ['option httpchk', 'option ssl-hello-chk',  'http-check expect']
-        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  \
-                                        context.configfilename))
-        remote = RemoteConfig(context)
+        self.del_lines = ['option httpchk', 'option ssl-hello-chk', 'http-check expect']
+        config_file = HaproxyConfigFile('%s/%s' % (self.localpath, \
+                                        self.configfilename))
+        remote = RemoteConfig(self.deviceref, self.localpath,
+                              self.remotepath, self.configgilename)
         remote.getConfig()
         if type_of_operation == 'del':
             config_file.DeleteLinesFromBackendBlock(haproxy_serverfarm, self.del_lines)
         elif type_of_operation == 'add':
             pr_type = probe.type.lower()
             if (pr_type != 'http') and (pr_type != 'https') and (pr_type != 'tcp'):
-                logger.debug('[HAPROXY] unsupported probe type %s,  exit' % pr_type)
+                logger.debug('[HAPROXY] unsupported probe type %s, exit' % pr_type)
                 return
             if pr_type == "http":
                 haproxy_serverfarm = HaproxyBackend()
                 haproxy_serverfarm.name = serverfarm.name
                 self.option_httpchk = "option httpchk"
                 if probe.requestMethodType != "":
-                    self.option_httpchk = "%s %s " % (self.option_httpchk ,  probe.requestMethodType)
+                    self.option_httpchk = "%s %s " % (self.option_httpchk, probe.requestMethodType)
                 else:
                     self.option_httpchk = "%s GET" % self.option_httpchk
                 if probe.requestHTTPurl != "":
-                    self.option_httpchk = "%s %s" % (self.option_httpchk , probe.requestHTTPurl)
+                    self.option_httpchk = "%s %s" % (self.option_httpchk, probe.requestHTTPurl)
                 else:
-                    self.option_httpchk = "%s  /" % self.option_httpchk
+                    self.option_httpchk = "%s /" % self.option_httpchk
                 if probe.expectRegExp != "":
                     self.http_check = "http-check expect rstring %s" % probe.expectRegExp
                 elif probe.minExpectStatus != "":
                     self.http_check = "http-check expect status %s" % probe.minExpectStatus
-                self.new_lines = [self.option_httpchk ,  self.http_check]
+                self.new_lines = [self.option_httpchk, self.http_check]
             elif pr_type == "tcp":
-                self.new_lines =  ["option httpchk"]
+                self.new_lines = ["option httpchk"]
             elif pr_type == "https":
-                self.new_lines =  ["option ssl-hello-chk"]
+                self.new_lines = ["option ssl-hello-chk"]
             config_file.DeleteLinesFromBackendBlock(haproxy_serverfarm, self.del_lines)
             config_file.AddLinesToBackendBlock(haproxy_serverfarm, self.new_lines)
         remote.putConfig()
         
-    def getContext(self,  dev):
-        return Context(dev.ip, dev.port, dev.user, dev.password, \
-                       dev.localpath, dev.configfilepath, \
-                       dev.remotepath, dev.interface)
-
-    def addRServerToSF(self,  context,  serverfarm,  rserver):
+    def addRServerToSF(self, serverfarm, rserver):
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
         haproxy_rserver = HaproxyRserver()
@@ -101,35 +112,37 @@ class HaproxyDriver(BaseDriver):
         haproxy_rserver.port = rserver.port
         haproxy_rserver.maxconn = rserver.maxCon
         #Modify remote config file, check and restart remote haproxy
-        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  \
-                                        context.configfilename))
-        remote = RemoteConfig(context)
+        config_file = HaproxyConfigFile('%s/%s' % (self.localpath, \
+                                        self.configfilename))
+        remote = RemoteConfig(self.deviceref, self.localpath,
+                              self.remotepath, self.configgilename)
         logger.debug('[HAPROXY] Creating rserver %s in the \
                      backend block %s' % \
-                     (haproxy_rserver.name,  haproxy_serverfarm.name))
+                     (haproxy_rserver.name, haproxy_serverfarm.name))
         remote.getConfig()
         config_file.AddRserverToBackendBlock(haproxy_serverfarm, \
                                              haproxy_rserver)
         remote.putConfig()
 
-    def deleteRServerFromSF(self, context,  serverfarm,  rserver):
+    def deleteRServerFromSF(self, serverfarm, rserver):
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
         haproxy_rserver = HaproxyRserver()
         haproxy_rserver.name = rserver.name
         #Modify remote config file, check and restart remote haproxy
-        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  \
-                                                context.configfilename))
-        remote = RemoteConfig(context)
+        config_file = HaproxyConfigFile('%s/%s' % (self.localpath, \
+                                                self.configfilename))
+        remote = RemoteConfig(self.deviceref, self.localpath,
+                              self.remotepath, self.configgilename)
         logger.debug('[HAPROXY] Deleting rserver %s in the \
-                     backend block %s' %  \
-                     (haproxy_rserver.name,  haproxy_serverfarm.name))
+                     backend block %s' % \
+                     (haproxy_rserver.name, haproxy_serverfarm.name))
         remote.getConfig()
         config_file.DelRserverFromBackendBlock(haproxy_serverfarm, \
                                                haproxy_rserver)
         remote.putConfig()
 
-    def createVIP(self,  context, virtualserver,  serverfarm):
+    def createVIP(self, virtualserver, serverfarm):
         if not bool(virtualserver.name):
             logger.error('[HAPROXY] Virtualserver name is empty')
             return 'VIRTUALSERVER NAME ERROR'
@@ -141,18 +154,20 @@ class HaproxyDriver(BaseDriver):
         haproxy_serverfarm.name = serverfarm.name
         logger.debug('[HAPROXY] create VIP %s' % haproxy_serverfarm.name)
         #Add new IP address
-        remote_interface = RemoteInterface(context, haproxy_virtualserver)
+        remote_interface = RemoteInterface(self.device_ref, 
+                                           haproxy_virtualserver)
         remote_interface.addIP()
         #Modify remote config file, check and restart remote haproxy
-        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  \
-                                        context.configfilename))
-        remote = RemoteConfig(context)
+        config_file = HaproxyConfigFile('%s/%s' % (self.localpath, \
+                                        self.configfilename))
+        remote = RemoteConfig(self.deviceref, self.localpath,
+                              self.remotepath, self.configgilename)
         remote.getConfig()
-        config_file.AddFronted(haproxy_virtualserver,  haproxy_serverfarm)
+        config_file.AddFronted(haproxy_virtualserver, haproxy_serverfarm)
         remote.putConfig()
         remote.validationConfig()
 
-    def deleteVIP(self,  context,  virtualserver):
+    def deleteVIP(self, virtualserver):
         logger.debug('[HAPROXY] delete VIP')
         if not bool(virtualserver.name):
             logger.error('[HAPROXY] Virtualserver name is empty')
@@ -160,31 +175,34 @@ class HaproxyDriver(BaseDriver):
         haproxy_virtualserver = HaproxyFronted()
         haproxy_virtualserver.name = virtualserver.name
         haproxy_virtualserver.bind_address = virtualserver.address
-        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  \
-                                        context.configfilename))
-        remote = RemoteConfig(context)
+        config_file = HaproxyConfigFile('%s/%s' % (self.localpath, \
+                                        self.configfilename))
+        remote = RemoteConfig(self.deviceref, self.localpath,
+                              self.remotepath, self.configgilename)
         #Check ip for using in the another frontend
-        if  not config_file.FindStringInTheBlock('frontend',  \
+        if not config_file.FindStringInTheBlock('frontend', \
             haproxy_virtualserver.bind_address):
             logger.debug('[HAPROXY] ip %s does not using in the othe \
                          frontend, delete it from remote interface' % \
                          haproxy_virtualserver.bind_address)
-            remote_interface = RemoteInterface(context, haproxy_virtualserver)
+            remote_interface = RemoteInterface(self.device_ref, 
+                                               haproxy_virtualserver)
             remote_interface.delIP()
         remote.getConfig()
         config_file.DeleteBlock(haproxy_virtualserver)
         remote.putConfig()
 
-    def getStatistics(self,  context, serverfarm, rserver):
+    def getStatistics(self, serverfarm, rserver):
         haproxy_rserver = HaproxyRserver()
         haproxy_rserver.name = rserver.name
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
-        remote_socket = RemoteSocketOperation(context, haproxy_serverfarm, \
-                                              haproxy_rserver)
+        remote_socket = RemoteSocketOperation(self.device_ref,
+                                        haproxy_serverfarm, haproxy_rserver,
+                                        self.interface, self.haproxy_socket)
         out = remote_socket.getStatistics()
         statistics = Statistics()
-        if out :
+        if out:
             status_line = out.split(",")
             statistics.weight = status_line[18]
             statistics.state = status_line[17]
@@ -194,44 +212,46 @@ class HaproxyDriver(BaseDriver):
             statistics.connMax = [5]
             statistics.connRateLimit = [34]
             statistics.bandwRateLimit = [35]
-        logger.debug('[HAPROXY] statistics  rserver state is \'%s\'' % statistics.state )  
+        logger.debug('[HAPROXY] statistics rserver state is \'%s\'' % statistics.state)
         return statistics
 
-    def suspendRServer(self,  context,  serverfarm,  rserver):
-        self.operationWithRServer(context,  serverfarm,  rserver,  'suspend')
+    def suspendRServer(self, serverfarm, rserver):
+        self.operationWithRServer(serverfarm, rserver, 'suspend')
 
-    def activateRServer(self,  context,  serverfarm,  rserver):
-        self.operationWithRServer(context,  serverfarm,  rserver,  'activate')
+    def activateRServer(self, serverfarm, rserver):
+        self.operationWithRServer(serverfarm, rserver, 'activate')
     
-    def operationWithRServer(self,  context,  serverfarm,  rserver,  \
+    def operationWithRServer(self, serverfarm, rserver, \
                              type_of_operation):
         haproxy_rserver = HaproxyRserver()
         haproxy_rserver.name = rserver.name
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
-        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  \
-                                        context.configfilename))
-        remote_config = RemoteConfig(context)
-        remote_socket = RemoteSocketOperation(context, haproxy_serverfarm, \
-                                              haproxy_rserver)
+        config_file = HaproxyConfigFile('%s/%s' % (self.localpath, \
+                                        self.configfilename))
+        remote_config = RemoteConfig(self.deviceref, self.localpath,
+                                     self.remotepath, self.configgilename)
+        remote_socket = RemoteSocketOperation(self.device_ref,
+                                        haproxy_serverfarm, haproxy_rserver,
+                                        self.interface, self.haproxy_socket)
         remote_config.getConfig()
         if type_of_operation == 'suspend':
             config_file.EnableDisableRserverInBackendBlock(haproxy_serverfarm,\
-                                                   haproxy_rserver,  'disable')
+                                                   haproxy_rserver, 'disable')
             remote_socket.suspendServer()
         elif type_of_operation == 'activate':
             config_file.EnableDisableRserverInBackendBlock(haproxy_serverfarm,\
-                                                    haproxy_rserver,  'enable')
+                                                    haproxy_rserver, 'enable')
             remote_socket.activateServer()
         remote_config.putConfig()
 
-    def createServerFarm(self,  context,  serverfarm):
+    def createServerFarm(self, serverfarm):
         if not bool(serverfarm.name):
             logger.error('[HAPROXY] Serverfarm name is empty')
             return 'SERVERFARM FARM NAME ERROR'
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
-        if serverfarm._predictor.type== 'RoundRobin':
+        if serverfarm._predictor.type == 'RoundRobin':
             haproxy_serverfarm.balance = 'roundrobin'
         elif serverfarm._predictor.type == 'LeastConnections':
             haproxy_serverfarm.balance = 'leastconn'
@@ -239,22 +259,24 @@ class HaproxyDriver(BaseDriver):
             haproxy_serverfarm.balance = 'source'
         elif serverfarm._predictor.type == 'HashURL':
             haproxy_serverfarm.balance = 'uri'
-        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  \
-                                                context.configfilename))
-        remote = RemoteConfig(context)
+        config_file = HaproxyConfigFile('%s/%s' % (self.localpath, \
+                                                self.configfilename))
+        remote = RemoteConfig(self.deviceref, self.localpath,
+                              self.remotepath, self.configgilename)
         remote.getConfig()
         config_file.AddBackend(haproxy_serverfarm)
         remote.putConfig()
 
-    def deleteServerFarm(self,  context,  serverfarm):
+    def deleteServerFarm(self, serverfarm):
         if not bool(serverfarm.name):
             logger.error('[HAPROXY] Serverfarm name is empty')
             return 'SERVER FARM NAME ERROR'
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm.name
-        config_file = HaproxyConfigFile('%s/%s' % (context.localpath,  \
-                                                context.configfilename))
-        remote = RemoteConfig(context)
+        config_file = HaproxyConfigFile('%s/%s' % (self.localpath, \
+                                                self.configfilename))
+        remote = RemoteConfig(self.deviceref, self.localpath,
+                              self.remotepath, self.configgilename)
         remote.getConfig()
         config_file.DeleteBlock(haproxy_serverfarm)
         remote.putConfig()
@@ -316,7 +338,7 @@ class HaproxyRserver():
         self.source_max_port = ''
         self.track = ''
         self.weight = 1
-        
+
 
 class HaproxyConfigFile:
     def __init__(self, haproxy_config_file_path='/tmp/haproxy.cfg'):
@@ -324,8 +346,8 @@ class HaproxyConfigFile:
 
     def GetHAproxyConfigFileName(self):
         return self.haproxy_config_file_path
-    
-    def AddLinesToBackendBlock(self, HaproxyBackend,  NewLines):
+
+    def AddLinesToBackendBlock(self, HaproxyBackend, NewLines):
         '''
              Add lines to backend section config file
         '''
@@ -336,9 +358,9 @@ class HaproxyConfigFile:
                 for j in NewLines:
                     logger.debug('[HAPROXY] add line \'%s\'' % j)
                     new_config_file[i].append("\t%s" % j)
-        self._WriteConfigFile(new_config_file)   
+        self._WriteConfigFile(new_config_file)
 
-    def DeleteLinesFromBackendBlock(self, HaproxyBackend,  DelLines):
+    def DeleteLinesFromBackendBlock(self, HaproxyBackend, DelLines):
         '''
             Delete lines from backend section config file
         '''
@@ -352,9 +374,9 @@ class HaproxyConfigFile:
                         if j.find(s) >= 0:
                             logger.debug('[HAPROXY] delete line \'%s\'' % s)
                             new_config_file[i].remove(j)
-        self._WriteConfigFile(new_config_file)  
+        self._WriteConfigFile(new_config_file)
 
-    def AddRserverToBackendBlock(self,  HaproxyBackend,  HaproxyRserver):
+    def AddRserverToBackendBlock(self, HaproxyBackend, HaproxyRserver):
         '''
             Add real server to backend section config file
         '''
@@ -368,20 +390,20 @@ class HaproxyConfigFile:
             if i.find(HaproxyBackend.type) == 0 and i.find('%s' % \
                                           HaproxyBackend.name) >= 0:
                 new_config_file[i].append('\tserver %s %s:%s %s maxconn %s \
-                                              inter %s rise %s fall %s' %  \
-                (HaproxyRserver.name,  HaproxyRserver.address, \
-                HaproxyRserver.port, HaproxyRserver.check,  \
-                HaproxyRserver.maxconn,  HaproxyRserver.inter, \
+                                              inter %s rise %s fall %s' % \
+                (HaproxyRserver.name, HaproxyRserver.address, \
+                HaproxyRserver.port, HaproxyRserver.check, \
+                HaproxyRserver.maxconn, HaproxyRserver.inter, \
                 HaproxyRserver.rise, HaproxyRserver.fall))
         self._WriteConfigFile(new_config_file)
 
-    def DelRserverFromBackendBlock(self,  HaproxyBackend,  HaproxyRserver):
+    def DelRserverFromBackendBlock(self, HaproxyBackend, HaproxyRserver):
         '''
             Delete real server to backend section config file
         '''
         new_config_file = self._ReadConfigFile()
         logger.debug('[HAPROXY] From backend %s delete rserver %s' % \
-                          (HaproxyBackend.name,  HaproxyRserver.name))
+                          (HaproxyBackend.name, HaproxyRserver.name))
         if HaproxyBackend.name == '':
             logger.error('[HAPROXY] Empty backend name')
             return 'BACKEND NAME ERROR'
@@ -395,8 +417,8 @@ class HaproxyConfigFile:
                         new_config_file[i].remove(j)
         self._WriteConfigFile(new_config_file)
 
-    def EnableDisableRserverInBackendBlock(self,  HaproxyBackend,  \
-                                HaproxyRserver,  type_of_operation):
+    def EnableDisableRserverInBackendBlock(self, HaproxyBackend, \
+                                HaproxyRserver, type_of_operation):
         '''
             Disable/Enable server in the backend section config file
         '''
@@ -421,7 +443,7 @@ class HaproxyConfigFile:
                         new_config_file[i].append(tmp_str)
         self._WriteConfigFile(new_config_file)
 
-    def AddFronted(self,  HaproxyFronted,  HaproxyBackend=None):
+    def AddFronted(self, HaproxyFronted, HaproxyBackend=None):
         '''
             Add frontend section to haproxy config file
         '''
@@ -430,7 +452,7 @@ class HaproxyConfigFile:
             logger.error('[HAPROXY] Empty fronted name')
             return 'FRONTEND NAME ERROR'
         if HaproxyFronted.bind_address == '' or HaproxyFronted.bind_port == '':
-            logger.error('[HAPROXY] Empty  bind adrress or port')
+            logger.error('[HAPROXY] Empty bind adrress or port')
             return 'FRONTEND ADDRESS OR PORT ERROR'
         logger.debug('[HAPROXY] Adding frontend %s' % HaproxyFronted.name)
         new_config_block = []
@@ -442,7 +464,7 @@ class HaproxyConfigFile:
                                            HaproxyBackend.name)
         new_config_file['frontend %s' % HaproxyFronted.name] = new_config_block
         self._WriteConfigFile(new_config_file)
-        return  HaproxyFronted.name
+        return HaproxyFronted.name
 
     def DeleteBlock(self, HaproxyBlock):
         '''
@@ -453,16 +475,16 @@ class HaproxyConfigFile:
             logger.error('[HAPROXY] Empty block name')
             return 'BLOCK NAME ERROR'
         logger.debug('[HAPROXY] Try to delete block %s %s' % \
-                         (HaproxyBlock.type,  HaproxyBlock.name))
+                         (HaproxyBlock.type, HaproxyBlock.name))
         for i in new_config_file.keys():
             if i.find(HaproxyBlock.type) == 0 and i.find('%s' % \
                                          HaproxyBlock.name) >= 0:
                 logger.debug('[HAPROXY] Delete block %s %s' % \
-                          (HaproxyBlock.type,  HaproxyBlock.name))
+                          (HaproxyBlock.type, HaproxyBlock.name))
                 del new_config_file[i]
         self._WriteConfigFile(new_config_file)
 
-    def FindStringInTheBlock(self,  block_type,  check_string):
+    def FindStringInTheBlock(self, block_type, check_string):
         """
             Find string in the block
         """
@@ -474,7 +496,7 @@ class HaproxyConfigFile:
             else:
                 return False
 
-    def AddBackend(self,  HaproxyBackend):
+    def AddBackend(self, HaproxyBackend):
         '''
             Add backend section to haproxy config file
         '''
@@ -488,14 +510,14 @@ class HaproxyConfigFile:
         new_config_file['backend %s' % HaproxyBackend.name] =\
                                                          new_config_block
         self._WriteConfigFile(new_config_file)
-        return  HaproxyBackend.name
+        return HaproxyBackend.name
 
     def _ReadConfigFile(self):
-        haproxy_config_file = open(self.haproxy_config_file_path,  'r')
+        haproxy_config_file = open(self.haproxy_config_file_path, 'r')
         config_file = {}
         block_name = ''
         current_block = []
-        for line in  haproxy_config_file:
+        for line in haproxy_config_file:
             if not line.strip():
                 continue
             tmp_line = line.strip()
@@ -532,17 +554,17 @@ class HaproxyConfigFile:
         return config_file
 
     def _WriteConfigFile(self, config_file):
-        haproxy_config_file = open(self.haproxy_config_file_path,  'w+')
+        haproxy_config_file = open(self.haproxy_config_file_path, 'w+')
         logging.debug('[HAPROXY] writing configuration to %s' % \
                                             self.haproxy_config_file_path)
         haproxy_config_file.write('global\n')
-        for v  in config_file['global']:
+        for v in config_file['global']:
             haproxy_config_file.write('%s\n' % v)
-        del  config_file['global']
+        del config_file['global']
         haproxy_config_file.write('defaults\n')
         for v in config_file['defaults']:
             haproxy_config_file.write('%s\n' % v)
-        del  config_file['defaults']
+        del config_file['defaults']
         for k, v in sorted(config_file.iteritems()):
             haproxy_config_file.write('%s\n' % k)
             for out_line in v:
