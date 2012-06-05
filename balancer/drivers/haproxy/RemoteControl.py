@@ -9,11 +9,11 @@ logger = logging.getLogger(__name__)
 
 class RemoteConfig(object):
     def __init__(self, device_ref, localpath, remotepath, configfilename):
-        env.user = device_ref.user
+        env.user = device_ref['user']
         env.hosts = []
-        env.hosts.append(device_ref.ip)
-        env.password = device_ref.password
-        env.host_string = device_ref.ip
+        env.hosts.append(device_ref['ip'])
+        env.password = device_ref['password']
+        env.host_string = device_ref['ip']
         self.localpath = localpath
         self.remotepath = remotepath
         self.configfilename = configfilename
@@ -64,11 +64,11 @@ class RemoteService(object):
     Operations with haproxy daemon
     '''
     def __init__(self, device_ref):
-        env.user = device_ref.user
+        env.user = device_ref['user']
         env.hosts = []
-        env.hosts.append(device_ref.ip)
-        env.password = device_ref.password
-        env.host_string = device_ref.ip
+        env.hosts.append(device_ref['ip'])
+        env.password = device_ref['password']
+        env.host_string = device_ref['ip']
 
     def start(self):
         sudo('service haproxy start')
@@ -85,12 +85,12 @@ class RemoteService(object):
 
 class RemoteInterface(object):
     def __init__(self, device_ref, frontend):
-        env.user = device_ref.user
+        env.user = device_ref['user']
         env.hosts = []
-        env.hosts.append(device_ref.ip)
-        env.password = device_ref.password
-        env.host_string = device_ref.ip
-        self.interface = device_ref.interface
+        env.hosts.append(device_ref['ip'])
+        env.password = device_ref['password']
+        env.host_string = device_ref['ip']
+        self.interface = device_ref['extra']['interface']
         self.IP = frontend.bind_address
 
     def changeIP(self, IP, netmask):
@@ -125,15 +125,15 @@ class RemoteSocketOperation(object):
     '''
     def __init__(self, device_ref, backend, rserver, interface,
             haproxy_socket):
-        env.user = device_ref.user
+        env.user = device_ref['user']
         env.hosts = []
-        env.hosts.append(device_ref.ip)
-        env.password = device_ref.password
-        env.host_string = device_ref.ip
+        env.hosts.append(device_ref['ip'])
+        env.password = device_ref['password']
+        env.host_string = device_ref['ip']
         self.interface = interface
         self.haproxy_socket = haproxy_socket
         self.backend_name = backend.name
-        self.rserver_name = rserver.name
+        self.rserver_name = rserver['name']
 
     def suspendServer(self):
         out = sudo('echo disable server %s/%s | socat stdio unix-connect:%s' %\
