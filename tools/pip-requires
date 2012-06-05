@@ -3,23 +3,19 @@
 # package to get the right headers...
 greenlet>=0.3.1
 
-mysql-python
 SQLAlchemy>=0.7
 anyjson
 eventlet>=0.9.12
 PasteDeploy
-routes
+Routes
 webob==1.0.8
 wsgiref
 argparse
-boto==2.1.1
-#swift
 sqlalchemy-migrate>=0.7.2
 httplib2
 xattr>=0.6.0
 kombu
 pycrypto>=2.1.0alpha1
-pysendfile==2.0.0
 iso8601>=0.1.4
 
 

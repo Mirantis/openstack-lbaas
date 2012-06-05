@@ -18,9 +18,10 @@
 import logging
 
 import routes
-import loadbalancers
-import devices
-#import tasks
+
+from . import loadbalancers
+from . import devices
+#from . import tasks
 
 
 from openstack.common import wsgi
