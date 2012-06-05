@@ -15,20 +15,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import balancer.common.utils
+#import balancer.common.utils
 import logging
-import pdb
+#import pdb
 import openstack.common.exception
 #from balancer.loadbalancers.command import BaseCommand
-import balancer.storage.storage
 
 import loadbalancer
 import predictor
 import probe
-import realserver
-import serverfarm
-import virtualserver
+#import realserver
+#import serverfarm
+#import virtualserver
 import sticky
+
+from balancer.db import api as db_api
+from balancer import exception
+
 
 logger = logging.getLogger(__name__)
 
@@ -43,158 +46,138 @@ class Balancer():
         self.probes = []
         self.vips = []
         self.conf = conf
-        self.store = balancer.storage.storage.Storage(conf)
 
     def parseParams(self, params):
+        obj_dict = params.copy()
+        nodes_list = obj_dict.pop('nodes') or []
+        probes_list = obj_dict.get('healthMonitor') or []
+        vips_list = obj_dict.get('virtualIps') or []
+        stic = obj_dict.get('sessionPersistence') or []
 
-        #if (params.has_key('lb')):
-        if 'lb' in params.keys():
-            lb = params['lb']
-        else:
-            lb = loadbalancer.LoadBalancer()
-        lb.loadFromDict(params)
-        self.lb = lb
-        self.lb.status = loadbalancer.LB_BUILD_STATUS
-        nodes = params.get('nodes',  None)
-        sf = serverfarm.ServerFarm()
-        sf.lb_id = lb.id
-        sf._predictor = createPredictor(lb.algorithm)
-        
-        sf._predictor.sf_id = sf.id
-        
-        sf.name = sf.id
-        self.sf = sf
-        device_id = params.get('device_id',  None)
-        logger.debug("Device ID = %s" % device_id)
-        if device_id != None:
-            self.lb.device_id = device_id
+        lb_ref = db_api.loadbalancer_pack_extra(obj_dict)
+        lb_ref['status'] = loadbalancer.LB_BUILD_STATUS
+        self.lb = lb_ref
+
+        sf_ref = db_api.serverfarm_pack_extra({})
+        sf_ref['name'] = sf_ref['id']
+        sf_ref['lb_id'] = lb_ref['id']
+        self.sf = sf_ref
+        self.sf._rservers = []
+        self.sf._probes = []
+        self.sf._sticky = []
+
+        predictor_ref = db_api.predictor_pack_extra({})
+        predictor_ref['type'] = lb_ref['algorithm']
+        predictor_ref['sf_id'] = sf_ref['id']
+        self._predictor = predictor_ref
 
         """ Parse RServer nodes and attach them to SF """
-        if nodes != None:
-            for node in nodes:
-                rs = realserver.RealServer()
-                rs.loadFromDict(node)
-                # We need to check if there is already real server  with the same IP deployed
-                rd = self.store.getReader()
-                try:
-                    parent_rs = rd.getRServerByIP(rs.address)
-                except openstack.common.exception.NotFound:
-                    parent_rs=None
-                    pass
-                if balancer.common.utils.checkNone(parent_rs):
-                    if parent_rs.address != "":
-                       rs.parent_id = parent_rs.id
-                
-                rs.sf_id = sf.id
-                rs.name = rs.id
-                self.rs.append(rs)
-                self.sf._rservers.append(rs)
+        for node in nodes_list:
+            rs_ref = db_api.server_pack_extra(node)
+            # We need to check if there is already real server with the
+            # same IP deployed
+            try:
+                parent_ref = db_api.server_get_by_address(self.conf,
+                                                          rs_ref['address'])
+            except exception.ServerNotFound:
+                pass
+            else:
+                if parent_ref['address'] != '':
+                    rs_ref['parent_id'] = parent_ref['id']
+            rs_ref['sf_id'] = sf_ref['id']
+            rs_ref['name'] = rs_ref['id']
 
-        probes = params.get("healthMonitor",  None)
-        if probes != None:
-            for pr in probes:
-                prb = createProbe(pr['type'])
-                prb.loadFromDict(pr)
-                prb.sf_id = sf.id
-                prb.name = prb.id
-                self.probes.append(prb)
-                self.sf._probes.append(prb)
+            self.rs.append(rs_ref)
+            self.sf._rservers.append(rs_ref)
 
-        vips = params.get('virtualIps',  None)
+        for pr in probes_list:
+            probe_ref = db_api.probe_pack_extra(pr)
+            probe_ref['sf_id'] = sf_ref['id']
+            probe_ref['name'] = probe_ref['id']
 
-        if vips != None:
-            for vip in vips:
-                vs = virtualserver.VirtualServer()
-                vs.loadFromDict(vip)
-                vs.proto = lb.transport
-                vs.appProto = lb.protocol
-                vs.sf_id = sf.id
-                vs.lb_id = lb.id
-                vs.name = vs.id
-                self.vips.append(vs)
+            self.probes.append(probe_ref)
+            self.sf._probes.append(probe_ref)
 
-        stic = params.get("sessionPersistence",  None)
-        
-        if stic != None:
-            for st in stic:
-                st = createSticky(stic['type'])
-                st.loadFromDict(stic)
-                st.sf_id = sf.id
-                st.name = st.id
-                self.sf._sticky.append(st)
+        for vip in vips_list:
+            vs_ref = db_api.virtualserver_pack_extra(vip)
+            vs_ref['transport'] = lb_ref['extra']['transport']
+            vs_ref['appProto'] = lb_ref['protocol']
+            vs_ref['sf_id'] = sf_ref['id']
+            vs_ref['lb_id'] = lb_ref['id']
+            vs_ref['name'] = vs_ref['id']
+            self.vips.append(vs_ref)
+            self.vips.append(vs_ref)
+
+# NOTE(ash): broken
+#        if stic != None:
+#            for st in stic:
+#                st = createSticky(stic['type'])
+#                st.loadFromDict(stic)
+#                st.sf_id = sf.id
+#                st.name = st.id
+#                self.sf._sticky.append(st)
 
     def update(self):
-        store = balancer.storage.storage.Storage(self.conf)
-        wr = store.getWriter()
-        wr.updateObjectInTable(self.lb)
-        
+        db_api.loadbalancer_update(self.conf, self.lb['id'], self.lb)
+
         for st in self.sf._sticky:
-            wr.updateObjectInTable(st)
+            db_api.sticky_update(self.conf, st['id'], st)
         for rs in self.rs:
-            wr.updateObjectInTable(rs)
-
+            db_api.server_update(self.conf, rs['id'], rs)
         for pr in self.probes:
-            wr.updateObjectInTable(pr)
-
+            db_api.probe_update(self.conf, pr['id'], pr)
         for vip in self.vips:
-            wr.updateObjectInTable(vip)
+            db_api.virtualserver_update(self.conf, vip['id'], vip)
 
     def getLB(self):
         return self.lb
 
     def savetoDB(self):
-        store = balancer.storage.storage.Storage(self.conf)
-        wr = store.getWriter()
-
-        wr.writeLoadBalancer(self.lb)
-        wr.writeServerFarm(self.sf)
-        wr.writePredictor(self.sf._predictor)
+        lb_ref = db_api.loadbalancer_create(self.conf, self.lb)
+        sf_ref = db_api.serverfarm_create(self.conf, self.sf)
+        db_api.predictor_create(self.conf, self.sf._predictor)
 
         for rs in self.rs:
-            wr.writeRServer(rs)
+            db_api.server_create(self.conf, rs)
 
         for pr in self.probes:
-            wr.writeProbe(pr)
+            db_api.probe_create(self.conf, pr)
 
         for vip in self.vips:
-            wr.writeVirtualServer(vip)
+            db_api.virtualserver_create(self.conf, vip)
 
         for st in self.sf._sticky:
-            wr.writeSticky(st)
+            db_api.sticky_create(self.conf, st)
 
     def loadFromDB(self, lb_id):
-        store = balancer.storage.storage.Storage(self.conf)
-        rd = store.getReader()
-        self.lb = rd.getLoadBalancerById(lb_id)
-        self.sf = rd.getSFByLBid(lb_id)
-        sf_id = self.sf.id
-        predictor = rd.getPredictorBySFid(sf_id)
+        self.lb = db_api.loadbalancer_get(self.conf, lb_id)
+        self.sf = db_api.serverfarm_get_all_by_lb_id(self.conf, lb_id)[0]
+        sf_id = self.sf['id']
+        predictor = db_api.predictor_get_all_by_sf_id(self.conf, sf_id)[0]
         self.sf._predictor = predictor
-        self.rs = rd.getRServersBySFid(sf_id)
-        sticks = rd.getStickiesBySFid(sf_id)
+        self.rs = db_api.server_get_all_by_sf_id(self.conf, sf_id)
+        sticks = db_api.sticky_get_all_by_sf_id(self.conf, sf_id)
 
         for rs in self.rs:
             self.sf._rservers.append(rs)
-        self.probes = rd.getProbesBySFid(sf_id)
+        self.probes = db_api.probe_get_all_by_sf_id(sf_id)
         for prob in self.probes:
             self.sf._probes.append(prob)
-        self.vips = rd.getVIPsBySFid(sf_id)
+        self.vips = db_api.virtualserver_get_all_by_sf_id(sf_id)
         for st in sticks:
             self.sf._sticky.append(st)
 
     def removeFromDB(self):
-        store = balancer.storage.storage.Storage(self.conf)
-        dl = store.getDeleter()
-        lb_id = self.lb.id
-        sf_id = self.sf.id
-        dl.deleteLBbyID(lb_id)
-        dl.deleteSFbyLBid(lb_id)
-        dl.deletePredictorBySFid(sf_id)
+        lb_id = self.lb['id']
+        sf_id = self.sf['id']
+        db_api.loadbalancer_destroy(self.conf, lb_id)
+        db_api.serverfarm_destroy(self.conf, sf_id)
+        db_api.predictor_destroy_by_sf_id(self.conf, sf_id)
+        db_api.server_destroy_by_sf_id(self.conf, sf_id)
+        db_api.probe_destroy_by_sf_id(self.conf, sf_id)
+        db_api.virtualserver_destroy_by_sf_id(self.conf, sf_id)
+        db_api.sticky_destroy_by_sf_id(self.conf, sf_id)
 
-        dl.deleteRSsBySFid(sf_id)
-        dl.deleteProbesBySFid(sf_id)
-        dl.deleteVSsBySFid(sf_id)
-        dl.deleteStickiesBySFid(sf_id)
 
 #    def deploy(self,  driver,  context):
 #        #Step 1. Deploy server farm

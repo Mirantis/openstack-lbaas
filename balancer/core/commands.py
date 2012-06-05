@@ -20,7 +20,8 @@ import logging
 import types
 
 from balancer.common import utils
-from balancer.storage import storage
+from balancer.db import api as db_api
+#from balancer.storage import storage
 
 LOG = logging.getLogger(__name__)
 
@@ -102,39 +103,33 @@ def create_rserver(ctx, rs):
         # We can't create multiple RS with the same IP. So parent_id points to
         # RS which already deployed and has this IP
         LOG.debug("Creating rserver command execution with rserver: %s", rs)
-        LOG.debug("RServer parent_id: %s", rs.parent_id)
-        if rs.parent_id == "":
+        LOG.debug("RServer parent_id: %s", rs['parent_id'])
+        if rs['parent_id'] == "":
             ctx.device.createRServer(rs)
-            rs.deployed = 'True'
-            stor = storage.Storage(ctx.conf)
-            wr = stor.getWriter()
-            wr.updateDeployed(rs, 'True')
+            rs['deployed'] = 'True'
+            db_api.server_update(ctx.conf, rs['id'], rs)
         yield
     except Exception:
         ctx.device.deleteRServer(rs)
-        rs.deployed = 'False'
-        stor = storage.Storage(ctx.conf)
-        wr = stor.getWriter()
-        wr.updateDeployed(rs, 'False')
+        rs['deployed'] = 'False'
+        db_api.server_update(ctx.conf, rs['id'], rs)
         raise
 
 
 @ignore_exceptions
 def delete_rserver(ctx, rs):
-    store = storage.Storage(ctx.conf)
-    reader = store.getReader()
     rss = []
     LOG.debug("Got delete RS request")
-    if rs.parent_id != "" and utils.checkNone(rs.parent_id):
-        rss = reader.getRServersByParentID(rs.parent_id)
+    if rs['parent_id'] != "" and utils.checkNone(rs['parent_id']):
+        rss = db_api.server_get_all_by_parent_id(ctx.conf, rs['parent_id'])
         LOG.debug("List servers %s", rss)
         if len(rss) == 1:
-            parent_rs = reader.getRServerById(rs.parent_id)
+            parent_rs = db_api.server_get(ctx.conf, rs['parent_id'])
             ctx.device.deleteRServer(parent_rs)
     else:
         # rs1
         # We need to check if there are reals who reference this rs as a parent
-        rss = reader.getRServersByParentID(rs.id)
+        rss = db_api.server_get_all_by_parent_id(ctx.conf, rs['id'])
         LOG.debug("List servers %s", rss)
         if len(rss) == 0:
             ctx.device.deleteRServer(rs)
@@ -142,46 +137,36 @@ def delete_rserver(ctx, rs):
 
 def create_sticky(ctx, sticky):
     ctx.device.createStickiness(sticky)
-    sticky.deployed = 'True'
-    stor = storage.Storage(ctx.conf)
-    wr = stor.getWriter()
-    wr.updateDeployed(sticky, 'True')
+    sticky['deployed'] = 'True'
+    db_api.sticky_update(ctx.conf, sticky['id'], sticky)
 
 
 @ignore_exceptions
 def delete_sticky(ctx, sticky):
     ctx.device.deleteStickiness(sticky)
-    sticky.deployed = 'False'
-    stor = storage.Storage(ctx.conf)
-    wr = stor.getWriter()
-    wr.updateDeployed(sticky, 'False')
+    sticky['deployed'] = 'False'
+    db_api.sticky_update(ctx.conf, sticky['id'], sticky)
 
 
 @with_rollback
 def create_server_farm(ctx, sf):
     try:
         ctx.device.createServerFarm(sf)
-        sf.deployed = 'True'
-        stor = storage.Storage(ctx.conf)
-        wr = stor.getWriter()
-        wr.updateDeployed(sf, 'True')
+        sf['deployed'] = 'True'
+        db_api.serverfarm_update(ctx.conf, sf['id'], sf)
         yield
     except Exception:
         ctx.device.deleteServerFarm(sf)
-        sf.deployed = 'False'
-        stor = storage.Storage(ctx.conf)
-        wr = stor.getWriter()
-        wr.updateDeployed(sf, 'False')
+        sf['deployed'] = 'False'
+        db_api.serverfarm_update(ctx.conf, sf['id'], sf)
         raise
 
 
 @ignore_exceptions
 def delete_server_farm(ctx, sf):
     ctx.device.deleteServerFarm(sf)
-    sf.deployed = 'False'
-    stor = storage.Storage(ctx.conf)
-    wr = stor.getWriter()
-    wr.updateDeployed(sf, 'False')
+    sf['deployed'] = 'False'
+    db_api.serverfarm_update(ctx.conf, sf['id'], sf)
 
 
 @with_rollback
@@ -207,27 +192,21 @@ def delete_rserver_from_server_farm(ctx, server_farm, rserver):
 def create_probe(ctx, probe):
     try:
         ctx.device.createProbe(probe)
-        probe.deployed = 'True'
-        stor = storage.Storage(ctx.conf)
-        wr = stor.getWriter()
-        wr.updateDeployed(probe, 'True')
+        probe['deployed'] = 'True'
+        db_api.probe_update(ctx.conf, probe['id'], probe)
         yield
     except Exception:
         ctx.device.deleteProbe(probe)
-        probe.deployed = 'False'
-        stor = storage.Storage(ctx.conf)
-        wr = stor.getWriter()
-        wr.updateDeployed(probe, 'False')
+        probe['deployed'] = 'False'
+        db_api.probe_update(ctx.conf, probe['id'], probe)
         raise
 
 
 @ignore_exceptions
 def delete_probe(ctx, probe):
     ctx.device.deleteProbe(probe)
-    probe.deployed = 'False'
-    stor = storage.Storage(ctx.conf)
-    wr = stor.getWriter()
-    wr.updateDeployed(probe, 'False')
+    probe['deployed'] = 'False'
+    db_api.probe_update(ctx.conf, probe['id'], probe)
 
 
 @with_rollback
@@ -257,27 +236,21 @@ def suspend_rserver(ctx, server_farm, rserver):
 def create_vip(ctx, vip, server_farm):
     try:
         ctx.device.createVIP(vip, server_farm)
-        vip.deployed = 'True'
-        stor = storage.Storage(ctx.conf)
-        wr = stor.getWriter()
-        wr.updateDeployed(vip, 'True')
+        vip['deployed'] = 'True'
+        db_api.virtualserver_update(ctx.conf, vip['id'], vip)
         yield
     except Exception:
         ctx.device.deleteVIP(vip, server_farm)
-        vip.deployed = 'False'
-        stor = storage.Storage(ctx.conf)
-        wr = stor.getWriter()
-        wr.updateDeployed(vip, 'False')
+        vip['deployed'] = 'False'
+        db_api.virtualserver_update(ctx.conf, vip['id'], vip)
         raise
 
 
 @ignore_exceptions
 def delete_vip(ctx, vip):
     ctx.device.deleteVIP(vip)
-    vip.deployed = 'False'
-    stor = storage.Storage(ctx.conf)
-    wr = stor.getWriter()
-    wr.updateDeployed(vip, 'False')
+    vip['deployed'] = 'False'
+    db_api.virtualserver_update(ctx.conf, vip['id'], vip)
 
 
 def create_loadbalancer(ctx, balancer):
