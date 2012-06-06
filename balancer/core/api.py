@@ -40,7 +40,7 @@ def asynchronous(func):
     @functools.wraps(func)
     def _inner(*args, **kwargs):
         if kwargs.pop('async', True):
-            eventlet.spawn(func, args, kwargs)
+            eventlet.spawn(func, *args, **kwargs)
         else:
             return func(*args, **kwargs)
 

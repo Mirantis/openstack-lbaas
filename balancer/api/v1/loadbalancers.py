@@ -120,7 +120,7 @@ class Controller(object):
     def show(self, req, **args):
         try:
             logger.debug("Got loadbalancerr info request. Request: %s", req)
-            result = core_api.lb_get_data(self._conf, args['id'])
+            result = core_api.lb_get_data(self.conf, args['id'])
             return {'loadbalancer': result}
         except exception.NotFound:
             msg = "Image with identifier %s not found" % args['id']
@@ -148,7 +148,7 @@ class Controller(object):
     def update(self, req, **args):
         try:
             logger.debug("Got update request. Request: %s", req)
-            core_api.update_lb(self._conf, args['id'], args['body'])
+            core_api.update_lb(self.conf, args['id'], args['body'])
             return {'loadbalancers': "OK"}
         except exception.NotFound:
             msg = "Image with identifier %s not found" % image_id
@@ -204,7 +204,7 @@ class Controller(object):
     def changeNodeStatus(self, req, **args):
         try:
             logger.debug("Got changeNodeStatus request. Request: %s", req)
-            msg = core_api.lb_change_node_status(self._conf, args['id'],
+            msg = core_api.lb_change_node_status(self.conf, args['id'],
                                                              args['nodeID'],
                                                              args['status'])
             return msg
@@ -220,7 +220,7 @@ class Controller(object):
     def updateNode(self, req, **args):
         try:
             logger.debug("Got updateNode request. Request: %s", req)
-            msg = core_api.lb_update_node(self._conf, args['id'],
+            msg = core_api.lb_update_node(self.conf, args['id'],
                                           args['nodeID'], args['body']['node'])
             return msg
         except exception.NotFound:
@@ -294,7 +294,7 @@ class Controller(object):
     def addSticky(self, req, **args):
         try:
             logger.debug("Got addSticky request. Request: %s", req)
-            st_id = core_api.lb_add_sticky(self._conf, args['id'],
+            st_id = core_api.lb_add_sticky(self.conf, args['id'],
                                            args['body']['sessionPersistence'])
             return "sticky: %s" % st_id
         except exception.NotFound:
