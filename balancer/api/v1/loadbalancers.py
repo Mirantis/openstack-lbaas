@@ -65,10 +65,7 @@ class Controller(object):
             logger.debug("Got index request. Request: %s", req)
             tenant_id = req.headers.get('X-Tenant-Id', "")
             tenant_name = req.headers.get('X-Tenant-Name', "")
-            param = {}
-            param['tenant_id'] = tenant_id
-            param['tenant_name'] = tenant_name
-            result = core_api.lb_get_index(self.conf, **param)
+            result = core_api.lb_get_index(self.conf, tenant_id)
             return {'loadbalancers': result}
 
         except exception.NotFound:
