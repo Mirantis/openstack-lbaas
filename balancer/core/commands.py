@@ -21,7 +21,6 @@ import types
 
 from balancer.common import utils
 from balancer.db import api as db_api
-#from balancer.storage import storage
 
 LOG = logging.getLogger(__name__)
 

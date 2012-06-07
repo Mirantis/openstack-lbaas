@@ -31,7 +31,6 @@ from balancer.loadbalancers.realserver import RealServer
 from balancer.loadbalancers.vserver import Balancer
 from balancer.loadbalancers.vserver import createSticky, createProbe,\
                                            createPredictor
-#from balancer.storage.storage import Storage
 from balancer.db import api as db_api
 
 
@@ -229,8 +228,6 @@ def lb_delete_node(conf, lb_id, lb_node_id):
     balancer_instance = Balancer(conf)
     #Step 1: Load balancer from DB
     balancer_instance.loadFromDB(lb_id)
-
-    #Step 2: Get reader and writer
     #Step 3: Get RS object from DB
     rs = db_api.server_get(conf, lb_node_id)
     #Step 4: Delete RS from DB
