@@ -21,8 +21,9 @@ import threading
 
 from openstack.common import exception
 from balancer.devices.device import LBDevice
-from balancer.storage.storage import *
+#from balancer.storage.storage import *
 from balancer.common.utils import Singleton
+from balancer.db import api as db_api
 
 logger = logging.getLogger(__name__)
 
@@ -30,17 +31,15 @@ logger = logging.getLogger(__name__)
 class Scheduller(object):
 
     def __init__(self, conf):
+        self.conf = conf
         self._device_map = {}
-        self._list = None
-        self.store = Storage(conf)
-        reader = self.store.getReader()
-        list = reader.getDevices()
-        self._list = list
+        devices = db_api.device_get_all(conf)
+        self._list = devices
         self._last_selected = 0
         self._device_count = 0
         self._lock = threading.RLock()
-        for device in list:
-            self._device_map[device.id] = device
+        for device in devices:
+            self._device_map[device['id']] = device
             self._device_count +=1
 
     def getDevice(self):
@@ -60,12 +59,13 @@ class Scheduller(object):
             self._lock.release()
             
 
-    def getDeviceByLBid(self, id):
-        rd = self.store.getReader()
-        self._device_map = rd.getDeviceByLBid(id)
-        return self._device_map
+# NOTE(ash): broken, unused method
+#    def getDeviceByLBid(self, id):
+#        rd = self.store.getReader()
+#        self._device_map = rd.getDeviceByLBid(id)
+#        return self._device_map
 
-    def getDeviceByID(self,  id):
+    def getDeviceByID(self, id):
         if id == None:
             dev = self.getDevice()
         else:
@@ -77,7 +77,7 @@ class Scheduller(object):
     def getDevices(self):
         return self._list
 
-    def addDevice(self,  device):
-        self._device_map[device.id] = device
+    def addDevice(self, device):
+        self._device_map[device['id']] = device
         self._list.append(device)
         self._device_count +=1

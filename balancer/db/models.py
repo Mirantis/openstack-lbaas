@@ -63,6 +63,7 @@ class LoadBalancer(DictBase, Base):
                         nullable=False)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow,
                         nullable=False)
+    deployed = Column(String(40))
     extra = Column(JsonBlob())
 
     device = relationship(Device,
@@ -79,6 +80,7 @@ class ServerFarm(DictBase, Base):
     name = Column(String(255))
     type = Column(String(255))
     status = Column(String(255))
+    deployed = Column(String(40))
     extra = Column(JsonBlob())
 
     loadbalancer = relationship(LoadBalancer,
@@ -98,6 +100,7 @@ class VirtualServer(DictBase, Base):
     mask = Column(String(255))
     port = Column(String(255))
     status = Column(String(255))
+    deployed = Column(String(40))
     extra = Column(JsonBlob())
 
     serverfarm = relationship(ServerFarm,
@@ -121,7 +124,7 @@ class Server(DictBase, Base):
     weight = Column(Integer)
     status = Column(String(255))
     parent_id = Column(Integer)
-    deployed = Column(Boolean, default=False)
+    deployed = Column(String(40))
     vm_id = Column(Integer)
     extra = Column(JsonBlob())
 
@@ -137,6 +140,7 @@ class Probe(DictBase, Base):
     sf_id = Column(String(32), ForeignKey('serverfarm.id'))
     name = Column(String(255))
     type = Column(String(255))
+    deployed = Column(String(40))
     extra = Column(JsonBlob())
 
     serverfarm = relationship(ServerFarm,
@@ -152,6 +156,7 @@ class Sticky(DictBase, Base):
     sf_id = Column(String(32), ForeignKey('serverfarm.id'))
     name = Column(String(255))
     type = Column(String(255))
+    deployed = Column(String(40))
     extra = Column(JsonBlob())
 
     serverfarm = relationship(ServerFarm,
@@ -166,6 +171,7 @@ class Predictor(DictBase, Base):
     id = Column(String(32), primary_key=True, default=create_uuid)
     sf_id = Column(String(32), ForeignKey('serverfarm.id'))
     type = Column(String(255))
+    deployed = Column(String(40))
     extra = Column(JsonBlob())
 
     serverfarm = relationship(ServerFarm,

@@ -27,10 +27,10 @@ logger = logging.getLogger(__name__)
 class XmlSender:
     def __init__(self, device_ref):
         #port 10443
-        self.url = "https://%s:%s/bin/xml_agent" % (device_ref.ip,
-                                                    device_ref.port)
+        self.url = "https://%s:%s/bin/xml_agent" % (device_ref['ip'],
+                                                    device_ref['port'])
         base64str = base64.encodestring('%s:%s' % \
-            (device_ref.login, device_ref.password))[:-1]
+            (device_ref['login'], device_ref['password']))[:-1]
 
         self.authheader = "Basic %s" % base64str
 

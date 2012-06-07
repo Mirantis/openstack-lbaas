@@ -31,7 +31,6 @@ Base = declarative_base()
 
 
 class DictBase(object):
-
     def to_dict(self):
         return dict(self.iteritems())
 

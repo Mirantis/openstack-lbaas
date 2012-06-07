@@ -19,9 +19,38 @@
 #    under the License.
 """Database storage API."""
 
+import functools
+
 from balancer.db import models
 from balancer.db.session import get_session
 from balancer import exception
+
+
+# XXX(ash): pack_ and unpack_ are helper methods to compatibility
+def pack_extra(model, values):
+    obj_ref = model()
+    obj_dict = values.copy()
+    for name in obj_ref:
+        if name != 'extra' and name in obj_dict:
+            obj_ref[name] = obj_dict.pop(name)
+    obj_ref['extra'] = obj_dict
+    return obj_ref
+
+
+def unpack_extra(obj_ref):
+    obj_dict = dict(obj_ref.iteritems())
+    obj_dict.update(obj_dict.pop('extra', None) or {})
+    return obj_dict
+
+
+device_pack_extra = functools.partial(pack_extra, models.Device)
+loadbalancer_pack_extra = functools.partial(pack_extra, models.LoadBalancer)
+serverfarm_pack_extra = functools.partial(pack_extra, models.ServerFarm)
+virtualserver_pack_extra = functools.partial(pack_extra, models.VirtualServer)
+server_pack_extra = functools.partial(pack_extra, models.Server)
+probe_pack_extra = functools.partial(pack_extra, models.Probe)
+sticky_pack_extra = functools.partial(pack_extra, models.Sticky)
+predictor_pack_extra = functools.partial(pack_extra, models.Predictor)
 
 # Device
 
@@ -55,7 +84,7 @@ def device_update(conf, device_id, values):
     with session.begin():
         device_ref = device_get(conf, device_id, session=session)
         device_ref.update(values)
-        session.add(device_ref)
+        return device_ref
 
 
 def device_destroy(conf, device_id):
@@ -108,7 +137,7 @@ def loadbalancer_update(conf, lb_id, values):
     with session.begin():
         lb_ref = loadbalancer_get(conf, lb_id, session=session)
         lb_ref.update(values)
-        session.add(lb_ref)
+        return lb_ref
 
 
 def loadbalancer_destroy(conf, lb_id):
@@ -153,7 +182,7 @@ def probe_update(conf, probe_id, values):
     with session.begin():
         probe_ref = probe_get(conf, probe_id, session=session)
         probe_ref.update(values)
-        session.add(probe_ref)
+        return probe_ref
 
 
 def probe_destroy(conf, probe_id):
@@ -161,6 +190,12 @@ def probe_destroy(conf, probe_id):
     with session.begin():
         probe_ref = probe_get(conf, probe_id, session=session)
         session.delete(probe_ref)
+
+
+def probe_destroy_by_sf_id(conf, sf_id, session=None):
+    session = session or get_session(conf)
+    with session.begin(subtransactions=True):
+        session.query(models.Sticky).filter_by(sf_id=sf_id).delete()
 
 # Sticky
 
@@ -198,7 +233,7 @@ def sticky_update(conf, sticky_id, values):
     with session.begin():
         sticky_ref = sticky_get(conf, sticky_id, session=session)
         sticky_ref.update(values)
-        session.add(sticky_ref)
+        return sticky_ref
 
 
 def sticky_destroy(conf, sticky_id):
@@ -206,6 +241,12 @@ def sticky_destroy(conf, sticky_id):
     with session.begin():
         sticky_ref = sticky_get(conf, sticky_id, session=session)
         session.delete(sticky_ref)
+
+
+def sticky_destroy_by_sf_id(conf, sf_id, session=None):
+    session = session or get_session(conf)
+    with session.begin(subtransactions=True):
+        session.query(models.Sticky).filter_by(sf_id=sf_id).delete()
 
 # Server
 
@@ -227,7 +268,7 @@ def server_get_by_address(conf, server_address):
     session = get_session(conf)
     server_ref = session.query(models.Server).\
                          filter_by(address=server_address).\
-                         filter_by(deployed=True).\
+                         filter_by(deployed='True').\
                          first()
     if not server_ref:
         raise exception.ServerNotFound(server_address=server_address)
@@ -260,7 +301,7 @@ def server_update(conf, server_id, values):
     with session.begin():
         server_ref = server_get(conf, server_id, session=session)
         server_ref.update(values)
-        session.add(server_ref)
+        return server_ref
 
 
 def server_destroy(conf, server_id):
@@ -268,6 +309,12 @@ def server_destroy(conf, server_id):
     with session.begin():
         server_ref = server_get(conf, server_id, session=session)
         session.delete(server_ref)
+
+
+def server_destroy_by_sf_id(conf, sf_id, session=None):
+    session = session or get_session(conf)
+    with session.begin(subtransactions=True):
+        session.query(models.Server).filter_by(sf_id=sf_id).delete()
 
 # ServerFarm
 
@@ -301,7 +348,7 @@ def serverfarm_update(conf, serverfarm_id, values):
     with session.begin():
         serverfarm_ref = serverfarm_get(conf, serverfarm_id, session=session)
         serverfarm_ref.update(values)
-        session.add(serverfarm_ref)
+        return serverfarm_ref
 
 
 def serverfarm_destroy(conf, serverfarm_id):
@@ -320,6 +367,7 @@ def predictor_get(conf, predictor_id, session=None):
     if not predictor_ref:
         raise exception.PredictorNotFound(predictor_id=predictor_id)
     return predictor_ref
+
 
 def predictor_get_all_by_sf_id(conf, sf_id):
     session = get_session(conf)
@@ -341,7 +389,7 @@ def predictor_update(conf, predictor_id, values):
     with session.begin():
         predictor_ref = predictor_get(conf, predictor_id, session=session)
         predictor_ref.update(values)
-        session.add(predictor_ref)
+        return predictor_ref
 
 
 def predictor_destroy(conf, predictor_id):
@@ -349,6 +397,12 @@ def predictor_destroy(conf, predictor_id):
     with session.begin():
         predictor_ref = predictor_get(conf, predictor_id, session=session)
         session.delete(predictor_ref)
+
+
+def predictor_destroy_by_sf_id(conf, sf_id, session=None):
+    session = session or get_session(conf)
+    with session.begin(subtransactions=True):
+        session.query(models.Predictor).filter_by(sf_id=sf_id).delete()
 
 # VirtualServer
 
@@ -382,7 +436,7 @@ def virtualserver_update(conf, vserver_id, values):
     with session.begin():
         vserver_ref = virtualserver_get(conf, vserver_id, session=session)
         vserver_ref.update(values)
-        session.add(vserver_ref)
+        return vserver_ref
 
 
 def virtualserver_destroy(conf, vserver_id):
@@ -390,3 +444,9 @@ def virtualserver_destroy(conf, vserver_id):
     with session.begin():
         vserver_ref = virtualserver_get(conf, vserver_id, session=session)
         session.delete(vserver_ref)
+
+
+def virtualserver_destroy_by_sf_id(conf, sf_id, session=None):
+    session = session or get_session(conf)
+    with session.begin(subtransactions=True):
+        session.query(models.VirtualServer).filter_by(sf_if=sf_id).delete()
