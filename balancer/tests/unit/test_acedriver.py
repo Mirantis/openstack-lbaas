@@ -17,7 +17,6 @@
 import unittest
 
 from balancer.drivers.cisco_ace.ace_5x_driver import AceDriver
-from balancer.drivers.cisco_ace.Context import Context
 from balancer.drivers.cisco_ace.XmlSender import XmlSender
 from balancer.loadbalancers.realserver import RealServer
 from balancer.loadbalancers.serverfarm import ServerFarm
