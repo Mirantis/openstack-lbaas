@@ -1,23 +1,32 @@
-import balancer.drivers.cisco_ace.ace_driver
-import balancer.drivers.haproxy.HaproxyDriver
-
+from balancer.common import cfg
+from balancer.common import utils
 from balancer.db import api as db_api
 
+drivers_opt = cfg.ListOpt('device_drivers',
+        default=[
+            'ace=balancer.drivers.cisco_ace.ace_driver.AceDriver',
+            'haproxy=balancer.drivers.haproxy.HaproxyDriver.HaproxyDriver',
+        ],
+        help="Balancer devices' drivers.")
 
 DEVICE_DRIVERS = {}
 
 
-# TODO(yorik-sar): add dynamic loading and config
 def get_device_driver(conf, device_id):
     try:
         return DEVICE_DRIVERS[device_id]
     except KeyError:
+        conf.register_opt(drivers_opt)
+        drivers = {}
+        for driver_str in conf.device_drivers:
+            driver_type, _sep, driver = driver_str.partition('=')
+            drivers[driver_type.lower] = utils.import_class(driver)
+
         device_ref = db_api.device_get(conf, device_id)
-        if device_ref['type'].lower() == "ace":
-            cls = balancer.drivers.cisco_ace.ace_driver.AceDriver
-        elif device_ref['type'].lower() == "haproxy":
-            cls = balancer.drivers.haproxy.HaproxyDriver.HaproxyDriver
-        else:
+        try:
+            cls = drivers[device_ref['type'].lower()]
+        except KeyError:
             raise NotImplementedError("Driver not found for type %s" % \
                                         (device_ref['type'],))
-        return cls(conf, device_ref)
+        DEVICE_DRIVERS[device_id] = cls(conf, device_ref)
+        return DEVICE_DRIVERS[device_id]
