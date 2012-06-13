@@ -15,10 +15,7 @@ def get_device_driver(conf, device_id):
     except KeyError:
         device_ref = db_api.device_get(conf, device_id)
         if device_ref['type'].lower() == "ace":
-            if device_ref['version'].lower().startswith('a4'):
-                cls = balancer.drivers.cisco_ace.ace_4x_driver.AceDriver
-            else:
-                cls = balancer.drivers.cisco_ace.ace_5x_driver.AceDriver
+            cls = balancer.drivers.cisco_ace.ace_driver.AceDriver
         elif device_ref['type'].lower() == "haproxy":
             cls = balancer.drivers.haproxy.HaproxyDriver.HaproxyDriver
         else:
