@@ -21,7 +21,7 @@ import threading
 
 from balancer.common.utils import Singleton
 from openstack.common import exception
-from  balancer.core.scheduller import Scheduller
+from balancer.core.scheduller import Scheduller
 
 logger = logger = logging.getLogger(__name__)
 

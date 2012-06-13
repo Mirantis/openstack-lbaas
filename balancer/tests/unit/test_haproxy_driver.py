@@ -6,12 +6,12 @@ import shutil
 import filecmp
 
 from balancer.drivers.BaseDriver import BaseDriver
-from balancer.drivers.haproxy.HaproxyDriver import  HaproxyConfigFile
-from balancer.drivers.haproxy.HaproxyDriver import  HaproxyFronted
-from balancer.drivers.haproxy.HaproxyDriver import  HaproxyBackend
-from balancer.drivers.haproxy.HaproxyDriver import  HaproxyRserver
-from balancer.drivers.haproxy.HaproxyDriver import  HaproxyListen
-from balancer.drivers.haproxy.HaproxyDriver import  HaproxyDriver
+from balancer.drivers.haproxy.HaproxyDriver import HaproxyConfigFile
+from balancer.drivers.haproxy.HaproxyDriver import HaproxyFronted
+from balancer.drivers.haproxy.HaproxyDriver import HaproxyBackend
+from balancer.drivers.haproxy.HaproxyDriver import HaproxyRserver
+from balancer.drivers.haproxy.HaproxyDriver import HaproxyListen
+from balancer.drivers.haproxy.HaproxyDriver import HaproxyDriver
 from balancer.drivers.haproxy.RemoteControl import RemoteConfig
 from balancer.drivers.haproxy.RemoteControl import RemoteService
 from balancer.drivers.haproxy.RemoteControl import RemoteInterface
@@ -20,6 +20,7 @@ from balancer.loadbalancers.serverfarm import ServerFarm
 from balancer.loadbalancers.virtualserver import VirtualServer
 from balancer.loadbalancers.realserver import RealServer
 from balancer.loadbalancers.probe import HTTPprobe
+
 
 class HAproxyDriverTestCase (unittest.TestCase):
 
@@ -32,7 +33,7 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.basedriver.device_ref.interface = 'eth0'
         self.basedriver.device_ref.remotepath = '/etc/haproxy'
         self.basedriver.device_ref.remotename = 'haproxy.cfg'
-	self.driver = HaproxyDriver(self.basedriver)
+        self.driver = HaproxyDriver(self.basedriver)
         #
         self.frontend = HaproxyFronted()
         self.frontend.bind_address = '1.1.1.1'
@@ -74,33 +75,32 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.rserver.weight = '8'
         self.rserver.maxCon = 30000
         #
-        self.probe= HTTPprobe()
+        self.probe = HTTPprobe()
         self.probe.type = "http"
         self.probe.requestMethodType = "GET"
-        self.probe.requestHTTPurl  = "/index.html"
-        self.probe.minExpectStatus  = "200"
-
+        self.probe.requestHTTPurl = "/index.html"
+        self.probe.minExpectStatus = "200"
 
     def test_AddHTTPProbe(self):
         self.driver.addProbeToSF(self.server_farm,  self.probe)
         self.assertTrue(True)
-    
+
     def test_DelHTTPProbe(self):
         self.driver.deleteProbeFromSF(self.server_farm,  self.probe)
-        self.assertTrue(True)        
-        
+        self.assertTrue(True)
+
     def test_AddLinesToBackendBlock(self):
         test = HaproxyConfigFile("/tmp/haproxy.cfg")
         NewLines = ["option httpchk",  "http-check expect status 200"]
         test.AddLinesToBackendBlock(self.backend, NewLines)
         self.assertTrue(True)
-        
+
     def test_DeleteLinesTFromBackendBlock(self):
         test = HaproxyConfigFile("/tmp/haproxy.cfg")
         DeletedLines = ["option httpchk",  "http-check expect status 200"]
         test.DeleteLinesFromBackendBlock(self.backend, DeletedLines)
         self.assertTrue(True)
-    
+
     def test_IPaddressAdd(self):
         interface = RemoteInterface(self.frontend)
         interface.addIP()
@@ -147,7 +147,7 @@ class HAproxyDriverTestCase (unittest.TestCase):
     def test_getRServerStatistics(self):
         self.driver.getStatistics(self.server_farm,  self.rserver)
         self.assertTrue(True)
-        
+
     def test_getSFStatistics(self):
         self.rserver.name = 'BACKEND'
         self.driver.getStatistics(self.server_farm,  self.rserver)

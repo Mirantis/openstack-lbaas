@@ -104,7 +104,7 @@ probe_echoTCP.receiveTimeout = 10
 probe_echoTCP.destIP = "1.1.1.1"
 probe_echoTCP.isRouted = True
 probe_echoTCP.port = "500"
-probe_echoTCP.tcpConnTerm= True
+probe_echoTCP.tcpConnTerm = True
 probe_echoTCP.openTimeout = 10
 
 probe_finger = FINGERprobe()
@@ -121,7 +121,7 @@ probe_finger.receiveTimeout = 10
 probe_finger.destIP = "1.1.1.1"
 probe_finger.isRouted = True
 probe_finger.port = "501"
-probe_finger.tcpConnTerm= None
+probe_finger.tcpConnTerm = None
 probe_finger.openTimeout = 1
 
 probe_ftp = FTPprobe()
@@ -137,7 +137,7 @@ probe_ftp.receiveTimeout = 15
 probe_ftp.destIP = "1.1.1.1"
 probe_ftp.isRouted = True
 probe_ftp.port = "502"
-probe_ftp.tcpConnTerm= True
+probe_ftp.tcpConnTerm = True
 probe_ftp.openTimeout = 65535
 
 probe_http = HTTPprobe()
@@ -382,7 +382,7 @@ probe_tcp.passDetectCount = 5
 probe_tcp.receiveTimeout = 15
 probe_tcp.destIP = "1.1.1.1"
 probe_tcp.isRouted = True
-probe_tcp.tcpConnTerm= True
+probe_tcp.tcpConnTerm = True
 probe_tcp.openTimeout = 60
 probe_tcp.expectRegExp = ".*"
 probe_tcp.expectRegExpOffset = 500
@@ -400,7 +400,7 @@ probe_telnet.receiveTimeout = 15
 probe_telnet.destIP = "1.1.1.1"
 probe_telnet.isRouted = True
 probe_telnet.port = "513"
-probe_telnet.tcpConnTerm= True
+probe_telnet.tcpConnTerm = True
 probe_telnet.openTimeout = 60
 
 probe_udp = UDPprobe()
@@ -588,7 +588,7 @@ vip_sticky.VLAN = [2]
 class Ace_5x_DriverTestCase(unittest.TestCase):
     def test_01a_createRServer_typeHost(self):
         print driver.createRServer(test_context, rs_host)
-    
+
     def test_01b_createRServer_typeRedirect(self):
         print driver.createRServer(test_context, rs_redirect)
 

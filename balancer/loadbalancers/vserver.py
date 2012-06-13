@@ -200,22 +200,23 @@ class Balancer():
 
 
 def createProbe(probe_type):
-    probeDict = {'DNS': probe.DNSprobe(), 'ECHO TCP': probe.ECHOTCPprobe(),
-                'ECHO UDP': probe.ECHOUDPprobe(), 'FINGER': probe.FINGERprobe(),
-                'FTP': probe.FTPprobe(), 'HTTPS': probe.HTTPSprobe(),
-                'HTTP': probe.HTTPprobe(), 'ICMP': probe.ICMPprobe(),
-                'IMAP': probe.IMAPprobe(), 'POP': probe.POPprobe(),
-                'RADIUS': probe.RADIUSprobe(), 'RTSP': probe.RTSPprobe(),
-                'SCRIPTED': probe.SCRIPTEDprobe(),
-                'SIP TCP': probe.SIPTCPprobe(),
-                'SIP UDP': probe.SIPUDPprobe(), 'SMTP': probe.SMTPprobe(),
-                'SNMP': probe.SNMPprobe(), 'CONNECT': probe.TCPprobe(),
-                'TELNET': probe.TELNETprobe(), 'UDP': probe.UDPprobe(),
-                'VM': probe.VMprobe()}
+    probeDict = {
+        'DNS': probe.DNSprobe(), 'ECHO TCP': probe.ECHOTCPprobe(),
+        'ECHO UDP': probe.ECHOUDPprobe(), 'FINGER': probe.FINGERprobe(),
+        'FTP': probe.FTPprobe(), 'HTTPS': probe.HTTPSprobe(),
+        'HTTP': probe.HTTPprobe(), 'ICMP': probe.ICMPprobe(),
+        'IMAP': probe.IMAPprobe(), 'POP': probe.POPprobe(),
+        'RADIUS': probe.RADIUSprobe(), 'RTSP': probe.RTSPprobe(),
+        'SCRIPTED': probe.SCRIPTEDprobe(),
+        'SIP TCP': probe.SIPTCPprobe(),
+        'SIP UDP': probe.SIPUDPprobe(), 'SMTP': probe.SMTPprobe(),
+        'SNMP': probe.SNMPprobe(), 'CONNECT': probe.TCPprobe(),
+        'TELNET': probe.TELNETprobe(), 'UDP': probe.UDPprobe(),
+        'VM': probe.VMprobe()}
     obj = probeDict.get(probe_type,  None)
     if obj == None:
-        raise openstack.common.exception.Invalid("Can't create health \
-			   monitoring probe of type %s" % probe_type)
+        raise openstack.common.exception.Invalid("Can't create health "
+                "monitoring probe of type %s" % probe_type)
     return obj.createSame()
 
 

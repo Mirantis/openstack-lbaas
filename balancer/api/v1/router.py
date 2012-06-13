@@ -45,7 +45,8 @@ class API(wsgi.Router):
 
         mapper.connect("/loadbalancers/", controller=lb_resource, \
         action="index")
-        mapper.connect("/loadbalancers/find_for_VM/{vm_id}", controller=lb_resource,
+        mapper.connect("/loadbalancers/find_for_VM/{vm_id}",
+                       controller=lb_resource,
                        action="findLBforVM", conditions=dict(method=["GET"]))
 
         mapper.connect("/loadbalancers/{id}", controller=lb_resource,
@@ -120,18 +121,17 @@ class API(wsgi.Router):
         #               action="device_status")
         mapper.connect("/devices/{id}/info", controller=device_resource,
                        action="device_info")
-        
 
         mapper.connect("/devices/",
                        controller=device_resource,
                        action="create",
                        conditions=dict(method=["POST"]))
-        
 
         # TODO(yorik-sar): tasks are broken, there is no processing anymore
         #tasks_resource = tasks.create_resource(self.conf)
         #mapper.resource("tasks", "tasks", controller=tasks_resource,
         #                collection={'detail': 'GET'})
-        #mapper.connect("/service/processing", controller=tasks_resource, action="index_processing")
+        #mapper.connect("/service/processing", controller=tasks_resource,
+        #               action="index_processing")
 
         super(API, self).__init__(mapper)

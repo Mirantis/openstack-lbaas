@@ -17,8 +17,8 @@
 
 import logging
 
-import  balancer.loadbalancers.loadbalancer
-from balancer.storage.storage   import *
+import balancer.loadbalancers.loadbalancer
+from balancer.storage.storage import *
 from balancer.common.utils import Singleton
 
 

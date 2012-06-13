@@ -50,12 +50,12 @@ class V1Client(base_client.BaseClient):
         return data
 
     def get_algorithms(self, **kwargs):
-        algorithms = ["RoundRobin",  "LeastConnections",  "LeastLoaded",
+        algorithms = ["RoundRobin", "LeastConnections", "LeastLoaded",
 "LeastBandwidth"]
         return algorithms
 
     def get_probe_types(self, **kwargs):
-        probes = ["CONNECT",  "HTTP",  "HTTPS",  "ICMP"]
+        probes = ["CONNECT", "HTTP", "HTTPS", "ICMP"]
         return probes
 
     def get_loadbalancer_details(self, lb_id):
@@ -70,85 +70,89 @@ class V1Client(base_client.BaseClient):
 
     def create_lb(self, body):
         post_body = json.dumps(body)
-        data = self.do_request("POST", "loadbalancers",  post_body,
+        data = self.do_request("POST", "loadbalancers", post_body,
                               {'content-type': 'application/json'})
         return data
-        
+
     def get_nodes_for_lb(self, lb_id):
         res = self.do_request("GET", "loadbalancers/%s/nodes" % lb_id)
         data = json.loads(res.read())['nodes']
         return data
-        
-    def get_balancers_with_vm(self,  vm_id):
+
+    def get_balancers_with_vm(self, vm_id):
         res = self.do_request("GET", "loadbalancers/find_for_VM/%s" % vm_id)
         data = json.loads(res.read())['loadbalancers']
         return data
-        
-    def activate_node(self,  node_id,  lb_id):
-        res = self.do_request("PUT", "/loadbalancers/%s/nodes/%s/inservice" % (lb_id,  node_id))
+
+    def activate_node(self, node_id, lb_id):
+        res = self.do_request("PUT",
+                "/loadbalancers/%s/nodes/%s/inservice" % (lb_id, node_id))
         return res
-        
-    def suspend_node(self,  node_id,  lb_id):
-        res = self.do_request("PUT", "/loadbalancers/%s/nodes/%s/outofservice" % (lb_id,  node_id))
-        return res        
-        
-    def activate_vmnode_in_lbs(self,   vmnode_id,  lb_id_list):
+
+    def suspend_node(self, node_id, lb_id):
+        res = self.do_request("PUT",
+                "/loadbalancers/%s/nodes/%s/outofservice" % (lb_id, node_id))
+        return res
+
+    def activate_vmnode_in_lbs(self, vmnode_id, lb_id_list):
         for lb_id in lb_id_list:
             nodes = self.get_nodes_for_lb(lb_id)
-            
+
             for node in nodes:
                 if node['vm_id'] == vmnode_id:
-                    self.activate_node(node['id'],  lb_id)
-            
-    
-    def suspend_vmnode_in_lbs(self,   vmnode_id,  lb_id_list):
+                    self.activate_node(node['id'], lb_id)
+
+    def suspend_vmnode_in_lbs(self, vmnode_id, lb_id_list):
         for lb_id in lb_id_list:
             nodes = self.get_nodes_for_lb(lb_id)
-            
+
             for node in nodes:
                 if node['vm_id'] == vmnode_id:
-                    self.suspend_node(node['id'],  lb_id)
-    
-    def activate_vmnode(self,  vmnode_id):
+                    self.suspend_node(node['id'], lb_id)
+
+    def activate_vmnode(self, vmnode_id):
         return balancerclient(request).activate_node(node_id)
-    
-    def suspend_vmnode(self,  vmnode_id):
+
+    def suspend_vmnode(self, vmnode_id):
         return balancerclient(request).suspend_node(node_id)
-       
-    def remove_vmnode_from_lbs(self,   vmnode_id,  lb_id_list):
-        return balancerclient(request).remove_node_from_lbs(node_id,  lb_id_list)
+
+    def remove_vmnode_from_lbs(self, vmnode_id, lb_id_list):
+        return balancerclient(request).remove_node_from_lbs(node_id,
+                                                            lb_id_list)
 
     def get_devices(self):
         res = self.do_request("GET", "devices")
         data = json.loads(res.read())['devices']
         return data
-        
-    def add_vmnode_to_lb(self,  node,  lb_id):
+
+    def add_vmnode_to_lb(self, node, lb_id):
         body = json.dumps(node)
-        res=self.do_request("PUT", "loadbalancers/%s/nodes" % lb_id, body,
-                        {'content-type': 'application/json'})
+        res = self.do_request("PUT", "loadbalancers/%s/nodes" % lb_id, body,
+                            {'content-type': 'application/json'})
         return res
-        
-    def delete_lb(self,  lb_id):
-        res=self.do_request("DELETE", "loadbalancers/%s" % lb_id)
+
+    def delete_lb(self, lb_id):
+        res = self.do_request("DELETE", "loadbalancers/%s" % lb_id)
         return res
-        
+
     def get_sticky_list(self):
-        list =["http-cookie",  "ip-netmask",  "http-header"]
+        list = ["http-cookie", "ip-netmask", "http-header"]
         return list
-    
-    def add_probe_to_lb(self,  probe,  lb_id):
+
+    def add_probe_to_lb(self, probe, lb_id):
         body = json.dumps(probe)
-        res=self.do_request("PUT", "loadbalancers/%s/healthMonitoring" % lb_id, body,
-                        {'content-type': 'application/json'})
+        res = self.do_request("PUT",
+                            "loadbalancers/%s/healthMonitoring" % lb_id, body,
+                            {'content-type': 'application/json'})
         return True
-        
-    def add_sticky_to_lb(self,  sticky,  lb_id):
+
+    def add_sticky_to_lb(self, sticky, lb_id):
         body = json.dumps(sticky)
-        res=self.do_request("PUT", "loadbalancers/%s/sessionPersistence" % lb_id, body,
+        res = self.do_request("PUT",
+                        "loadbalancers/%s/sessionPersistence" % lb_id, body,
                         {'content-type': 'application/json'})
         return True
-        
+
     def add_image(self, image_meta=None, image_data=None, features=None):
         """
         Tells Glance about an image's metadata as well

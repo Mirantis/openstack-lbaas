@@ -108,7 +108,8 @@ def install_dependencies(venv=VENV):
 
     # Tell the virtual env how to "import glance"
     py_ver = _detect_python_version(venv)
-    pthfile = os.path.join(venv, "lib", py_ver, "site-packages", "balancer.pth")
+    pthfile = os.path.join(venv, "lib", py_ver,
+                           "site-packages", "balancer.pth")
     f = open(pthfile, 'w')
     f.write("%s\n" % ROOT)
 

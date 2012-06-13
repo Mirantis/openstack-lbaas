@@ -107,7 +107,7 @@ class BaseDriver(object):
     def deleteVIP(self, vip):
         pass
 
-    def getStatistics (self, serverfarm, rserver):
+    def getStatistics(self, serverfarm, rserver):
         pass
 
 

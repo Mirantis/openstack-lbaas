@@ -18,6 +18,7 @@
 from balancer.core.serializeable import Serializeable
 from balancer.core.uniqueobject import UniqueObject
 
+
 class Sticky(Serializeable,  UniqueObject):
     def __init__(self):
         Serializeable.__init__(self)

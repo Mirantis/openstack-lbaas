@@ -19,6 +19,7 @@
 #    under the License.
 """Balancer base exception handling."""
 
+
 class NotFound(Exception):
     message = 'Resource not found.'
 
@@ -45,7 +46,6 @@ class StickyNotFound(NotFound):
 
 class ServerNotFound(NotFound):
     message = 'Server not found'
-
 
 
 class ServerFarmNotFound(NotFound):

@@ -8,11 +8,13 @@ from suds.client import Client
 
 logger = logging.getLogger(__name__)
 
+
 class ANMSpecificContext(Context):
     def __init__(self, ip, port, login, password, contextName):
         super(ANMSpecificContext, self).__init__(ip, port, login, password)
         self.contextName = contextName
         self.templateInstances = {}
+
 
 class ANMDriver(AceDriver):
     def __init__(self, anmIp, anmLogin, anmPassword):
@@ -20,12 +22,16 @@ class ANMDriver(AceDriver):
         self.anmIp = anmIp
         self.anmLogin = anmLogin
         self.anmPassword = anmPassword
-        self.operationClient = Client("http://%s:8080/anm/OperationManager?wsdl" %self.anmIp)
-        self.templateClient = Client("http://%s:8080/anm/ApplicationTemplateManager?wsdl" %self.anmIp)
+        self.operationClient = Client(
+            "http://%s:8080/anm/OperationManager?wsdl" % self.anmIp)
+        self.templateClient = Client(
+            "http://%s:8080/anm/ApplicationTemplateManager?wsdl" % self.anmIp)
 
     def getContext(self,  dev):
-        logger.debug("Creating context with params: IP %s, Port: %s" % (dev.ip,  dev.port))
-        return ANMSpecificContext(dev.ip, dev.port, dev.user,  dev.password, "dmitryme")
+        logger.debug("Creating context with params: IP %s, Port: %s",
+                dev.ip, dev.port)
+        return ANMSpecificContext(dev.ip, dev.port, dev.user, dev.password,
+                    "dmitryme")
 
 ######## Work Methods
 ######## Commented out methods are inherited
@@ -39,7 +45,8 @@ class ANMDriver(AceDriver):
 #        try:
 #            deviceId = self.createSudsDeviceID(context)
 #            sfRServer = self.createSudsServerFarmRServer(serverfarm, rserver)
-#            self.operationClient.service.activateServerfarmRserver(sid, deviceId, sfRServer, "OpenstackLB wants this rserver up!")
+#            self.operationClient.service.activateServerfarmRserver(sid,
+#                deviceId, sfRServer, "OpenstackLB wants this rserver up!")
 #        finally:
 #            self.logout(sid)
 
@@ -48,7 +55,9 @@ class ANMDriver(AceDriver):
 #        try:
 #            deviceId = self.createSudsDeviceID(context)
 #            sfRServer = self.createSudsServerFarmRServer(serverfarm, rserver)
-#            self.operationClient.service.suspendServerfarmRserver(sid, deviceId, sfRServer, "Suspend", "OpenstackLB wants this rserver down!")            
+#            self.operationClient.service.suspendServerfarmRserver(sid,
+#                deviceId, sfRServer, "Suspend",
+#                "OpenstackLB wants this rserver down!")
 #        finally:
 #            self.logout(sid)
 
@@ -62,7 +71,7 @@ class ANMDriver(AceDriver):
 
 #   def deleteServerFarm(self,  context,  serverfarm):
 
-    # backup-rserver is not supported 
+    # backup-rserver is not supported
 #    def addRServerToSF(self,  context,  serverfarm,  rserver):
 #        sid = self.login()
 #        try:
@@ -71,7 +80,8 @@ class ANMDriver(AceDriver):
 #            port = 0
 #            if hasattr(rserver, 'port'):
 #                port = rserver.port
-#            self.operationClient.service.addRserverToServerfarm(sid, deviceId, serverfarm.name, rServer, port)
+#            self.operationClient.service.addRserverToServerfarm(sid, deviceId,
+#                serverfarm.name, rServer, port)
 #        finally:
 #            self.logout(sid)
 
@@ -80,15 +90,18 @@ class ANMDriver(AceDriver):
 #        try:
 #            deviceId = self.createSudsDeviceID(context)
 #            sfRServer = self.createSudsServerFarmRServer(serverfarm, rserver)
-#            self.operationClient.service.removeRserverFromServerfarm(sid, deviceId, sfRServer)
+#            self.operationClient.service.removeRserverFromServerfarm(sid,
+#                deviceId, sfRServer)
 #        finally:
 #            self.logout(sid)
 
 #    def addProbeToSF(self,  context,  serverfarm,  probe):
-#        raise NotImplementedError("ANM Driver can not add probes to server farm")
+#        raise NotImplementedError(
+#            "ANM Driver can not add probes to server farm")
 
  #   def deleteProbeFromSF(self,  context,  serverfarm,  probe):
- #       raise NotImplementedError("ANM Driver can not delete probes from server farm")
+ #       raise NotImplementedError(
+#            "ANM Driver can not delete probes from server farm")
 
     def createStickiness(self,  context,  sticky):
         raise NotImplementedError("ANM Driver can not enable stickness")
@@ -117,18 +130,20 @@ class ANMDriver(AceDriver):
         if self.checkNone(vip.allVLANs):
             values["network"]["vlans"] = "ALL_VLAN"
         elif is_sequence(vip.VLAN):
-            values["network"]["vlans"] = ",".join(vip.VLAN) 
+            values["network"]["vlans"] = ",".join(vip.VLAN)
         else:
             values["network"]["vlans"] = vip.VLAN
         values["network"]["autoNat"] = "true"
 
         sid = self.login()
         try:
-            definition = self.fetchTemplateDefinition(sid, "OpenstackLB-Basic-HTTP-adv")
+            definition = self.fetchTemplateDefinition(sid,
+                    "OpenstackLB-Basic-HTTP-adv")
             inputs = self.fetchTemplateImputs(sid, definition)
             self.fillTemplateInputs(inputs, values)
             deviceId = self.createSudsDeviceID(context)
-            instance = self.templateClient.service.createTemplateInstance(sid, deviceId, definition, inputs)
+            instance = self.templateClient.service.createTemplateInstance(sid,
+                    deviceId, definition, inputs)
             context.templateInstances[vip.name] = instance
         finally:
             self.logout(sid)
@@ -138,14 +153,15 @@ class ANMDriver(AceDriver):
         try:
             instance = context.templateInstances[vip.name]
             deviceId = self.createSudsDeviceID(context)
-            self.templateClient.service.deleteTemplateInstance(sid, deviceId, instance)
+            self.templateClient.service.deleteTemplateInstance(sid, deviceId,
+                    instance)
         finally:
             self.logout(sid)
 
-
 ######## Utilities
     def login(self):
-        return self.operationClient.service.login(self.anmLogin, self.anmPassword)
+        return self.operationClient.service.login(self.anmLogin,
+                self.anmPassword)
 
     def logout(self, sid):
         self.operationClient.service.logout(sid)
@@ -186,12 +202,12 @@ class ANMDriver(AceDriver):
                 rServer.state = "OOS"
         else:
             rServer.state = "IS"
-        
+
         if hasattr(rserver, "weight"):
             rServer.weight = rserver.weight
         else:
             rServer.weight = 8
-        
+
         return rServer
 
     def fetchTemplateDefinition(self, sid, templateName):
@@ -199,27 +215,30 @@ class ANMDriver(AceDriver):
         for definition in listOfDefs['item']:
             if definition.name == templateName:
                 return definition
-        raise RuntimeError("No such template found: %s" %templateName)
+        raise RuntimeError("No such template found: %s" % templateName)
 
     def fetchTemplateImputs(self, sid, templateDefinition):
-        return self.templateClient.service.getTemplateDefinitionMetadata(sid, templateDefinition)
+        return self.templateClient.service.getTemplateDefinitionMetadata(sid,
+                templateDefinition)
 
     def fillTemplateInputs(self, templateInputs, values):
         for inputGroup in templateInputs['item']:
-            if values.has_key(inputGroup.name):
-                self.fillTemplateGroupInputs(inputGroup, inputGroup.name, values[inputGroup.name])
+            if inputGroup.name in values:
+                self.fillTemplateGroupInputs(inputGroup, inputGroup.name,
+                        values[inputGroup.name])
             else:
-                print "Ops, don't have group %s in values" %inputGroup.name
+                print "Ops, don't have group %s in values" % inputGroup.name
 
     def fillTemplateGroupInputs(self, element, groupName, mapping):
         if not hasattr(element, 'childElements'):
             return
         for inp in element.childElements:
             if hasattr(inp, 'name'):
-                if mapping.has_key(inp.name):
+                if inp.name in mapping:
                     inp.userData = mapping[inp.name]
                 else:
-                    print "Ops, don't have value for group %s, input %s" %(groupName, inp.name)
+                    print "Ops, don't have value for group %s, input %s" % (
+                                                        groupName, inp.name)
             self.fillTemplateGroupInputs(inp, groupName, mapping)
 
 

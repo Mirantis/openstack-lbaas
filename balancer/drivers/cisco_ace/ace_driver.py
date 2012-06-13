@@ -24,6 +24,7 @@ import openstack.common.exception
 
 logger = logging.getLogger(__name__)
 
+
 class AceDriver(BaseDriver):
     def __init__(self, conf, device_ref):
         super(self, AceDriver).__init__(conf, device_ref)
@@ -155,7 +156,7 @@ class AceDriver(BaseDriver):
         return self.deployConfig(cmd)
 
     def suspendRServer(self, serverfarm,  rserver):
-        cmd = "serverfarm " + serverfarm['name'] + "\n" + \ 
+        cmd = "serverfarm " + serverfarm['name'] + "\n" + \
               "rserver " + rserver['name']
         if self.checkNone(rserver['port']):
             cmd += " " + rserver['port']
@@ -279,7 +280,7 @@ class AceDriver(BaseDriver):
                     cmd += "\nversion " + pr_extra.get('SNMPver')
                     if pr_extra.get('SNMPComm'):
                         cmd += "\ncommunity " + pr_extra.get('SNMPComm')
-        else: # for type == vm
+        else:  # for type == vm
             if pr_extra.get('VMControllerName'):
                 cmd += "vm-controller " + \
                     pr_extra.get('VMControllerName')
@@ -322,7 +323,7 @@ class AceDriver(BaseDriver):
                     pr += " samples " + sample
             elif (pr == "leastconnections"):
                 pr = "leastconns slowstart " + \
-                     sf._predictor.['extra']['slowStartDur']
+                     sf._predictor['extra']['slowStartDur']
             elif (pr == "leastloaded"):
                 pr = "least-loaded probe " + \
                      sf._predictor['extra']['snmpProbe']
@@ -443,7 +444,7 @@ class AceDriver(BaseDriver):
                 cmd += "\nv6-prefix " + \
                     str(st_extra.get('ipv6PrefixLength'))
         elif sticky_type == "v6prefix":
-            cmd += str(st_extra['prefixLength]') + " address " + \
+            cmd += str(st_extra['prefixLength']) + " address " + \
                 st_extra['addrType'].lower() + " " + name
             if st_extra.get('netmask'):
                 cmd += "\nip-netmask " + str(st_extra.get('netmask'))

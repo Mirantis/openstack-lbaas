@@ -68,17 +68,19 @@ class Reader(object):
     """ Reader class is used for db read opreations"""
     def __init__(self, conf):
         self.conf = conf
-        self._probeDict = {'DNS': DNSprobe(), 'ECHO TCP': ECHOTCPprobe(), \
-                        'ECHO-UDP': ECHOUDPprobe(), 'FINGER': FINGERprobe(), \
-                        'FTP': FTPprobe(), 'HTTPS': HTTPSprobe(), \
-                        'HTTP': HTTPprobe(), 'ICMP': ICMPprobe(), \
-                        'IMAP': IMAPprobe(), 'POP': POPprobe(), \
-                        'RADIUS': RADIUSprobe(), 'RTSP': RTSPprobe(), \
-                        'SCRIPTED': SCRIPTEDprobe(), 'SIP TCP': SIPTCPprobe(), \
-                        'SIP UDP': SIPUDPprobe(), 'SMTP': SMTPprobe(), \
-                        'SNMP': SNMPprobe(), 'CONNECT': TCPprobe(), \
-                        'TELNET': TELNETprobe(), 'UDP': UDPprobe(), \
-                        'VM': VMprobe()}
+        self._probeDict = {
+            'DNS': DNSprobe(), 'ECHO TCP': ECHOTCPprobe(),
+            'ECHO-UDP': ECHOUDPprobe(), 'FINGER': FINGERprobe(),
+            'FTP': FTPprobe(), 'HTTPS': HTTPSprobe(),
+            'HTTP': HTTPprobe(), 'ICMP': ICMPprobe(),
+            'IMAP': IMAPprobe(), 'POP': POPprobe(),
+            'RADIUS': RADIUSprobe(), 'RTSP': RTSPprobe(),
+            'SCRIPTED': SCRIPTEDprobe(), 'SIP TCP': SIPTCPprobe(),
+            'SIP UDP': SIPUDPprobe(), 'SMTP': SMTPprobe(),
+            'SNMP': SNMPprobe(), 'CONNECT': TCPprobe(),
+            'TELNET': TELNETprobe(), 'UDP': UDPprobe(),
+            'VM': VMprobe(),
+        }
         self._predictDict = {'HashAddrPredictor': HashAddrPredictor(), \
                           'HashContent': HashContent(), \
                           'HashCookie': HashCookie(), \
@@ -147,7 +149,6 @@ class Reader(object):
             load_to_old_model(probe_ref, prb)
             probes.append(prb)
         return probes
-
 
     def getStickyById(self, id):
         sticky_ref = db.sticky_get(self.conf, id)
@@ -254,7 +255,6 @@ class Reader(object):
             predictors.append(pred)
         return predictors
 
-
     def getVIPsBySFid(self, id):
         vservers = []
         vserver_refs = db.virtualverser_get_all_by_sf_id(self.conf, id)
@@ -317,15 +317,19 @@ class Writer(object):
         logger.debug("Saving ServerFarm instance in DB.")
         serverfarm_dict = sf.convertToDict()
         serverfarm_ref = db.serverfarm_create(self.conf, serverfarm_dict)
-        serverfarm_ref['extra'] = extract_extra(serverfarm_ref, serverfarm_dict)
+        serverfarm_ref['extra'] = extract_extra(serverfarm_ref,
+                                                serverfarm_dict)
         db.serverfarm_update(self.conf, serverfarm_ref['id'], serverfarm_ref)
 
     def writeVirtualServer(self, vs):
         logger.debug("Saving VirtualServer instance in DB.")
         virtualserver_dict = vs.convertToDict()
-        virtualserver_ref = db.virtualserver_create(self.conf, virtualserver_dict)
-        virtualserver_ref['extra'] = extract_extra(virtualserver_ref, virtualserver_dict)
-        db.virtualserver_update(self.conf, virtualserver_ref['id'], virtualserver_ref)
+        virtualserver_ref = db.virtualserver_create(self.conf,
+                                                    virtualserver_dict)
+        virtualserver_ref['extra'] = extract_extra(virtualserver_ref,
+                                                   virtualserver_dict)
+        db.virtualserver_update(self.conf, virtualserver_ref['id'],
+                                virtualserver_ref)
 
     def updateObjectInTable(self, obj):
         (db_get_func, db_update_func) = get_db_funcs(obj)
@@ -364,7 +368,6 @@ class Deleter(object):
     def deleteProbeByID(self,  id):
         db.probe_destroy(self.conf, id)
 
-
     def deleteProbesBySFid(self, id):
         probe_refs = db.probe_get_all_by_sf_id(self.conf, id)
         for probe_ref in probe_refs:
@@ -377,7 +380,6 @@ class Deleter(object):
         sticky_refs = db.sticky_get_all_by_sf_id(self.conf, id)
         for sticky_ref in sticky_refs:
             self.deleteStickyByID(sticky_ref['id'])
-
 
     def deleteLBbyID(self,  id):
         db.loadbalancer_destroy(self.conf, id)

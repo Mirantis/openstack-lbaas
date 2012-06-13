@@ -132,6 +132,7 @@ class Server(DictBase, Base):
                               backref=backref('servers', order_by=id),
                               uselist=False)
 
+
 class Probe(DictBase, Base):
     """Represents a health monitoring."""
 

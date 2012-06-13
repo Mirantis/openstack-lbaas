@@ -27,6 +27,7 @@ from balancer.db import api as db_api
 
 logger = logging.getLogger(__name__)
 
+
 @Singleton
 class Scheduller(object):
 
@@ -40,24 +41,26 @@ class Scheduller(object):
         self._lock = threading.RLock()
         for device in devices:
             self._device_map[device['id']] = device
-            self._device_count +=1
+            self._device_count += 1
 
     def getDevice(self):
         #TODO understand how we select device
         self._lock.acquire()
         try:
-            logger.debug("Sehduller select device: current %s of %s" % (self._last_selected, self._device_count))
-            if self._last_selected >= (self._device_count-1):
+            logger.debug("Sehduller select device: current %s of %s",
+                                self._last_selected, self._device_count)
+            if self._last_selected >= (self._device_count - 1):
                 self._last_selected = 0
-                logger.debug("Sehduller select device: return %s" % self._last_selected)
+                logger.debug("Sehduller select device: return %s",
+                                self._last_selected)
                 return self._list[self._last_selected]
             else:
-                self._last_selected +=1
-                logger.debug("Sehduller select device: return %s" % self._last_selected)
+                self._last_selected += 1
+                logger.debug("Sehduller select device: return %s",
+                                self._last_selected)
                 return self._list[self._last_selected]
         finally:
             self._lock.release()
-            
 
 # NOTE(ash): broken, unused method
 #    def getDeviceByLBid(self, id):
@@ -71,7 +74,8 @@ class Scheduller(object):
         else:
             dev = self._device_map.get(id,  None)
             if dev == None:
-                raise  exception.NotFound("Can't find device specified by device ID.")
+                raise exception.NotFound(
+                                "Can't find device specified by device ID.")
         return dev
 
     def getDevices(self):
@@ -80,4 +84,4 @@ class Scheduller(object):
     def addDevice(self, device):
         self._device_map[device['id']] = device
         self._list.append(device)
-        self._device_count +=1
+        self._device_count += 1

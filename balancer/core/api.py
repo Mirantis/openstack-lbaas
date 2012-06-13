@@ -205,7 +205,8 @@ def lb_add_node(conf, lb_id, lb_node):
     balancer_instance.sf._rservers.append(rs)
     balancer_instance.savetoDB()
 
-    device_driver = drivers.get_device_driver(balancer_instance.lb['device_id'])
+    device_driver = drivers.get_device_driver(
+                        balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.delete_loadbalancer(ctx, balancer_instance)
         commands.add_node_to_loadbalancer(ctx, balancer_instance, rs)
@@ -234,7 +235,8 @@ def lb_delete_node(conf, lb_id, lb_node_id):
     db_api.server_destroy(conf, lb_node_id)
 
     #Step 5: Delete real server from device
-    device_driver = drivers.get_device_driver(balancer_instance.lb['device_id'])
+    device_driver = drivers.get_device_driver(
+                        balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.remove_node_from_loadbalancer(ctx, balancer_instance, rs)
     return lb_node_id
@@ -254,7 +256,8 @@ def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
     if rs['parent_id'] != "":
         rs['name'] = rs['parent_id']
     logger.debug("Changing RServer status to: %s" % lb_node_status)
-    device_driver = drivers.get_device_driver(balancer_instance.lb['device_id'])
+    device_driver = drivers.get_device_driver(
+                        balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         if lb_node_status == "inservice":
             commands.activate_rserver(ctx, sf, rs)
@@ -285,7 +288,8 @@ def lb_update_node(conf, lb_id, lb_node_id, lb_node):
     db_api.server_destroy(conf, lb_node_id)
     new_rs = db_api.server_create(conf, new_rs_dict)
 
-    device_driver = drivers.get_device_driver(balancer_instance.lb['device_id'])
+    device_driver = drivers.get_device_driver(
+                        balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.remove_node_from_loadbalancer(ctx, balancer_instance, rs)
         commands.add_node_to_loadbalancer(ctx, balancer_instance, new_rs)
@@ -323,7 +327,8 @@ def lb_add_probe(conf, lb_id, lb_probe):
     balancer_instance.sf._probes.append(prb)
     balancer_instance.savetoDB()
 
-    device_driver = drivers.get_device_driver(balancer_instance.lb['device_id'])
+    device_driver = drivers.get_device_driver(
+                        balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.add_probe_to_loadbalancer(ctx, balancer_instance, prb)
 
@@ -344,7 +349,8 @@ def lb_delete_probe(conf, lb_id, probe_id):
     db_api.probe_destroy(conf, probe_id)
 
     #Step 5: Delete real server from device
-    device_driver = drivers.get_device_driver(balancer_instance.lb['device_id'])
+    device_driver = drivers.get_device_driver(
+                        balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.remove_probe_from_server_farm(ctx, balancer_instance, prb)
     return probe_id
@@ -379,7 +385,8 @@ def lb_add_sticky(conf, lb_id, sticky):
     balancer_instance.sf._sticky.append(st)
     balancer_instance.savetoDB()
 
-    device_driver = drivers.get_device_driver(balancer_instance.lb['device_id'])
+    device_driver = drivers.get_device_driver(
+                        balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.add_sticky_to_loadbalancer(ctx, balancer_instance, st)
 
@@ -400,7 +407,8 @@ def lb_delete_sticky(conf, lb_id, sticky_id):
     db_api.sticky_destroy(conf, sticky_id)
 
     #Step 5: Delete real server from device
-    device_driver = drivers.get_device_driver(balancer_instance.lb['device_id'])
+    device_driver = drivers.get_device_driver(
+                        balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.remove_sticky_from_loadbalancer(ctx, balancer_instance, st)
 

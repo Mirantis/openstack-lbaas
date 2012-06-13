@@ -83,12 +83,14 @@ class Singleton:
         raise TypeError(
             'Singletons must be accessed through the `Instance` method.')
 
+
 def checkNone(obj):
-       if bool(obj):
-           if obj != 'None':
-               return True
-       return False
-        
+    if bool(obj):
+        if obj != 'None':
+            return True
+    return False
+
+
 def chunkreadable(iter, chunk_size=65536):
     """
     Wrap a readable iterator with a reader yielding chunks of

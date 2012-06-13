@@ -54,6 +54,7 @@ predictor_pack_extra = functools.partial(pack_extra, models.Predictor)
 
 # Device
 
+
 def device_get(conf, device_id, session=None):
     session = session or get_session(conf)
     device_ref = session.query(models.Device).\
@@ -94,6 +95,7 @@ def device_destroy(conf, device_id):
         session.delete(device_ref)
 
 # LoadBalancer
+
 
 def loadbalancer_get(conf, loadbalancer_id, session=None):
     session = session or get_session(conf)
@@ -148,6 +150,7 @@ def loadbalancer_destroy(conf, lb_id):
 
 # Probe
 
+
 def probe_get(conf, probe_id, session=None):
     session = session or get_session(conf)
     probe_ref = session.query(models.Probe).filter_by(id=probe_id).first()
@@ -199,6 +202,7 @@ def probe_destroy_by_sf_id(conf, sf_id, session=None):
 
 # Sticky
 
+
 def sticky_get(conf, sticky_id, session=None):
     session = session or get_session(conf)
     sticky_ref = session.query(models.Sticky).filter_by(id=sticky_id).first()
@@ -249,6 +253,7 @@ def sticky_destroy_by_sf_id(conf, sf_id, session=None):
         session.query(models.Sticky).filter_by(sf_id=sf_id).delete()
 
 # Server
+
 
 def server_get(conf, server_id, session=None):
     session = session or get_session(conf)
@@ -318,6 +323,7 @@ def server_destroy_by_sf_id(conf, sf_id, session=None):
 
 # ServerFarm
 
+
 def serverfarm_get(conf, serverfarm_id, session=None):
     session = session or get_session(conf)
     serverfarm_ref = session.query(models.ServerFarm).\
@@ -358,6 +364,7 @@ def serverfarm_destroy(conf, serverfarm_id):
         session.delete(serverfarm_ref)
 
 # Predictor
+
 
 def predictor_get(conf, predictor_id, session=None):
     session = session or get_session(conf)
@@ -405,6 +412,7 @@ def predictor_destroy_by_sf_id(conf, sf_id, session=None):
         session.query(models.Predictor).filter_by(sf_id=sf_id).delete()
 
 # VirtualServer
+
 
 def virtualserver_get(conf, vserver_id, session=None):
     session = session or get_session(conf)

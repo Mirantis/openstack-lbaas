@@ -1,5 +1,4 @@
-import balancer.drivers.cisco_ace.ace_4x_driver
-import balancer.drivers.cisco_ace.ace_5x_driver
+import balancer.drivers.cisco_ace.ace_driver
 import balancer.drivers.haproxy.HaproxyDriver
 
 from balancer.db import api as db_api
