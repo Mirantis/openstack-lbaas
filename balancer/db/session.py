@@ -19,8 +19,11 @@
 #    under the License.
 """Session management functions."""
 
+import os
 import logging
 
+from migrate.versioning import api as versioning_api
+from migrate import exceptions as versioning_exceptions
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.orm import sessionmaker
@@ -28,6 +31,7 @@ from sqlalchemy.pool import NullPool
 from sqlalchemy.exc import DisconnectionError
 
 from balancer.common import cfg
+from balancer.db import migrate_repo
 
 
 CACHE = {
@@ -117,3 +121,13 @@ def register_conf_opts(conf, options=DB_OPTIONS, group=DB_GROUP_NAME):
 
     conf.register_group(cfg.OptGroup(name=group))
     conf.register_opts(options, group=group)
+
+
+def sync(conf):
+    register_conf_opts(conf)
+    repo_path = os.path.abspath(os.path.dirname(migrate_repo.__file__))
+    try:
+        versioning_api.upgrade(conf.sql.connection, repo_path)
+    except versioning_exceptions.DatabaseNotControlledError:
+        versioning_api.version_control(conf.sql.connection, repo_path)
+        versioning_api.upgrade(conf.sql.connection, repo_path)

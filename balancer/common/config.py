@@ -39,16 +39,12 @@ paste_deploy_opts = [
 
 
 class BalancerConfigOpts(cfg.CommonConfigOpts):
-    dbsync_opt = cfg.BoolOpt('dbsync', default=False,
-                             help='Perform database schema synchronization')
-
     def __init__(self, default_config_files=None, **kwargs):
         super(BalancerConfigOpts, self).__init__(
             project='balancer',
             version='%%prog %s' % version.version_string(),
             default_config_files=default_config_files,
             **kwargs)
-        self.register_cli_opt(self.dbsync_opt)
 
 
 class BalancerCacheConfigOpts(BalancerConfigOpts):

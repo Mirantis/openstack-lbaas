@@ -29,9 +29,6 @@ import gettext
 import os
 import sys
 
-from migrate.versioning import api as versioning_api
-from migrate import exceptions as versioning_exceptions
-
 # If ../balancer/__init__.py exists, add ../ to Python search path, so that
 # it will override what happens to be installed in /usr/(local/)lib/python...
 
@@ -42,35 +39,29 @@ if os.path.exists(os.path.join(possible_topdir, 'balancer', '__init__.py')):
     sys.path.insert(0, possible_topdir)
 
 
+from balancer.common import cfg
 from balancer.common import config
 from balancer.common import wsgi
-from balancer.db import migrate_repo
+from balancer.db import session
 
 
 gettext.install('balancer', unicode=1)
 
-
-def do_db_sync(conf):
-    repo_path = os.path.abspath(os.path.dirname(migrate_repo.__file__))
-    try:
-        versioning_api.db_version(conf.sql.connection, repo_path)
-    except versioning_exceptions.DatabaseNotControlledError:
-        versioning_api.version_control(conf.sql.connection, repo_path)
-    versioning_api.upgrade(conf.sql.connection, repo_path)
-
+dbsync_opt = cfg.BoolOpt('dbsync', default=False,
+                         help='Perform database schema synchronization')
 
 if __name__ == '__main__':
     try:
         conf = config.BalancerConfigOpts()
+        conf.register_cli_opt(dbsync_opt)
         conf()
 
         if conf.dbsync:
-            do_db_sync(conf)
-            sys.exit()
-
-        app = config.load_paste_app(conf)
-        server = wsgi.Server()
-        server.start(app, conf, default_port=8181)
-        server.wait()
+            session.sync(conf)
+        else:
+            app = config.load_paste_app(conf)
+            server = wsgi.Server()
+            server.start(app, conf, default_port=8181)
+            server.wait()
     except RuntimeError, e:
         sys.exit("ERROR: %s" % e)
