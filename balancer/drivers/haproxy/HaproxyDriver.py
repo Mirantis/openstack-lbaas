@@ -21,7 +21,6 @@ import logging
 
 
 from balancer.drivers.BaseDriver import BaseDriver
-from balancer.loadbalancers.statistics import Statistics
 from balancer.drivers.haproxy.RemoteControl import RemoteConfig
 from balancer.drivers.haproxy.RemoteControl import RemoteInterface
 from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation
@@ -216,19 +215,20 @@ class HaproxyDriver(BaseDriver):
                                         haproxy_serverfarm, haproxy_rserver,
                                         self.interface, self.haproxy_socket)
         out = remote_socket.getStatistics()
-        statistics = Statistics()
+        statistics = {}
         if out:
             status_line = out.split(",")
-            statistics.weight = status_line[18]
-            statistics.state = status_line[17]
-            statistics.connCurrent = [4]
-            statistics.connTotal = [7]
-            statistics.connFail = [13]
-            statistics.connMax = [5]
-            statistics.connRateLimit = [34]
-            statistics.bandwRateLimit = [35]
-        logger.debug('[HAPROXY] statistics rserver state is \'%s\'',
-                statistics.state)
+            statistics['weight'] = status_line[18]
+            statistics['state'] = status_line[17]
+            statistics['connCurrent'] = [4]
+            statistics['connTotal'] = [7]
+            statistics['connFail'] = [13]
+            statistics['connMax'] = [5]
+            statistics['connRateLimit'] = [34]
+            statistics['bandwRateLimit'] = [35]
+# NOTE: broken because use indeterminate state variable
+#        logger.debug('[HAPROXY] statistics rserver state is \'%s\'',
+#                statistics.state)
         return statistics
 
     def suspendRServer(self, serverfarm, rserver):
