@@ -19,8 +19,6 @@ import logging
 import sys
 import traceback
 
-import balancer.loadbalancers.loadbalancer
-
 from openstack.common import exception
 from openstack.common import wsgi
 
@@ -83,15 +81,10 @@ class Controller(object):
             logger.debug("Got create request. Request: %s", req)
             #here we need to decide which device should be used
             params = args['body']
-            # We need to create LB object and return its id
-            lb = balancer.loadbalancers.loadbalancer.LoadBalancer()
-            tenant_id = req.headers.get('X-Tenant-Id', "")
-            tenant_name = req.headers.get('X-Tenant-Name', "")
-            lb.tenant_id = tenant_id
-            lb.tenant_name = tenant_name
-            params['lb'] = lb
-            core_api.create_lb(self.conf, **params)
-            return {'loadbalancers': {'id': lb.id}}
+            params['tenant_id'] = req.headers.get('X-Tenant-Id', '')
+            params['tenant_name'] = req.headers.get('X-Tenant-Name', '')
+            lb_id = core_api.create_lb(self.conf, **params)
+            return {'loadbalancers': {'id': lb_id}}
         except exception.NotFound:
             msg = "Exception occured "
             traceback.print_exc(file=sys.stdout)
