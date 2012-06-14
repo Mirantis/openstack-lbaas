@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 class AceDriver(BaseDriver):
     def __init__(self, conf, device_ref):
-        super(self, AceDriver).__init__(conf, device_ref)
+        super(AceDriver, self).__init__(conf, device_ref)
         self.url = "https://%s:%s/bin/xml_agent" % (device_ref['ip'],
                                                     device_ref['port'])
         base64str = base64.encodestring('%s:%s' % \
@@ -64,54 +64,54 @@ class AceDriver(BaseDriver):
         return s
 
     def importCertificatesAndKeys(self):
-        dev_extra = self.device_ref['extra']
+        dev_extra = self.device_ref.get('extra') or {}
         cmd = "do crypto import " + dev_extra['protocol'] + " "
         if self.checkNone(dev_extra['passphrase']):
             cmd += "passphrase " + dev_extra['passphrase'] + " "
         cmd += dev_extra['server_ip'] + " " + dev_extra['server_user'] + \
                " " + dev_extra['file_name'] + " " + dev_extra['file_name'] + \
                "\n" + dev_extra['server_password']
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def createSSLProxy(self, SSLproxy):
-        cmd = "ssl-proxy service " + SSLproxy.name
-        if self.checkNone(SSLproxy.cert):
-            cmd += "\ncert " + SSLproxy.cert
-        if self.checkNone(SSLproxy.key):
-            cmd += "\nkey " + SSLproxy.key
-        if self.checkNone(SSLproxy.authGroup):
-            cmd += "\nauthgroup " + SSLproxy.authGroup
-        if self.checkNone(SSLproxy.ocspServer):
-            cmd += "\nocspserver " + SSLproxy.ocspServer
-        if self.checkNone(SSLproxy.ocspBestEffort):
-            cmd += "\noscpserver " + SSLproxy.ocspBestEffort
-        if self.checkNone(SSLproxy.crl):
-            cmd += "\ncrl " + SSLproxy.crl
-        if self.checkNone(SSLproxy.crlBestEffort):
+        cmd = "ssl-proxy service " + SSLproxy['name']
+        if SSLproxy.get('cert'):
+            cmd += "\ncert " + SSLproxy.get('cert')
+        if SSLproxy.get('key'):
+            cmd += "\nkey " + SSLproxy.get('key')
+        if SSLproxy.get('authGroup'):
+            cmd += "\nauthgroup " + SSLproxy.get('authGroup')
+        if SSLproxy.get('ocspServer'):
+            cmd += "\nocspserver " + SSLproxy.get('ocspServer')
+        if SSLproxy.get('ocspBestEffort'):
+            cmd += "\noscpserver " + SSLproxy.get('ocspBestEffort')
+        if SSLproxy.get('crl'):
+            cmd += "\ncrl " + SSLproxy.get('crl')
+        if SSLproxy.get('crlBestEffort'):
             cmd += "\ncrl best-effort"
-        if self.checkNone(SSLproxy.chainGroup):
-            cmd += "\nchaingroup " + SSLproxy.chainGroup
-        if self.checkNone(SSLproxy.CheckPriority):
-            cmd += "\nrevcheckprion " + SSLproxy.CheckPriority
-        return self.deployConfig(cmd)
+        if SSLproxy.get('chainGroup'):
+            cmd += "\nchaingroup " + SSLproxy.get('chainGroup')
+        if SSLproxy.get('CheckPriority'):
+            cmd += "\nrevcheckprion " + SSLproxy.get('CheckPriority')
+        self.deployConfig(cmd)
 
     def deleteSSLProxy(self, SSLproxy):
-        cmd = "no ssl-proxy service " + SSLproxy.name
-        return self.deployConfig(cmd)
+        cmd = "no ssl-proxy service " + SSLproxy['name']
+        self.deployConfig(cmd)
 
     def addSSLProxyToVIP(self, vip,  SSLproxy):
         cmd = "policy-map multi-match global\nclass " + vip['name'] + \
               "\nssl-proxy server " + SSLproxy.name
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def removeSSLProxyFromVIP(self, vip,  SSLproxy):
         cmd = "policy-map multi-match global\nclass " + vip['name'] + \
               "\nno ssl-proxy server " + SSLproxy.name
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def createRServer(self, rserver):
         srv_type = rserver['type'].lower()
-        srv_extra = rserver['extra'] or {}
+        srv_extra = rserver.get('extra') or {}
         cmd = "\nrserver " + srv_type + " " + rserver['name']
         if srv_extra.get('description'):
             cmd += "\ndescription " + srv_extra.get('description')
@@ -137,11 +137,11 @@ class AceDriver(BaseDriver):
                 str(srv_extra.get('rateBandwidth'))
         if (rserver['state'] == "In Service"):
             cmd += "\ninservice"
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def deleteRServer(self, rserver):
         cmd = "no rserver " + rserver['name']
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def activateRServer(self, serverfarm,  rserver):
         cmd = "serverfarm " + serverfarm['name'] + "\n" + \
@@ -149,11 +149,11 @@ class AceDriver(BaseDriver):
         if self.checkNone(rserver['port']):
             cmd += " " + rserver['port']
         cmd += "\ninservice"
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def activateRServerGlobal(self, rserver):
         cmd = "rserver " + rserver['name'] + "\ninservice"
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def suspendRServer(self, serverfarm,  rserver):
         cmd = "serverfarm " + serverfarm['name'] + "\n" + \
@@ -164,14 +164,14 @@ class AceDriver(BaseDriver):
             cmd += "\ninservice standby"
         else:
             cmd += "\nno inservice"
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def suspendRServerGlobal(self, rserver):
         cmd = "rserver " + rserver['name'] + "\nno inservice"
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def createProbe(self, probe):
-        pr_extra = probe['extra'] or {}
+        pr_extra = probe.get('extra') or {}
         pr_type = probe['type'].lower().replace('-', ' ')
         if pr_type == "connect":
             pr_type = "tcp"
@@ -294,18 +294,18 @@ class AceDriver(BaseDriver):
                     cmd += "\nload mem burst-threshold max " + \
                         pr_extra.get('maxMemBurstThresh') + " min " + \
                         pr_extra.get('minMemBurstThresh')
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def deleteProbe(self, probe):
         pr_type = probe['type'].lower().replace('-', ' ')
         if pr_type == "connect":
             pr_type = "tcp"
         cmd = "no probe " + pr_type + " " + probe['name']
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def createServerFarm(self, sf):
         sf_type = sf['type'].lower()
-        sf_extra = sf['extra'] or {}
+        sf_extra = sf.get('extra') or {}
         cmd = "serverfarm " + sf_type + " " + sf['name']
         if sf_extra.get('description'):
             cmd += "\ndescription " + sf_extra.get('description')
@@ -352,14 +352,14 @@ class AceDriver(BaseDriver):
                 cmd += "\ndws " + sf_extra.get('dynamicWorkloadScale')
                 if (sf_extra.get('dynamicWorkloadScale') == "burst"):
                     cmd += " probe " + sf['VMprobe']
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def deleteServerFarm(self, sf):
         cmd = "no serverfarm " + sf['name']
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def addRServerToSF(self, sf,  rserver):
-        srv_extra = rserver['extra'] or {}
+        srv_extra = rserver.get('extra') or {}
         cmd = "serverfarm " + sf['name'] + "\nrserver " + rserver['name']
         if self.checkNone(rserver['port']):
             cmd += " " + rserver['port']
@@ -386,28 +386,28 @@ class AceDriver(BaseDriver):
             cmd += "\ninservice"
             if rs_extra.get('state').lower() == "standby":
                 cmd += " standby"
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def deleteRServerFromSF(self, sf,  rserver):
         cmd = "serverfarm " + sf['name'] + "\nno rserver " + rserver['name']
         if self.checkNone(rserver['port']):
             cmd += " " + rserver['port']
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def addProbeToSF(self, sf,  probe):
         cmd = "serverfarm " + sf['name'] + "\nprobe " + probe['name']
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def deleteProbeFromSF(self, sf,  probe):
         cmd = "serverfarm " + sf['name'] + "\nno probe " + probe['name']
-        return self.deployConfig(XMLstr)
+        self.deployConfig(XMLstr)
 
     def createStickiness(self, sticky):
         name = sticky['name']
         sticky_type = sticky['type'].lower().replace('httpc', 'http-c')
         sticky_type = sticky_type.replace('header', '-header')
         sticky_type = sticky_type.replace('l4', 'layer4-')
-        st_extra = sticky['extra'] or {}
+        st_extra = sticky.get('extra') or {}
         cmd = "sticky " + sticky_type + " "
         if (sticky_type == "http-content"):
             cmd += name + "\n"
@@ -492,7 +492,7 @@ class AceDriver(BaseDriver):
         #        if self.checkNone(sticky.aggregateState):
         #            cmd += " aggregate-state"
         #    cmd += "\n"
-        return self.deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def deleteStickiness(self, sticky):
         name = sticky['name']
@@ -516,7 +516,7 @@ class AceDriver(BaseDriver):
         return self.deployConfig(cmd)
 
     def createVIP(self, vip, sfarm):
-        vip_extra = vip['extra'] or {}
+        vip_extra = vip.get('extra') or {}
         allVLANs = vip_extra.get('allVLANs')
         if self.checkNone(allVLANs):
             pmap = "global"
@@ -579,7 +579,6 @@ class AceDriver(BaseDriver):
                         self.deployConfig(cmd)
                     except:
                         logger.warning("Got exception on acl set")
-        return 'OK'
 
     def deleteVIP(self, vip):
         vip_extra = vip['extra'] or {}
@@ -614,4 +613,3 @@ class AceDriver(BaseDriver):
         cmd = "no access-list vip-acl extended permit ip any host " + \
               vip['address']
         self.deployConfig(cmd)
-        return "OK"
