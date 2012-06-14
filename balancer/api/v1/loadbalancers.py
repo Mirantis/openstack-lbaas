@@ -62,7 +62,6 @@ class Controller(object):
         try:
             logger.debug("Got index request. Request: %s", req)
             tenant_id = req.headers.get('X-Tenant-Id', "")
-            tenant_name = req.headers.get('X-Tenant-Name', "")
             result = core_api.lb_get_index(self.conf, tenant_id)
             return {'loadbalancers': result}
 
@@ -81,10 +80,13 @@ class Controller(object):
             logger.debug("Got create request. Request: %s", req)
             #here we need to decide which device should be used
             params = args['body']
-            params['tenant_id'] = req.headers.get('X-Tenant-Id', '')
-            params['tenant_name'] = req.headers.get('X-Tenant-Name', '')
-            lb_id = core_api.create_lb(self.conf, **params)
-            return {'loadbalancers': {'id': lb_id}}
+            # We need to create LB object and return its id
+            tenant_id = req.headers.get('X-Tenant-Id', "")
+            lb_ref = db_api.loadbalancer_create(self.conf, {
+                                                    'tenant_id': tenant_id})
+            params['lb'] = lb_ref
+            core_api.create_lb(self.conf, **params)
+            return {'loadbalancers': {'id': lb_ref['id']}}
         except exception.NotFound:
             msg = "Exception occured "
             traceback.print_exc(file=sys.stdout)

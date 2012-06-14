@@ -44,7 +44,11 @@ class Balancer():
         vips_list = obj_dict.get('virtualIps') or []
         stic = obj_dict.get('sessionPersistence') or []
 
-        lb_ref = db_api.loadbalancer_pack_extra(obj_dict)
+        try:
+            lb_ref = params['lb']
+        except KeyError:
+            lb_ref = db_api.loadbalancer_pack_extra(obj_dict)
+
         lb_ref['status'] = lb_status.BUILD
         self.lb = lb_ref
 
