@@ -21,7 +21,6 @@ import logging
 import openstack.common.exception
 #from balancer.loadbalancers.command import BaseCommand
 
-import loadbalancer
 import predictor
 import probe
 #import realserver
@@ -31,6 +30,7 @@ import sticky
 
 from balancer.db import api as db_api
 from balancer import exception
+from balancer.core import lb_status
 
 
 logger = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ class Balancer():
         stic = obj_dict.get('sessionPersistence') or []
 
         lb_ref = db_api.loadbalancer_pack_extra(obj_dict)
-        lb_ref['status'] = loadbalancer.LB_BUILD_STATUS
+        lb_ref['status'] = lb_status.BUILD
         self.lb = lb_ref
 
         sf_ref = db_api.serverfarm_pack_extra({})

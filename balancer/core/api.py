@@ -22,11 +22,10 @@ import eventlet
 from openstack.common import exception
 
 from balancer.core import commands
+from balancer.core import lb_status
 from balancer.core.scheduller import Scheduller
 from balancer import drivers
-from balancer.devices.device import LBDevice
 from balancer.core.ServiceController import ServiceController
-from balancer.loadbalancers import loadbalancer
 from balancer.loadbalancers.realserver import RealServer
 from balancer.loadbalancers.vserver import Balancer
 from balancer.loadbalancers.vserver import createSticky, createProbe,\
@@ -107,9 +106,9 @@ def create_lb(conf, **params):
         with device_driver.request_context() as ctx:
             commands.create_loadbalancer(ctx, balancer_instance)
     except (exception.Error, exception.Invalid):
-        balancer_instance.lb.status = loadbalancer.LB_ERROR_STATUS
+        balancer_instance.lb.status = lb_status.ERROR
     else:
-        balancer_instance.lb.status = loadbalancer.LB_ACTIVE_STATUS
+        balancer_instance.lb.status = lb_status.ACTIVE
     balancer_instance.update()
 
     #balancer_instance.lb.status = \
@@ -149,7 +148,7 @@ def update_lb(conf, lb_id, lb_body):
                 % (key, lb_body[key]))
 
     #Step 3: Save updated data in DB
-    lb.status = loadbalancer.LB_PENDING_UPDATE_STATUS
+    lb.status = lb_status.PENDING_UPDATE
     balancer_instance.update()
 
     #Step 5. Deploy new config to device
@@ -159,7 +158,7 @@ def update_lb(conf, lb_id, lb_body):
             commands.update_loadbalancer(ctx, old_balancer_instance,
                     balancer_instance)
     except:
-        old_balancer_instance.lb.status = loadbalancer.LB_ERROR_STATUS
+        old_balancer_instance.lb.status = lb_status.ERROR
         old_balancer_instance.update()
         return
 
