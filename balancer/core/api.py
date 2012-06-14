@@ -26,10 +26,7 @@ from balancer.core import lb_status
 from balancer.core.scheduller import Scheduller
 from balancer import drivers
 from balancer.core.ServiceController import ServiceController
-from balancer.loadbalancers.realserver import RealServer
 from balancer.loadbalancers.vserver import Balancer
-from balancer.loadbalancers.vserver import createSticky, createProbe,\
-                                           createPredictor
 from balancer.db import api as db_api
 
 

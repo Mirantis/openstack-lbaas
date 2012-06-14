@@ -15,18 +15,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-#import balancer.common.utils
 import logging
-#import pdb
 import openstack.common.exception
-#from balancer.loadbalancers.command import BaseCommand
-
-import predictor
-import probe
-#import realserver
-#import serverfarm
-#import virtualserver
-import sticky
 
 from balancer.db import api as db_api
 from balancer import exception
@@ -197,62 +187,3 @@ class Balancer():
 #        #Step 4. Deploy vip
 #        for vip in self.vips:
 #            driver.createVIP(context,  vip,  self.sf)
-
-
-def createProbe(probe_type):
-    probeDict = {
-        'DNS': probe.DNSprobe(), 'ECHO TCP': probe.ECHOTCPprobe(),
-        'ECHO UDP': probe.ECHOUDPprobe(), 'FINGER': probe.FINGERprobe(),
-        'FTP': probe.FTPprobe(), 'HTTPS': probe.HTTPSprobe(),
-        'HTTP': probe.HTTPprobe(), 'ICMP': probe.ICMPprobe(),
-        'IMAP': probe.IMAPprobe(), 'POP': probe.POPprobe(),
-        'RADIUS': probe.RADIUSprobe(), 'RTSP': probe.RTSPprobe(),
-        'SCRIPTED': probe.SCRIPTEDprobe(),
-        'SIP TCP': probe.SIPTCPprobe(),
-        'SIP UDP': probe.SIPUDPprobe(), 'SMTP': probe.SMTPprobe(),
-        'SNMP': probe.SNMPprobe(), 'CONNECT': probe.TCPprobe(),
-        'TELNET': probe.TELNETprobe(), 'UDP': probe.UDPprobe(),
-        'VM': probe.VMprobe()}
-    obj = probeDict.get(probe_type,  None)
-    if obj == None:
-        raise openstack.common.exception.Invalid("Can't create health "
-                "monitoring probe of type %s" % probe_type)
-    return obj.createSame()
-
-
-def createPredictor(pr_type):
-    predictDict = {'HashAddr': predictor.HashAddrPredictor(),
-                  'HashContent': predictor.HashContent(),
-                  'HashCookie': predictor.HashCookie(),
-                  'HashHeader': predictor.HashHeader(),
-                  'HashLayer4': predictor.HashLayer4(),
-                  'HashURL': predictor.HashURL(),
-                  'LeastBandwidth': predictor.LeastBandwidth(),
-                  'LeastConnections': predictor.LeastConn(),
-                  'LeastLoaded': predictor.LeastLoaded(),
-                  'Response': predictor.Response(),
-                  'RoundRobin': predictor.RoundRobin()}
-
-    obj = predictDict.get(pr_type,  None)
-    if obj == None:
-        raise openstack.common.exception.Invalid("Can't find load balancing \
-                                           algorithm with type %s" % pr_type)
-    return obj.createSame()
-
-
-def createSticky(st_type):
-    stickyDict = {'http-content': sticky.HTTPContentSticky(), \
-                        'http-cookie': sticky.HTTPCookieSticky(), \
-                        'http-header': sticky.HTTPHeaderSticky(), \
-                        'ip-netmask': sticky.IPNetmaskSticky(), \
-                        'layer4-payload': sticky.L4PayloadSticky(), \
-                        'rtsp-header': sticky.RTSPHeaderSticky(), \
-                        'radius': sticky.RadiusSticky(), \
-                        'sip-header': sticky.SIPHeaderSticky(), \
-                        'v6prefix': sticky.v6PrefixSticky()}
-
-    obj = stickyDict.get(st_type,  None)
-    if obj == None:
-        raise openstack.common.exception.Invalid("Can't find load balancing \
-                                           algorithm with type %s" % st_type)
-    return obj.createSame()

@@ -20,7 +20,6 @@ import logging
 import threading
 
 from openstack.common import exception
-from balancer.devices.device import LBDevice
 #from balancer.storage.storage import *
 from balancer.common.utils import Singleton
 from balancer.db import api as db_api
