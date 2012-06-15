@@ -12,7 +12,7 @@ import balancer.core.api as api
 
 class WorkWithReader(TestCase):
 
-    def __init__(self):
+    def setUp(self):
         self.conf = Mock()
         self.tenant_id = Mock()
         self.tenant_id.return_value = "foo"
