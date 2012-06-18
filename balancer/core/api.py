@@ -420,7 +420,7 @@ def device_create(conf, **params):
     device_dict = db_api.device_pack_extra(params)
     device = db_api.device_create(conf, device_dict)
     Scheduller.Instance(conf).addDevice(device)
-    return 'OK'
+    return device['id']
 
 
 def device_info(params):
