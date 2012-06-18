@@ -20,7 +20,7 @@ def get_device_driver(conf, device_id):
         drivers = {}
         for driver_str in conf.device_drivers:
             driver_type, _sep, driver = driver_str.partition('=')
-            drivers[driver_type.lower] = utils.import_class(driver)
+            drivers[driver_type.lower()] = utils.import_class(driver)
 
         device_ref = db_api.device_get(conf, device_id)
         try:
