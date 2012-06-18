@@ -24,11 +24,12 @@ from openstack.common import wsgi
 
 import webob
 
+from balancer.api import v1 as api_v1
+from balancer.api.v1 import filters
 from balancer.core import api as core_api
+from balancer.db import api as db_api
 
 logger = logging.getLogger('balancer.api.v1.loadbalancers')
-SUPPORTED_PARAMS = balancer.api.v1.SUPPORTED_PARAMS
-SUPPORTED_FILTERS = balancer.api.v1.SUPPORTED_FILTERS
 
 
 class Controller(object):
@@ -325,7 +326,7 @@ class Controller(object):
         """
         params = {'filters': self._get_filters(req)}
 
-        for PARAM in SUPPORTED_PARAMS:
+        for PARAM in api_v1.SUPPORTED_PARAMS:
             if PARAM in req.params:
                 params[PARAM] = req.params.get(PARAM)
         return params
@@ -339,11 +340,12 @@ class Controller(object):
         """
         query_filters = {}
         for param in req.params:
-            if param in SUPPORTED_FILTERS or param.startswith('property-'):
+            if param in api_v1.SUPPORTED_FILTERS or \
+                    param.startswith('property-'):
                 query_filters[param] = req.params.get(param)
                 if not filters.validate(param, query_filters[param]):
-                    raise HTTPBadRequest('Bad value passed to filter %s '
-                                         'got %s' % (param,
+                    raise webob.exc.HTTPBadRequest(
+                            'Bad value passed to filter %s got %s' % (param,
                                                      query_filters[param]))
         return query_filters
 
