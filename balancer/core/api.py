@@ -97,7 +97,7 @@ def create_lb(conf, **params):
     balancer_instance.savetoDB()
 
     #Step 3. Deploy config to device
-    device_driver = drivers.get_device_driver(device['id'])
+    device_driver = drivers.get_device_driver(conf, device['id'])
     try:
         with device_driver.request_context() as ctx:
             commands.create_loadbalancer(ctx, balancer_instance)

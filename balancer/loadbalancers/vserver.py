@@ -127,9 +127,13 @@ class Balancer():
         return self.lb
 
     def savetoDB(self):
-        lb_ref = db_api.loadbalancer_create(self.conf, self.lb)
+        try:
+            lb_ref = db_api.loadbalancer_update(self.conf, self.lb['id'], self.lb)
+        except exception.LoadBalancerNotFound:
+            lb_ref = db_api.loadbalancer_create(self.conf, self.lb)
+
         sf_ref = db_api.serverfarm_create(self.conf, self.sf)
-        db_api.predictor_create(self.conf, self.sf._predictor)
+        db_api.predictor_create(self.conf, self._predictor)
 
         for rs in self.rs:
             db_api.server_create(self.conf, rs)
