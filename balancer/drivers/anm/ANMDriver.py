@@ -1,7 +1,7 @@
 import logging
 
 from balancer.drivers.cisco_ace.Context import Context
-from balancer.drivers.BaseDriver import is_sequence
+from balancer.drivers.base_driver import is_sequence
 from balancer.drivers.cisco_ace.ace_5x_driver import AceDriver
 
 from suds.client import Client

@@ -20,7 +20,7 @@
 import logging
 
 
-from balancer.drivers.BaseDriver import BaseDriver
+from balancer.drivers.base_driver import BaseDriver
 from balancer.drivers.haproxy.RemoteControl import RemoteConfig
 from balancer.drivers.haproxy.RemoteControl import RemoteInterface
 from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation

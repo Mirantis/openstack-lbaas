@@ -39,76 +39,76 @@ class BaseDriver(object):
         return False
 
     def importCertificatesAndKeys(self):
-        pass
+        raise NotImplementedError
 
     def createSSLProxy(self, SSLproxy):
-        pass
+        raise NotImplementedError
 
     def deleteSSLProxy(self, SSLproxy):
-        pass
+        raise NotImplementedError
 
     def addSSLProxyToVIP(self, vip, SSLproxy):
-        pass
+        raise NotImplementedError
 
     def removeSSLProxyFromVIP(self, vip, SSLproxy):
-        pass
+        raise NotImplementedError
 
     def createRServer(self, rserver):
-        pass
+        raise NotImplementedError
 
     def deleteRServer(self, rserver):
-        pass
+        raise NotImplementedError
 
     def activateRServer(self, serverfarm, rserver):
-        pass
+        raise NotImplementedError
 
     def activateRServerGlobal(self, rserver):
-        pass
+        raise NotImplementedError
 
     def suspendRServer(self, serverfarm, rserver):
-        pass
+        raise NotImplementedError
 
     def suspendRServerGlobal(self, rserver):
-        pass
+        raise NotImplementedError
 
     def createProbe(self, probe):
-        pass
+        raise NotImplementedError
 
     def deleteProbe(self, probe):
-        pass
+        raise NotImplementedError
 
     def createServerFarm(self, serverfarm):
-        pass
+        raise NotImplementedError
 
     def deleteServerFarm(self, serverfarm):
-        pass
+        raise NotImplementedError
 
     def addRServerToSF(self, serverfarm, rserver):
-        pass
+        raise NotImplementedError
 
     def deleteRServerFromSF(self, serverfarm, rserver):
-        pass
+        raise NotImplementedError
 
     def addProbeToSF(self, serverfarm, probe):
-        pass
+        raise NotImplementedError
 
     def deleteProbeFromSF(self, serverfarm, probe):
-        pass
+        raise NotImplementedError
 
     def createStickiness(self, sticky):
-        pass
+        raise NotImplementedError
 
     def deleteStickiness(self, sticky):
-        pass
+        raise NotImplementedError
 
     def createVIP(self, vip, sfarm):
-        pass
+        raise NotImplementedError
 
     def deleteVIP(self, vip):
-        pass
+        raise NotImplementedError
 
     def getStatistics(self, serverfarm, rserver):
-        pass
+        raise NotImplementedError
 
 
 def is_sequence(arg):

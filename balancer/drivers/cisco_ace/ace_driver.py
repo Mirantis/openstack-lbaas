@@ -19,7 +19,7 @@ import md5
 import urllib2
 import base64
 import logging
-from balancer.drivers.BaseDriver import (BaseDriver, is_sequence)
+from balancer.drivers.base_driver import BaseDriver, is_sequence
 import openstack.common.exception
 
 logger = logging.getLogger(__name__)
