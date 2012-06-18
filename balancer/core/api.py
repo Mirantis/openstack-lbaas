@@ -25,7 +25,6 @@ from balancer.core import commands
 from balancer.core import lb_status
 from balancer.core.scheduller import Scheduller
 from balancer import drivers
-from balancer.core.ServiceController import ServiceController
 from balancer.loadbalancers.vserver import Balancer
 from balancer.db import api as db_api
 
