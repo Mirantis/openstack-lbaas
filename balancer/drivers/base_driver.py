@@ -19,6 +19,7 @@ from balancer.core import commands
 
 class DeviceRequestContext(commands.RollbackContext):
     def __init__(self, conf, device):
+        super(DeviceRequestContext, self).__init__()
         self.conf = conf
         self.device = device
 
