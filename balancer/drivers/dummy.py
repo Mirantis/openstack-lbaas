@@ -22,10 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 class DummyDriver(BaseDriver):
-    def __init__(self, conf, device_ref):
-        self.conf = conf
-        self.device_ref = device_ref
-
     def importCertificatesAndKeys(self):
         logger.debug("Called DummyDriver.importCertificatesAndKeys().")
 
