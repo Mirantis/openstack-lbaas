@@ -246,15 +246,16 @@ def create_vip(ctx, vip, server_farm):
 def create_loadbalancer(ctx, balancer):
     for probe in balancer.probes:
         create_probe(ctx,  probe)
-
+    port = {}
     create_server_farm(ctx, balancer.sf)
     for rserver in balancer.rs:
         create_rserver(ctx, rserver)
         add_rserver_to_server_farm(ctx, balancer.sf,  rserver)
-
-#    for pr in bal.probes:
-#        CreateProbeCommand(driver,  context,  pr)
-#        AddProbeToSFCommand(driver,  context,  bal.sf,  pr)
+        port.append(rserver.get('port'))
+    for probe in balancer.probes:
+        probe['port'] = port[-1]
+        create_probe(ctx,  probe)
+        add_probe_to_server_farm(ctx, balancer.sf, probe)
     for vip in balancer.vips:
         create_vip(ctx, vip, balancer.sf)
 
