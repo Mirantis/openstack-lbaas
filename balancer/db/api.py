@@ -58,10 +58,9 @@ predictor_pack_extra = functools.partial(pack_extra, models.Predictor)
 def device_get(conf, device_id, session=None):
     session = session or get_session(conf)
     device_ref = session.query(models.Device).\
-                         filter_by(id=device_id).\
-                         first()
+                         filter_by(id=device_id).first()
     if not device_ref:
-        raise exception.DeviceNotFound(device_id=device_id)
+        raise exception.DeviceNotFound(device_id)
     return device_ref
 
 
@@ -83,7 +82,7 @@ def device_create(conf, values):
 def device_update(conf, device_id, values):
     session = get_session(conf)
     with session.begin():
-        device_ref = device_get(conf, device_id, session=session)
+        device_ref = device_get(conf, device_id, session)
         device_ref.update(values)
         return device_ref
 
@@ -91,7 +90,7 @@ def device_update(conf, device_id, values):
 def device_destroy(conf, device_id):
     session = get_session(conf)
     with session.begin():
-        device_ref = device_get(conf, device_id, session=session)
+        device_ref = device_get(conf, device_id, session)
         session.delete(device_ref)
 
 # LoadBalancer
@@ -100,10 +99,9 @@ def device_destroy(conf, device_id):
 def loadbalancer_get(conf, loadbalancer_id, session=None):
     session = session or get_session(conf)
     loadbalancer_ref = session.query(models.LoadBalancer).\
-                               filter_by(id=loadbalancer_id).\
-                               first()
+                               filter_by(id=loadbalancer_id).first()
     if not loadbalancer_ref:
-        raise exception.LoadBalancerNotFound(loadbalancer_id=loadbalancer_id)
+        raise exception.LoadBalancerNotFound(loadbalancer_id)
     return loadbalancer_ref
 
 
@@ -137,7 +135,7 @@ def loadbalancer_create(conf, values):
 def loadbalancer_update(conf, lb_id, values):
     session = get_session(conf)
     with session.begin():
-        lb_ref = loadbalancer_get(conf, lb_id, session=session)
+        lb_ref = loadbalancer_get(conf, lb_id, session)
         lb_ref.update(values)
         return lb_ref
 
@@ -145,7 +143,7 @@ def loadbalancer_update(conf, lb_id, values):
 def loadbalancer_destroy(conf, lb_id):
     session = get_session(conf)
     with session.begin():
-        lb_ref = loadbalancer_get(conf, lb_id, session=session)
+        lb_ref = loadbalancer_get(conf, lb_id, session)
         session.delete(lb_ref)
 
 # Probe
@@ -155,7 +153,7 @@ def probe_get(conf, probe_id, session=None):
     session = session or get_session(conf)
     probe_ref = session.query(models.Probe).filter_by(id=probe_id).first()
     if not probe_ref:
-        raise exception.ProbeNotFound(probe_id=probe_id)
+        raise exception.ProbeNotFound(probe_id)
     return probe_ref
 
 
@@ -183,7 +181,7 @@ def probe_create(conf, values):
 def probe_update(conf, probe_id, values):
     session = get_session(conf)
     with session.begin():
-        probe_ref = probe_get(conf, probe_id, session=session)
+        probe_ref = probe_get(conf, probe_id, session)
         probe_ref.update(values)
         return probe_ref
 
@@ -191,7 +189,7 @@ def probe_update(conf, probe_id, values):
 def probe_destroy(conf, probe_id):
     session = get_session(conf)
     with session.begin():
-        probe_ref = probe_get(conf, probe_id, session=session)
+        probe_ref = probe_get(conf, probe_id, session)
         session.delete(probe_ref)
 
 
@@ -207,7 +205,7 @@ def sticky_get(conf, sticky_id, session=None):
     session = session or get_session(conf)
     sticky_ref = session.query(models.Sticky).filter_by(id=sticky_id).first()
     if not sticky_ref:
-        raise exception.StickyNotFound(sticky_id=sticky_id)
+        raise exception.StickyNotFound(sticky_id)
     return sticky_ref
 
 
@@ -235,7 +233,7 @@ def sticky_create(conf, values):
 def sticky_update(conf, sticky_id, values):
     session = get_session(conf)
     with session.begin():
-        sticky_ref = sticky_get(conf, sticky_id, session=session)
+        sticky_ref = sticky_get(conf, sticky_id, session)
         sticky_ref.update(values)
         return sticky_ref
 
@@ -243,7 +241,7 @@ def sticky_update(conf, sticky_id, values):
 def sticky_destroy(conf, sticky_id):
     session = get_session(conf)
     with session.begin():
-        sticky_ref = sticky_get(conf, sticky_id, session=session)
+        sticky_ref = sticky_get(conf, sticky_id, session)
         session.delete(sticky_ref)
 
 
@@ -259,7 +257,7 @@ def server_get(conf, server_id, session=None):
     session = session or get_session(conf)
     server_ref = session.query(models.Server).filter_by(id=server_id).first()
     if not server_ref:
-        raise exception.ServerNotFound(server_id=server_id)
+        raise exception.ServerNotFound(server_id)
     return server_ref
 
 
@@ -273,10 +271,23 @@ def server_get_by_address(conf, server_address):
     session = get_session(conf)
     server_ref = session.query(models.Server).\
                          filter_by(address=server_address).\
-                         filter_by(deployed='True').\
-                         first()
+                         filter_by(deployed='True').first()
     if not server_ref:
-        raise exception.ServerNotFound(server_address=server_address)
+        raise exception.ServerNotFound(server_address)
+    return server_ref
+
+# TODO: need to be fixed
+def server_get_by_address_on_device(conf, server_address, device_id):
+    session = get_session(conf)
+    server_refs = session.query(models.Server).\
+                         filter_by(address=server_address).\
+                         filter_by(deployed='True')
+    for server_ref in server_refs:
+        sf = serverfarm_get(conf, server_ref['sf_id'])
+        lb = loadbalancer_get(conf, sf['lb_id'])
+        device_id = lb['device_id']
+    if not server_ref:
+        raise exception.ServerNotFound(server_address)
     return server_ref
 
 
@@ -304,7 +315,7 @@ def server_create(conf, values):
 def server_update(conf, server_id, values):
     session = get_session(conf)
     with session.begin():
-        server_ref = server_get(conf, server_id, session=session)
+        server_ref = server_get(conf, server_id, session)
         server_ref.update(values)
         return server_ref
 
@@ -312,7 +323,7 @@ def server_update(conf, server_id, values):
 def server_destroy(conf, server_id):
     session = get_session(conf)
     with session.begin():
-        server_ref = server_get(conf, server_id, session=session)
+        server_ref = server_get(conf, server_id, session)
         session.delete(server_ref)
 
 
@@ -325,12 +336,12 @@ def server_destroy_by_sf_id(conf, sf_id, session=None):
 
 
 def serverfarm_get(conf, serverfarm_id, session=None):
-    session = session or get_session(conf)
+    if session == None:
+        get_session(conf)
     serverfarm_ref = session.query(models.ServerFarm).\
-                             filter_by(id=serverfarm_id).\
-                             first()
+                             filter_by(id=serverfarm_id).first()
     if not serverfarm_ref:
-        raise exception.ServerFarmNotFound(serverfarm_id=serverfarm_id)
+        raise exception.ServerFarmNotFound(serverfarm_id)
     return serverfarm_ref
 
 
@@ -352,7 +363,7 @@ def serverfarm_create(conf, values):
 def serverfarm_update(conf, serverfarm_id, values):
     session = get_session(conf)
     with session.begin():
-        serverfarm_ref = serverfarm_get(conf, serverfarm_id, session=session)
+        serverfarm_ref = serverfarm_get(conf, serverfarm_id, session)
         serverfarm_ref.update(values)
         return serverfarm_ref
 
@@ -360,7 +371,7 @@ def serverfarm_update(conf, serverfarm_id, values):
 def serverfarm_destroy(conf, serverfarm_id):
     session = get_session(conf)
     with session.begin():
-        serverfarm_ref = serverfarm_get(conf, serverfarm_id, session=session)
+        serverfarm_ref = serverfarm_get(conf, serverfarm_id, session)
         session.delete(serverfarm_ref)
 
 # Predictor
@@ -369,10 +380,9 @@ def serverfarm_destroy(conf, serverfarm_id):
 def predictor_get(conf, predictor_id, session=None):
     session = session or get_session(conf)
     predictor_ref = session.query(models.Predictor).\
-                            filter_by(id=predictor_id).\
-                            first()
+                            filter_by(id=predictor_id).first()
     if not predictor_ref:
-        raise exception.PredictorNotFound(predictor_id=predictor_id)
+        raise exception.PredictorNotFound(predictor_id)
     return predictor_ref
 
 
@@ -394,7 +404,7 @@ def predictor_create(conf, values):
 def predictor_update(conf, predictor_id, values):
     session = get_session(conf)
     with session.begin():
-        predictor_ref = predictor_get(conf, predictor_id, session=session)
+        predictor_ref = predictor_get(conf, predictor_id, session)
         predictor_ref.update(values)
         return predictor_ref
 
@@ -402,7 +412,7 @@ def predictor_update(conf, predictor_id, values):
 def predictor_destroy(conf, predictor_id):
     session = get_session(conf)
     with session.begin():
-        predictor_ref = predictor_get(conf, predictor_id, session=session)
+        predictor_ref = predictor_get(conf, predictor_id, session)
         session.delete(predictor_ref)
 
 
@@ -417,10 +427,9 @@ def predictor_destroy_by_sf_id(conf, sf_id, session=None):
 def virtualserver_get(conf, vserver_id, session=None):
     session = session or get_session(conf)
     vserver_ref = session.query(models.VirtualServer).\
-                          filter_by(id=vserver_id).\
-                          first()
+                          filter_by(id=vserver_id).first()
     if not vserver_ref:
-        raise exception.VirtualServerNotFound(vserver_id=vserver_id)
+        raise exception.VirtualServerNotFound(vserver_id)
     return vserver_ref
 
 
@@ -442,7 +451,7 @@ def virtualserver_create(conf, values):
 def virtualserver_update(conf, vserver_id, values):
     session = get_session(conf)
     with session.begin():
-        vserver_ref = virtualserver_get(conf, vserver_id, session=session)
+        vserver_ref = virtualserver_get(conf, vserver_id, session)
         vserver_ref.update(values)
         return vserver_ref
 
@@ -450,7 +459,7 @@ def virtualserver_update(conf, vserver_id, values):
 def virtualserver_destroy(conf, vserver_id):
     session = get_session(conf)
     with session.begin():
-        vserver_ref = virtualserver_get(conf, vserver_id, session=session)
+        vserver_ref = virtualserver_get(conf, vserver_id, session)
         session.delete(vserver_ref)
 
 

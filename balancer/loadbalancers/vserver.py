@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 
 class Balancer():
     def __init__(self, conf):
-
         """ This member contains LoadBalancer object """
         self.lb = None
         self.sf = None
@@ -67,13 +66,14 @@ class Balancer():
             # We need to check if there is already real server with the
             # same IP deployed
             try:
-                parent_ref = db_api.server_get_by_address(self.conf,
-                                                          rs_ref['address'])
+                parent_ref = db_api.server_get_by_address_on_device(self.conf,
+                                                        rs_ref['address'],
+                                                        lb_ref['device_id'])
             except exception.ServerNotFound:
                 pass
-            else:
-                if parent_ref['address'] != '':
-                    rs_ref['parent_id'] = parent_ref['id']
+            
+            if parent_ref.get('address') != '':
+                rs_ref['parent_id'] = parent_ref['id']
 
             self.rs.append(rs_ref)
             self.sf._rservers.append(rs_ref)
@@ -102,7 +102,6 @@ class Balancer():
 
     def update(self):
         db_api.loadbalancer_update(self.conf, self.lb['id'], self.lb)
-
         for st in self.sf._sticky:
             db_api.sticky_update(self.conf, st['id'], st)
         for rs in self.rs:
@@ -117,21 +116,21 @@ class Balancer():
 
     def savetoDB(self):
         try:
-            lb_ref = db_api.loadbalancer_update(self.conf, self.lb['id'], self.lb)
+            lb_ref = db_api.loadbalancer_update(self.conf, self.lb['id'],
+                                                self.lb)
         except exception.LoadBalancerNotFound:
             lb_ref = db_api.loadbalancer_create(self.conf, self.lb)
 
         self.sf['lb_id'] = lb_ref['id']
-
         try:
             sf_ref = db_api.serverfarm_update(self.conf, self.sf['id'], self.sf)
         except exception.ServerFarmNotFound:
             sf_ref = db_api.serverfarm_create(self.conf, self.sf)
 
         self._predictor['sf_id'] = sf_ref['id']
-
         try:
-            db_api.predictor_update(self.conf, self._predictor['id'], self._predictor)
+            db_api.predictor_update(self.conf, self._predictor['id'],
+                                    self._predictor)
         except exception.PredictorNotFound:
             db_api.predictor_create(self.conf, self._predictor)
 

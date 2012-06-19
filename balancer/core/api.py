@@ -202,7 +202,6 @@ def lb_add_node(conf, lb_id, lb_node):
     device_driver = drivers.get_device_driver(
                         balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
-        commands.delete_loadbalancer(ctx, balancer_instance)
         commands.add_node_to_loadbalancer(ctx, balancer_instance, rs)
     return rs['id']
 

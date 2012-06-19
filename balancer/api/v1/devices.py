@@ -37,11 +37,11 @@ class Controller(object):
             logger.debug("Obtained response: %s" % result)
             return {'devices': result}
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+            msg = "Element not found"
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -49,16 +49,16 @@ class Controller(object):
         logger.debug("Got create request. Request: %s", req)
         try:
             params = args['body']
-            logger.debug("Request params: %s", params)
+            logger.debug("Request params: %s" % params)
             self._validate_params(params)
             result = core_api.device_create(self.conf, **params)
             return {'devices': result}
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+            msg = "Element not found"
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
         return {'devices': list}
@@ -67,7 +67,6 @@ class Controller(object):
         logger.debug("Got device data request. Request: %s Arguments: %s" % \
                                                                    (req, args))
         try:
-
             return {"list": "OK"}
             # TODO(yorik-sar): actually implement method
             logger.debug(msg)
@@ -78,19 +77,17 @@ class Controller(object):
             worker = mapper.getWorker(task, "show", self.conf)
             if worker.type == SYNCHRONOUS_WORKER:
                 result = worker.run()
-
                 return {'devices': result}
-
             if worker.type == ASYNCHRONOUS_WORKER:
                 task.worker = worker
                 self._service_controller.addTask(task)
                 return {'task_id': task.id}
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+            msg = "Element not found"
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
         return {'devices': list}
@@ -113,11 +110,11 @@ class Controller(object):
             else:
                 return {'device_command_status': 'not available'}
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+            msg = "Device with id %s not found" % args['id']
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
         finally:
@@ -130,11 +127,11 @@ class Controller(object):
                 result = core_api.device_info(args)
                 return {'devices': result}
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+            msg = "Element not found"
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
         return {'devices': list}

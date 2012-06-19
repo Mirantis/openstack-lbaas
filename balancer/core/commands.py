@@ -121,7 +121,7 @@ def delete_rserver(ctx, rs):
     LOG.debug("Got delete RS request")
     if (rs.get('parent_id') and rs['parent_id'] != ""):
         rss = db_api.server_get_all_by_parent_id(ctx.conf, rs['parent_id'])
-        LOG.debug("List servers %s", rss)
+        LOG.debug("List of servers: %s", rss)
         if len(rss) == 1:
             parent_rs = db_api.server_get(ctx.conf, rs['parent_id'])
             ctx.device.delete_real_server(parent_rs)
@@ -129,7 +129,7 @@ def delete_rserver(ctx, rs):
         # rs1
         # We need to check if there are reals who reference this rs as a parent
         rss = db_api.server_get_all_by_parent_id(ctx.conf, rs['id'])
-        LOG.debug("List servers %s", rss)
+        LOG.debug("List of servers: %s", rss)
         if len(rss) == 0:
             ctx.device.delete_real_server(rs)
 
@@ -250,10 +250,10 @@ def create_loadbalancer(ctx, balancer):
     create_server_farm(ctx, balancer.sf)
     for rserver in balancer.rs:
         create_rserver(ctx, rserver)
-        add_rserver_to_server_farm(ctx, balancer.sf,  rserver)
+        add_rserver_to_server_farm(ctx, balancer.sf, rserver)
         port.append(rserver.get('port'))
     for probe in balancer.probes:
-        probe['port'] = port[-1]
+        probe['port'] = port[-1] or '80'
         create_probe(ctx,  probe)
         add_probe_to_server_farm(ctx, balancer.sf, probe)
     for vip in balancer.vips:
