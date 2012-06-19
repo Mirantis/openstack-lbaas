@@ -18,15 +18,12 @@
 
 
 import logging
-
-
 from balancer.drivers.base_driver import BaseDriver
 from balancer.drivers.haproxy.RemoteControl import RemoteConfig
 from balancer.drivers.haproxy.RemoteControl import RemoteInterface
 from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation
 
 logger = logging.getLogger(__name__)
-
 
 class HaproxyDriver(BaseDriver):
     def __init__(self, device_ref):
@@ -54,13 +51,13 @@ class HaproxyDriver(BaseDriver):
             self.interface = device_ref.interface
         self.haproxy_socket = '/tmp/haproxy.sock'
 
-    def addProbeToSF(self, serverfarm, probe):
+    def add_probe_to_server_farm(self, serverfarm, probe):
         '''
             Haproxy support only tcp (connect), http and https (limited) probes
         '''
         self.probeSF(serverfarm, probe, 'add')
 
-    def deleteProbeFromSF(self, serverfarm, probe):
+    def delete_probe_from_server_farm(self, serverfarm, probe):
         self.probeSF(serverfarm, probe, 'del')
 
     def probeSF(self, serverfarm, probe, type_of_operation):
@@ -116,7 +113,7 @@ class HaproxyDriver(BaseDriver):
                     self.new_lines)
         remote.putConfig()
 
-    def addRServerToSF(self, serverfarm, rserver):
+    def add_real_server_to_server_farm(self, serverfarm, rserver):
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['name']
         haproxy_rserver = HaproxyRserver()
@@ -138,7 +135,7 @@ class HaproxyDriver(BaseDriver):
                                              haproxy_rserver)
         remote.putConfig()
 
-    def deleteRServerFromSF(self, serverfarm, rserver):
+    def delete_real_server_from_server_farm(self, serverfarm, rserver):
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['name']
         haproxy_rserver = HaproxyRserver()
@@ -156,7 +153,7 @@ class HaproxyDriver(BaseDriver):
                                                haproxy_rserver)
         remote.putConfig()
 
-    def createVIP(self, virtualserver, serverfarm):
+    def create_virtual_ip(self, virtualserver, serverfarm):
         if not bool(virtualserver['name']):
             logger.error('[HAPROXY] Virtualserver name is empty')
             return 'VIRTUALSERVER NAME ERROR'
@@ -181,7 +178,7 @@ class HaproxyDriver(BaseDriver):
         remote.putConfig()
         remote.validationConfig()
 
-    def deleteVIP(self, virtualserver):
+    def delete_virtual_ip(self, virtualserver):
         logger.debug('[HAPROXY] delete VIP')
         if not bool(virtualserver['name']):
             logger.error('[HAPROXY] Virtualserver name is empty')
@@ -206,7 +203,7 @@ class HaproxyDriver(BaseDriver):
         config_file.DeleteBlock(haproxy_virtualserver)
         remote.putConfig()
 
-    def getStatistics(self, serverfarm, rserver):
+    def get_statistics(self, serverfarm, rserver):
         haproxy_rserver = HaproxyRserver()
         haproxy_rserver.name = rserver['name']
         haproxy_serverfarm = HaproxyBackend()
@@ -231,10 +228,10 @@ class HaproxyDriver(BaseDriver):
 #                statistics.state)
         return statistics
 
-    def suspendRServer(self, serverfarm, rserver):
+    def suspend_real_server(self, serverfarm, rserver):
         self.operationWithRServer(serverfarm, rserver, 'suspend')
 
-    def activateRServer(self, serverfarm, rserver):
+    def activate_real_server(self, serverfarm, rserver):
         self.operationWithRServer(serverfarm, rserver, 'activate')
 
     def operationWithRServer(self, serverfarm, rserver, \
@@ -261,7 +258,7 @@ class HaproxyDriver(BaseDriver):
             remote_socket.activateServer()
         remote_config.putConfig()
 
-    def createServerFarm(self, serverfarm):
+    def create_server_farm(self, serverfarm):
         if not bool(serverfarm['name']):
             logger.error('[HAPROXY] Serverfarm name is empty')
             return 'SERVERFARM FARM NAME ERROR'
@@ -283,7 +280,7 @@ class HaproxyDriver(BaseDriver):
         config_file.AddBackend(haproxy_serverfarm)
         remote.putConfig()
 
-    def deleteServerFarm(self, serverfarm):
+    def delete_server_farm(self, serverfarm):
         if not bool(serverfarm['name']):
             logger.error('[HAPROXY] Serverfarm name is empty')
             return 'SERVER FARM NAME ERROR'

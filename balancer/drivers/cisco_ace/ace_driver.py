@@ -25,7 +25,7 @@ import openstack.common.exception
 
 logger = logging.getLogger(__name__)
 
-def deployConfig(self,  s):
+def deployConfig(self, s):
     request = urllib2.Request(self.url)
     request.add_header("Authorization", self.authheader)
     d = """xml_cmd=<request_raw>\nconfigure\n%s\nend\n</request_raw>""" % s
@@ -41,7 +41,7 @@ def deployConfig(self,  s):
     else:
         return Exception
 
-def getConfig(self,  s):
+def getConfig(self, s):
     request = urllib2.Request(self.url)
     request.add_header("Authorization", self.authheader)
     data = """xml_cmd=<request_raw>\nshow runn %s\n</request_raw>""" % s
@@ -54,7 +54,7 @@ def getConfig(self,  s):
     logger.debug("data from ACE:\n" + s)
     return s
 
-def create_nat_pool(self,  nat_pool):
+def create_nat_pool(self, nat_pool):
     cmd = "int vlan " + nat_pool['vlan'] + \
           "\nnat-pool " + nat_pool['number'] + " " + nat_pool['ip']
     if nat_pool.get('ip2'):
@@ -64,11 +64,11 @@ def create_nat_pool(self,  nat_pool):
         cmd += " pat"
     deployConfig(cmd)
 
-def delete_nat_pool(self,  nat_pool):
+def delete_nat_pool(self, nat_pool):
     cmd = "int vlan " + nat_pool['vlan'] + "\nno nat-pool " + nat_pool['number']
     deployConfig(cmd)
 
-def add_nat_pool_to_vip(self,  nat_pool,  vip):
+def add_nat_pool_to_vip(self, nat_pool, vip):
     cmd = "policy-map multi-match "
     vip_extra = vip.get('extra') or {}
     if vip_extra.get('allVLANs'):
@@ -80,7 +80,7 @@ def add_nat_pool_to_vip(self,  nat_pool,  vip):
            " vlan " + nat_pool['vlan']
     deployConfig(cmd)
 
-def delete_nat_pool_from_vip(self,  nat_pool,  vip):
+def delete_nat_pool_from_vip(self, nat_pool, vip):
     cmd = "policy-map multi-match "
     vip_extra = vip.get('extra') or {}
     if vip_extra.get('allVLANs'):
@@ -100,12 +100,12 @@ def get_nat_pools():
         for f in s:
             f = f.split()
             for w in f:
-                if w.length() > 4:
+                if len(w) > 4:
                     r.append(w)
             res['vlan'] = vlan[-1]
             res['id'] = r[0]
             res['ip1'] = r[1]
-            if r.length() > 3:
+            if len(r) > 3:
                 res['ip2'] = r[2]
                 res['netmask'] = r[3]
             else:
@@ -114,7 +114,7 @@ def get_nat_pools():
             result.append(res)
     return result
 
-def find_nat_pool_for_vip(self,  vip):
+def find_nat_pool_for_vip(self, vip):
     ip = ipaddr.ip_address(vip['address'])
     network = ipaddr.ip_network(ip + "/" + vip['mask'])
     for nat_pool in get_nat_pools()
@@ -126,7 +126,7 @@ def find_nat_pool_for_vip(self,  vip):
                 return nat_pool
     return None
 
-def generate_nat_pool_for_vip(self,  vip):
+def generate_nat_pool_for_vip(self, vip):
     nat_pool['vlan'] = vip['extra']['VLAN'][-1]
     nat_pool['netmask'] = vip['mask']
     ip = ipaddr.ip_address(vip['address'])
@@ -154,7 +154,7 @@ class AceDriver(BaseDriver):
                "\n" + dev_extra['server_password']
         deployConfig(cmd)
 
-    def create_ssl_proxy(self,  ssl_proxy):
+    def create_ssl_proxy(self, ssl_proxy):
         cmd = "ssl-proxy service " + ssl_proxy['name']
         if ssl_proxy.get('cert'):
             cmd += "\ncert " + ssl_proxy['cert']
@@ -176,30 +176,30 @@ class AceDriver(BaseDriver):
             cmd += "\nrevcheckprion " + ssl_proxy['CheckPriority']
         deployConfig(cmd)
 
-    def delete_ssl_proxy(self,  ssl_proxy):
+    def delete_ssl_proxy(self, ssl_proxy):
         cmd = "no ssl-proxy service " + ssl_proxy['name']
         deployConfig(cmd)
 
-    def add_ssl_proxy_to_vip(self,  vip,  ssl_proxy):
+    def add_ssl_proxy_to_virtual_ip(self, vip, ssl_proxy):
         cmd = "policy-map multi-match global\nclass " + vip['name'] + \
               "\nssl-proxy server " + ssl_proxy['name']
         deployConfig(cmd)
 
-    def remove_ssl_proxy_from_vip(self,  vip,  ssl_proxy):
+    def remove_ssl_proxy_from_virtual_ip(self, vip, ssl_proxy):
         cmd = "policy-map multi-match global\nclass " + vip['name'] + \
               "\nno ssl-proxy server " + ssl_proxy['name']
         deployConfig(cmd)
 
-    def create_vlan(self,  vlan):
+    def create_vlan(self, vlan):
         cmd = "int vlan " + vlan['number'] + "\nip address" + vlan['ip'] + \
               " " + vlan['netmask'] + "\nno shutdown"
         deployConfig(cmd)
 
-    def delete_vlan(self,  vlan):
+    def delete_vlan(self, vlan):
         cmd = "no int vlan " + vlan['number']
         deployConfig(cmd)
 
-    def createRServer(self,  rserver):
+    def create_real_server(self, rserver):
         srv_type = rserver['type'].lower()
         srv_extra = rserver.get('extra') or {}
         cmd = "\nrserver " + srv_type + " " + rserver['name']
@@ -228,11 +228,11 @@ class AceDriver(BaseDriver):
             cmd += "\ninservice"
         deployConfig(cmd)
 
-    def deleteRServer(self,  rserver):
+    def delete_real_server(self, rserver):
         cmd = "no rserver " + rserver['name']
         deployConfig(cmd)
 
-    def activateRServer(self,  serverfarm,  rserver):
+    def activate_real_server(self, serverfarm, rserver):
         cmd = "serverfarm " + serverfarm['name'] + "\n" + \
               "rserver " + rserver['name']
         if self.checkNone(rserver['port']):
@@ -240,11 +240,11 @@ class AceDriver(BaseDriver):
         cmd += "\ninservice"
         deployConfig(cmd)
 
-    def activateRServerGlobal(self,  rserver):
+    def activate_real_server_global(self, rserver):
         cmd = "rserver " + rserver['name'] + "\ninservice"
         deployConfig(cmd)
 
-    def suspendRServer(self,  serverfarm,  rserver):
+    def suspend_real_server(self, serverfarm, rserver):
         cmd = "serverfarm " + serverfarm['name'] + "\n" + \
               "rserver " + rserver['name']
         if self.checkNone(rserver['port']):
@@ -255,11 +255,11 @@ class AceDriver(BaseDriver):
             cmd += "\nno inservice"
         deployConfig(cmd)
 
-    def suspendRServerGlobal(self,  rserver):
+    def suspend_real_server_global(self, rserver):
         cmd = "rserver " + rserver['name'] + "\nno inservice"
         deployConfig(cmd)
 
-    def createProbe(self,  probe):
+    def create_probe(self, probe):
         pr_extra = probe.get('extra') or {}
         pr_type = probe['type'].lower().replace('-', ' ')
         if pr_type == "connect":
@@ -379,14 +379,14 @@ class AceDriver(BaseDriver):
                         pr_extra['minMemBurstThresh']
         deployConfig(cmd)
 
-    def deleteProbe(self,  probe):
+    def delete_probe(self, probe):
         pr_type = probe['type'].lower().replace('-', ' ')
         if pr_type == "connect":
             pr_type = "tcp"
         cmd = "no probe " + pr_type + " " + probe['name']
         deployConfig(cmd)
 
-    def createServerFarm(self,  sf):
+    def create_server_farm(self, sf):
         sf_type = sf['type'].lower()
         sf_extra = sf.get('extra') or {}
         cmd = "serverfarm " + sf_type + " " + sf['name']
@@ -436,11 +436,11 @@ class AceDriver(BaseDriver):
                     cmd += " probe " + sf['VMprobe']
         deployConfig(cmd)
 
-    def deleteServerFarm(self,  sf):
+    def delete_server_farm(self, sf):
         cmd = "no serverfarm " + sf['name']
         self.deployConfig(cmd)
 
-    def addRServerToSF(self,  sf,  rserver):
+    def add_real_server_to_server_farm(self, sf, rserver):
         srv_extra = rserver.get('extra') or {}
         cmd = "serverfarm " + sf['name'] + "\nrserver " + rserver['name']
         if rserver.get('port'):
@@ -469,21 +469,21 @@ class AceDriver(BaseDriver):
                 cmd += " standby"
         deployConfig(cmd)
 
-    def deleteRServerFromSF(self,  sf,  rserver):
+    def delete_real_server_from_server_farm(self, sf, rserver):
         cmd = "serverfarm " + sf['name'] + "\nno rserver " + rserver['name']
         if rserver.get('port'):
             cmd += " " + rserver['port']
         deployConfig(cmd)
 
-    def addProbeToSF(self,  sf,  probe):
+    def add_probe_to_server_farm(self, sf, probe):
         cmd = "serverfarm " + sf['name'] + "\nprobe " + probe['name']
         deployConfig(cmd)
 
-    def deleteProbeFromSF(self,  sf,  probe):
+    def delete_probe_from_server_farm(self, sf, probe):
         cmd = "serverfarm " + sf['name'] + "\nno probe " + probe['name']
         deployConfig(cmd)
 
-    def createStickiness(self,  sticky):
+    def create_stickiness(self, sticky):
         name = sticky['name']
         sticky_type = sticky['type'].lower().replace('httpc', 'http-c')
         sticky_type = sticky_type.replace('header', '-header')
@@ -569,7 +569,7 @@ class AceDriver(BaseDriver):
                     cmd += " aggregate-state"
         deployConfig(cmd)
 
-    def deleteStickiness(self,  sticky):
+    def delete_stickiness(self, sticky):
         name = sticky['name']
         sticky_type = sticky['type'].lower().replace('httpc', 'http-c')
         sticky_type = sticky_type.replace('header', '-header')
@@ -590,7 +590,7 @@ class AceDriver(BaseDriver):
             cmd += " Call-ID" + name
         deployConfig(cmd)
 
-    def createVIP(self,  vip,  sfarm):
+    def create_virtual_ip(self, vip, sfarm):
         vip_extra = vip.get('extra') or {}
         allVLANs = vip_extra.get('allVLANs')
         if self.checkNone(allVLANs):
@@ -661,9 +661,8 @@ class AceDriver(BaseDriver):
             nat_pool = generate_nat_pool_for_vip(vip)
             create_nat_pool(nat_pool)
             add_nat_pool_to_vip(nat_pool, vip)
-            
 
-    def deleteVIP(self,  vip):
+    def delete_virtual_ip(self, vip):
         vip_extra = vip['extra'] or {}
         if vip_extra.get('allVLANs'):
             pmap = "global"

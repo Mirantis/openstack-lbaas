@@ -39,76 +39,76 @@ class BaseDriver(object):
                 return True
         return False
 
-    def importCertificatesAndKeys(self):
+    def import_certificate_or_key(self):
         raise NotImplementedError
 
-    def createSSLProxy(self, SSLproxy):
+    def create_ssl_proxy(self, ssl_proxy):
         raise NotImplementedError
 
-    def deleteSSLProxy(self, SSLproxy):
+    def delete_ssl_proxy(self, ssl_proxy):
         raise NotImplementedError
 
-    def addSSLProxyToVIP(self, vip, SSLproxy):
+    def add_ssl_proxy_to_virtual_ip(self, vip, ssl_proxy):
         raise NotImplementedError
 
-    def removeSSLProxyFromVIP(self, vip, SSLproxy):
+    def remove_ssl_proxy_from_virtual_ip(self, vip, ssl_proxy):
         raise NotImplementedError
 
-    def createRServer(self, rserver):
+    def create_real_server(self, rserver):
         raise NotImplementedError
 
-    def deleteRServer(self, rserver):
+    def delete_real_server(self, rserver):
         raise NotImplementedError
 
-    def activateRServer(self, serverfarm, rserver):
+    def activate_real_server(self, serverfarm, rserver):
         raise NotImplementedError
 
-    def activateRServerGlobal(self, rserver):
+    def activate_real_server_global(self, rserver):
         raise NotImplementedError
 
-    def suspendRServer(self, serverfarm, rserver):
+    def suspend_real_server(self, serverfarm, rserver):
         raise NotImplementedError
 
-    def suspendRServerGlobal(self, rserver):
+    def suspend_real_server_global(self, rserver):
         raise NotImplementedError
 
-    def createProbe(self, probe):
+    def create_probe(self, probe):
         raise NotImplementedError
 
-    def deleteProbe(self, probe):
+    def delete_probe(self, probe):
         raise NotImplementedError
 
-    def createServerFarm(self, serverfarm):
+    def create_server_farm(self, serverfarm):
         raise NotImplementedError
 
-    def deleteServerFarm(self, serverfarm):
+    def delete_server_farm(self, serverfarm):
         raise NotImplementedError
 
-    def addRServerToSF(self, serverfarm, rserver):
+    def add_real_server_to_server_farm(self, serverfarm, rserver):
         raise NotImplementedError
 
-    def deleteRServerFromSF(self, serverfarm, rserver):
+    def delete_real_server_from_server_farm(self, serverfarm, rserver):
         raise NotImplementedError
 
-    def addProbeToSF(self, serverfarm, probe):
+    def add_probe_to_server_farm(self, serverfarm, probe):
         raise NotImplementedError
 
-    def deleteProbeFromSF(self, serverfarm, probe):
+    def delete_probe_from_server_farm(self, serverfarm, probe):
         raise NotImplementedError
 
-    def createStickiness(self, sticky):
+    def create_stickiness(self, sticky):
         raise NotImplementedError
 
-    def deleteStickiness(self, sticky):
+    def delete_stickiness(self, sticky):
         raise NotImplementedError
 
-    def createVIP(self, vip, sfarm):
+    def create_virtual_ip(self, vip, serverfarm):
         raise NotImplementedError
 
-    def deleteVIP(self, vip):
+    def delete_virtual_ip(self, vip):
         raise NotImplementedError
 
-    def getStatistics(self, serverfarm, rserver):
+    def get_statistics(self, serverfarm, rserver):
         raise NotImplementedError
 
 

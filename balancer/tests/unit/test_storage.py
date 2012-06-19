@@ -19,6 +19,8 @@ import unittest
 
 
 from balancer.storage.storage import *
+# TODO: check modules - balancer.loadbalancers.loadbalancer
+#       does not exists.
 from balancer.loadbalancers.loadbalancer import LoadBalancer
 from openstack.common import exception
 from balancer.devices.device import LBDevice

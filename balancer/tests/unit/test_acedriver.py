@@ -339,236 +339,236 @@ vip_sticky = { 'name': 'LB_test_VIP2', 'ipVersion': 'IPv4', \
 
 class Ace_DriverTestCase(unittest.TestCase):
     def test_01a_createRServer_typeHost(self):
-        print driver.createRServer(rs_host)
+        print driver.create_real_server(rs_host)
 
     def test_01b_createRServer_typeRedirect(self):
-        print driver.createRServer(rs_redirect)
+        print driver.create_real_server(rs_redirect)
 
 
     def test_02a_createDNSProbe(self):
-        driver.createProbe(probe_dns)
+        driver.create_probe(probe_dns)
 
     def test_02b_createECHOUDPprobe(self):
-        driver.createProbe(probe_echoUDP)
+        driver.create_probe(probe_echoUDP)
 
     def test_02c_createECHOTCPprobe(self):
-        driver.createProbe(probe_echoTCP)
+        driver.create_probe(probe_echoTCP)
 
     def test_02d_createFINGERprobe(self):
-        driver.createProbe(probe_finger)
+        driver.create_probe(probe_finger)
 
     def test_02e_createFTPprobe(self):
-        driver.createProbe(probe_ftp)
+        driver.create_probe(probe_ftp)
 
     def test_02f_createHTTPprobe(self):
-        driver.createProbe(probe_http)
+        driver.create_probe(probe_http)
 
     def test_02g_createHTTPSprobe(self):
-        driver.createProbe(probe_https)
+        driver.create_probe(probe_https)
 
     def test_02h_createICMPprobe(self):
-        driver.createProbe(probe_icmp)
+        driver.create_probe(probe_icmp)
 
     def test_02i_createIMAPprobe(self):
-        driver.createProbe(probe_imap)
+        driver.create_probe(probe_imap)
 
     def test_02j_createPOPprobe(self):
-        driver.createProbe(probe_pop)
+        driver.create_probe(probe_pop)
 
     def test_02k_createRADIUSprobe(self):
-        driver.createProbe(probe_radius)
+        driver.create_probe(probe_radius)
 
     def test_02l_createRTSPprobe(self):
-        driver.createProbe(probe_rtsp)
+        driver.create_probe(probe_rtsp)
 
     def test_02m_createSCRIPTEDprobe(self):
-        driver.createProbe(probe_scripted)
+        driver.create_probe(probe_scripted)
 
     def test_02n_createSIPUDPprobe(self):
-        driver.createProbe(probe_sipUDP)
+        driver.create_probe(probe_sipUDP)
 
     def test_02o_createSMTPprobe(self):
-        driver.createProbe(probe_smtp)
+        driver.create_probe(probe_smtp)
 
     def test_02p_createSNMPprobe(self):
-        driver.createProbe(probe_snmp)
+        driver.create_probe(probe_snmp)
 
     def test_02r_createTCPprobe(self):
-        driver.createProbe(probe_tcp)
+        driver.create_probe(probe_tcp)
 
     def test_02s_createTELNETprobe(self):
-        driver.createProbe(probe_telnet)
+        driver.create_probe(probe_telnet)
 
     def test_02t_createUDPprobe(self):
-        driver.createProbe(probe_udp)
+        driver.create_probe(probe_udp)
 
     def test_02u_createVMprobe(self):
-        driver.createProbe(probe_vm)
+        driver.create_probe(probe_vm)
 
     def test_03a_createServerFarm_typeHost(self):
-        driver.createServerFarm(sf_host)
+        driver.create_server_farm(sf_host)
 
     def test_03b_createServerFarm_typeRedirect(self):
-        driver.createServerFarm(sf_redirect)
+        driver.create_server_farm(sf_redirect)
 
     def test_04_addRServerToSF(self):
-        driver.addRServerToSF(sf_host,  rs_host)
+        driver.add_real_server_to_server_farm(sf_host,  rs_host)
 
     def test_05_addProbeToSF(self):
-        driver.addProbeToSF(sf_host,  probe_http)
+        driver.add_probe_to_server_farm(sf_host,  probe_http)
 
     def test_06a_createHTTPContentStickiness(self):
-        driver.createStickiness(sticky_httpContent)
+        driver.create_stickiness(sticky_httpContent)
 
     def test_06b_createHTTPCookieStickiness(self):
-        driver.createStickiness(sticky_httpCookie)
+        driver.create_stickiness(sticky_httpCookie)
 
     def test_06c_createHTTPHeaderStickiness(self):
-        driver.createStickiness(sticky_httpHeader)
+        driver.create_stickiness(sticky_httpHeader)
 
     def test_06d_createIPNetmaskStickiness(self):
-        driver.createStickiness(sticky_ipnetmask)
+        driver.create_stickiness(sticky_ipnetmask)
 
     def test_06e_createV6prefixStickiness(self):
-        driver.createStickiness(sticky_v6prefix)
+        driver.create_stickiness(sticky_v6prefix)
 
     def test_06f_createL4payloadStickiness(self):
-        driver.createStickiness(sticky_l4payload)
+        driver.create_stickiness(sticky_l4payload)
 
     def test_06g_createRadiusStickiness(self):
-        driver.createStickiness(sticky_radius)
+        driver.create_stickiness(sticky_radius)
 
     def test_06h_createRTSPHeaderStickiness(self):
-        driver.createStickiness(sticky_rtspHeader)
+        driver.create_stickiness(sticky_rtspHeader)
 
     def test_06i_createSIPHeaderStickiness(self):
-        driver.createStickiness(sticky_sipHeader)
+        driver.create_stickiness(sticky_sipHeader)
 
     def test_07a_createVIP_loadbalncer(self):
-        driver.createVIP(vip_loadbalance,  sf_host)
+        driver.create_virtual_ip(vip_loadbalance,  sf_host)
 
     def test_07b_createVIP_sticky(self):
-        driver.createVIP(vip_sticky,  sf_redirect)
+        driver.create_virtual_ip(vip_sticky,  sf_redirect)
 
     def test_08_suspendRServer(self):
-        driver.suspendRServer(sf_host, rs_host)
+        driver.suspend_real_server(sf_host, rs_host)
 
     def test_08a_suspendRServerGlobal(self):
-        driver.suspendRServerGlobal(rs_redirect)
+        driver.suspend_real_server_global(rs_redirect)
 
     def test_09_activateRServer(self):
-        driver.activateRServer(sf_host, rs_host)
+        driver.activate_real_server(sf_host, rs_host)
 
     def test_09a_activateRServerGlobal(self):
-        driver.activateRServerGlobal(rs_redirect)
+        driver.activate_real_server_global(rs_redirect)
 
     def test_10a_deleteVIP_loadbalance(self):
-        driver.deleteVIP(vip_loadbalance)
+        driver.delete_virtual_ip(vip_loadbalance)
 
     def test_10b_deleteVIP_sticky(self):
-        driver.deleteVIP(vip_sticky)
+        driver.delete_virtual_ip(vip_sticky)
 
     def test_11a_deleteHTTPContentStickiness(self):
-        driver.deleteStickiness(sticky_httpContent)
+        driver.delete_stickiness(sticky_httpContent)
 
     def test_11b_deleteHTTPCookieStickiness(self):
-        driver.deleteStickiness(sticky_httpCookie)
+        driver.delete_stickiness(sticky_httpCookie)
 
     def test_11c_deleteHTTPHeaderStickiness(self):
-        driver.deleteStickiness(sticky_httpHeader)
+        driver.delete_stickiness(sticky_httpHeader)
 
     def test_11d_deleteIPNetmaskStickiness(self):
-        driver.deleteStickiness(sticky_ipnetmask)
+        driver.delete_stickiness(sticky_ipnetmask)
 
     def test_11e_deleteV6prefixStickiness(self):
-        driver.deleteStickiness(sticky_v6prefix)
+        driver.delete_stickiness(sticky_v6prefix)
 
     def test_11f_deleteL4payloadStickiness(self):
-        driver.deleteStickiness(sticky_l4payload)
+        driver.delete_stickiness(sticky_l4payload)
 
     def test_11g_deleteRadiusStickiness(self):
-        driver.deleteStickiness(sticky_radius)
+        driver.delete_stickiness(sticky_radius)
 
     def test_11h_deleteRTSPHeaderStickiness(self):
-        driver.deleteStickiness(sticky_rtspHeader)
+        driver.delete_stickiness(sticky_rtspHeader)
 
     def test_11i_deleteSIPHeaderStickiness(self):
-        driver.deleteStickiness(sticky_sipHeader)
+        driver.delete_stickiness(sticky_sipHeader)
 
     def test_12_deleteProbeFromSF(self):
-        driver.deleteProbeFromSF(sf_host,  probe_http)
+        driver.delete_probe_from__server_farm(sf_host, probe_http)
 
     def test_13_deleteRServerFromSF(self):
-        driver.deleteRServerFromSF(sf_host,  rs_host)
+        driver.delete_real_server_from_server_farm(sf_host, rs_host)
 
     def test_14a_deleteServerFarm_typeHost(self):
-        driver.deleteServerFarm(sf_host)
+        driver.delete_server_farm(sf_host)
 
     def test_14b_deleteServerFarm_typeRedirect(self):
-        driver.deleteServerFarm(sf_redirect)
+        driver.delete_server_farm(sf_redirect)
 
     def test_15a_deleteDNSProbe(self):
-        driver.deleteProbe(probe_dns)
+        driver.delete_probe(probe_dns)
 
     def test_15b_deleteECHOUDPprobe(self):
-        driver.deleteProbe(probe_echoUDP)
+        driver.delete_probe(probe_echoUDP)
 
     def test_15c_deleteECHOTCPprobe(self):
-        driver.deleteProbe(probe_echoTCP)
+        driver.delete_probe(probe_echoTCP)
 
     def test_15d_deleteFINGERprobe(self):
-        driver.deleteProbe(probe_finger)
+        driver.delete_probe(probe_finger)
 
     def test_15e_deleteFTPprobe(self):
-        driver.deleteProbe(probe_ftp)
+        driver.delete_probe(probe_ftp)
 
     def test_15f_deleteHTTPprobe(self):
-        driver.deleteProbe(probe_http)
+        driver.delete_probe(probe_http)
 
     def test_15g_deleteHTTPSprobe(self):
-        driver.deleteProbe(probe_https)
+        driver.delete_probe(probe_https)
 
     def test_15h_deleteICMPprobe(self):
-        driver.deleteProbe(probe_icmp)
+        driver.delete_probe(probe_icmp)
 
     def test_15i_deleteIMAPprobe(self):
-        driver.deleteProbe(probe_imap)
+        driver.delete_probe(probe_imap)
 
     def test_15j_deletePOPprobe(self):
-        driver.deleteProbe(probe_pop)
+        driver.delete_probe(probe_pop)
 
     def test_15k_deleteRADIUSprobe(self):
-        driver.deleteProbe(probe_radius)
+        driver.delete_probe(probe_radius)
 
     def test_15l_deleteRTSPprobe(self):
-        driver.deleteProbe(probe_rtsp)
+        driver.delete_probe(probe_rtsp)
 
     def test_15m_deleteSCRIPTEDprobe(self):
-        driver.deleteProbe(probe_scripted)
+        driver.delete_probe(probe_scripted)
 
     def test_15n_deleteSIPUDPprobe(self):
-        driver.deleteProbe(probe_sipUDP)
+        driver.delete_probe(probe_sipUDP)
 
     def test_15o_deleteSMTPprobe(self):
-        driver.deleteProbe(probe_smtp)
+        driver.delete_probe(probe_smtp)
 
     def test_15p_deleteSNMPprobe(self):
-        driver.deleteProbe(probe_snmp)
+        driver.delete_probe(probe_snmp)
 
     def test_15r_deleteTCPprobe(self):
-        driver.deleteProbe(probe_tcp)
+        driver.delete_probe(probe_tcp)
 
     def test_15s_deleteTELNETprobe(self):
-        driver.deleteProbe(probe_telnet)
+        driver.delete_probe(probe_telnet)
 
     def test_15t_deleteUDPprobe(self):
-        driver.deleteProbe(probe_udp)
+        driver.delete_probe(probe_udp)
 
     def test_15u_deleteVMprobe(self):
-        driver.deleteProbe(probe_vm)
+        driver.delete_probe(probe_vm)
 
     def test_16a_deleteRServer_typeHost(self):
-        driver.deleteRServer(rs)
+        driver.delete_real_server(rs)
 
     def test_16b_deleteRServer_typeRedirect(self):
-        driver.deleteRServer(rs)
+        driver.delete_real_server(rs)

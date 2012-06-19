@@ -51,11 +51,11 @@ class Controller(object):
             result = core_api.lb_find_for_vm(self.conf, **params)
             return {'loadbalancers': result}
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+            msg = "VM with id %s not found" % args['vm_id']
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -65,13 +65,12 @@ class Controller(object):
             tenant_id = req.headers.get('X-Tenant-Id', "")
             result = core_api.lb_get_index(self.conf, tenant_id)
             return {'loadbalancers': result}
-
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+            msg = "Balancer with id %s not found" % args['id']
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
         return {'loadbalancers': list}
@@ -89,12 +88,12 @@ class Controller(object):
             core_api.create_lb(self.conf, **params)
             return {'loadbalancers': {'id': lb_ref['id']}}
         except exception.NotFound:
-            msg = "Exception occured "
+            msg = "Exception occured"
             traceback.print_exc(file=sys.stdout)
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -105,11 +104,11 @@ class Controller(object):
             return "OK"
 
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % args['id']
+            msg = "Balancer with id %s not found" % args['id']
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -119,11 +118,11 @@ class Controller(object):
             result = core_api.lb_get_data(self.conf, args['id'])
             return {'loadbalancer': result}
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % args['id']
+            msg = "Balancer with id %s not found" % args['id']
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -133,11 +132,11 @@ class Controller(object):
             result = core_api.lb_show_details(self.conf, args['id'])
             return result
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % args['id']
+            msg = "Balancer with id %s not found" % args['id']
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = ("Unauthorized image access")
+            msg = ("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -147,11 +146,11 @@ class Controller(object):
             core_api.update_lb(self.conf, args['id'], args['body'])
             return {'loadbalancers': "OK"}
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+            msg = "Balancer with id %s not found" % args['id']
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = ("Unauthorized image access")
+            msg = ("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -161,11 +160,11 @@ class Controller(object):
             return core_api.lb_add_node(self.conf, args['id'],
                     args['body']['node'])
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+            msg = "Node with id %s not found" % args['id']
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = ("Unauthorized image access")
+            msg = ("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -174,11 +173,11 @@ class Controller(object):
             logger.debug("Got showNodes request. Request: %s", req)
             return core_api.lb_show_nodes(self.conf, args['id'])
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+            msg = "Node with id %s not found" % args['id']
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = ("Unauthorized image access")
+            msg = ("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -189,11 +188,11 @@ class Controller(object):
                                                             args['nodeID'])
             return "Deleted node with id %s" % lb_node_id
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+            msg = "Node with id %s not found" % args['id']
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = ("Unauthorized image access")
+            msg = ("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -205,11 +204,11 @@ class Controller(object):
                                                              args['status'])
             return msg
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+            msg = "Element not found"
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = ("Unauthorized image access")
+            msg = ("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -225,7 +224,7 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = ("Unauthorized image access")
+            msg = ("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -239,7 +238,7 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -254,7 +253,7 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -269,7 +268,7 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -283,7 +282,7 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -298,7 +297,7 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
@@ -313,7 +312,7 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 

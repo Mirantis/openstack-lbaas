@@ -104,12 +104,12 @@ def create_rserver(ctx, rs):
         LOG.debug("Creating rserver command execution with rserver: %s", rs)
         LOG.debug("RServer parent_id: %s", rs['parent_id'])
         if rs['parent_id'] == "":
-            ctx.device.createRServer(rs)
+            ctx.device.create_real_server(rs)
             rs['deployed'] = 'True'
             db_api.server_update(ctx.conf, rs['id'], rs)
         yield
     except Exception:
-        ctx.device.deleteRServer(rs)
+        ctx.device.delete_real_server(rs)
         rs['deployed'] = 'False'
         db_api.server_update(ctx.conf, rs['id'], rs)
         raise
@@ -119,137 +119,128 @@ def create_rserver(ctx, rs):
 def delete_rserver(ctx, rs):
     rss = []
     LOG.debug("Got delete RS request")
-    if rs['parent_id'] != "" and utils.checkNone(rs['parent_id']):
+    if (rs.get('parent_id') and rs['parent_id'] != ""):
         rss = db_api.server_get_all_by_parent_id(ctx.conf, rs['parent_id'])
         LOG.debug("List servers %s", rss)
         if len(rss) == 1:
             parent_rs = db_api.server_get(ctx.conf, rs['parent_id'])
-            ctx.device.deleteRServer(parent_rs)
+            ctx.device.delete_real_server(parent_rs)
     else:
         # rs1
         # We need to check if there are reals who reference this rs as a parent
         rss = db_api.server_get_all_by_parent_id(ctx.conf, rs['id'])
         LOG.debug("List servers %s", rss)
         if len(rss) == 0:
-            ctx.device.deleteRServer(rs)
+            ctx.device.delete_real_server(rs)
 
 
 def create_sticky(ctx, sticky):
-    ctx.device.createStickiness(sticky)
+    ctx.device.create_stickiness(sticky)
     sticky['deployed'] = 'True'
     db_api.sticky_update(ctx.conf, sticky['id'], sticky)
 
 
 @ignore_exceptions
 def delete_sticky(ctx, sticky):
-    ctx.device.deleteStickiness(sticky)
+    ctx.device.delete_stickiness(sticky)
     sticky['deployed'] = 'False'
     db_api.sticky_update(ctx.conf, sticky['id'], sticky)
 
 
+@ignore_exceptions
+def delete_server_farm(ctx, sf):
+    ctx.device.delete_server_farm(sf)
+    sf['deployed'] = 'False'
+    db_api.serverfarm_update(ctx.conf, sf['id'], sf)
+
 @with_rollback
 def create_server_farm(ctx, sf):
     try:
-        ctx.device.createServerFarm(sf)
+        ctx.device.create_server_farm(sf)
         sf['deployed'] = 'True'
         db_api.serverfarm_update(ctx.conf, sf['id'], sf)
         yield
     except Exception:
-        ctx.device.deleteServerFarm(sf)
-        sf['deployed'] = 'False'
-        db_api.serverfarm_update(ctx.conf, sf['id'], sf)
+        delete_server_farm(ctx, sf)
         raise
-
-
-@ignore_exceptions
-def delete_server_farm(ctx, sf):
-    ctx.device.deleteServerFarm(sf)
-    sf['deployed'] = 'False'
-    db_api.serverfarm_update(ctx.conf, sf['id'], sf)
 
 
 @with_rollback
 def add_rserver_to_server_farm(ctx, server_farm, rserver):
     try:
-        if rserver.parent_id != "":
+        if (rserver.get('parent_id') and rserver['parent_id'] != ""):
             #Nasty hack. We need to think how todo this more elegant
-            rserver.name = rserver.parent_id
-
-        ctx.device.addRServerToSF(server_farm, rserver)
+            rserver['name'] = rserver['parent_id']
+        ctx.device.add_real_server_to_server_farm(server_farm, rserver)
         yield
     except Exception:
-        ctx.device.deleteRServerFromSF(server_farm, rserver)
+        ctx.device.delete_real_server_from_server_farm(server_farm, rserver)
         raise
 
 
 @ignore_exceptions
 def delete_rserver_from_server_farm(ctx, server_farm, rserver):
-    ctx.device.deleteRServerFromSF(server_farm, rserver)
-
-
-@with_rollback
-def create_probe(ctx, probe):
-    try:
-        ctx.device.createProbe(probe)
-        probe['deployed'] = 'True'
-        db_api.probe_update(ctx.conf, probe['id'], probe)
-        yield
-    except Exception:
-        ctx.device.deleteProbe(probe)
-        probe['deployed'] = 'False'
-        db_api.probe_update(ctx.conf, probe['id'], probe)
-        raise
-
+    ctx.device.delete_real_server_from_server_farm(server_farm, rserver)
 
 @ignore_exceptions
 def delete_probe(ctx, probe):
-    ctx.device.deleteProbe(probe)
+    ctx.device.delete_probe(probe)
     probe['deployed'] = 'False'
     db_api.probe_update(ctx.conf, probe['id'], probe)
 
 
 @with_rollback
-def add_probe_to_server_farm(ctx, server_farm, probe):
+def create_probe(ctx, probe):
     try:
-        ctx.device.addProbeToSF(server_farm, probe)
+        ctx.device.create_probe(probe)
+        probe['deployed'] = 'True'
+        db_api.probe_update(ctx.conf, probe['id'], probe)
         yield
     except Exception:
-        ctx.device.deleteProbeFromSF(server_farm, probe)
+        delete_probe(ctx, probe)
+        raise
+
+
+@with_rollback
+def add_probe_to_server_farm(ctx, server_farm, probe):
+    try:
+        ctx.device.add_probe_to_server_farm(server_farm, probe)
+        yield
+    except Exception:
+        ctx.device.delete_probe_from_server_farm(server_farm, probe)
         raise
 
 
 @ignore_exceptions
 def remove_probe_from_server_farm(ctx, server_farm, probe):
-    ctx.device.deleteProbeFromSF(server_farm, probe)
+    ctx.device.delete_probe_from_server_farm(server_farm, probe)
 
 
 def activate_rserver(ctx, server_farm, rserver):
-    ctx.device.activateRServer(server_farm, rserver)
+    ctx.device.activate_real_server(server_farm, rserver)
 
 
 def suspend_rserver(ctx, server_farm, rserver):
-    ctx.device.suspendRServer(server_farm, rserver)
-
-
-@with_rollback
-def create_vip(ctx, vip, server_farm):
-    try:
-        ctx.device.createVIP(vip, server_farm)
-        vip['deployed'] = 'True'
-        db_api.virtualserver_update(ctx.conf, vip['id'], vip)
-        yield
-    except Exception:
-        ctx.device.deleteVIP(vip, server_farm)
-        vip['deployed'] = 'False'
-        db_api.virtualserver_update(ctx.conf, vip['id'], vip)
-        raise
+    ctx.device.suspend_real_server(server_farm, rserver)
 
 
 @ignore_exceptions
 def delete_vip(ctx, vip):
-    ctx.device.deleteVIP(vip)
+    ctx.device.delete_virtual_ip(vip)
     vip['deployed'] = 'False'
     db_api.virtualserver_update(ctx.conf, vip['id'], vip)
+    
+
+@with_rollback
+def create_vip(ctx, vip, server_farm):
+    try:
+        ctx.device.create_virtual_ip(vip, server_farm)
+        vip['deployed'] = 'True'
+        db_api.virtualserver_update(ctx.conf, vip['id'], vip)
+        yield
+    except Exception:
+        delete_vip(ctx, vip)
+        raise
 
 
 def create_loadbalancer(ctx, balancer):

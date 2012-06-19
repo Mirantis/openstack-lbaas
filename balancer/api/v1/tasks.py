@@ -58,11 +58,11 @@ class Controller(object):
             return {'processing_status': status}
 
         except exception.NotFound:
-            msg = "Image with identifier %s not found" % image_id
+            msg = "Element not found"
             logger.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
-            msg = _("Unauthorized image access")
+            msg = _("Unauthorized access")
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
         return {}

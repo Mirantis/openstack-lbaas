@@ -39,7 +39,6 @@ def asynchronous(func):
             eventlet.spawn(func, *args, **kwargs)
         else:
             return func(*args, **kwargs)
-
     return _inner
 
 
@@ -205,14 +204,12 @@ def lb_add_node(conf, lb_id, lb_node):
     with device_driver.request_context() as ctx:
         commands.delete_loadbalancer(ctx, balancer_instance)
         commands.add_node_to_loadbalancer(ctx, balancer_instance, rs)
-
     return rs['id']
 
 
 def lb_show_nodes(conf, lb_id):
     balancer_instance = Balancer(conf)
     nodes = {'nodes': []}
-
     balancer_instance.loadFromDB(lb_id)
     for rs in balancer_instance.rs:
         rs_dict = db_api.unpack_extra(rs)
@@ -326,7 +323,6 @@ def lb_add_probe(conf, lb_id, lb_probe):
                         balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.add_probe_to_loadbalancer(ctx, balancer_instance, prb)
-
     return prb['id']
 
 
@@ -384,7 +380,6 @@ def lb_add_sticky(conf, lb_id, sticky):
                         balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.add_sticky_to_loadbalancer(ctx, balancer_instance, st)
-
     return st['id']
 
 
@@ -406,7 +401,6 @@ def lb_delete_sticky(conf, lb_id, sticky_id):
                         balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.remove_sticky_from_loadbalancer(ctx, balancer_instance, st)
-
     return sticky_id
 
 
@@ -426,7 +420,7 @@ def device_create(conf, **params):
 def device_info(params):
     query = params['query_params']
     logger.debug("DeviceInfoWorker start with Params: %s Query: %s",
-                                                                params, query)
+                                                            params, query)
     return
 
 

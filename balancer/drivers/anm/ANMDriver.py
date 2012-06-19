@@ -103,10 +103,10 @@ class ANMDriver(AceDriver):
  #       raise NotImplementedError(
 #            "ANM Driver can not delete probes from server farm")
 
-    def createStickiness(self,  context,  sticky):
+    def create_stickiness(self, sticky):
         raise NotImplementedError("ANM Driver can not enable stickness")
 
-    def deleteStickiness(self,  context,  sticky):
+    def delete_stickiness(self, sticky):
         raise NotImplementedError("ANM Driver can not disable stickness")
 
     def createVIP(self,  context,  vip,  sfarm):

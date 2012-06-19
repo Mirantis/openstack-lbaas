@@ -22,74 +22,86 @@ logger = logging.getLogger(__name__)
 
 
 class DummyDriver(BaseDriver):
-    def importCertificatesAndKeys(self):
+    def import_certificate_or_key(self):
         logger.debug("Called DummyDriver.importCertificatesAndKeys().")
 
-    def createSSLProxy(self, SSLproxy):
-        logger.debug("Called DummyDriver.createSSLProxy(%r)." % (SSLproxy,))
+    def create_ssl_proxy(self, ssl_proxy):
+        logger.debug("Called DummyDriver.createSSLProxy(%r)." % (ssl_proxy,))
 
-    def deleteSSLProxy(self, SSLproxy):
-        logger.debug("Called DummyDriver.deleteSSLProxy(%r)." % (SSLproxy,))
+    def delete_ssl_proxy(self, ssl_proxy):
+        logger.debug("Called DummyDriver.deleteSSLProxy(%r)." % (ssl_proxy,))
 
-    def addSSLProxyToVIP(self, vip, SSLproxy):
-        logger.debug("Called DummyDriver.deleteSSLProxy(%r, %r)." % (vip, SSLproxy))
+    def add_ssl_proxy_to_virtual_ip(self, vip, ssl_proxy):
+        logger.debug("Called DummyDriver.deleteSSLProxy(%r, %r)."
+                     % (vip, ssl_proxy))
 
-    def removeSSLProxyFromVIP(self, vip, SSLproxy):
-        logger.debug("Called DummyDriver.removeSSLProxyFromVIP(%r, %r)." % (vip, SSLproxy))
+    def remove_ssl_proxy_from_virtual_ip(self, vip, ssl_proxy):
+        logger.debug("Called DummyDriver.removeSSLProxyFromVIP(%r, %r)."
+                     % (vip, ssl_proxy))
 
-    def createRServer(self, rserver):
+    def create_real_server(self, rserver):
         logger.debug("Called DummyDriver.createRServer(%r)." % (rserver,))
 
-    def deleteRServer(self, rserver):
+    def delete_real_server(self, rserver):
         logger.debug("Called DummyDriver.deleteRServer(%r)." % (rserver,))
 
-    def activateRServer(self, serverfarm, rserver):
-        logger.debug("Called DummyDriver.activateRServer(%r, %r)." % (serverfarm, rserver))
+    def activate_real_server(self, serverfarm, rserver):
+        logger.debug("Called DummyDriver.activateRServer(%r, %r)."
+                     % (serverfarm, rserver))
 
-    def activateRServerGlobal(self, rserver):
-        logger.debug("Called DummyDriver.activateRServerGlobal(%r)." % (rserver,))
+    def activate_real_server_global(self, rserver):
+        logger.debug("Called DummyDriver.activateRServerGlobal(%r)."
+                     % (rserver,))
 
-    def suspendRServer(self, serverfarm, rserver):
-        logger.debug("Called DummyDriver.suspendRServer(%r, %r)." % (serverfarm, rserver))
+    def suspend_real_server(self, serverfarm, rserver):
+        logger.debug("Called DummyDriver.suspendRServer(%r, %r)."
+                     % (serverfarm, rserver))
 
-    def suspendRServerGlobal(self, rserver):
-        logger.debug("Called DummyDriver.suspendRServerGlobal(%r)." % (rserver,))
+    def suspend_real_server_global(self, rserver):
+        logger.debug("Called DummyDriver.suspendRServerGlobal(%r)."
+                     % (rserver,))
 
-    def createProbe(self, probe):
+    def create_probe(self, probe):
         logger.debug("Called DummyDriver.createProbe(%r)." % (probe,))
 
-    def deleteProbe(self, probe):
+    def delete_probe(self, probe):
         logger.debug("Called DummyDriver.deleteProbe(%r)." % (probe,))
 
-    def createServerFarm(self, serverfarm):
+    def create_server_farm(self, serverfarm):
         logger.debug("Called DummyDriver.createServerFarm(%r)." % (serverfarm,))
 
-    def deleteServerFarm(self, serverfarm):
+    def delete_server_farm(self, serverfarm):
         logger.debug("Called DummyDriver.deleteServerFarm(%r)." % (serverfarm,))
 
-    def addRServerToSF(self, serverfarm, rserver):
-        logger.debug("Called DummyDriver.addRServerToSF(%r, %r)." % (serverfarm, rserver))
+    def add_real_server_to_server_farm(self, serverfarm, rserver):
+        logger.debug("Called DummyDriver.addRServerToSF(%r, %r)."
+                     % (serverfarm, rserver))
 
-    def deleteRServerFromSF(self, serverfarm, rserver):
-        logger.debug("Called DummyDriver.deleteRServerFromSF(%r, %r)." % (serverfarm, rserver))
+    def delete_real_server_from_server_farm(self, serverfarm, rserver):
+        logger.debug("Called DummyDriver.deleteRServerFromSF(%r, %r)."
+                     % (serverfarm, rserver))
 
-    def addProbeToSF(self, serverfarm, probe):
-        logger.debug("Called DummyDriver.addProbeToSF(%r, %r)." % (serverfarm, probe))
+    def add_probe_to_server_farm(self, serverfarm, probe):
+        logger.debug("Called DummyDriver.addProbeToSF(%r, %r)."
+                     % (serverfarm, probe))
 
-    def deleteProbeFromSF(self, serverfarm, probe):
-        logger.debug("Called DummyDriver.deleteProbeFromSF(%r, %r)." % (serverfarm, probe))
+    def delete_probe_from_server_farm(self, serverfarm, probe):
+        logger.debug("Called DummyDriver.deleteProbeFromSF(%r, %r)."
+                     % (serverfarm, probe))
 
-    def createStickiness(self, sticky):
+    def create_stickiness(self, sticky):
         logger.debug("Called DummyDriver.createStickiness(%r)." % (sticky,))
 
-    def deleteStickiness(self, sticky):
+    def delete_stickiness(self, sticky):
         logger.debug("Called DummyDriver.deleteStickiness(%r)." % (sticky,))
 
-    def createVIP(self, vip, sfarm):
-        logger.debug("Called DummyDriver.createVIP(%r, %r)." % (vip, sfarm))
+    def create_virtual_ip(self, vip, serverfarm):
+        logger.debug("Called DummyDriver.createVIP(%r, %r)."
+                     % (vip, serverfarm))
 
-    def deleteVIP(self, vip):
+    def delete_virtual_ip(self, vip):
         logger.debug("Called DummyDriver.deleteVIP(%r)." % (vip,))
 
-    def getStatistics(self, serverfarm, rserver):
-        logger.debug("Called DummyDriver.getStatistics(%r, %r)." % (serverfarm, rserver))
+    def get_statistics(self, serverfarm, rserver):
+        logger.debug("Called DummyDriver.getStatistics(%r, %r)."
+                     % (serverfarm, rserver))
