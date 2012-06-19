@@ -5,6 +5,8 @@ distribute>=0.6.24
 Babel
 
 # Needed for testing
+unittest2
+mock
 mox
 nose
 nose-exclude
