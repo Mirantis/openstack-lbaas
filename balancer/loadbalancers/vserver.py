@@ -53,16 +53,12 @@ class Balancer():
         self.lb = lb_ref
 
         sf_ref = db_api.serverfarm_pack_extra({})
-        sf_ref['name'] = sf_ref['id']
-        sf_ref['lb_id'] = lb_ref['id']
         self.sf = sf_ref
         self.sf._rservers = []
         self.sf._probes = []
         self.sf._sticky = []
 
         predictor_ref = db_api.predictor_pack_extra({})
-        predictor_ref['type'] = lb_ref['algorithm']
-        predictor_ref['sf_id'] = sf_ref['id']
         self._predictor = predictor_ref
 
         """ Parse RServer nodes and attach them to SF """
@@ -78,17 +74,12 @@ class Balancer():
             else:
                 if parent_ref['address'] != '':
                     rs_ref['parent_id'] = parent_ref['id']
-            rs_ref['sf_id'] = sf_ref['id']
-            rs_ref['name'] = rs_ref['id']
 
             self.rs.append(rs_ref)
             self.sf._rservers.append(rs_ref)
 
         for pr in probes_list:
             probe_ref = db_api.probe_pack_extra(pr)
-            probe_ref['sf_id'] = sf_ref['id']
-            probe_ref['name'] = probe_ref['id']
-
             self.probes.append(probe_ref)
             self.sf._probes.append(probe_ref)
 
@@ -96,8 +87,6 @@ class Balancer():
             vs_ref = db_api.virtualserver_pack_extra(vip)
             vs_ref['transport'] = lb_ref['extra']['transport']
             vs_ref['appProto'] = lb_ref['protocol']
-            vs_ref['sf_id'] = sf_ref['id']
-            vs_ref['lb_id'] = lb_ref['id']
             vs_ref['name'] = vs_ref['id']
             self.vips.append(vs_ref)
             self.vips.append(vs_ref)
@@ -132,20 +121,63 @@ class Balancer():
         except exception.LoadBalancerNotFound:
             lb_ref = db_api.loadbalancer_create(self.conf, self.lb)
 
-        sf_ref = db_api.serverfarm_create(self.conf, self.sf)
-        db_api.predictor_create(self.conf, self._predictor)
+        self.sf['lb_id'] = lb_ref['id']
+
+        try:
+            sf_ref = db_api.serverfarm_update(self.conf, self.sf['id'], self.sf)
+        except exception.ServerFarmNotFound:
+            sf_ref = db_api.serverfarm_create(self.conf, self.sf)
+
+        self._predictor['sf_id'] = sf_ref['id']
+
+        try:
+            db_api.predictor_update(self.conf, self._predictor['id'], self._predictor)
+        except exception.PredictorNotFound:
+            db_api.predictor_create(self.conf, self._predictor)
+
+        stickies = self.sf._sticky
+        vips = []
+
+        self.sf = sf_ref
+        self.sf._rservers = []
+        self.sf._probes = []
+        self.sf._sticky = []
 
         for rs in self.rs:
-            db_api.server_create(self.conf, rs)
+            rs['sf_id'] = sf_ref['id']
+            try:
+                rs_ref = db_api.server_update(self.conf, rs['id'], rs)
+            except exception.ServerNotFound:
+                rs_ref = db_api.server_create(self.conf, rs)
+            self.sf._rservers.append(rs_ref)
 
         for pr in self.probes:
-            db_api.probe_create(self.conf, pr)
+            pr['sf_id'] = sf_ref['id']
+            try:
+                pr_ref = db_api.probe_update(self.conf, pr['id'], pr)
+            except exception.ProbeNotFound:
+                pr_ref = db_api.probe_create(self.conf, pr)
+            self.sf._probes.append(pr_ref)
 
         for vip in self.vips:
-            db_api.virtualserver_create(self.conf, vip)
+            vip['sf_id'] = sf_ref['id']
+            try:
+                vip_ref = db_api.virtualserver_update(self.conf, vip['id'], vip)
+            except exception.VirtualServerNotFound:
+                vip_ref = db_api.virtualserver_create(self.conf, vip)
+            vips.append(vip_ref)
 
-        for st in self.sf._sticky:
-            db_api.sticky_create(self.conf, st)
+        for st in stickies:
+            st['sf_id'] = sf_ref['id']
+            try:
+                st_ref = db_api.sticky_update(self.conf, st['id'], st)
+            except exception.StickyNotFound:
+                st_ref = db_api.sticky_create(self.conf, st)
+            self.sf._sticky.append(st_ref)
+
+        self.rs = self.sf._rservers
+        self.probes = self.sf._probes
+        self.vips = vips
 
     def loadFromDB(self, lb_id):
         self.lb = db_api.loadbalancer_get(self.conf, lb_id)
