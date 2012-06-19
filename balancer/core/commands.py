@@ -94,6 +94,7 @@ def ignore_exceptions(func):
         except Exception:
             LOG.exception("Got exception while executing %s. Ignored.",
                                                                  func.__name__)
+    return __inner
 
 
 @with_rollback
