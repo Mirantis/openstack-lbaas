@@ -49,7 +49,11 @@ done
 
 # If enabled, tell nose to collect coverage data
 if [ $coverage -eq 1 ]; then
+<<<<<<< HEAD
     noseopts="$noseopts --with-coverage --cover-package=balancer --cover-inclusive"
+=======
+    noseopts="$noseopts --with-coverage --cover-package=balancer"
+>>>>>>> Add coverage support to run_tests.sh
 fi
 
 function run_tests {
