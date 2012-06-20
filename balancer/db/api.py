@@ -276,7 +276,7 @@ def server_get_by_address(conf, server_address):
         raise exception.ServerNotFound(server_address=server_address)
     return server_ref
 
-# TODO: need to be fixed
+
 def server_get_by_address_on_device(conf, server_address, device_id):
     session = get_session(conf)
     server_refs = session.query(models.Server).\
@@ -285,10 +285,9 @@ def server_get_by_address_on_device(conf, server_address, device_id):
     for server_ref in server_refs:
         sf = serverfarm_get(conf, server_ref['sf_id'])
         lb = loadbalancer_get(conf, sf['lb_id'])
-        device_id = lb['device_id']
-    if not server_ref:
-        raise exception.ServerNotFound(server_address=server_address)
-    return server_ref
+        if device_id == lb['device_id']:
+            return server_ref
+    raise exception.ServerNotFound(server_address=server_address)
 
 
 def server_get_all_by_parent_id(conf, parent_id):

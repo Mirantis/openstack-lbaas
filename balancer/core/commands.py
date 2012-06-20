@@ -119,20 +119,15 @@ def create_rserver(ctx, rs):
 def delete_rserver(ctx, rs):
     rss = []
     LOG.debug("Got delete RS request")
-    if (rs.get('parent_id') and rs['parent_id'] != ""):
-        rss = db_api.server_get_all_by_parent_id(ctx.conf, rs['parent_id'])
-        LOG.debug("List of servers: %s", rss)
-        if len(rss) == 1:
-            parent_rs = db_api.server_get(ctx.conf, rs['parent_id'])
-            ctx.device.delete_real_server(parent_rs)
-    else:
-        # rs1
-        # We need to check if there are reals who reference this rs as a parent
+    if rs['parent_id'] == "":
         rss = db_api.server_get_all_by_parent_id(ctx.conf, rs['id'])
         LOG.debug("List of servers: %s", rss)
-        if len(rss) == 0:
-            ctx.device.delete_real_server(rs)
-
+        ctx.device.delete_real_server(rs)
+        if len(rss) > 0:
+            for rs_child in rss:
+                db_api.server_update(rs_child['id'], {'parent_id':rss[-1]['id']})
+            db_api.server_update(rss[-1]['id'], {'parent_id':'','deployed':'True'})
+            ctx.device.create_real_server(rss[-1])
 
 def create_sticky(ctx, sticky):
     ctx.device.create_stickiness(sticky)
