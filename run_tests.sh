@@ -8,6 +8,7 @@ function usage {
   echo "  -N, --no-virtual-env     Don't use virtualenv.  Run tests in local environment"
   echo "  -f, --force              Force a clean re-build of the virtual environment. Useful when dependencies have been added."
   echo "  --unittests-only         Run unit tests only, exclude functional tests."
+  echo "  -c, --coverage           Generate coverage report"
   echo "  -p, --pep8               Just run pep8"
   echo "  -h, --help               Print this usage message"
   echo ""
@@ -24,7 +25,9 @@ function process_option {
     -N|--no-virtual-env) let always_venv=0; let never_venv=1;;
     -p|--pep8) let just_pep8=1;;
     -f|--force) let force=1;;
-    --unittests-only) noseargs="$noseargs --exclude-dir=balancer/tests/functional";;
+    --unittests-only) noseopts="$noseopts --exclude-dir=balancer/tests/functional";;
+    -c|--coverage) coverage=1;;
+    -*) noseopts="$noseopts $1";;
     *) noseargs="$noseargs $1"
   esac
 }
@@ -35,12 +38,19 @@ always_venv=0
 never_venv=0
 force=0
 noseargs=
+noseopts=
 wrapper=""
 just_pep8=0
+coverage=0
 
 for arg in "$@"; do
   process_option $arg
 done
+
+# If enabled, tell nose to collect coverage data
+if [ $coverage -eq 1 ]; then
+    noseopts="$noseopts --with-coverage --cover-package=balancer"
+fi
 
 function run_tests {
   # Just run the test suites in current environment
@@ -56,7 +66,7 @@ function run_pep8 {
 }
 
 
-NOSETESTS="python run_tests.py $noseargs"
+NOSETESTS="python run_tests.py $noseopts $noseargs"
 
 if [ $never_venv -eq 0 ]
 then
@@ -88,13 +98,23 @@ echo "Cleaning test database"
 rm -f ./db/testdb.db
 sqlite3 ./db/testdb.db < ./etc/tables.sql
 
+# Delete old coverage data from previous runs
+if [ $coverage -eq 1 ]; then
+    ${wrapper} coverage erase
+fi
+
 if [ $just_pep8 -eq 1 ]; then
     run_pep8
     exit
 fi
 
-run_tests || exit
+run_tests
 
 if [ -z "$noseargs" ]; then
   run_pep8
+fi
+
+if [ $coverage -eq 1 ]; then
+    echo "Generating coverage report in covhtml/"
+    ${wrapper} coverage html -d covhtml -i
 fi
