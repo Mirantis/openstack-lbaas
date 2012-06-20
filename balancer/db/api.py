@@ -362,7 +362,7 @@ def serverfarm_create(conf, values):
 def serverfarm_update(conf, serverfarm_id, values):
     session = get_session(conf)
     with session.begin():
-        serverfarm_ref = serverfarm_get(conf, serverfarm_id, sessin=session)
+        serverfarm_ref = serverfarm_get(conf, serverfarm_id, session=session)
         serverfarm_ref.update(values)
         return serverfarm_ref
 
