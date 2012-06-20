@@ -63,17 +63,16 @@ class Balancer():
         """ Parse RServer nodes and attach them to SF """
         for node in nodes_list:
             rs_ref = db_api.server_pack_extra(node)
-            # We need to check if there is already real server with the
-            # same IP deployed
+            parent_ref['address'] = ''
             try:
                 parent_ref = db_api.server_get_by_address_on_device(self.conf,
                                                         rs_ref['address'],
                                                         lb_ref['device_id'])
             except exception.ServerNotFound:
                 pass
-            else:
-                if parent_ref.get('address') != '':
-                    rs_ref['parent_id'] = parent_ref['id']
+            
+            if parent_ref.get('address') != '':
+                rs_ref['parent_id'] = parent_ref['id']
 
             self.rs.append(rs_ref)
             self.sf._rservers.append(rs_ref)
@@ -85,7 +84,7 @@ class Balancer():
 
         for vip in vips_list:
             vs_ref = db_api.virtualserver_pack_extra(vip)
-            vs_ref['transport'] = lb_ref['extra']['transport']
+            vs_ref['transport'] = lb_ref['transport']
             vs_ref['appProto'] = lb_ref['protocol']
             vs_ref['name'] = vs_ref['id']
             self.vips.append(vs_ref)
