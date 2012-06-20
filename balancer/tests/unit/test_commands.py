@@ -38,8 +38,8 @@ class TestRollbackContextManager(TestCase):
     @patch("balancer.core.commands.RollbackContext")
     def test_exit(self, mock_context):
 
-        res = self.obj.__exit__(None, Mock(), Mock())
-        self.assertEquals(res, None)
+        self.obj.__exit__(Mock(), Mock(), Mock())
+        self.assertTrue(self.obj.context.rollback_stack.called, "Rollback not call")
 
 
 class TestRserver(TestCase):
