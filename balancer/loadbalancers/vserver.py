@@ -71,9 +71,9 @@ class Balancer():
                                                         lb_ref['device_id'])
             except exception.ServerNotFound:
                 pass
-            
-            if parent_ref.get('address') != '':
-                rs_ref['parent_id'] = parent_ref['id']
+            else:
+                if parent_ref.get('address') != '':
+                    rs_ref['parent_id'] = parent_ref['id']
 
             self.rs.append(rs_ref)
             self.sf._rservers.append(rs_ref)
