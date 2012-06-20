@@ -22,9 +22,8 @@ class TestRollbackContext(TestCase):
 
 class TestRollbackContextManager(TestCase):
     def setUp(self):
-        self.obj = cmd.RollbackContextManager()
-        self.obj.context = Mock()
-        self.obj.context.return_value = "foo"
+        self.obj = cmd.RollbackContextManager(
+                context=Mock(rollback_stack=Mock(spec=list)))
 
     @patch("balancer.core.commands.RollbackContext")
     def test_init(self, mock_context):
@@ -36,10 +35,11 @@ class TestRollbackContextManager(TestCase):
         res = self.obj.__enter__()
         self.assertEquals(res, self.obj.context, "Wrong context")
 
-#    @patch("balancer.core.commands.RollbackContextManager")
-#    def test_exit(self, mock_context):
-#        res = self.obj.__exit__(Mock(), Mock(), Mock())
-#        self.assertEquals(res, None)
+    @patch("balancer.core.commands.RollbackContext")
+    def test_exit(self, mock_context):
+
+        res = self.obj.__exit__(None, Mock(), Mock())
+        self.assertEquals(res, None)
 
 
 class TestRserver(TestCase):
