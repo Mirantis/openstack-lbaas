@@ -340,13 +340,13 @@ def serverfarm_get(conf, serverfarm_id, session=None):
     serverfarm_ref = session.query(models.ServerFarm).\
                              filter_by(id=serverfarm_id).first()
     if not serverfarm_ref:
-        raise exception.ServerFarmNotFound(serverfarm_id=serverfarm_id)
+        raise exception.ServerFarmNotFound(id=serverfarm_id)
     return serverfarm_ref
 
 
 def serverfarm_get_all_by_lb_id(conf, lb_id):
     session = get_session(conf)
-    query = session.query(models.ServerFarm).filter_by(loadbalancer_id=lb_id)
+    query = session.query(models.ServerFarm).filter_by(lb_id=lb_id)
     return query.all()
 
 
