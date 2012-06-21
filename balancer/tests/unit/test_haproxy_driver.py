@@ -23,7 +23,7 @@ class HAproxyDriverTestCase (unittest.TestCase):
         #shutil.copyfile ('./balancer/tests/unit/testfiles/haproxy.cfg',  \
         #"/tmp/haproxy.cfg")
         self.dev = {'ip': '192.168.19.86', 'interface': 'eth0', \
-               'login':'user', 'password': 'swordfish', \
+               'login': 'user', 'password': 'swordfish', \
                'remotepath': '/etc/haproxy', 'remotename': 'haproxy.cfg'}
         conf = []
         self.driver = HaproxyDriver(conf, self.dev)
@@ -55,7 +55,8 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.server_farm = {'name': 'SFname',  'type': 'HashAddrPredictor'}
         #
         self.virtualserver = {'name': 'VirtualServer', \
-                                        'address': '115.115.115.115', 'port': '8080'}
+                                        'address': '115.115.115.115',  \
+                                        'port': '8080'}
         #
         self.rserver = {'name': 'test_real_server', \
                                 'address': '123.123.123.123', 'port': '9090', \
@@ -65,13 +66,12 @@ class HAproxyDriverTestCase (unittest.TestCase):
                                 'requestHTTPurl': '/index.html', \
                                 'minExpectStatus': '200'}
 
-
     def test_AddHTTPProbe(self):
         self.driver.add_probe_to_server_farm(self.server_farm,  self.probe)
         self.assertTrue(True)
 
     def test_DelHTTPProbe(self):
-        self.driver.delete_probe_from_server_farm(self.server_farm,  self.probe)
+        self.driver.delete_probe_from_server_farm(self.server_farm, self.probe)
         self.assertTrue(True)
 
     def test_AddLinesToBackendBlock(self):
