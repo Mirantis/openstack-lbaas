@@ -129,12 +129,12 @@ class Balancer():
         except exception.ServerFarmNotFound:
             sf_ref = db_api.serverfarm_create(self.conf, self.sf)
 
-        self._predictor['sf_id'] = sf_ref['id']
+        self.sf._predictor['sf_id'] = sf_ref['id']
         try:
-            db_api.predictor_update(self.conf, self._predictor['id'],
-                                    self._predictor)
+            db_api.predictor_update(self.conf, self.sf._predictor['id'],
+                                    self.sf._predictor)
         except exception.PredictorNotFound:
-            db_api.predictor_create(self.conf, self._predictor)
+            db_api.predictor_create(self.conf, self.sf._predictor)
 
         stickies = self.sf._sticky
         vips = []

@@ -465,4 +465,4 @@ def virtualserver_destroy(conf, vserver_id):
 def virtualserver_destroy_by_sf_id(conf, sf_id, session=None):
     session = session or get_session(conf)
     with session.begin(subtransactions=True):
-        session.query(models.VirtualServer).filter_by(sf_if=sf_id).delete()
+        session.query(models.VirtualServer).filter_by(sf_id=sf_id).delete()
