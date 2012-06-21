@@ -49,7 +49,7 @@ done
 
 # If enabled, tell nose to collect coverage data
 if [ $coverage -eq 1 ]; then
-    noseopts="$noseopts --with-coverage --cover-package=balancer"
+    noseopts="$noseopts --with-coverage --cover-package=balancer --cover-html --cover-html-dir=covhtml"
 fi
 
 function run_tests {
@@ -112,9 +112,4 @@ run_tests
 
 if [ -z "$noseargs" ]; then
   run_pep8
-fi
-
-if [ $coverage -eq 1 ]; then
-    echo "Generating coverage report in covhtml/"
-    ${wrapper} coverage html -d covhtml -i
 fi
