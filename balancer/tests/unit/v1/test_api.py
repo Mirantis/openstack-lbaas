@@ -2,6 +2,7 @@ import unittest
 import mock
 
 from balancer.api.v1 import loadbalancers
+from balancer.api.v1 import devices
 
 
 class TestLoadBalancersController(unittest.TestCase):
@@ -128,3 +129,28 @@ class TestLoadBalancersController(unittest.TestCase):
     def test_delete_sticky(self, mock_lb_delete_sticky):
         resp = self.controller.deleteSticky(self.req, id='1', stickyID='1')
         self.assertEqual(resp.status_int, 202)
+
+
+class TestDeviceController(unittest.TestCase):
+    def setUp(self):
+        self.conf = mock.Mock()
+        self.controller = devices.Controller(self.conf)
+        self.req = mock.Mock()
+
+    @mock.patch('balancer.core.api.device_get_index', autospec=True)
+    def test_index(self, mock_device_get_index):
+        mock_device_get_index.return_value = 'foo'
+        resp = self.controller.index(self.req)
+        self.assertEqual({'devices': 'foo'}, resp)
+
+    @mock.patch('balancer.core.api.device_create', autospec=True)
+    def test_create(self, mock_device_create):
+        mock_device_create.return_value = 'foo'
+        resp = self.controller.create(self.req, body={})
+        self.assertEqual({'devices': 'foo'}, resp)
+
+    @mock.patch('balancer.core.api.device_info', autospec=True)
+    def test_info(self, mock_device_info):
+        mock_device_info.return_value = 'foo'
+        resp = self.controller.device_info(self.req)
+        self.assertEqual({'devices': 'foo'}, resp)
