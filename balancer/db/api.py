@@ -450,7 +450,7 @@ def virtualserver_create(conf, values):
 def virtualserver_update(conf, vserver_id, values):
     session = get_session(conf)
     with session.begin():
-        vserver_ref = virtualserver_get(conf, vserver_id, sssion=session)
+        vserver_ref = virtualserver_get(conf, vserver_id, session=session)
         vserver_ref.update(values)
         return vserver_ref
 
