@@ -42,11 +42,9 @@ class Controller(object):
     def findLBforVM(self, req, **args):
         logger.debug("Got index request. Request: %s", req)
         tenant_id = req.headers.get('X-Tenant-Id', "")
-        tenant_name = req.headers.get('X-Tenant-Name', "")
         params = {}
         params['vm_id'] = args['vm_id']
         params['tenant_id'] = tenant_id
-        params['tenant_name'] = tenant_name
         result = core_api.lb_find_for_vm(self.conf, **params)
         return {'loadbalancers': result}
 
