@@ -52,7 +52,7 @@ class HaproxyDriver(BaseDriver):
         else:
             self.interface = device_ref.interface
         self.haproxy_socket = '/tmp/haproxy.sock'
- 
+
     def add_probe_to_server_farm(self, serverfarm, probe):
         '''
             Haproxy support only tcp (connect), http and https (limited) probes
