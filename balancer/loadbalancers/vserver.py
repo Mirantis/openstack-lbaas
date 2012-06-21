@@ -185,7 +185,7 @@ class Balancer():
         self.sf = db_api.serverfarm_get_all_by_lb_id(self.conf, lb_id)[0]
         sf_id = self.sf['id']
 
-        self.vips = db_api.virtualserver_get_all_by_sf_id(sf_id)
+        self.vips = db_api.virtualserver_get_all_by_sf_id(self.conf, sf_id)
 
         predictor = db_api.predictor_get_all_by_sf_id(self.conf, sf_id)[0]
         self.sf._predictor = predictor
@@ -195,7 +195,7 @@ class Balancer():
         for rs in self.rs:
             self.sf._rservers.append(rs)
 
-        self.probes = db_api.probe_get_all_by_sf_id(sf_id)
+        self.probes = db_api.probe_get_all_by_sf_id(self.conf, sf_id)
         self.sf._probes = []
         for prob in self.probes:
             self.sf._probes.append(prob)
