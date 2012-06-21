@@ -66,6 +66,7 @@ class HAproxyDriverTestCase (unittest.TestCase):
                                 'requestHTTPurl': '/index.html', \
                                 'minExpectStatus': '200'}
 
+
     def test_AddHTTPProbe(self):
         self.driver.add_probe_to_server_farm(self.server_farm, self.probe)
         self.assertTrue(True)
