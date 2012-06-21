@@ -60,7 +60,7 @@ class Balancer():
         self.sf._sticky = []
 
         predictor_ref = db_api.predictor_pack_extra({})
-        self._predictor = predictor_ref
+        self.sf._predictor = predictor_ref
 
         """ Parse RServer nodes and attach them to SF """
         for node in nodes_list:
