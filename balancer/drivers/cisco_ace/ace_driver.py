@@ -94,7 +94,7 @@ def delete_nat_pool_from_vip(self, nat_pool, vip):
 
 def get_nat_pools():
     vlan_interfaces = getConfig("| i interface vlan").split('\n')
-    result = {}
+    result = []
     for vlan in vlan_interfaces:
         s = getConfig("int vlan %s | i nat-pool"%vlan).split('\n')
         for f in s:
@@ -117,7 +117,8 @@ def get_nat_pools():
 def find_nat_pool_for_vip(self, vip):
     ip = ipaddr.ip_address(vip['address'])
     network = ipaddr.ip_network(ip + "/" + vip['mask'])
-    for nat_pool in get_nat_pools()
+    nat_pools = get_nat_pools()
+    for nat_pool in nat_pools:
         if (nat_pool['ip1'] in network.iterhosts() and
             nat_pool['ip2'] in network.iterhosst()):
             ip_nat = nat_pool['ip1']
