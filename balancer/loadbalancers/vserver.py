@@ -47,6 +47,8 @@ class Balancer():
             lb_ref = params['lb']
         except KeyError:
             lb_ref = db_api.loadbalancer_pack_extra(obj_dict)
+        else:
+            lb_ref['extra'] = {}
 
         lb_ref['status'] = lb_status.BUILD
         self.lb = lb_ref
@@ -85,7 +87,7 @@ class Balancer():
 
         for vip in vips_list:
             vs_ref = db_api.virtualserver_pack_extra(vip)
-            vs_ref['transport'] = lb_ref['extra']['transport']
+            vs_ref['transport'] = lb_ref['extra'].get('transport')
             vs_ref['appProto'] = lb_ref['protocol']
             vs_ref['name'] = vs_ref['id']
             self.vips.append(vs_ref)
