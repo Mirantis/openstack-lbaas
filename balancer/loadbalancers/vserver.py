@@ -184,17 +184,24 @@ class Balancer():
         self.lb = db_api.loadbalancer_get(self.conf, lb_id)
         self.sf = db_api.serverfarm_get_all_by_lb_id(self.conf, lb_id)[0]
         sf_id = self.sf['id']
+
+        self.vips = db_api.virtualserver_get_all_by_sf_id(sf_id)
+
         predictor = db_api.predictor_get_all_by_sf_id(self.conf, sf_id)[0]
         self.sf._predictor = predictor
-        self.rs = db_api.server_get_all_by_sf_id(self.conf, sf_id)
-        sticks = db_api.sticky_get_all_by_sf_id(self.conf, sf_id)
 
+        self.rs = db_api.server_get_all_by_sf_id(self.conf, sf_id)
+        self.sf._rservers = []
         for rs in self.rs:
             self.sf._rservers.append(rs)
+
         self.probes = db_api.probe_get_all_by_sf_id(sf_id)
+        self.sf._probes = []
         for prob in self.probes:
             self.sf._probes.append(prob)
-        self.vips = db_api.virtualserver_get_all_by_sf_id(sf_id)
+
+        sticks = db_api.sticky_get_all_by_sf_id(self.conf, sf_id)
+        self.sf._sticky = []
         for st in sticks:
             self.sf._sticky.append(st)
 
