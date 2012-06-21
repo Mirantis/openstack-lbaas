@@ -1,7 +1,6 @@
 import balancer.core.commands as cmd
 from unittest import TestCase
 from mock import patch, MagicMock as Mock
-#from cmd import delete_rserver
 
 
 class TestRollbackContext(TestCase):
@@ -22,8 +21,10 @@ class TestRollbackContext(TestCase):
 
 class TestRollbackContextManager(TestCase):
     def setUp(self):
+#        self.call_list = Mock()
+#        self.call_list.__iter__.return_value = iter([Mock(pop=Mock(spec=list, return_value=None))])
         self.obj = cmd.RollbackContextManager(
-                context=Mock(rollback_stack=Mock(spec=list, return_value=[])))
+                context=Mock(rollback_stack=Mock(iter([]), pop=Mock())))
 
     @patch("balancer.core.commands.RollbackContext")
     def test_init(self, mock_context):
@@ -186,34 +187,47 @@ class TestServerFarm(TestCase):
 class TestLoadbalancer(TestCase):
     def setUp(self):
         self.ctx = Mock()
-        self.balancer = Mock(
-                probes=Mock(spec=list, return_value=[]),
-                rs=Mock(spec=list, return_value=[Mock()]),
-                vips=Mock(spec=list))
         self.rserver = Mock()
         self.probe = Mock()
         self.sticky = Mock()
+        self.call_list = Mock(spec=list)
+        self.call_list.__iter__.return_value = [Mock(get=Mock())]
+        self.balancer = Mock(probes=self.call_list,
+               rs=self.call_list, vips=self.call_list,
+               sf=Mock(_sticky=self.call_list))
+        #self.balancer = Mock()
 
+    @patch("balancer.core.commands.add_probe_to_server_farm")
     @patch("balancer.core.commands.create_probe")
     @patch("balancer.core.commands.create_server_farm")
     @patch("balancer.core.commands.create_rserver")
     @patch("balancer.core.commands.add_rserver_to_server_farm")
     @patch("balancer.core.commands.create_vip")
-    def test_create_loadbalancer(self, mf1, mf2, mf3, mf4, mf5):
+    def test_create_loadbalancer(self, mf1, mf2, mf3, mf4, mf5, mf6):
         cmd.create_loadbalancer(self.ctx, self.balancer)
+        self.assertTrue(mf5.called, "create_probe not called")
         self.assertTrue(mf4.called, "create_server_farm not called")
         self.assertTrue(mf3.called, "create_rserver not called")
-        print self.balancer.rs.return_value
+        self.assertTrue(mf2.called, "add_rserver_server_farm not called")
+        self.assertTrue(mf6.called, "add_probe_to_server_farm not called")
+        self.assertTrue(mf1.called, "create_vip not called")
 
+    @patch("balancer.core.commands.delete_sticky")
+    @patch("balancer.core.commands.remove_probe_from_server_farm")
     @patch("balancer.core.commands.delete_probe")
     @patch("balancer.core.commands.delete_server_farm")
     @patch("balancer.core.commands.delete_rserver")
     @patch("balancer.core.commands.delete_rserver_from_server_farm")
     @patch("balancer.core.commands.delete_vip")
-    def test_delete_loadbalancer(self, mf1, mf2, mf3, mf4, mf5):
+    def test_delete_loadbalancer(self, mf1, mf2, mf3, mf4, mf5, mf6, mf7):
         cmd.delete_loadbalancer(self.ctx, self.balancer)
+        self.assertTrue(mf1.called, "delete_vip not called")
+        self.assertTrue(mf2.called, "delete_rserver_from_sf not called")
+        self.assertTrue(mf3.called, "delete_rserver")
+        self.assertTrue(mf5.called, "delete_probe not called")
+        self.assertTrue(mf6.called, "remove_probe_from_server_farm not called")
+        self.assertTrue(mf7.called, "delete_sticky not called")
         self.assertTrue(mf4.called, "delete_server_farm not called")
-        #self.assertTrue(self.balancer.called, "balancer not called")
 
     @patch("balancer.core.commands.create_server_farm")
     def test_update_loadbalancer(self, mock_func):
