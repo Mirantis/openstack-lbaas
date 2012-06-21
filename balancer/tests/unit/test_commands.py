@@ -1,6 +1,6 @@
 import balancer.core.commands as cmd
 from unittest import TestCase
-from mock import patch, MagicMock as Mock
+from mock import patch, MagicMock as Mock, call
 
 
 class TestRollbackContext(TestCase):
@@ -21,10 +21,9 @@ class TestRollbackContext(TestCase):
 
 class TestRollbackContextManager(TestCase):
     def setUp(self):
-        self.call_list = Mock()
-        self.call_list.__iter__.return_value = None
+        self.rollback_mock = Mock()
         self.obj = cmd.RollbackContextManager(
-                context=Mock(rollback_stack=Mock(return_value=self.call_list)))
+                context=Mock(rollback_stack=[self.rollback_mock]))
 
     @patch("balancer.core.commands.RollbackContext")
     def test_init(self, mock_context):
@@ -36,17 +35,15 @@ class TestRollbackContextManager(TestCase):
         res = self.obj.__enter__()
         self.assertEquals(res, self.obj.context, "Wrong context")
 
-    @patch("balancer.core.commands.RollbackContext")
-    def test_exit_None(self, mock_context):
+    def test_exit_none(self):
         self.obj.__exit__(None, None, None)
-        self.assertFalse(self.obj.context.rollback_stack.called,\
-                "Rollback call")
+        self.assertEquals([call(True,)], self.rollback_mock.call_args_list)
 
-    @patch("balancer.core.commands.RollbackContext")
-    def test_exit_not_None(self, mock_context):
-        self.obj.__exit__(Exception, Exception, None)
-        self.assertTrue(self.obj.context.rollback_stack.called,\
-                "Rollback not call")
+    def test_exit_not_none(self):
+        exc = Exception("Someone set up us the bomb")
+        with self.assertRaises(type(exc)):
+            self.obj.__exit__(type(exc), exc, None)
+        self.assertEquals([call(False,)], self.rollback_mock.call_args_list)
 
 
 class TestRserver(TestCase):
