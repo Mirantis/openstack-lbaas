@@ -3,6 +3,8 @@ import unittest
 import mock
 
 
+#class TestDecorators(unittest.Testcase):
+#    def setUP
 class TestRollbackContext(unittest.TestCase):
     def setUp(self):
         self.rollback = mock.MagicMock()
@@ -10,10 +12,10 @@ class TestRollbackContext(unittest.TestCase):
         self.obj = cmd.RollbackContext()
         self.stack = []
 
-#    def test_init(self):
-#        res = self.obj.__init__()
-#        self.assertEquals(res, self.stack, "Not equal")
-#    @patch("balancer.core.commands.RollbackContext")#, "__init__")
+    def test_init(self):
+        self.obj.__init__()
+        self.assertEquals(self.obj.rollback_stack, [], "Not equal")
+
     def test_add_rollback(self):
         self.obj.add_rollback(self.rollback)
         self.assertFalse(self.obj.rollback_stack == [], 'Empty')
