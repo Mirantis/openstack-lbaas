@@ -21,10 +21,10 @@ class TestRollbackContext(TestCase):
 
 class TestRollbackContextManager(TestCase):
     def setUp(self):
-#        self.call_list = Mock()
-#        self.call_list.__iter__.return_value = iter([Mock(pop=Mock(spec=list, return_value=None))])
+        self.call_list = Mock()
+        self.call_list.__iter__.return_value = None
         self.obj = cmd.RollbackContextManager(
-                context=Mock(rollback_stack=Mock(iter([]), pop=Mock())))
+                context=Mock(rollback_stack=Mock(return_value=self.call_list)))
 
     @patch("balancer.core.commands.RollbackContext")
     def test_init(self, mock_context):
