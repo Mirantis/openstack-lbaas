@@ -1,10 +1,20 @@
 import balancer.core.commands as cmd
 import unittest
 import mock
+import types
 
 
-#class TestDecorators(unittest.Testcase):
-#    def setUP
+#
+class TestDecorators(unittest.TestCase):
+    def setUp(self):
+        self.obj0 = mock.MagicMock(spec=types.GeneratorType, __name__="1")
+
+    def test_with_rollback_gen_type(self):
+        cmd.with_rollback(self.obj0).__inner(mock.Mock, mock.Mock, mock.Mock)
+
+        #        self.assertTrue(self.obj.quiet, 'quiet')
+
+
 class TestRollbackContext(unittest.TestCase):
     def setUp(self):
         self.rollback = mock.MagicMock()
@@ -39,59 +49,55 @@ class TestRollbackContextManager(unittest.TestCase):
 
     def test_exit_none(self):
         self.obj.__exit__(None, None, None)
-        self.assertEquals([mock.call(True,)], self.rollback_mock.call_args_list)
+        self.assertEquals([mock.call(True,)],
+                self.rollback_mock.call_args_list)
 
     def test_exit_not_none(self):
         exc = Exception("Someone set up us the bomb")
         with self.assertRaises(type(exc)):
             self.obj.__exit__(type(exc), exc, None)
-        self.assertEquals([mock.call(False,)], self.rollback_mock.call_args_list)
+        self.assertEquals([mock.call(False,)],
+                self.rollback_mock.call_args_list)
 
 
 class TestRserver(unittest.TestCase):
     def setUp(self):
         self.ctx = mock.MagicMock(device=mock.MagicMock(
-            delete_real_server=mock.MagicMock()))
-        self.rs = mock.MagicMock()
-#    def test_create_rserver:
+            delete_real_server=mock.MagicMock(),
+            create_real_server=mock.MagicMock()))
+        self.rs = {'parent_id': "", 'id': mock.Mock}
+    #    def test_create_rserver:
 
+    @mock.patch("balancer.db.api.server_update")
     @mock.patch("balancer.db.api.server_get_all_by_parent_id")
-    def test_delete_rserver_1(self, mock_func):
-        """rs not empty, rss not 1"""
+    def test_delete_rserver_1(self, mock_f1, mock_f2):
+        """rs empty, len rss > 0"""
+        mock_f1.return_value = ({}, {}, {})
         cmd.delete_rserver(self.ctx, self.rs)
-        self.assertTrue(mock_func.called, "get not called")
+        self.assertTrue(self.ctx.device.delete_real_server.called,
+                "ctx_delete_rs not called")
+#        self.assertTrue(mock_f2.called, "server_upd not called")
+#        self.assertTrue(self.ctx.device.create_real_server.called,
+#                "ctx_create_rs not called")
+        self.assertNotEquals(len(mock_f1.return_value), 0)
 
     @mock.patch("balancer.db.api.server_get_all_by_parent_id")
     @mock.patch("balancer.db.api.server_get")
     def test_delete_rserver_2(self, mock_f1, mock_f2):
-        """rs not empty, rss length = 1"""
-        mock_f2.return_value = '1'
+        """rs not empty, rss not empty"""
+        self.rs['parent_id'] = 1
         cmd.delete_rserver(self.ctx, self.rs)
-        self.assertTrue(mock_f1.called, "server_get not called")
-        self.assertTrue(self.ctx.device.delete_real_server.called,\
-                "delete_rserver not called")
-
-    @mock.patch("balancer.db.api.server_get_all_by_parent_id")
-    @mock.patch("balancer.db.api.server_get")
-    def test_delete_rserver_3(self, mock_f1, mock_f2):
-        """rs empty, rss length != 0"""
-        mock_f2.return_value = '1'
-        rs = mock.MagicMock(get=mock.MagicMock(return_value=None))
-        cmd.delete_rserver(self.ctx, rs)
-        self.assertTrue(mock_f2.called, "server_get_parent not called")
         self.assertFalse(self.ctx.device.delete_real_server.called,\
                 "delete_rserver called")
 
     @mock.patch("balancer.db.api.server_get_all_by_parent_id")
-    @mock.patch("balancer.db.api.server_get")
-    def test_delete_rserver_4(self, mock_f1, mock_f2):
-        """rs empty, rss length = 0"""
-        mock_f2.return_value = ''
-        rs = mock.MagicMock(get=mock.MagicMock(return_value=None))
-        cmd.delete_rserver(self.ctx, rs)
-        self.assertTrue(mock_f2.called, "server_get_parent not called")
-        self.assertTrue(self.ctx.device.delete_real_server.called,\
-                "delete_rserver not called")
+    @mock.patch("balancer.db.api.server_update")
+    def test_delete_rserver_3(self, mock_f1, mock_f2):
+        """rs empty, rss empty"""
+        mock_f2.return_value = ()
+        cmd.delete_rserver(self.ctx, self.rs)
+        self.assertFalse(mock_f1.called,\
+                "server_update called")
 
 
 class TestSticky(unittest.TestCase):
