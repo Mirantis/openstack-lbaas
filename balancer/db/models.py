@@ -62,6 +62,7 @@ class LoadBalancer(DictBase, Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow,
                         nullable=False)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow,
+                        onupdate=datetime.datetime.utcnow,
                         nullable=False)
     deployed = Column(String(40))
     extra = Column(JsonBlob())
