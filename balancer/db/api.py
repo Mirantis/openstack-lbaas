@@ -20,13 +20,14 @@
 """Database storage API."""
 
 import functools
+import datetime
 
 from balancer.db import models
 from balancer.db.session import get_session
 from balancer import exception
 
 
-# XXX(ash): pack_ and unpack_ are helper methods to compatibility
+# XXX(akscram): pack_ and unpack_ are helper methods to compatibility
 def pack_extra(model, values):
     obj_ref = model()
     obj_dict = values.copy()
@@ -137,6 +138,7 @@ def loadbalancer_update(conf, lb_id, values):
     with session.begin():
         lb_ref = loadbalancer_get(conf, lb_id, session=session)
         lb_ref.update(values)
+        lb_ref['updated_at'] = datetime.datetime.utcnow()
         return lb_ref
 
 
