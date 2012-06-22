@@ -44,11 +44,15 @@ class Balancer():
         stic = obj_dict.get('sessionPersistence') or []
 
         try:
-            lb_ref = params['lb']
+            lb = obj_dict.pop('lb')
         except KeyError:
             lb_ref = db_api.loadbalancer_pack_extra(obj_dict)
         else:
-            lb_ref['extra'] = {}
+            lb_ref = db_api.loadbalancer_pack_extra(obj_dict)
+            lb_ref['id'] = lb['id']
+            lb_ref['tenant_id'] = lb['tenant_id']
+            lb_ref['created_at'] = lb['created_at']
+            lb_ref['updated_at'] = lb['updated_at']
 
         lb_ref['status'] = lb_status.BUILD
         self.lb = lb_ref
