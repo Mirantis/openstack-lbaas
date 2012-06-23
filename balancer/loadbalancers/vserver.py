@@ -44,11 +44,15 @@ class Balancer():
         stic = obj_dict.get('sessionPersistence') or []
 
         try:
-            lb_ref = params['lb']
+            lb = obj_dict.pop('lb')
         except KeyError:
             lb_ref = db_api.loadbalancer_pack_extra(obj_dict)
         else:
-            lb_ref['extra'] = {}
+            lb_ref = db_api.loadbalancer_pack_extra(obj_dict)
+            lb_ref['id'] = lb['id']
+            lb_ref['tenant_id'] = lb['tenant_id']
+            lb_ref['created_at'] = lb['created_at']
+            lb_ref['updated_at'] = lb['updated_at']
 
         lb_ref['status'] = lb_status.BUILD
         self.lb = lb_ref
@@ -60,7 +64,7 @@ class Balancer():
         self.sf._sticky = []
 
         predictor_ref = db_api.predictor_pack_extra({})
-        self._predictor = predictor_ref
+        self.sf._predictor = predictor_ref
 
         """ Parse RServer nodes and attach them to SF """
         for node in nodes_list:
@@ -129,12 +133,12 @@ class Balancer():
         except exception.ServerFarmNotFound:
             sf_ref = db_api.serverfarm_create(self.conf, self.sf)
 
-        self._predictor['sf_id'] = sf_ref['id']
+        self.sf._predictor['sf_id'] = sf_ref['id']
         try:
-            db_api.predictor_update(self.conf, self._predictor['id'],
-                                    self._predictor)
+            db_api.predictor_update(self.conf, self.sf._predictor['id'],
+                                    self.sf._predictor)
         except exception.PredictorNotFound:
-            db_api.predictor_create(self.conf, self._predictor)
+            db_api.predictor_create(self.conf, self.sf._predictor)
 
         stickies = self.sf._sticky
         vips = []
@@ -184,17 +188,24 @@ class Balancer():
         self.lb = db_api.loadbalancer_get(self.conf, lb_id)
         self.sf = db_api.serverfarm_get_all_by_lb_id(self.conf, lb_id)[0]
         sf_id = self.sf['id']
+
+        self.vips = db_api.virtualserver_get_all_by_sf_id(self.conf, sf_id)
+
         predictor = db_api.predictor_get_all_by_sf_id(self.conf, sf_id)[0]
         self.sf._predictor = predictor
-        self.rs = db_api.server_get_all_by_sf_id(self.conf, sf_id)
-        sticks = db_api.sticky_get_all_by_sf_id(self.conf, sf_id)
 
+        self.rs = db_api.server_get_all_by_sf_id(self.conf, sf_id)
+        self.sf._rservers = []
         for rs in self.rs:
             self.sf._rservers.append(rs)
-        self.probes = db_api.probe_get_all_by_sf_id(sf_id)
+
+        self.probes = db_api.probe_get_all_by_sf_id(self.conf, sf_id)
+        self.sf._probes = []
         for prob in self.probes:
             self.sf._probes.append(prob)
-        self.vips = db_api.virtualserver_get_all_by_sf_id(sf_id)
+
+        sticks = db_api.sticky_get_all_by_sf_id(self.conf, sf_id)
+        self.sf._sticky = []
         for st in sticks:
             self.sf._sticky.append(st)
 
