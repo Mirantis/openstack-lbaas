@@ -4,15 +4,56 @@ import mock
 import types
 
 
-#
 class TestDecorators(unittest.TestCase):
+    """Need help with def fin coverage"""
     def setUp(self):
-        self.obj0 = mock.MagicMock(spec=types.GeneratorType, __name__="1")
+        self.obj0 = mock.MagicMock(__name__='GenTypeObj',
+                return_value=mock.MagicMock(spec=types.GeneratorType))
+        self.obj1 = mock.MagicMock(__name__='NonGenTypeObj',
+                return_value=mock.MagicMock(spec=types.FunctionType))
+        self.ctx_mock = mock.MagicMock()    # add_rollback=mock.MagicMock(
+#            side_effect=mock.MagicMock))
+        self.exc = Exception("Someone doing something wrong")
 
-    def test_with_rollback_gen_type(self):
-        cmd.with_rollback(self.obj0).__inner(mock.Mock, mock.Mock, mock.Mock)
+    def test_with_rollback_gen_type0(self):
+        """Don't get StopIteration exception"""
+        wrapped = cmd.with_rollback(self.obj0)
+        wrapped(self.ctx_mock, "arg1", "arg2")
+        self.assertEquals([mock.call(self.ctx_mock, "arg1", "arg2")],
+                self.obj0.call_args_list)
+        rollback_fn = self.ctx_mock.add_rollback.call_args([0])
+        rollback_fn(True)
+        self.assertTrue(self.ctx_mock.add_rollback.called)
+#        self.assertTrue(self.obj0.close.called)
 
-        #        self.assertTrue(self.obj.quiet, 'quiet')
+    def test_with_rollback_non_gen_type(self):
+        with self.assertRaises(type(self.exc)):
+            wrapped = cmd.with_rollback(self.obj1)
+            wrapped(self.ctx_mock, "arg1", "arg2")
+
+    def test_with_rollback_gen_type1(self):
+        """Get StopIteration exception"""
+        self.obj0.return_value.next = None
+        with self.assertRaises(type(self.exc)):
+            wrapped = cmd.with_rollback(self.obj0)
+            wrapped(self.ctx_mock, "arg1", "arg2")
+        self.assertEquals([mock.call(self.ctx_mock, "arg1", "arg2")],
+                self.obj0.call_args_list)
+        self.assertFalse(self.ctx_mock.add_rollback.called)
+
+    def test_ignore_exceptions0(self):
+        """Don't get exception"""
+        wrapped = cmd.ignore_exceptions(self.obj1)
+        wrapped("arg1", "arg2")
+        self.assertEquals([mock.call("arg1", "arg2")],
+                self.obj1.call_args_list)
+
+    def test_ignore_exceptions1(self):
+        """Get exception"""
+        self.obj1.side_effect = Exception()
+        wrapped = cmd.ignore_exceptions(self.obj1)
+        wrapped()
+        self.assertTrue(self.obj1.call_args_list, Exception)
 
 
 class TestRollbackContext(unittest.TestCase):
