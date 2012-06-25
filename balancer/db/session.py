@@ -34,20 +34,17 @@ from balancer.common import cfg
 from balancer.db import migrate_repo
 
 
-CACHE = {
-    'maker': None,
-    'engine': None
-}
-
 DB_GROUP_NAME = 'sql'
 DB_OPTIONS = (
     cfg.IntOpt('idle_timeout', default=3600),
     cfg.StrOpt('connection', default='sqlite:///balancer.sqlite'),
 )
 
+MAKER = None
+ENGINE = None
+
 
 class MySQLPingListener(object):
-
     """
     Ensures that MySQL connections checked out of the
     pool are alive.
@@ -78,42 +75,34 @@ class MySQLPingListener(object):
 
 def get_session(conf, autocommit=True, expire_on_commit=False):
     """Return a SQLAlchemy session."""
+    global MAKER
 
-    if CACHE['maker'] is None or CACHE['engine'] is None:
-        CACHE['engine'] = get_engine(conf)
-        CACHE['maker'] = get_maker(CACHE['engine'], autocommit,
-                                   expire_on_commit)
-
-    Session = CACHE['maker']
-    return Session()
+    if MAKER is None:
+        MAKER = sessionmaker(autocommit=autocommit,
+                             expire_on_commit=expire_on_commit)
+    engine = get_engine(conf)
+    MAKER.configure(bind=engine)
+    session = MAKER()
+    return session
 
 
 def get_engine(conf):
     """Return a SQLAlchemy engine."""
+    global ENGINE
 
     register_conf_opts(conf)
-
-    connection_dict = make_url(conf.sql.connection)
-
-    engine_args = {'pool_recycle': conf.sql.idle_timeout,
-                   'echo': False,
-                   'convert_unicode': True
-                   }
-
-    if 'sqlite' in connection_dict.drivername:
-        engine_args['poolclass'] = NullPool
-
-    if 'mysql' in connection_dict.drivername:
-        engine_args['listeners'] = [MySQLPingListener()]
-
-    return create_engine(conf.sql.connection, **engine_args)
-
-
-def get_maker(engine, autocommit=True, expire_on_commit=False):
-    """Return a SQLAlchemy sessionmaker using the given engine."""
-
-    return sessionmaker(bind=engine, autocommit=autocommit,
-                        expire_on_commit=expire_on_commit)
+    connection_url = make_url(conf.sql.connection)
+    if ENGINE is None or not ENGINE.url == connection_url:
+        engine_args = {'pool_recycle': conf.sql.idle_timeout,
+                       'echo': False,
+                       'convert_unicode': True
+                       }
+        if 'sqlite' in connection_url.drivername:
+            engine_args['poolclass'] = NullPool
+        if 'mysql' in connection_url.drivername:
+            engine_args['listeners'] = [MySQLPingListener()]
+        ENGINE = create_engine(conf.sql.connection, **engine_args)
+    return ENGINE
 
 
 def register_conf_opts(conf, options=DB_OPTIONS, group=DB_GROUP_NAME):
