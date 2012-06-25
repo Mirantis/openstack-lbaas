@@ -14,6 +14,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
 import unittest
 
 from balancer.drivers.cisco_ace.ace_driver import AceDriver
@@ -37,6 +38,19 @@ rs_redirect['extra'] = { 'description': 'Created by test. RS type Redirect', \
                          'minCon': '2000000', 'maxCon': '3000000', \
                          'weight': '1', 'rateBandwidth': '100000', \
                          'rateConnection': '999', 'redirectionCode': '301', \
+                         'webHostRedir': 'www.cisco.com' }
+
+rs_test3 = { 'type': 'host', 'name': 'LB_test_rs03', \
+           'address': '10.4.15.231', 'state': 'outofservice' }
+rs_test3['extra'] = { 'description': 'Created by test. RS type Host', \
+                     'weight': '70', 'rateBandwidth': '5000', \
+                     'rateConnection': '5000', \
+                     'port': '809', 'cookieStr': 'stringcookie' }
+
+rs_test4 = { 'type': 'redirect', 'name': 'LB_test_rs02', \
+                'address': '172.250.0.2', 'state': 'inservice' }
+rs_test4['extra'] = { 'description': 'Created by test. RS type Redirect', \
+                         'weight': '100', 'redirectionCode': '301', \
                          'webHostRedir': 'www.cisco.com' }
 
 probe_dns = { 'type': 'DNS', 'name': 'LB_test_ProbeDNS' }
@@ -328,14 +342,19 @@ sticky_sipHeader['extra'] = { 'serverFarm': 'LB_test_sfarm01', \
                               'timeoutActiveConn': 'True' }
 
 vip_loadbalance = { 'name': 'LB_test_VIP1', 'ipVersion': 'IPv4', \
-                    'address': '10.250.250.250', 'mask': '255.255.255.255', \
-                    'proto': 'TCP', 'appProto': 'HTTP', 'port': '80', \
+                    'address': '10.250.250.250', 'mask': '255.255.255.0', \
+                    'proto': 'TCP', 'appProto': 'HTTP', 'port': '20', \
                     'VLAN': "2" }
 
 vip_sticky = { 'name': 'LB_test_VIP2', 'ipVersion': 'IPv4', \
-               'address': '10.250.250.251', 'mask': '255.255.255.255', \
-               'proto': 'TCP', 'appProto': 'HTTP', 'port': '80', 'VLAN': '2' }
+               'address': '10.250.250.251', 'mask': '255.255.255.0', \
+               'proto': 'TCP', 'appProto': 'HTTPS', 'port': '5077', \
+               'VLAN': '2' }
 
+vip_test3 = { 'name': 'test3', 'ipVersion': 'IPv4', \
+               'address': '10.250.250.253', 'mask': '255.255.255.0', \
+               'proto': 'TCP', 'appProto': 'RTSP', 'port': '507', \
+               'allVLANs': 'True' }
 
 class Ace_DriverTestCase(unittest.TestCase):
     def test_01a_createRServer_typeHost(self):
@@ -344,6 +363,11 @@ class Ace_DriverTestCase(unittest.TestCase):
     def test_01b_createRServer_typeRedirect(self):
         print driver.create_real_server(rs_redirect)
 
+    def test_01c_createRServer_typeHost(self):
+        print driver.create_real_server(rs_test3)
+
+    def test_01d_createRServer_typeRedirect(self):
+        print driver.create_real_server(rs_test4)
 
     def test_02a_createDNSProbe(self):
         driver.create_probe(probe_dns)
@@ -449,6 +473,9 @@ class Ace_DriverTestCase(unittest.TestCase):
 
     def test_07b_createVIP_sticky(self):
         driver.create_virtual_ip(vip_sticky,  sf_redirect)
+
+    def test_07c_createVIP_loadbalncer(self):
+        driver.create_virtual_ip(vip_test,  sf_host)
 
     def test_08_suspendRServer(self):
         driver.suspend_real_server(sf_host, rs_host)
