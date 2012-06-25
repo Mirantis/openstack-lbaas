@@ -11,8 +11,7 @@ class TestDecorators(unittest.TestCase):
                 return_value=mock.MagicMock(spec=types.GeneratorType))
         self.obj1 = mock.MagicMock(__name__='NonGenTypeObj',
                 return_value=mock.MagicMock(spec=types.FunctionType))
-        self.ctx_mock = mock.MagicMock()    # add_rollback=mock.MagicMock(
-#            side_effect=mock.MagicMock))
+        self.ctx_mock = mock.MagicMock()
         self.exc = Exception("Someone doing something wrong")
 
     def test_with_rollback_gen_type0(self):
@@ -106,8 +105,34 @@ class TestRserver(unittest.TestCase):
         self.ctx = mock.MagicMock(device=mock.MagicMock(
             delete_real_server=mock.MagicMock(),
             create_real_server=mock.MagicMock()))
-        self.rs = {'parent_id': "", 'id': mock.Mock}
-    #    def test_create_rserver:
+        self.rs = {'parent_id': "", 'id': mock.Mock, 'deployed': ""}
+        self.exc = cmd.Rollback()
+
+    @mock.patch("balancer.db.api.server_update")
+    def test_create_rserver_1(self, mock_func):
+        """ parent_id == "" """
+        cmd.create_rserver(self.ctx, self.rs)
+        self.assertTrue(self.ctx.device.create_real_server.called)
+        self.assertTrue(mock_func.called)
+
+    @mock.patch("balancer.db.api.server_update")
+    def test_create_rserver_2(self, mock_func):
+        """ parent_id != "" """
+        self.rs['parent_id'] = 0
+        cmd.create_rserver(self.ctx, self.rs)
+        self.assertFalse(self.ctx.device.create_real_server.called)
+        self.assertFalse(mock_func.called)
+
+    @mock.patch("balancer.db.api.server_update")
+    def test_create_rserver_3(self, mock_func):
+        """Exception"""
+        self.rs['parent_id'] = ""
+        cmd.create_rserver(self.ctx, self.rs)
+        rollback_fn = self.ctx.add_rollback.call_args_list[0]
+        with self.assertRaises(type(self.exc)):
+            rollback_fn(False)
+        self.assertTrue(self.ctx.device.delete_real_server.called)
+        self.assertTrue(mock_func.called)
 
     @mock.patch("balancer.db.api.server_update")
     @mock.patch("balancer.db.api.server_get_all_by_parent_id")
@@ -163,6 +188,8 @@ class TestProbe(unittest.TestCase):
     def setUp(self):
         self.ctx = mock.MagicMock()
         self.probe = mock.MagicMock()
+
+#    @mock.patch("balancer.db.api.probe_update")
 #    def test_create_probe(self):
 
     @mock.patch("balancer.db.api.probe_update")
@@ -242,7 +269,6 @@ class TestLoadbalancer(unittest.TestCase):
         self.balancer = mock.MagicMock(probes=self.call_list,
                rs=self.call_list, vips=self.call_list,
                sf=mock.MagicMock(_sticky=self.call_list))
-        #self.balancer = Mock()
 
     @mock.patch("balancer.core.commands.add_probe_to_server_farm")
     @mock.patch("balancer.core.commands.create_probe")
