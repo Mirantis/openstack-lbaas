@@ -544,7 +544,7 @@ class TestDBAPI(unittest.TestCase):
         values2 = get_fake_sf('2')
         sf_ref1 = db_api.serverfarm_create(self.conf, values1)
         sf_ref2 = db_api.serverfarm_create(self.conf, values2)
-        sfs1= db_api.serverfarm_get_all_by_lb_id(self.conf, '1')
+        sfs1 = db_api.serverfarm_get_all_by_lb_id(self.conf, '1')
         sfs2 = db_api.serverfarm_get_all_by_lb_id(self.conf, '2')
         self.assertEqual(len(sfs1), 1)
         self.assertEqual(sfs1[0]['id'], sf_ref1['id'])
@@ -568,7 +568,8 @@ class TestDBAPI(unittest.TestCase):
     def test_serverfarm_get(self):
         values = get_fake_sf('1')
         serverfarm_ref1 = db_api.serverfarm_create(self.conf, values)
-        serverfarm_ref2 = db_api.serverfarm_get(self.conf, serverfarm_ref1['id'])
+        serverfarm_ref2 = db_api.serverfarm_get(self.conf,
+                                                serverfarm_ref1['id'])
         self.assertEqual(dict(serverfarm_ref1.iteritems()),
                          dict(serverfarm_ref2.iteritems()))
 
@@ -671,8 +672,8 @@ class TestDBAPI(unittest.TestCase):
                   'extra': {'ipVersion': 'IPv4',
                             'VLAN': 400,
                             'ICMPreply': False}}
-        virtualserver_ref = db_api.virtualserver_update(self.conf, virtualserver_ref['id'],
-                                                update)
+        virtualserver_ref = db_api.virtualserver_update(self.conf,
+                                    virtualserver_ref['id'], update)
         virtualserver = dict(virtualserver_ref.iteritems())
         values.update(update)
         self.assertIsNotNone(virtualserver['id'])
@@ -682,7 +683,8 @@ class TestDBAPI(unittest.TestCase):
     def test_virtualserver_get(self):
         values = get_fake_virtualserver('1', '1')
         virtualserver_ref1 = db_api.virtualserver_create(self.conf, values)
-        virtualserver_ref2 = db_api.virtualserver_get(self.conf, virtualserver_ref1['id'])
+        virtualserver_ref2 = db_api.virtualserver_get(self.conf,
+                                                      virtualserver_ref1['id'])
         self.assertEqual(dict(virtualserver_ref1.iteritems()),
                          dict(virtualserver_ref2.iteritems()))
 
@@ -695,8 +697,10 @@ class TestDBAPI(unittest.TestCase):
         with self.assertRaises(exception.VirtualServerNotFound) as cm:
             db_api.virtualserver_get(self.conf, virtualserver_ref1['id'])
         err = cm.exception
-        self.assertEqual(err.kwargs, {'virtualserver_id': virtualserver_ref1['id']})
-        virtualserver_ref3 = db_api.virtualserver_get(self.conf, virtualserver_ref2['id'])
+        expected = {'virtualserver_id': virtualserver_ref1['id']}
+        self.assertEqual(err.kwargs, expected)
+        virtualserver_ref3 = db_api.virtualserver_get(self.conf,
+                                                      virtualserver_ref2['id'])
         self.assertEqual(virtualserver_ref3['id'], virtualserver_ref2['id'])
 
     def test_virtualserver_destroy(self):
