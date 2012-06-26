@@ -176,7 +176,7 @@ def delete_lb(conf, lb_id):
 
     #Step 3. Destruct config at device
     device_id = balancer_instance.lb['device_id']
-    device_driver = drivers.get_device_driver(device_id)
+    device_driver = drivers.get_device_driver(conf, device_id)
     with device_driver.request_context() as ctx:
         commands.delete_loadbalancer(ctx, balancer_instance)
 

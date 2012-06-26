@@ -319,6 +319,7 @@ class Resource(object):
         deserialized_params = self.deserialize_request(action, request)
         action_args.update(deserialized_params)
         action_result = self.execute_action(action, request, **action_args)
+
         try:
             return self.serialize_response(action, action_result, request)
 
@@ -332,7 +333,21 @@ class Resource(object):
     def serialize_response(self, action, action_result, request):
         msg = "Called serialize response Action:%s Result:%s  Request:%s" % (action,  action_result,  request)
         logger.debug(msg)
+
+        try:
+            if not self.controller:
+                meth = getattr(self, action)
+            else:
+                meth = getattr(self.controller, action)
+        except AttributeError:
+            raise
+
+        code = 200
+        if hasattr(meth, 'wsgi_code'):
+            code = meth.wsgi_code
+
         response = webob.Response()
+        response.status = code
         logger.debug("serializer: dispatching call")
         #TODO check why it fails with original openstack code
         #self.dispatch(self.serializer, action, response,
