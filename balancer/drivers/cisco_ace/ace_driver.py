@@ -222,7 +222,7 @@ class AceDriver(BaseDriver):
             if srv_extra.get('failOnAll'):
                 cmd += "\nfail-on-all"
             if srv_extra.get('weight'):
-            cmd += "\nweight " + str(srv_extra['weight'])
+                cmd += "\nweight " + str(srv_extra['weight'])
         else:
             if srv_extra.get('webHostRedir'):
                 cmd += "\nwebhost-redirection " + srv_extra['webHostRedir']
