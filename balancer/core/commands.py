@@ -125,10 +125,10 @@ def delete_rserver(ctx, rs):
         ctx.device.delete_real_server(rs)
         if len(rss) > 0:
             for rs_child in rss:
-                db_api.server_update(rs_child['id'], 
-						{'parent_id': rss[-1]['id']})
-            db_api.server_update(rss[-1]['id'], 
-					{'parent_id': '','deployed': 'True'})
+                db_api.server_update(rs_child['id'],
+                                     {'parent_id': rss[-1]['id']})
+            db_api.server_update(rss[-1]['id'],
+                                     {'parent_id': '', 'deployed': 'True'})
             ctx.device.create_real_server(rss[-1])
 
 
@@ -229,7 +229,7 @@ def delete_vip(ctx, vip):
     ctx.device.delete_virtual_ip(vip)
     vip['deployed'] = 'False'
     db_api.virtualserver_update(ctx.conf, vip['id'], vip)
-    
+
 
 @with_rollback
 def create_vip(ctx, vip, server_farm):
