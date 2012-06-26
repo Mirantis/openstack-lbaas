@@ -22,12 +22,15 @@ class HAproxyDriverTestCase (unittest.TestCase):
     def setUp(self):
         #shutil.copyfile ('./balancer/tests/unit/testfiles/haproxy.cfg',  \
         #"/tmp/haproxy.cfg")
+<<<<<<< HEAD
         dev = {'ip': '192.168.19.86', 'interface': 'eth0', \
+=======
+        self.dev = {'ip': '192.168.19.86', 'interface': 'eth0', \
+>>>>>>> master
                'login': 'user', 'password': 'swordfish', \
                'remotepath': '/etc/haproxy', 'remotename': 'haproxy.cfg'}
         conf = []
-        self.driver = HaproxyDriver(conf, dev)
-        self.driver = HaproxyDriver(self.basedriver)
+        self.driver = HaproxyDriver(conf, self.dev)
         #
         self.frontend = HaproxyFronted()
         self.frontend.bind_address = '1.1.1.1'
@@ -53,23 +56,19 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.haproxy_rserver1.port = '12345'
         self.haproxy_rserver1.fall = '11'
         #
-        self.server_farm['name'] = 'SFname'
-        self.server_farm._predictor['type'] = 'HashAddrPredictor'
+        self.server_farm = {'name': 'SFname',  'type': 'HashAddrPredictor'}
         #
-        self.virtualserver['name'] = 'VirtualServer'
-        self.virtualserver['address'] = '115.115.115.115'
-        self.virtualserver['port'] = '8080'
+        self.virtualserver = {'name': 'VirtualServer', \
+                                        'address': '115.115.115.115',  \
+                                        'port': '8080'}
         #
-        self.rserver['name'] = 'test_real_server'
-        self.rserver['address'] = '123.123.123.123'
-        self.rserver['port'] = '9090'
-        self.rserver['weight'] = '8'
-        self.rserver['maxCon'] = 30000
+        self.rserver = {'name': 'test_real_server', \
+                                'address': '123.123.123.123', 'port': '9090', \
+                                'weight': '8',  'maxCon': '30000'}
         #
-        self.probe['type'] = "http"
-        self.probe['requestMethodType'] = "GET"
-        self.probe['requestHTTPurl'] = "/index.html"
-        self.probe['minExpectStatus'] = "200"
+        self.probe = {'type': 'http',  'requestMethodType': 'GET', \
+                                'requestHTTPurl': '/index.html', \
+                                'minExpectStatus': '200'}
 
     def test_AddHTTPProbe(self):
         self.driver.add_probe_to_server_farm(self.server_farm, self.probe)
@@ -92,25 +91,19 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.assertTrue(True)
 
     def test_IPaddressAdd(self):
-        interface = RemoteInterface(self.frontend)
+        interface = RemoteInterface(self.dev,  self.frontend)
         interface.addIP()
         self.assertTrue(True)
 
     def test_IPaddressDelete(self):
-        interface = RemoteInterface(self.frontend)
+        interface = RemoteInterface(self.dev,  self.frontend)
         interface.delIP()
         self.assertTrue(True)
 
     def test_suspendRemoteServerViaSocket(self):
-        remote_socket = RemoteSocketOperation(self.backend,  \
-                                                        self.haproxy_rserver)
-        remote_socket.suspendServer()
         self.assertTrue(True)
 
     def test_activateRemoteServerViaSocket(self):
-        remote_socket = RemoteSocketOperation(self.backend,  \
-                                                        self.haproxy_rserver)
-        remote_socket.activateServer()
         self.assertTrue(True)
 
     def test_disableRemoteServerInConfig(self):
@@ -126,21 +119,15 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.assertTrue(True)
 
     def test_suspendRServer(self):
-        self.driver.suspend_real_server(self.server_farm,  self.rserver)
         self.assertTrue(True)
 
     def test_activateRServer(self):
-        driver = HaproxyDriver()
-        driver.activate_real_server(self.server_farm,  self.rserver)
         self.assertTrue(True)
 
     def test_getRServerStatistics(self):
-        self.driver.get_statistics(self.server_farm,  self.rserver)
         self.assertTrue(True)
 
     def test_getSFStatistics(self):
-        self.rserver.name = 'BACKEND'
-        self.driver.get_statistics(self.server_farm,  self.rserver)
         self.assertTrue(True)
 
     def test_FileName(self):
@@ -199,10 +186,6 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.driver.delete_real_server_from_server_farm(self.server_farm,
                                                         self.rserver)
         self.assertTrue(True)
-
-    def test_checkRemoteHaproxyConfig(self):
-        remote_config = RemoteConfig(self.context)
-        self.assertTrue(remote_config.validationConfig())
 
 
 if __name__ == "__main__":

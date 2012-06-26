@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class RemoteConfig(object):
     def __init__(self, device_ref, localpath, remotepath, configfilename):
-        env.user = device_ref['user']
+        env.user = device_ref['login']
         env.hosts = []
         env.hosts.append(device_ref['ip'])
         env.password = device_ref['password']
@@ -64,7 +64,7 @@ class RemoteService(object):
     Operations with haproxy daemon
     '''
     def __init__(self, device_ref):
-        env.user = device_ref['user']
+        env.user = device_ref['login']
         env.hosts = []
         env.hosts.append(device_ref['ip'])
         env.password = device_ref['password']
@@ -85,12 +85,12 @@ class RemoteService(object):
 
 class RemoteInterface(object):
     def __init__(self, device_ref, frontend):
-        env.user = device_ref['user']
+        env.user = device_ref['login']
         env.hosts = []
         env.hosts.append(device_ref['ip'])
         env.password = device_ref['password']
         env.host_string = device_ref['ip']
-        self.interface = device_ref['extra']['interface']
+        self.interface = device_ref['interface']
         self.IP = frontend.bind_address
 
     def changeIP(self, IP, netmask):
