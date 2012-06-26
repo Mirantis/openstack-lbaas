@@ -155,7 +155,8 @@ def delete_server_farm(ctx, sf):
 @with_rollback
 def create_server_farm(ctx, sf):
     try:
-        ctx.device.create_server_farm(sf)
+        pr = db_api.predictor_get_all_by_sf_id(conf, sf['id'])
+        ctx.device.create_server_farm(sf, pr)
         sf['deployed'] = 'True'
         db_api.serverfarm_update(ctx.conf, sf['id'], sf)
         yield

@@ -260,19 +260,19 @@ class HaproxyDriver(BaseDriver):
             remote_socket.activateServer()
         remote_config.putConfig()
 
-    def create_server_farm(self, serverfarm):
+    def create_server_farm(self, serverfarm, predictor):
         if not bool(serverfarm['name']):
             logger.error('[HAPROXY] Serverfarm name is empty')
             return 'SERVERFARM FARM NAME ERROR'
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['name']
-        if serverfarm._predictor['type'] == 'RoundRobin':
+        if predictor['type'] == 'RoundRobin':
             haproxy_serverfarm.balance = 'roundrobin'
-        elif serverfarm._predictor['type'] == 'LeastConnections':
+        elif predictor['type'] == 'LeastConnections':
             haproxy_serverfarm.balance = 'leastconn'
-        elif serverfarm._predictor['type'] == 'HashAddrPredictor':
+        elif predictor['type'] == 'HashAddrPredictor':
             haproxy_serverfarm.balance = 'source'
-        elif serverfarm._predictor['type'] == 'HashURL':
+        elif predictor['type'] == 'HashURL':
             haproxy_serverfarm.balance = 'uri'
         config_file = HaproxyConfigFile('%s/%s' % (self.localpath, \
                                                 self.configfilename))

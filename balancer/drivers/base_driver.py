@@ -78,7 +78,7 @@ class BaseDriver(object):
     def delete_probe(self, probe):
         raise NotImplementedError
 
-    def create_server_farm(self, serverfarm):
+    def create_server_farm(self, serverfarm, predictor):
         raise NotImplementedError
 
     def delete_server_farm(self, serverfarm):

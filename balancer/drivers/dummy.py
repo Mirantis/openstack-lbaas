@@ -67,7 +67,7 @@ class DummyDriver(BaseDriver):
     def delete_probe(self, probe):
         logger.debug("Called DummyDriver.deleteProbe(%r)." % (probe,))
 
-    def create_server_farm(self, serverfarm):
+    def create_server_farm(self, serverfarm, predictor):
         logger.debug("Called DummyDriver.createServerFarm(%r)." %
                                                         (serverfarm,))
 

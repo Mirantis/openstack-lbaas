@@ -398,7 +398,7 @@ class AceDriver(BaseDriver):
         cmd = "no probe " + pr_type + " " + probe['name']
         self.deployConfig(cmd)
 
-    def create_server_farm(self, sf):
+    def create_server_farm(self, sf, predictor):
         sf_type = sf['type'].lower()
         sf_extra = sf.get('extra') or {}
         cmd = "serverfarm " + sf_type + " " + sf['name']
@@ -406,21 +406,21 @@ class AceDriver(BaseDriver):
             cmd += "\ndescription " + sf_extra['description']
         if sf_extra.get('failAction'):
             cmd += "\nfailaction " + sf_extra['failAction']
-        if sf._predictor.get('type'):
-            pr = sf._predictor['type'].lower()
+        if predictor.get('type'):
+            pr = predictor['type'].lower()
             if (pr == "leastbandwidth"):
                 pr = "least-bandwidth"
-                accessTime = sf._predictor['extra'].get('accessTime')
+                accessTime = predictor['extra'].get('accessTime')
                 if accessTime:
                     pr += " assess-time " + accessTime
                 if sf_extra.get('accessTime'):
-                    pr += " samples " + sf._predictor['extra']['sample']
+                    pr += " samples " + predictor['extra']['sample']
             elif (pr == "leastconnections"):
                 pr = "leastconns slowstart " + \
-                     sf._predictor['extra']['slowStartDur']
+                     predictor['extra']['slowStartDur']
             elif (pr == "leastloaded"):
                 pr = "least-loaded probe " + \
-                     sf._predictor['extra']['snmpProbe']
+                     predictor['extra']['snmpProbe']
             cmd += "\npredictor " + pr
         if (sf_type == "host"):
             if sf_extra.get('failOnAll'):
