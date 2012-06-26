@@ -20,6 +20,9 @@ import unittest
 from balancer.drivers.cisco_ace.ace_driver import AceDriver
 
 
+W = ""
+
+
 class TestDriver(AceDriver):
     def deployConfig(self, s):
         W += s
@@ -612,7 +615,7 @@ class Ace_DriverTestCase(unittest.TestCase):
         driver.delete_probe(probe_vm)
 
     def test_16a_deleteRServer_typeHost(self):
-        driver.delete_real_server(rs)
+        driver.delete_real_server(rs_host)
 
     def test_16b_deleteRServer_typeRedirect(self):
-        driver.delete_real_server(rs)
+        driver.delete_real_server(rs_redirect)

@@ -72,11 +72,11 @@ class HAproxyDriverTestCase (unittest.TestCase):
         self.probe['minExpectStatus'] = "200"
 
     def test_AddHTTPProbe(self):
-        self.driver.add_probe_to_server_farm(self.server_farm,  self.probe)
+        self.driver.add_probe_to_server_farm(self.server_farm, self.probe)
         self.assertTrue(True)
 
     def test_DelHTTPProbe(self):
-        self.driver.delete_probe_from_server_farm(self.server_farm,  self.probe)
+        self.driver.delete_probe_from_server_farm(self.server_farm, self.probe)
         self.assertTrue(True)
 
     def test_AddLinesToBackendBlock(self):
