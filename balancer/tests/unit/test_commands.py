@@ -14,31 +14,57 @@ class TestDecorators(unittest.TestCase):
         self.ctx_mock = mock.MagicMock()
         self.exc = Exception("Someone doing something wrong")
 
-    def test_with_rollback_gen_type0(self):
-        """Don't get StopIteration exception"""
+    def test_with_rollback_gen_type_0(self):
+        """Don't get any exception"""
         wrapped = cmd.with_rollback(self.obj0)
         wrapped(self.ctx_mock, "arg1", "arg2")
         self.assertEquals([mock.call(self.ctx_mock, "arg1", "arg2")],
                 self.obj0.call_args_list)
-        rollback_fn = self.ctx_mock.add_rollback.call_args([0])
+        rollback_fn = self.ctx_mock.add_rollback.call_args[0][0]
         rollback_fn(True)
         self.assertTrue(self.ctx_mock.add_rollback.called)
-#        self.assertTrue(self.obj0.close.called)
+        self.assertTrue(self.obj0.return_value.close.called)
 
-    def test_with_rollback_non_gen_type(self):
-        with self.assertRaises(type(self.exc)):
-            wrapped = cmd.with_rollback(self.obj1)
-            wrapped(self.ctx_mock, "arg1", "arg2")
+    def test_with_rollback_gen_type_1(self):
+        """Get Rollback exception"""
+        self.obj0.return_value.throw.side_effect = cmd.Rollback
+        wrapped = cmd.with_rollback(self.obj0)
+        wrapped(self.ctx_mock, "arg1", "arg2")
+        self.assertEquals([mock.call(self.ctx_mock, "arg1", "arg2")],
+                self.obj0.call_args_list)
+        rollback_fn = self.ctx_mock.add_rollback.call_args[0][0]
+        with self.assertRaises(cmd.Rollback):
+            rollback_fn(False)
+        self.assertTrue(self.ctx_mock.add_rollback.called)
+        self.assertTrue(self.obj0.return_value.throw.called)
 
-    def test_with_rollback_gen_type1(self):
+    def test_with_rollback_gen_type_2(self):
+        """Get exception during rollback"""
+        self.obj0.return_value.throw.side_effect = Exception()
+        wrapped = cmd.with_rollback(self.obj0)
+        wrapped(self.ctx_mock, "arg1", "arg2")
+        self.assertEquals([mock.call(self.ctx_mock, "arg1", "arg2")],
+                self.obj0.call_args_list)
+        with self.assertRaises(Exception):
+            rollback_fn = self.ctx_mock.add_rollback.call_args[0][0]
+            rollback_fn(False)
+        self.assertTrue(self.ctx_mock.add_rollback.called)
+        self.assertTrue(self.obj0.return_value.throw.called)
+
+    def test_with_rollback_gen_type_3(self):
         """Get StopIteration exception"""
-        self.obj0.return_value.next = None
+        self.obj0.return_value.next.side_effect = StopIteration
         with self.assertRaises(type(self.exc)):
             wrapped = cmd.with_rollback(self.obj0)
             wrapped(self.ctx_mock, "arg1", "arg2")
         self.assertEquals([mock.call(self.ctx_mock, "arg1", "arg2")],
                 self.obj0.call_args_list)
         self.assertFalse(self.ctx_mock.add_rollback.called)
+
+    def test_with_rollback_non_gen_type(self):
+        with self.assertRaises(type(self.exc)):
+            wrapped = cmd.with_rollback(self.obj1)
+            wrapped(self.ctx_mock, "arg1", "arg2")
 
     def test_ignore_exceptions0(self):
         """Don't get exception"""
@@ -105,8 +131,10 @@ class TestRserver(unittest.TestCase):
         self.ctx = mock.MagicMock(device=mock.MagicMock(
             delete_real_server=mock.MagicMock(),
             create_real_server=mock.MagicMock()))
-        self.rs = {'parent_id': "", 'id': mock.Mock, 'deployed': ""}
-        self.exc = cmd.Rollback()
+        self.rs = {'parent_id': "", 'id': mock.MagicMock(spec=int),
+                'deployed': ""}
+        self.exc = Exception()
+        #cmd.Rollback()
 
     @mock.patch("balancer.db.api.server_update")
     def test_create_rserver_1(self, mock_func):
@@ -117,7 +145,7 @@ class TestRserver(unittest.TestCase):
 
     @mock.patch("balancer.db.api.server_update")
     def test_create_rserver_2(self, mock_func):
-        """ parent_id != "" """
+        """ parent_id != "", no exception """
         self.rs['parent_id'] = 0
         cmd.create_rserver(self.ctx, self.rs)
         self.assertFalse(self.ctx.device.create_real_server.called)
@@ -128,7 +156,7 @@ class TestRserver(unittest.TestCase):
         """Exception"""
         self.rs['parent_id'] = ""
         cmd.create_rserver(self.ctx, self.rs)
-        rollback_fn = self.ctx.add_rollback.call_args_list[0]
+        rollback_fn = self.ctx.add_rollback.call_args[0][0]
         with self.assertRaises(type(self.exc)):
             rollback_fn(False)
         self.assertTrue(self.ctx.device.delete_real_server.called)
@@ -142,9 +170,9 @@ class TestRserver(unittest.TestCase):
         cmd.delete_rserver(self.ctx, self.rs)
         self.assertTrue(self.ctx.device.delete_real_server.called,
                 "ctx_delete_rs not called")
-#        self.assertTrue(mock_f2.called, "server_upd not called")
-#        self.assertTrue(self.ctx.device.create_real_server.called,
-#                "ctx_create_rs not called")
+        self.assertTrue(mock_f2.called, "server_upd not called")
+        self.assertTrue(self.ctx.device.create_real_server.called,
+                "ctx_create_rs not called")
         self.assertNotEquals(len(mock_f1.return_value), 0)
 
     @mock.patch("balancer.db.api.server_get_all_by_parent_id")
