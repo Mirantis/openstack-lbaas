@@ -27,37 +27,6 @@ import openstack.common.exception
 logger = logging.getLogger(__name__)
 
 
-def deployConfig(self, s):
-    request = urllib2.Request(self.url)
-    request.add_header("Authorization", self.authheader)
-    d = """xml_cmd=<request_raw>\nconfigure\n%s\nend\n</request_raw>""" % s
-    logger.debug("send data to ACE:\n" + d)
-    try:
-        message = urllib2.urlopen(request, d)
-        s = message.read()
-    except (Exception):
-        return Exception
-    logger.debug("data from ACE:\n" + s)
-    if (s.find('XML_CMD_SUCCESS') > 0):
-        return 'OK'
-    else:
-        return Exception
-
-
-def getConfig(self, s):
-    request = urllib2.Request(self.url)
-    request.add_header("Authorization", self.authheader)
-    data = """xml_cmd=<request_raw>\nshow runn %s\n</request_raw>""" % s
-    logger.debug("send data to ACE:\n" + data)
-    try:
-        message = urllib2.urlopen(request, data)
-        s = message.read()
-    except (Exception):
-        return Exception
-    logger.debug("data from ACE:\n" + s)
-    return s
-
-
 def create_nat_pool(self, nat_pool):
     cmd = "int vlan " + nat_pool['vlan'] + \
           "\nnat-pool " + nat_pool['number'] + " " + nat_pool['ip']
@@ -70,7 +39,8 @@ def create_nat_pool(self, nat_pool):
 
 
 def delete_nat_pool(self, nat_pool):
-    cmd = "int vlan " + nat_pool['vlan'] + "\nno nat-pool " + nat_pool['number']
+    cmd = "int vlan " + nat_pool['vlan'] + "\nno nat-pool " + \
+          nat_pool['number']
     deployConfig(cmd)
 
 
@@ -156,6 +126,35 @@ class AceDriver(BaseDriver):
             (device_ref['login'], device_ref['password']))[:-1]
         self.authheader = "Basic %s" % base64str
 
+    def deployConfig(self, s):
+        request = urllib2.Request(self.url)
+        request.add_header("Authorization", self.authheader)
+        d = "xml_cmd=<request_raw>\nconfigure\n%s\nend\n</request_raw>" % s
+        logger.debug("send data to ACE:\n" + d)
+        try:
+            message = urllib2.urlopen(request, d)
+            s = message.read()
+        except (Exception):
+            return Exception
+    logger.debug("data from ACE:\n" + s)
+    if (s.find('XML_CMD_SUCCESS') > 0):
+        return 'OK'
+    else:
+        return Exception
+
+    def getConfig(self, s):
+        request = urllib2.Request(self.url)
+        request.add_header("Authorization", self.authheader)
+        data = "xml_cmd=<request_raw>\nshow runn %s\n</request_raw>" % s
+        logger.debug("send data to ACE:\n" + data)
+        try:
+            message = urllib2.urlopen(request, data)
+            s = message.read()
+        except (Exception):
+            return Exception
+        logger.debug("data from ACE:\n" + s)
+        return s
+
     def import_certificate_or_key(self):
         dev_extra = self.device_ref.get('extra') or {}
         cmd = "do crypto import " + dev_extra['protocol'] + " "
@@ -164,7 +163,7 @@ class AceDriver(BaseDriver):
         cmd += dev_extra['server_ip'] + " " + dev_extra['server_user'] + \
                " " + dev_extra['file_name'] + " " + dev_extra['file_name'] + \
                "\n" + dev_extra['server_password']
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def create_ssl_proxy(self, ssl_proxy):
         cmd = "ssl-proxy service " + ssl_proxy['name']
@@ -186,30 +185,30 @@ class AceDriver(BaseDriver):
             cmd += "\nchaingroup " + ssl_proxy['chainGroup']
         if ssl_proxy.get('CheckPriority'):
             cmd += "\nrevcheckprion " + ssl_proxy['CheckPriority']
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def delete_ssl_proxy(self, ssl_proxy):
         cmd = "no ssl-proxy service " + ssl_proxy['name']
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def add_ssl_proxy_to_virtual_ip(self, vip, ssl_proxy):
         cmd = "policy-map multi-match global\nclass " + vip['name'] + \
               "\nssl-proxy server " + ssl_proxy['name']
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def remove_ssl_proxy_from_virtual_ip(self, vip, ssl_proxy):
         cmd = "policy-map multi-match global\nclass " + vip['name'] + \
               "\nno ssl-proxy server " + ssl_proxy['name']
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def create_vlan(self, vlan):
         cmd = "int vlan " + vlan['number'] + "\nip address" + vlan['ip'] + \
               " " + vlan['netmask'] + "\nno shutdown"
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def delete_vlan(self, vlan):
         cmd = "no int vlan " + vlan['number']
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def create_real_server(self, rserver):
         srv_type = rserver['type'].lower()
@@ -238,11 +237,11 @@ class AceDriver(BaseDriver):
             cmd += "\nrate-limit bandwidth " + str(srv_extra['rateBandwidth'])
         if (rserver['state'] == "In Service"):
             cmd += "\ninservice"
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def delete_real_server(self, rserver):
         cmd = "no rserver " + rserver['name']
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def activate_real_server(self, serverfarm, rserver):
         cmd = "serverfarm " + serverfarm['name'] + "\n" + \
@@ -250,11 +249,11 @@ class AceDriver(BaseDriver):
         if self.checkNone(rserver['port']):
             cmd += " " + rserver['port']
         cmd += "\ninservice"
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def activate_real_server_global(self, rserver):
         cmd = "rserver " + rserver['name'] + "\ninservice"
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def suspend_real_server(self, serverfarm, rserver):
         cmd = "serverfarm " + serverfarm['name'] + "\n" + \
@@ -265,11 +264,11 @@ class AceDriver(BaseDriver):
             cmd += "\ninservice standby"
         else:
             cmd += "\nno inservice"
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def suspend_real_server_global(self, rserver):
         cmd = "rserver " + rserver['name'] + "\nno inservice"
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def create_probe(self, probe):
         pr_extra = probe.get('extra') or {}
@@ -389,14 +388,14 @@ class AceDriver(BaseDriver):
                     cmd += "\nload mem burst-threshold max " + \
                         pr_extra['maxMemBurstThresh'] + " min " + \
                         pr_extra['minMemBurstThresh']
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def delete_probe(self, probe):
         pr_type = probe['type'].lower().replace('-', ' ')
         if pr_type == "connect":
             pr_type = "tcp"
         cmd = "no probe " + pr_type + " " + probe['name']
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def create_server_farm(self, sf):
         sf_type = sf['type'].lower()
@@ -446,7 +445,7 @@ class AceDriver(BaseDriver):
                 cmd += "\ndws " + sf_extra['dynamicWorkloadScale']
                 if (sf_extra['dynamicWorkloadScale'] == "burst"):
                     cmd += " probe " + sf['VMprobe']
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def delete_server_farm(self, sf):
         cmd = "no serverfarm " + sf['name']
@@ -479,21 +478,21 @@ class AceDriver(BaseDriver):
             cmd += "\ninservice"
             if rs_extra.get('state').lower() == "standby":
                 cmd += " standby"
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def delete_real_server_from_server_farm(self, sf, rserver):
         cmd = "serverfarm " + sf['name'] + "\nno rserver " + rserver['name']
         if rserver.get('port'):
             cmd += " " + rserver['port']
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def add_probe_to_server_farm(self, sf, probe):
         cmd = "serverfarm " + sf['name'] + "\nprobe " + probe['name']
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def delete_probe_from_server_farm(self, sf, probe):
         cmd = "serverfarm " + sf['name'] + "\nno probe " + probe['name']
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def create_stickiness(self, sticky):
         name = sticky['name']
@@ -579,7 +578,7 @@ class AceDriver(BaseDriver):
                     cmd += " sticky"
                 if st_extra('aggregateState'):
                     cmd += " aggregate-state"
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def delete_stickiness(self, sticky):
         name = sticky['name']
@@ -600,7 +599,7 @@ class AceDriver(BaseDriver):
             cmd += " Session " + name
         elif sticky_type == "sip-header":
             cmd += " Call-ID" + name
-        deployConfig(cmd)
+        self.deployConfig(cmd)
 
     def create_virtual_ip(self, vip, sfarm):
         vip_extra = vip.get('extra') or {}
@@ -611,7 +610,7 @@ class AceDriver(BaseDriver):
             pmap = "int-" + str(md5.new(vip_extra['VLAN']).hexdigest())
         cmd = "access-list vip-acl extended permit ip any host " + \
               vip['address']
-        deployConfig(cmd)
+        self.deployConfig(cmd)
         appProto = vip_extra.get('appProto')
         if appProto.lower() in ('other', 'http'):
             appProto = ""
@@ -636,11 +635,11 @@ class AceDriver(BaseDriver):
         cmd += "\nloadbalance policy " + vip['name'] + "-l7slb"
         if vip_extra.get('ICMPreply'):
             cmd += "\nloadbalance vip icmp-reply"
-        deployConfig(cmd)
+        self.deployConfig(cmd)
         if vip_extra.get('allVLANs'):
             cmd = "service-policy input " + pmap
             try:
-                deployConfig(cmd)
+                self.deployConfig(cmd)
             except:
                 logger.warning("Got exception on acl set")
         else:
@@ -649,21 +648,21 @@ class AceDriver(BaseDriver):
                 for i in VLAN:
                     cmd = "interface vlan " + str(i) + \
                           "\nservice-policy input " + pmap
-                    deployConfig(cmd)
+                    self.deployConfig(cmd)
                     cmd = "interface vlan " + str(i) + \
                           "\naccess-group input vip-acl"
                     try:
-                        deployConfig(cmd)
+                        self.deployConfig(cmd)
                     except:
                         logger.warning("Got exception on acl set")
             else:
                     cmd = "interface vlan " + str(VLAN) + \
                           "\nservice-policy input " + pmap
-                    deployConfig(cmd)
+                    self.deployConfig(cmd)
                     cmd = "interface vlan " + str(VLAN) + \
                           "\naccess-group input vip-acl"
                     try:
-                        deployConfig(cmd)
+                        self.deployConfig(cmd)
                     except:
                         logger.warning("Got exception on acl set")
         nat_pool = find_nat_pool_for_vip(vip)
@@ -681,29 +680,29 @@ class AceDriver(BaseDriver):
         else:
             pmap = "int-" + str(md5.new(vip_extra['VLAN']).hexdigest())
         cmd = "policy-map multi-match " + pmap + "\nno class " + vip['name']
-        deployConfig(cmd)
+        self.deployConfig(cmd)
         cmd = "no class-map match-all " + vip['name'] + "\n"
-        deployConfig(cmd)
+        self.deployConfig(cmd)
         cmd = "no policy-map type loadbalance first-match " + \
               vip['name'] + "-l7slb"
-        deployConfig(cmd)
-        if (getConfig("policy-map %s" % pmap).find("class") <= 0):
+        self.deployConfig(cmd)
+        if (self.getConfig("policy-map %s" % pmap).find("class") <= 0):
             if vip_extra.get('allVLANs'):
                 cmd = "no service-policy input " + pmap
-                deployConfig(cmd)
+                self.deployConfig(cmd)
             else:
                 VLAN = vip_extra['VLAN']
                 if is_sequence(VLAN):
                     for i in VLAN:
                         cmd = "interface vlan " + str(i) + \
                               "\nno service-policy input " + pmap
-                        deployConfig(cmd)
+                        self.deployConfig(cmd)
                 else:
                         cmd = "interface vlan " + str(VLAN) + \
                               "\nno service-policy input " + pmap
-                        deployConfig(cmd)
+                        self.deployConfig(cmd)
             cmd = "no policy-map multi-match " + pmap
-            deployConfig(cmd)
+            self.deployConfig(cmd)
         cmd = "no access-list vip-acl extended permit ip any host " + \
               vip['address']
-        deployConfig(cmd)
+        self.deployConfig(cmd)

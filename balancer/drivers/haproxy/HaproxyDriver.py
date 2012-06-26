@@ -23,7 +23,9 @@ from balancer.drivers.haproxy.RemoteControl import RemoteConfig
 from balancer.drivers.haproxy.RemoteControl import RemoteInterface
 from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation
 
+
 logger = logging.getLogger(__name__)
+
 
 class HaproxyDriver(BaseDriver):
     def __init__(self, device_ref):

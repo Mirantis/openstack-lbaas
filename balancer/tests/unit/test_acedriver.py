@@ -19,16 +19,14 @@ import unittest
 
 from balancer.drivers.cisco_ace.ace_driver import AceDriver
 
-def deployConfig(s):
-    W += s
-    return 'OK'
-
-def getConfig(s):
-    return 'test'
 
 class TestDriver(AceDriver):
-    pass
+    def deployConfig(s):
+        W += s
+        return 'OK'
 
+    def getConfig(s):
+        return 'test'
 
 dev = {'ip':'10.4.15.21', 'port':'10443', \
        'login':'admin', 'password':'cisco123'}
@@ -163,7 +161,8 @@ probe_pop['extra'] = { 'description': 'Created by test. Probe type POP', \
 
 probe_radius = { 'type': 'RADIUS', 'name': 'LB_test_ProbeRADIUS' }
 probe_radius['extra'] = { 'description': 'Probe type Radius', \
-                          'probeInterval': '30', 'passDetectInterval': '100', \
+                          'probeInterval': '30', \
+                          'passDetectInterval': '100', \
                           'failDetect': '5', 'userSecret': 'topsecret', \
                           'userName': 'user', 'password': 'password', \
                           'requestCommand': 'request', \
@@ -204,7 +203,8 @@ probe_sipUDP['extra'] = { 'description': 'Probe type SIPUDP', \
 
 probe_sipTCP = { 'type': 'SIP-TCP', 'name': 'LB_test_ProbeSIPTCP' }
 probe_sipTCP['extra'] = { 'description': 'Probe type SIPTCP', \
-                          'probeInterval': '30', 'passDetectInterval': '100', \
+                          'probeInterval': '30', \
+                          'passDetectInterval': '100', \
                           'failDetect': '5', 'passDetectCount': '5', \
                           'receiveTimeout': '15', 'destIP': '1.1.1.1', \
                           'port': '509', 'tcpConnTerm': 'True', \
@@ -285,7 +285,8 @@ sticky_httpContent['extra'] = { 'offset': '0', \
                                 'timeout': '2880', \
                                 'timeoutActiveConn': 'True' }
 
-sticky_httpCookie = { 'type': 'HTTPCookie', 'name': 'LB_test_stickyHTTPCookie' }
+sticky_httpCookie = { 'type': 'HTTPCookie', \
+                      'name': 'LB_test_stickyHTTPCookie' }
 sticky_httpCookie['extra'] = { 'cookieName': 'cookieshmuki', \
                                'enableInsert': 'True', \
                                'browserExpire': 'True', 'offset': '999', \
@@ -294,16 +295,18 @@ sticky_httpCookie['extra'] = { 'cookieName': 'cookieshmuki', \
                                'serverFarm': 'LB_test_sfarm01', \
                                'backupServerFarm': 'LB_test_sfarm02', \
                                'replicateOnHAPeer': 'True', \
-                               'timeout': '2880', 'timeoutActiveConn': 'True' }
+                               'timeout': '2880', \
+                               'timeoutActiveConn': 'True' }
 
 sticky_httpHeader = { 'type': 'HTTPHeader', \
                       'name': 'LB_test_stickyHTTPHeader' }
-sticky_httpHeader['extra'] = { 'headerName': 'authorization', 'offset': '50', \
-                               'length': '150', \
+sticky_httpHeader['extra'] = { 'headerName': 'authorization', \
+                               'offset': '50', 'length': '150', \
                                'serverFarm': 'LB_test_sfarm01', \
                                'backupServerFarm': 'LB_test_sfarm02', \
                                'replicateOnHAPeer': 'True', \
-                               'timeout': '2880', 'timeoutActiveConn': 'True' }
+                               'timeout': '2880', \
+                               'timeoutActiveConn': 'True' }
 
 sticky_ipnetmask = { 'type': 'IPNetmask', 'name': 'LB_test_stickyIPNetmask' }
 sticky_ipnetmask['extra'] = { 'netmask': '255.255.255.128', 'timeout': '1', \
@@ -350,7 +353,8 @@ sticky_rtspHeader['extra'] = { 'offset': '50', 'length': '200', \
 sticky_sipHeader = { 'type': 'SIPHeader', 'name': 'LB_test_stickySIPHeader' }
 sticky_sipHeader['extra'] = { 'serverFarm': 'LB_test_sfarm01', \
                               'backupServerFarm': 'LB_test_sfarm02', \
-                              'replicateOnHAPeer': 'True', 'timeout': '2880', \
+                              'replicateOnHAPeer': 'True',\
+                              'timeout': '2880', \
                               'timeoutActiveConn': 'True' }
 
 vip_loadbalance = { 'name': 'LB_test_VIP1', 'ipVersion': 'IPv4', \

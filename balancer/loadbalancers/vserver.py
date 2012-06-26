@@ -129,7 +129,8 @@ class Balancer():
 
         self.sf['lb_id'] = lb_ref['id']
         try:
-            sf_ref = db_api.serverfarm_update(self.conf, self.sf['id'], self.sf)
+            sf_ref = db_api.serverfarm_update(self.conf, self.sf['id'],
+                                              self.sf)
         except exception.ServerFarmNotFound:
             sf_ref = db_api.serverfarm_create(self.conf, self.sf)
 
@@ -167,7 +168,8 @@ class Balancer():
         for vip in self.vips:
             vip['sf_id'] = sf_ref['id']
             try:
-                vip_ref = db_api.virtualserver_update(self.conf, vip['id'], vip)
+                vip_ref = db_api.virtualserver_update(self.conf, vip['id'],
+                                                      vip)
             except exception.VirtualServerNotFound:
                 vip_ref = db_api.virtualserver_create(self.conf, vip)
             vips.append(vip_ref)
