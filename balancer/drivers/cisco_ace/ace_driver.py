@@ -23,7 +23,9 @@ import ipaddr
 from balancer.drivers.base_driver import BaseDriver, is_sequence
 import openstack.common.exception
 
+
 logger = logging.getLogger(__name__)
+
 
 def deployConfig(self, s):
     request = urllib2.Request(self.url)

@@ -19,10 +19,22 @@ import unittest
 
 from balancer.drivers.cisco_ace.ace_driver import AceDriver
 
+def deployConfig(self, s):
+    W += s
+    return 'OK'
+
+def getConfig(self, s):
+    return 'test'
+
+class TestDriver(AceDriver):
+    pass
+
+
 dev = {'ip':'10.4.15.21', 'port':'10443', \
        'login':'admin', 'password':'cisco123'}
+
 conf = []
-driver = AceDriver(conf, dev)
+driver = TestDriver(conf, dev)
 
 rs_host = { 'type': 'host', 'name': 'LB_test_rs01', \
            'address': '172.250.0.1', 'state': 'inservice' }
