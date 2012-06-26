@@ -22,9 +22,9 @@ class HAproxyDriverTestCase (unittest.TestCase):
     def setUp(self):
         #shutil.copyfile ('./balancer/tests/unit/testfiles/haproxy.cfg',  \
         #"/tmp/haproxy.cfg")
-        dev = {'ip':'192.168.19.86', 'interface':'eth0', \
-               'login':'user', 'password':'swordfish', \
-               'remotepath':'/etc/haproxy', 'remotename':'haproxy.cfg'}
+        dev = {'ip': '192.168.19.86', 'interface': 'eth0', \
+               'login': 'user', 'password': 'swordfish', \
+               'remotepath': '/etc/haproxy', 'remotename': 'haproxy.cfg'}
         conf = []
         self.driver = HaproxyDriver(conf, dev)
         self.driver = HaproxyDriver(self.basedriver)

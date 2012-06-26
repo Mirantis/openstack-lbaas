@@ -21,11 +21,11 @@ from balancer.drivers.cisco_ace.ace_driver import AceDriver
 
 
 class TestDriver(AceDriver):
-    def deployConfig(s):
+    def deployConfig(self, s):
         W += s
         return 'OK'
 
-    def getConfig(s):
+    def getConfig(self, s):
         return 'test'
 
 dev = {'ip': '10.4.15.21', 'port': '10443', \
@@ -178,17 +178,17 @@ probe_rtsp['extra'] = {'description': 'Created by test. Probe type RTSP', \
                        'proxyRequareHeaderValue': 'requarevalue', \
                        'requestMethodType': 'True', \
                        'passDetectCount': '5', 'receiveTimeout': '15', \
-                       'destIP': '1.1.1.1', 'port': '506' , \
+                       'destIP': '1.1.1.1', 'port': '506', \
                        'tcpConnTerm': 'True', 'openTimeout': '60'}
 
-probe_scripted =  {'type': 'SCRIPTED', 'name': 'LB_test_ProbeSCRIPTED'}
+probe_scripted = {'type': 'SCRIPTED', 'name': 'LB_test_ProbeSCRIPTED'}
 probe_scripted['extra'] = {'description': 'Probe type SCRIPTED', \
                            'probeInterval': '30', \
                            'passDetectInterval': '100', \
                            'failDetect': '5', 'port': '507', \
                            'scriptName': 'script.py', 'scriptArgv': 'a1', \
                            'passDetectCount': '5', 'receiveTimeout': '15', \
-                           'copied': 'True', 'proto': 'FTP' , \
+                           'copied': 'True', 'proto': 'FTP', \
                            'userName': 'user', 'password': 'password', \
                            'sourceFileName': 'root/script.py'}
 
@@ -238,7 +238,7 @@ probe_tcp['extra'] = {'description': 'Created by test. Probe type TCP', \
                       'openTimeout': '60', 'expectRegExp': '.*', \
                       'expectRegExpOffset': '500'}
 
-probe_telnet =  {'type': 'TELNET', 'name': 'LB_test_ProbeTELNET'}
+probe_telnet = {'type': 'TELNET', 'name': 'LB_test_ProbeTELNET'}
 probe_telnet['extra'] = {'description': 'Probe type TELNET', \
                          'probeInterval': '20', 'passDetectInterval': '50', \
                          'failDetect': '5', 'passDetectCount': '5', \
@@ -253,7 +253,7 @@ probe_udp['extra'] = {'description': 'Created by test. Probe type UDP', \
                       'sendData': 'SendingData', 'passDetectCount': '5', \
                       'receiveTimeout': '15', 'destIP': '1.1.1.1', \
                       'isRouted': 'True', 'expectRegExp': '.*', \
-                      'expectRegExpOffset': '500' }
+                      'expectRegExpOffset': '500'}
 
 probe_vm = {'type': 'VM', 'name': 'LB_test_ProbeVM'}
 probe_vm['extra'] = {'description': 'Created by test. Probe type VM', \
@@ -271,7 +271,7 @@ sf_host['extra'] = {'description': 'Created by test. Sfarm type Host', \
                     'partialThreshPercentage': '11', 'backInservice': '22'}
 
 sf_redirect = {'type': 'Redirect', 'name': 'LB_test_sfarm02'}
-sf_redirect['extra'] = {'description': 'SFarm type Redirect' , \
+sf_redirect['extra'] = {'description': 'SFarm type Redirect', \
                         'failAction': 'purge'}
 
 sticky_httpContent = {'type': 'HTTPContent', \
@@ -296,7 +296,7 @@ sticky_httpCookie['extra'] = {'cookieName': 'cookieshmuki', \
                               'backupServerFarm': 'LB_test_sfarm02', \
                               'replicateOnHAPeer': 'True', \
                               'timeout': '2880', \
-                              'timeoutActiveConn': 'True' }
+                              'timeoutActiveConn': 'True'}
 
 sticky_httpHeader = {'type': 'HTTPHeader', \
                      'name': 'LB_test_stickyHTTPHeader'}
@@ -371,6 +371,7 @@ vip_test3 = {'name': 'test3', 'ipVersion': 'IPv4', \
              'address': '10.250.250.253', 'mask': '255.255.255.0', \
              'proto': 'TCP', 'appProto': 'RTSP', 'port': '507', \
              'allVLANs': 'True'}
+
 
 class Ace_DriverTestCase(unittest.TestCase):
     def test_01a_createRServer_typeHost(self):
