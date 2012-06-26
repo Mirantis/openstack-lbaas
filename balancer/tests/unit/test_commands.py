@@ -33,10 +33,10 @@ class TestDecorators(unittest.TestCase):
         self.assertEquals([mock.call(self.ctx_mock, "arg1", "arg2")],
                 self.obj0.call_args_list)
         rollback_fn = self.ctx_mock.add_rollback.call_args[0][0]
-        with self.assertRaises(cmd.Rollback):
-            rollback_fn(False)
+        rollback_fn(False)
         self.assertTrue(self.ctx_mock.add_rollback.called)
-        self.assertTrue(self.obj0.return_value.throw.called)
+        self.assertEquals(self.obj0.return_value.throw.call_args_list,
+                [mock.call(cmd.Rollback)])
 
     def test_with_rollback_gen_type_2(self):
         """Get exception during rollback"""
@@ -45,11 +45,11 @@ class TestDecorators(unittest.TestCase):
         wrapped(self.ctx_mock, "arg1", "arg2")
         self.assertEquals([mock.call(self.ctx_mock, "arg1", "arg2")],
                 self.obj0.call_args_list)
-        with self.assertRaises(Exception):
-            rollback_fn = self.ctx_mock.add_rollback.call_args[0][0]
-            rollback_fn(False)
+        rollback_fn = self.ctx_mock.add_rollback.call_args[0][0]
+        rollback_fn(False)
         self.assertTrue(self.ctx_mock.add_rollback.called)
-        self.assertTrue(self.obj0.return_value.throw.called)
+        self.assertEquals(self.obj0.return_value.throw.call_args_list,
+                [mock.call(cmd.Rollback)])
 
     def test_with_rollback_gen_type_3(self):
         """Get StopIteration exception"""
@@ -157,16 +157,17 @@ class TestRserver(unittest.TestCase):
         self.rs['parent_id'] = ""
         cmd.create_rserver(self.ctx, self.rs)
         rollback_fn = self.ctx.add_rollback.call_args[0][0]
-        with self.assertRaises(type(self.exc)):
-            rollback_fn(False)
+        rollback_fn(False)
         self.assertTrue(self.ctx.device.delete_real_server.called)
         self.assertTrue(mock_func.called)
+#        self.assertEquals(self.obj0.return_value.throw.call_args_list,
+#                [mock.call(cmd.Rollback)])
 
     @mock.patch("balancer.db.api.server_update")
     @mock.patch("balancer.db.api.server_get_all_by_parent_id")
     def test_delete_rserver_1(self, mock_f1, mock_f2):
         """rs empty, len rss > 0"""
-        mock_f1.return_value = ({}, {}, {})
+        mock_f1.return_value = ({'id': mock.MagicMock(spec=int)})
         cmd.delete_rserver(self.ctx, self.rs)
         self.assertTrue(self.ctx.device.delete_real_server.called,
                 "ctx_delete_rs not called")
@@ -217,8 +218,20 @@ class TestProbe(unittest.TestCase):
         self.ctx = mock.MagicMock()
         self.probe = mock.MagicMock()
 
-#    @mock.patch("balancer.db.api.probe_update")
-#    def test_create_probe(self):
+    @mock.patch("balancer.core.commands")
+    @mock.patch("balancer.db.api.probe_update")
+    def test_create_probe_0(self, mock_f1, mock_f2):
+        cmd.create_probe(self.ctx, self.probe)
+        self.assertTrue(self.ctx.device.create_probe.called)
+        self.assertTrue(mock_f1.called)
+
+    @mock.patch("balancer.core.commands.delete_probe")
+    @mock.patch("balancer.db.api.probe_update")
+    def test_create_probe_1(self, mock_f1, mock_f2):
+        cmd.create_probe(self.ctx, self.probe)
+        rollback_fn = self.ctx.add_rollback.call_args[0][0]
+        rollback_fn(False)
+        self.assertTrue(mock_f2.called)
 
     @mock.patch("balancer.db.api.probe_update")
     def test_delete_probe(self, mock_upd):
@@ -231,7 +244,23 @@ class TestVip(unittest.TestCase):
         self.ctx = mock.MagicMock()
         self.vip = mock.MagicMock()
         self.server_farm = mock.MagicMock()
-#    def test_create_vip(self):
+
+    @mock.patch("balancer.core.commands.delete_vip")
+    @mock.patch("balancer.db.api.virtualserver_update")
+    def test_create_vip_0(self, mock_f1, mock_f2):
+        """No exception"""
+        cmd.create_vip(self.ctx, self.vip, self.server_farm)
+        self.assertTrue(self.ctx.device.create_virtual_ip.called)
+        self.assertTrue(mock_f1.called)
+
+    @mock.patch("balancer.core.commands.delete_vip")
+    @mock.patch("balancer.db.api.virtualserver_update")
+    def test_create_vip_1(self, mock_f1, mock_f2):
+        """Exception"""
+        cmd.create_vip(self.ctx, self.vip, self.server_farm)
+        rollback_fn = self.ctx.add_rollback.call_args[0][0]
+        rollback_fn(False)
+        self.assertTrue(mock_f2.called)
 
     @mock.patch("balancer.db.api.virtualserver_update")
     def test_delete_vip(self, mock_upd):
@@ -245,18 +274,61 @@ class TestServerFarm(unittest.TestCase):
             delete_real_server_from_server_farm=mock.MagicMock(),
             delete_probe_from_server_farm=mock.MagicMock(),
             activate_real_server=mock.MagicMock(),
-            suspend_real_server=mock.MagicMock()))
+            uspend_real_server=mock.MagicMock(),
+            add_real_server_to_server_farm=mock.MagicMock(),
+            create_server_farm=mock.MagicMock(),
+            add_probe_to_server_farm=mock.MagicMock()))
         self.server_farm = mock.MagicMock()
         self.rserver = mock.MagicMock()
         self.probe = mock.MagicMock()
 
-#    def test_create_server_farm(self):
+    @mock.patch("balancer.db.api.serverfarm_update")
+    @mock.patch("balancer.core.commands.delete_server_farm")
+    def test_create_server_farm_0(self, mock_f1, mock_f2):
+        """No exception"""
+        cmd.create_server_farm(self.ctx, self.server_farm)
+        self.assertTrue(self.ctx.device.create_server_farm.called)
+        self.assertTrue(mock_f2.called)
+        self.assertFalse(mock_f1.called)
+
+    @mock.patch("balancer.db.api.serverfarm_update")
+    @mock.patch("balancer.core.commands.delete_server_farm")
+    def test_create_server_farm_1(self, mock_f1, mock_f2):
+        """No exception"""
+        cmd.create_server_farm(self.ctx, self.server_farm)
+        rollback_fn = self.ctx.add_rollback.call_args[0][0]
+        rollback_fn(False)
+#        self.assertFalse(self.ctx.device.create_server_farm.called)
+#        self.assertFalse(mock_f2.called)
+        self.assertTrue(mock_f1.called)
+
     @mock.patch("balancer.db.api.serverfarm_update")
     def test_delete_server_farm(self, mock_upd):
         cmd.delete_server_farm(self.ctx, self.server_farm)
         self.assertTrue(mock_upd.called, "upd not called")
 
-#    def test_add_rserver_to_server_farm(self):
+    def test_add_rserver_to_server_farm_0(self):
+        "No exception, if statement = True"
+        cmd.add_rserver_to_server_farm(self.ctx, self.server_farm, self.rserver)
+        self.assertTrue(self.ctx.device.add_real_server_to_server_farm.called)
+        self.assertEquals(self.rserver['name'], self.rserver['parent_id'])
+
+#    def test_add_rserver_to_server_farm_1(self):
+#        "No exception, if statement = False"
+#        self.rserver['parent_id'] = ""
+#        self.rserver.get('parent_id').return_value = ""
+#        cmd.add_rserver_to_server_farm(self.ctx, self.server_farm, self.rserver)
+#        self.assertTrue(self.ctx.device.add_real_server_to_server_farm.called)
+#        self.assertNotEquals(self.rserver['name'], self.rserver['parent_id'])
+
+    def test_add_rserver_to_server_farm_2(self):
+        "Exception"
+        cmd.add_rserver_to_server_farm(self.ctx, self.server_farm, self.rserver)
+        rollback_fn = self.ctx.add_rollback.call_args[0][0]
+        rollback_fn(False)
+        self.assertTrue(
+            self.ctx.device.delete_real_server_from_server_farm.called)
+
     def test_delete_rserver_from_server_farm(self):
         cmd.delete_rserver_from_server_farm(self.ctx, self.server_farm,\
                                             self.rserver)
@@ -264,7 +336,18 @@ class TestServerFarm(unittest.TestCase):
                 self.ctx.device.delete_real_server_from_server_farm.called,\
                 "method not called")
 
-#    def test_add_probe_to_server_farm(self):
+    def test_add_probe_to_server_farm_0(self):
+        "No exception"
+        cmd.add_probe_to_server_farm(self.ctx, self.server_farm, self.probe)
+        self.assertTrue(self.ctx.device.add_probe_to_server_farm.called)
+
+    def test_add_probe_to_server_farm_1(self):
+        "Exception"
+        cmd.add_probe_to_server_farm(self.ctx, self.server_farm, self.probe)
+        rollback_fn = self.ctx.add_rollback.call_args[0][0]
+        rollback_fn(False)
+        self.assertTrue(self.ctx.device.delete_probe_from_server_farm.called)
+
     def test_remove_probe_from_server_farm(self):
         cmd.remove_probe_from_server_farm(self.ctx, self.server_farm,\
                                           self.probe)
