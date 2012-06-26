@@ -136,11 +136,11 @@ class AceDriver(BaseDriver):
             s = message.read()
         except (Exception):
             return Exception
-    logger.debug("data from ACE:\n" + s)
-    if (s.find('XML_CMD_SUCCESS') > 0):
-        return 'OK'
-    else:
-        return Exception
+        logger.debug("data from ACE:\n" + s)
+        if (s.find('XML_CMD_SUCCESS') > 0):
+            return 'OK'
+        else:
+            return Exception
 
     def getConfig(self, s):
         request = urllib2.Request(self.url)
