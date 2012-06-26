@@ -68,10 +68,12 @@ class DummyDriver(BaseDriver):
         logger.debug("Called DummyDriver.deleteProbe(%r)." % (probe,))
 
     def create_server_farm(self, serverfarm):
-        logger.debug("Called DummyDriver.createServerFarm(%r)." % (serverfarm,))
+        logger.debug("Called DummyDriver.createServerFarm(%r)." %
+				                                        (serverfarm,))
 
     def delete_server_farm(self, serverfarm):
-        logger.debug("Called DummyDriver.deleteServerFarm(%r)." % (serverfarm,))
+        logger.debug("Called DummyDriver.deleteServerFarm(%r)." %
+				                                        (serverfarm,))
 
     def add_real_server_to_server_farm(self, serverfarm, rserver):
         logger.debug("Called DummyDriver.addRServerToSF(%r, %r)."

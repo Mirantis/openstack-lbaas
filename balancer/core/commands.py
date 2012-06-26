@@ -125,9 +125,12 @@ def delete_rserver(ctx, rs):
         ctx.device.delete_real_server(rs)
         if len(rss) > 0:
             for rs_child in rss:
-                db_api.server_update(rs_child['id'], {'parent_id':rss[-1]['id']})
-            db_api.server_update(rss[-1]['id'], {'parent_id':'','deployed':'True'})
+                db_api.server_update(rs_child['id'], 
+						{'parent_id': rss[-1]['id']})
+            db_api.server_update(rss[-1]['id'], 
+					{'parent_id': '','deployed': 'True'})
             ctx.device.create_real_server(rss[-1])
+
 
 def create_sticky(ctx, sticky):
     ctx.device.create_stickiness(sticky)
@@ -147,6 +150,7 @@ def delete_server_farm(ctx, sf):
     ctx.device.delete_server_farm(sf)
     sf['deployed'] = 'False'
     db_api.serverfarm_update(ctx.conf, sf['id'], sf)
+
 
 @with_rollback
 def create_server_farm(ctx, sf):
@@ -176,6 +180,7 @@ def add_rserver_to_server_farm(ctx, server_farm, rserver):
 @ignore_exceptions
 def delete_rserver_from_server_farm(ctx, server_farm, rserver):
     ctx.device.delete_real_server_from_server_farm(server_farm, rserver)
+
 
 @ignore_exceptions
 def delete_probe(ctx, probe):
