@@ -266,7 +266,8 @@ probe_vm['extra'] = {'description': 'Created by test. Probe type VM', \
                      'minMemBurstThresh': '97'}
 
 sf_host = {'type': 'Host', 'name': 'LB_test_sfarm01'}
-sf_host._predictor = {'type': 'roundrobin'}
+sf_host._predictor = []
+sf_host._predictor['type'] = 'roundrobin'
 sf_host['extra'] = {'description': 'Created by test. Sfarm type Host', \
                     'failAction': 'reassign', 'failOnAll': 'True', \
                     'inbandHealthCheck': 'Remove', \
@@ -276,7 +277,8 @@ sf_host['extra'] = {'description': 'Created by test. Sfarm type Host', \
                     'partialThreshPercentage': '11', 'backInservice': '22'}
 
 sf_redirect = {'type': 'Redirect', 'name': 'LB_test_sfarm02'}
-sf_redirect._predictor = {'type': 'roundrobin'}
+sf_host._predictor = []
+sf_host._predictor['type'] = 'roundrobin'
 sf_redirect['extra'] = {'description': 'SFarm type Redirect', \
                         'failAction': 'purge'}
 
