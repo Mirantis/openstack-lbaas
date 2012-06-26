@@ -19,11 +19,11 @@ import unittest
 
 from balancer.drivers.cisco_ace.ace_driver import AceDriver
 
-def deployConfig(self, s):
+def deployConfig(s):
     W += s
     return 'OK'
 
-def getConfig(self, s):
+def getConfig(s):
     return 'test'
 
 class TestDriver(AceDriver):
