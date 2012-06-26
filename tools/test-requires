@@ -7,7 +7,6 @@ Babel
 # Needed for testing
 unittest2
 mock
-mox
 nose
 nose-exclude
 nosexcover
@@ -16,3 +15,4 @@ pep8==0.6.1
 sphinx>=1.1.2
 fabric
 ipaddr
+pysqlite
