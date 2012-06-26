@@ -221,7 +221,8 @@ class AceDriver(BaseDriver):
                 cmd += "\nip address " + rserver['address']
             if srv_extra.get('failOnAll'):
                 cmd += "\nfail-on-all"
-            cmd += "\nweight " + str(rserver['weight'])
+            if srv_extra.get('weight'):
+            cmd += "\nweight " + str(srv_extra['weight'])
         else:
             if srv_extra.get('webHostRedir'):
                 cmd += "\nwebhost-redirection " + srv_extra['webHostRedir']
