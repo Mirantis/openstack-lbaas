@@ -17,6 +17,7 @@ from balancer.drivers.haproxy.RemoteControl import RemoteInterface
 from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation
 
 
+@unittest.skip("requires external connectivity")
 class HAproxyDriverTestCase (unittest.TestCase):
 
     def setUp(self):

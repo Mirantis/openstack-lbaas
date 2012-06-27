@@ -51,7 +51,7 @@ class RollbackContextManager(object):
         while rollback_stack:
             rollback_stack.pop()(good)
         if not good:
-            raise exc_type, exc_value, exc_tb
+            raise exc_value, exc_type, exc_tb
 
 
 class Rollback(Exception):
@@ -94,6 +94,7 @@ def ignore_exceptions(func):
         except Exception:
             LOG.exception("Got exception while executing %s. Ignored.",
                                                                  func.__name__)
+    return __inner
 
 
 @with_rollback

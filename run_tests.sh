@@ -49,7 +49,7 @@ done
 
 # If enabled, tell nose to collect coverage data
 if [ $coverage -eq 1 ]; then
-    noseopts="$noseopts --with-coverage --cover-package=balancer --cover-inclusive"
+   noseopts="$noseopts --with-coverage --cover-package=balancer --cover-inclusive"
 fi
 
 function run_tests {
@@ -93,10 +93,6 @@ then
     fi
   fi
 fi
-
-echo "Cleaning test database"
-rm -f ./db/testdb.db
-sqlite3 ./db/testdb.db < ./etc/tables.sql
 
 # Delete old coverage data from previous runs
 if [ $coverage -eq 1 ]; then

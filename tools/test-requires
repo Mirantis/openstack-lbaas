@@ -5,12 +5,13 @@ distribute>=0.6.24
 Babel
 
 # Needed for testing
-mox
+unittest2
+mock
 nose
 nose-exclude
 nosexcover
 openstack.nose_plugin
-pep8==0.6.1
+pep8==1.0.1
 sphinx>=1.1.2
-fabric
 ipaddr
+pysqlite
