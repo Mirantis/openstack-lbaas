@@ -226,7 +226,7 @@ def lb_delete_node(conf, lb_id, lb_node_id):
     db_api.server_destroy(conf, lb_node_id)
 
     #Step 5: Delete real server from device
-    device_driver = drivers.get_device_driver(
+    device_driver = drivers.get_device_driver(conf,
                         balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.remove_node_from_loadbalancer(ctx, balancer_instance, rs)
