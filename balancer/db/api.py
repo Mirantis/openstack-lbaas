@@ -117,8 +117,8 @@ def loadbalancer_get_all_by_vm_id(conf, vm_id, tenant_id):
     query = session.query(models.LoadBalancer).distinct().\
                     filter_by(tenant_id=tenant_id).\
                     filter(models.LoadBalancer.id ==
-                           models.ServerFarm.loadbalancer_id).\
-                    filter(models.Server.serverfarm_id ==
+                           models.ServerFarm.lb_id).\
+                    filter(models.Server.sf_id ==
                            models.ServerFarm.id).\
                     filter(models.Server.vm_id == vm_id)
     return query.all()
@@ -198,7 +198,7 @@ def probe_destroy(conf, probe_id):
 def probe_destroy_by_sf_id(conf, sf_id, session=None):
     session = session or get_session(conf)
     with session.begin(subtransactions=True):
-        session.query(models.Sticky).filter_by(sf_id=sf_id).delete()
+        session.query(models.Probe).filter_by(sf_id=sf_id).delete()
 
 # Sticky
 
@@ -207,7 +207,7 @@ def sticky_get(conf, sticky_id, session=None):
     session = session or get_session(conf)
     sticky_ref = session.query(models.Sticky).filter_by(id=sticky_id).first()
     if not sticky_ref:
-        raise exception.StickyNotFound(sticky_id)
+        raise exception.StickyNotFound(sticky_id=sticky_id)
     return sticky_ref
 
 
@@ -259,7 +259,7 @@ def server_get(conf, server_id, session=None):
     session = session or get_session(conf)
     server_ref = session.query(models.Server).filter_by(id=server_id).first()
     if not server_ref:
-        raise exception.ServerNotFound(server_id)
+        raise exception.ServerNotFound(server_id=server_id)
     return server_ref
 
 
@@ -285,11 +285,12 @@ def server_get_by_address_on_device(conf, server_address, device_id):
                          filter_by(address=server_address).\
                          filter_by(deployed='True')
     for server_ref in server_refs:
-        sf = serverfarm_get(conf, server_ref['sf_id'])
+        sf = serverfarm_get(conf, server_ref['sf_id'], session=session)
         lb = loadbalancer_get(conf, sf['lb_id'])
         if device_id == lb['device_id']:
             return server_ref
-    raise exception.ServerNotFound(server_address=server_address)
+    raise exception.ServerNotFound(server_address=server_address,
+                                   device_id=device_id)
 
 
 def server_get_all_by_parent_id(conf, parent_id):
@@ -337,12 +338,11 @@ def server_destroy_by_sf_id(conf, sf_id, session=None):
 
 
 def serverfarm_get(conf, serverfarm_id, session=None):
-    if session == None:
-        get_session(conf)
+    session = session or get_session(conf)
     serverfarm_ref = session.query(models.ServerFarm).\
                              filter_by(id=serverfarm_id).first()
     if not serverfarm_ref:
-        raise exception.ServerFarmNotFound(id=serverfarm_id)
+        raise exception.ServerFarmNotFound(serverfarm_id=serverfarm_id)
     return serverfarm_ref
 
 
@@ -430,7 +430,7 @@ def virtualserver_get(conf, vserver_id, session=None):
     vserver_ref = session.query(models.VirtualServer).\
                           filter_by(id=vserver_id).first()
     if not vserver_ref:
-        raise exception.VirtualServerNotFound(vserver_id=vserver_id)
+        raise exception.VirtualServerNotFound(virtualserver_id=vserver_id)
     return vserver_ref
 
 

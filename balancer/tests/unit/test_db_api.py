@@ -49,7 +49,7 @@ def get_fake_lb(device_id, tenant_id):
           'status': 'INSERVICE',
           'tenant_id': tenant_id,
           'created_at': datetime.datetime(2000, 01, 01, 12, 00, 00),
-          'updated_at': datetime.datetime(2000, 01, 01, 12, 00, 00),
+          'updated_at': datetime.datetime(2000, 01, 02, 12, 00, 00),
           'deployed': 'True',
           'extra': {}}
     return lb
@@ -229,6 +229,7 @@ class TestDBAPI(unittest.TestCase):
         values.update(update)
         self.assertIsNotNone(lb['id'])
         values['id'] = lb['id']
+        values['updated_at'] = lb['updated_at']
         self.assertEqual(lb, values)
 
     def test_loadbalancer_get(self):
@@ -268,7 +269,7 @@ class TestDBAPI(unittest.TestCase):
         node_ref4 = db_api.server_create(self.conf, node_fake4)
         lbs1 = db_api.loadbalancer_get_all_by_vm_id(self.conf, 1, 'tenant1')
         lbs2 = db_api.loadbalancer_get_all_by_vm_id(self.conf, 30, 'tenant2')
-        lbs3 = db_api.loadbalancer_get_all_by_vm_id(self.conf, 20, 'tenant1')
+        lbs3 = db_api.loadbalancer_get_all_by_vm_id(self.conf, 20, 'tenant2')
         self.assertEqual(len(lbs1), 1)
         self.assertEqual(lbs1[0]['id'], lb_ref1['id'])
         self.assertEqual(len(lbs2), 1)
@@ -333,13 +334,14 @@ class TestDBAPI(unittest.TestCase):
                          dict(probe_ref2.iteritems()))
 
     def test_probe_destroy_by_sf_id(self):
-        values = get_fake_probe('1')
-        probe_ref1 = db_api.probe_create(self.conf, values)
-        values = get_fake_probe('2')
-        probe_ref2 = db_api.probe_create(self.conf, values)
+        values1 = get_fake_probe('1')
+        values2 = get_fake_probe('2')
+        probe_ref1 = db_api.probe_create(self.conf, values1)
+        probe_ref2 = db_api.probe_create(self.conf, values2)
         db_api.probe_destroy_by_sf_id(self.conf, '1')
         probes = db_api.probe_get_all(self.conf)
         self.assertEqual(len(probes), 1)
+        self.assertEqual(probes[0]['id'], probe_ref2['id'])
 
     def test_probe_destroy(self):
         values = get_fake_probe('1')
@@ -417,7 +419,7 @@ class TestDBAPI(unittest.TestCase):
         with self.assertRaises(exception.StickyNotFound) as cm:
             db_api.sticky_get(self.conf, sticky['id'])
         err = cm.exception
-        self.assertEqual(err.kwargs, {'probe_id': sticky['id']})
+        self.assertEqual(err.kwargs, {'sticky_id': sticky['id']})
 
     def test_server_create(self):
         values = get_fake_server('1', 1)
@@ -486,7 +488,7 @@ class TestDBAPI(unittest.TestCase):
         with self.assertRaises(exception.ServerNotFound) as cm:
             db_api.server_get(self.conf, server['id'])
         err = cm.exception
-        self.assertEqual(err.kwargs, {'probe_id': server['id']})
+        self.assertEqual(err.kwargs, {'server_id': server['id']})
 
     def test_server_get_by_address(self):
         values1 = get_fake_server('1', 1, '10.0.0.1')
@@ -512,13 +514,17 @@ class TestDBAPI(unittest.TestCase):
         with self.assertRaises(exception.ServerNotFound) as cm:
             server = db_api.server_get_by_address_on_device(self.conf,
                                                             '10.0.0.2', '1')
+        expected = {'server_address': '10.0.0.2',
+                    'device_id': '1'}
         err = cm.exception
-        self.assertEqual(err.kwargs, {'server_address': '10.0.0.2'})
+        self.assertEqual(err.kwargs, expected)
         with self.assertRaises(exception.ServerNotFound) as cm:
             server = db_api.server_get_by_address_on_device(self.conf,
                                                             '10.0.0.1', '2')
         err = cm.exception
-        self.assertEqual(err.kwargs, {'device_id': '2'})
+        expected = {'server_address': '10.0.0.1',
+                    'device_id': '2'}
+        self.assertEqual(err.kwargs, expected)
 
     def test_server_get_all_by_parent_id(self):
         values1 = get_fake_server('1', 1, '10.0.0.1', '1')
