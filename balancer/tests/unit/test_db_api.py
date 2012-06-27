@@ -123,8 +123,8 @@ def get_fake_predictor(sf_id):
 
 class TestExtra(unittest.TestCase):
     def test_pack_extra(self):
-        model = mock.MagicMock()
-        model_inst = model()
+        model = mock.Mock()
+        model_inst = model.return_value = mock.MagicMock()
         model_inst.__iter__.return_value = ['name', 'type']
         values = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother'}
         obj_ref = db_api.pack_extra(model, values)
