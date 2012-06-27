@@ -40,8 +40,8 @@ try:
 except ImportError:
     SENDFILE_SUPPORTED = False
 
-from glance.common import auth
-from glance.common import exception, utils
+#from glance.common import auth
+#from glance.common import exception, utils
 
 
 # common chunk size for get and put
