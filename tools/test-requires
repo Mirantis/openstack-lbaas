@@ -11,7 +11,7 @@ nose
 nose-exclude
 nosexcover
 openstack.nose_plugin
-pep8==0.6.1
+pep8==1.0.1
 sphinx>=1.1.2
 ipaddr
 pysqlite

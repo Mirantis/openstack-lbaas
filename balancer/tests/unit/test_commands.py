@@ -304,13 +304,15 @@ class TestServerFarm(unittest.TestCase):
 
     def test_add_rserver_to_server_farm_0(self):
         "No exception, if statement = True"
-        cmd.add_rserver_to_server_farm(self.ctx, self.server_farm, self.rserver)
+        cmd.add_rserver_to_server_farm(self.ctx, self.server_farm,
+                self.rserver)
         self.assertTrue(self.ctx.device.add_real_server_to_server_farm.called)
         self.assertEquals(self.rserver['name'], self.rserver['parent_id'])
 
     def test_add_rserver_to_server_farm_1(self):
         "Exception"
-        cmd.add_rserver_to_server_farm(self.ctx, self.server_farm, self.rserver)
+        cmd.add_rserver_to_server_farm(self.ctx, self.server_farm,
+                self.rserver)
         rollback_fn = self.ctx.add_rollback.call_args[0][0]
         rollback_fn(False)
         self.assertTrue(

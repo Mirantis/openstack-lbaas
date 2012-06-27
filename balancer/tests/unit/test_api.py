@@ -69,10 +69,10 @@ class TestLoadBalancersController(unittest.TestCase):
     @mock.patch('balancer.core.api.lb_add_node', autospec=True)
     def test_add_node(self, mock_lb_add_node):
         mock_lb_add_node.return_value = 'foo'
-        resp = self.controller.addNode(self.req, id='123', body={'node': 'foo'})
+        resp = self.controller.addNode(self.req, id='123',
+                                                 body={'node': 'foo'})
         self.assertTrue(mock_lb_add_node.called)
         self.assertEqual(resp, 'foo')
-
 
     @mock.patch('balancer.core.api.lb_show_nodes', autospec=True)
     def test_show_nodes(self, mock_lb_show_nodes):
