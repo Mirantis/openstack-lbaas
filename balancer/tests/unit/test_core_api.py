@@ -2,6 +2,7 @@
 
 import mock
 import unittest
+import types
 #from balancer.core import commands
 #from balancer.loadbalancers.vserver import Balancer
 #from balancer.devices.DeviceMap import DeviceMap
@@ -10,12 +11,32 @@ from balancer.storage.storage import Storage
 import balancer.core.api as api
 
 
-class WorkWithReader(unittest.TestCase):
+class TestDecoratos(unittest.TestCase):
 
     def setUp(self):
-        self.conf = mock.Mock()
-        self.tenant_id = mock.Mock()
-        self.store = mock.Mock(spec=Storage(self.conf))
+        self.func = mock.MagicMock(__name__='Test func',
+                return_value=mock.MagicMock(spec=types.FunctionType))
+
+    def test_asynchronous_1(self):
+        wrapped = api.asynchronous(self.func)
+        wrapped()
+        self.assertEquals(self.func.call_args_list, [mock.call()])
+
+    def test_asynchronous_2(self):
+        wrapped = api.asynchronous(self.func)
+        wrapped(False)
+        self.assertEquals(self.func.call_args_list, [mock.call()])
+
+
+class TestBalancer(unittest.TestCase):
+
+    def setUp(self):
+        self.conf = mock.MagicMock()
+        self.tenant_id = mock.MagicMock()
+        self.store = mock.MagicMock(spec=Storage(self.conf))
+        self.mock_lb = mock.MagicMock(autospec=True)
+        self.patcher = mock.create_autospec('__main__.Balancer')
+        #, autospec=True)
 
     @mock.patch("balancer.db.api.loadbalancer_get_all_by_project")
     def test_lb_get_index(self, mock_api):
@@ -35,22 +56,15 @@ class WorkWithReader(unittest.TestCase):
         api.lb_get_data(self.conf, lb_id)
         self.assertTrue(mock_api.called)
 
+    @mock.patch("balancer.db.api.unpack_extra")
+    def test_lb_show_details(self, mock_func):
+        #, mock_obj):
+        lb_id = mock.MagicMock(spec=int)
+        #with mock.patch("balancer.loadbalancers.vserver.Balancer",
+        #        autospec=True):
+        api.lb_show_details(self.conf, lb_id)
 
-#class WorkWithBalancer(unittest.TestCase):
-#    def setUp(self):
-#        self.conf = mock.MagicMock()
-#        self.mock_lb = mock.MagicMock(loadFromDB=mock.MagicMock(),
-#                parseParams=mock.MagicMock)
 
-#    @mock.patch("balancer.loadbalancers.vserver.Balancer")
-#    @mock.patch("balancer.db.api.unpack_extra")
-#    def test_lb_show_details(self, mock_func, mock_obj):
-#        lb_id = mock.MagicMock(spec=int)
-#        mock_obj = self.mock_lb
-#        with mock_obj:
-#            api.lb_show_details(self.conf, lb_id)
-#
-#
 class TestDevice(unittest.TestCase):
     def setUp(self):
         self.conf = mock.MagicMock(register_group=mock.MagicMock)

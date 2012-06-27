@@ -134,7 +134,6 @@ class TestRserver(unittest.TestCase):
         self.rs = {'parent_id': "", 'id': mock.MagicMock(spec=int),
                 'deployed': ""}
         self.exc = Exception()
-        #cmd.Rollback()
 
     @mock.patch("balancer.db.api.server_update")
     def test_create_rserver_1(self, mock_func):
@@ -160,14 +159,12 @@ class TestRserver(unittest.TestCase):
         rollback_fn(False)
         self.assertTrue(self.ctx.device.delete_real_server.called)
         self.assertTrue(mock_func.called)
-#        self.assertEquals(self.obj0.return_value.throw.call_args_list,
-#                [mock.call(cmd.Rollback)])
 
     @mock.patch("balancer.db.api.server_update")
     @mock.patch("balancer.db.api.server_get_all_by_parent_id")
     def test_delete_rserver_1(self, mock_f1, mock_f2):
         """rs empty, len rss > 0"""
-        mock_f1.return_value = ({'id': mock.MagicMock(spec=int)})
+        mock_f1.return_value = ({'id': 2}, {'id': 3})
         cmd.delete_rserver(self.ctx, self.rs)
         self.assertTrue(self.ctx.device.delete_real_server.called,
                 "ctx_delete_rs not called")
@@ -298,8 +295,6 @@ class TestServerFarm(unittest.TestCase):
         cmd.create_server_farm(self.ctx, self.server_farm)
         rollback_fn = self.ctx.add_rollback.call_args[0][0]
         rollback_fn(False)
-#        self.assertFalse(self.ctx.device.create_server_farm.called)
-#        self.assertFalse(mock_f2.called)
         self.assertTrue(mock_f1.called)
 
     @mock.patch("balancer.db.api.serverfarm_update")
@@ -313,15 +308,7 @@ class TestServerFarm(unittest.TestCase):
         self.assertTrue(self.ctx.device.add_real_server_to_server_farm.called)
         self.assertEquals(self.rserver['name'], self.rserver['parent_id'])
 
-#    def test_add_rserver_to_server_farm_1(self):
-#        "No exception, if statement = False"
-#        self.rserver['parent_id'] = ""
-#        self.rserver.get('parent_id').return_value = ""
-#        cmd.add_rserver_to_server_farm(self.ctx, self.server_farm, self.rserver)
-#        self.assertTrue(self.ctx.device.add_real_server_to_server_farm.called)
-#        self.assertNotEquals(self.rserver['name'], self.rserver['parent_id'])
-
-    def test_add_rserver_to_server_farm_2(self):
+    def test_add_rserver_to_server_farm_1(self):
         "Exception"
         cmd.add_rserver_to_server_farm(self.ctx, self.server_farm, self.rserver)
         rollback_fn = self.ctx.add_rollback.call_args[0][0]
