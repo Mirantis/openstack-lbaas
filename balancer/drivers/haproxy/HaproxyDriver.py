@@ -267,7 +267,7 @@ class HaproxyDriver(BaseDriver):
             return 'SERVERFARM FARM NAME ERROR'
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['name']
-<<<<<<< HEAD
+
         if predictor['type'] == 'RoundRobin':
             haproxy_serverfarm.balance = 'roundrobin'
         elif predictor['type'] == 'LeastConnections':
@@ -276,16 +276,7 @@ class HaproxyDriver(BaseDriver):
             haproxy_serverfarm.balance = 'source'
         elif predictor['type'] == 'HashURL':
             haproxy_serverfarm.balance = 'uri'
-=======
-#        if serverfarm._predictor['type'] == 'RoundRobin':
-#            haproxy_serverfarm.balance = 'roundrobin'
-#        elif serverfarm._predictor['type'] == 'LeastConnections':
-#            haproxy_serverfarm.balance = 'leastconn'
-#        elif serverfarm._predictor['type'] == 'HashAddrPredictor':
-#            haproxy_serverfarm.balance = 'source'
-#        elif serverfarm._predictor['type'] == 'HashURL':
-#            haproxy_serverfarm.balance = 'uri'
->>>>>>> master
+
         config_file = HaproxyConfigFile('%s/%s' % (self.localpath, \
                                                 self.configfilename))
         remote = RemoteConfig(self.device_ref, self.localpath,

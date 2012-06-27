@@ -22,11 +22,7 @@ class HAproxyDriverTestCase (unittest.TestCase):
     def setUp(self):
         #shutil.copyfile ('./balancer/tests/unit/testfiles/haproxy.cfg',  \
         #"/tmp/haproxy.cfg")
-<<<<<<< HEAD
         dev = {'ip': '192.168.19.86', 'interface': 'eth0', \
-=======
-        self.dev = {'ip': '192.168.19.86', 'interface': 'eth0', \
->>>>>>> master
                'login': 'user', 'password': 'swordfish', \
                'remotepath': '/etc/haproxy', 'remotename': 'haproxy.cfg'}
         conf = []
