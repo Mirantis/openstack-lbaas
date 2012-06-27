@@ -7,7 +7,7 @@ import types
 #from balancer.loadbalancers.vserver import Balancer
 #from balancer.devices.DeviceMap import DeviceMap
 #from balancer.core.scheduller import Scheduller
-from balancer.storage.storage import Storage
+#from balancer.storage.storage import Storage
 import balancer.core.api as api
 
 
@@ -28,6 +28,7 @@ class TestDecoratos(unittest.TestCase):
         self.assertEquals(self.func.call_args_list, [mock.call()])
 
 
+@unittest.skip("requires balancer.storage module")
 class TestBalancer(unittest.TestCase):
 
     def setUp(self):
