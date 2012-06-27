@@ -94,10 +94,6 @@ then
   fi
 fi
 
-echo "Cleaning test database"
-rm -f ./db/testdb.db
-sqlite3 ./db/testdb.db < ./etc/tables.sql
-
 # Delete old coverage data from previous runs
 if [ $coverage -eq 1 ]; then
     ${wrapper} coverage erase
