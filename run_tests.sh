@@ -105,6 +105,7 @@ if [ $just_pep8 -eq 1 ]; then
 fi
 
 run_tests
+RESULT=$?
 
 if [ -z "$noseargs" ]; then
   run_pep8
@@ -114,3 +115,5 @@ if [ $coverage -eq 1 ]; then
     echo "Generating coverage report in covhtml/"
     ${wrapper} coverage html -d covhtml -i --include='balancer/*' --omit='balancer/db/migrate_repo*,balancer/common*,balancer/tests*'
 fi
+
+exit $RESULT
