@@ -19,6 +19,7 @@ import logging
 
 from openstack.common import exception
 from openstack.common import wsgi
+from balancer.api import utils
 
 from balancer.core import api as core_api
 
@@ -45,6 +46,7 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
+    @utils.http_success_code(202)
     def create(self, req, **args):
         logger.debug("Got create request. Request: %s", req)
         try:

@@ -268,8 +268,7 @@ def delete_loadbalancer(ctx, balancer):
 #        DeleteProbeFromSFCommand(driver,  context,  balancer.sf,  pr)
 #        DeleteProbeCommand(driver,  context,  pr)
     for rserver in balancer.rs:
-        delete_rserver_from_server_farm(ctx,
-                                        balancer.sf, rserver)
+        delete_rserver_from_server_farm(ctx, balancer.sf, rserver)
         delete_rserver(ctx, rserver)
     for probe in balancer.probes:
         remove_probe_from_server_farm(ctx, balancer.sf, probe)

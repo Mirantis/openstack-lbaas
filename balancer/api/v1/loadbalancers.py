@@ -26,6 +26,7 @@ import webob
 
 from balancer.api import v1 as api_v1
 from balancer.api.v1 import filters
+from balancer.api import utils
 from balancer.core import api as core_api
 from balancer.db import api as db_api
 
@@ -54,6 +55,7 @@ class Controller(object):
         result = core_api.lb_get_index(self.conf, tenant_id)
         return {'loadbalancers': result}
 
+    @utils.http_success_code(202)
     def create(self, req, **args):
         logger.debug("Got create request. Request: %s", req)
         #here we need to decide which device should be used
@@ -66,6 +68,7 @@ class Controller(object):
         core_api.create_lb(self.conf, **params)
         return {'loadbalancers': {'id': lb_ref['id']}}
 
+    @utils.http_success_code(202)
     def delete(self, req, **args):
         logger.debug("Got delete request. Request: %s", req)
         core_api.delete_lb(self.conf, args['id'])
@@ -81,11 +84,13 @@ class Controller(object):
         result = core_api.lb_show_details(self.conf, args['id'])
         return result
 
+    @utils.http_success_code(202)
     def update(self, req, **args):
         logger.debug("Got update request. Request: %s", req)
         core_api.update_lb(self.conf, args['id'], args['body'])
         return {'loadbalancers': "OK"}
 
+    @utils.http_success_code(202)
     def addNode(self, req, **args):
         logger.debug("Got addNode request. Request: %s", req)
         return core_api.lb_add_node(self.conf, args['id'],
@@ -95,12 +100,14 @@ class Controller(object):
         logger.debug("Got showNodes request. Request: %s", req)
         return core_api.lb_show_nodes(self.conf, args['id'])
 
+    @utils.http_success_code(202)
     def deleteNode(self, req, **args):
         logger.debug("Got deleteNode request. Request: %s", req)
         lb_node_id = core_api.lb_delete_node(self.conf, args['id'],
                                                         args['nodeID'])
         return "Deleted node with id %s" % lb_node_id
 
+    @utils.http_success_code(202)
     def changeNodeStatus(self, req, **args):
         logger.debug("Got changeNodeStatus request. Request: %s", req)
         msg = core_api.lb_change_node_status(self.conf, args['id'],
@@ -108,6 +115,7 @@ class Controller(object):
                                                          args['status'])
         return msg
 
+    @utils.http_success_code(202)
     def updateNode(self, req, **args):
         logger.debug("Got updateNode request. Request: %s", req)
         msg = core_api.lb_update_node(self.conf, args['id'],
@@ -119,12 +127,14 @@ class Controller(object):
         result = core_api.lb_show_probes(self.conf, args['id'])
         return result
 
+    @utils.http_success_code(202)
     def addProbe(self, req, **args):
         logger.debug("Got addProbe request. Request: %s", req)
         probe_id = core_api.lb_add_probe(self.conf, args['id'],
                                args['body']['healthMonitoring']['probe'])
         return "probe: %s" % probe_id
 
+    @utils.http_success_code(202)
     def deleteProbe(self, req, **args):
         logger.debug("Got deleteProbe request. Request: %s", req)
         probe_id = core_api.lb_delete_probe(self.conf, args['id'],
