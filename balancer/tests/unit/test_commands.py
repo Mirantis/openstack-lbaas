@@ -274,24 +274,28 @@ class TestServerFarm(unittest.TestCase):
             uspend_real_server=mock.MagicMock(),
             add_real_server_to_server_farm=mock.MagicMock(),
             create_server_farm=mock.MagicMock(),
-            add_probe_to_server_farm=mock.MagicMock()))
+            add_probe_to_server_farm=mock.MagicMock()),
+            conf=mock.MagicMock())
         self.server_farm = mock.MagicMock()
         self.rserver = mock.MagicMock()
         self.probe = mock.MagicMock()
 
+    @mock.patch("balancer.db.api.predictor_get_all_by_sf_id")
     @mock.patch("balancer.db.api.serverfarm_update")
     @mock.patch("balancer.core.commands.delete_server_farm")
-    def test_create_server_farm_0(self, mock_f1, mock_f2):
+    def test_create_server_farm_0(self, mock_f1, mock_f2, mock_f3):
         """No exception"""
         cmd.create_server_farm(self.ctx, self.server_farm)
         self.assertTrue(self.ctx.device.create_server_farm.called)
         self.assertTrue(mock_f2.called)
         self.assertFalse(mock_f1.called)
+        self.assertTrue(mock_f3.called)
 
+    @mock.patch("balancer.db.api.predictor_get_all_by_sf_id")
     @mock.patch("balancer.db.api.serverfarm_update")
     @mock.patch("balancer.core.commands.delete_server_farm")
-    def test_create_server_farm_1(self, mock_f1, mock_f2):
-        """No exception"""
+    def test_create_server_farm_1(self, mock_f1, mock_f2, mock_f3):
+        """Exception"""
         cmd.create_server_farm(self.ctx, self.server_farm)
         rollback_fn = self.ctx.add_rollback.call_args[0][0]
         rollback_fn(False)
