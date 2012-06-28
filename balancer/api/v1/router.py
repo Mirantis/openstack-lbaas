@@ -127,7 +127,7 @@ class API(wsgi.Router):
                        action="create",
                        conditions=dict(method=["POST"]))
 
-        mapper.connect("/devices/", controller=device_resource,
+        mapper.connect("/devices/{id}", controller=device_resource,
                                     action = "delete",
                                     conditions=dict(method=["DELETE"]))
 
