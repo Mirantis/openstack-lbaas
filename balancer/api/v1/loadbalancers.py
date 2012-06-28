@@ -107,6 +107,7 @@ class Controller(object):
                                                         args['nodeID'])
         return "Deleted node with id %s" % lb_node_id
 
+    @utils.http_success_code(202)
     def changeNodeStatus(self, req, **args):
         logger.debug("Got changeNodeStatus request. Request: %s", req)
         msg = core_api.lb_change_node_status(self.conf, args['id'],

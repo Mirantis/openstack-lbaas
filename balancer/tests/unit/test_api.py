@@ -39,13 +39,19 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertTrue(mock_loadbalancer_create.called)
         self.assertTrue(mock_create_lb.called)
         self.assertEqual(resp, {'loadbalancers': {'id': '1'}})
+        self.assertTrue(hasattr(self.controller.create, "wsgi_code"),
+            "has not redifined HTTP status code")
+        self.assertTrue(self.controller.create.wsgi_code == 202,
+        "incorrect HTTP status code")
 
-    @unittest.skip('incorrect response check')
     @mock.patch('balancer.core.api.delete_lb', autospec=True)
     def test_delete(self, mock_delete_lb):
         resp = self.controller.delete(self.req, id='123')
         self.assertTrue(mock_delete_lb.called)
-#        self.assertEqual(resp.status_int, 202)
+        self.assertTrue(hasattr(self.controller.delete, "wsgi_code"),
+            "has not redifined HTTP status code")
+        self.assertTrue(self.controller.delete.wsgi_code == 202,
+            "incorrect HTTP status code")
 
     @mock.patch('balancer.core.api.lb_get_data', autospec=True)
     def test_show(self, mock_lb_get_data):
@@ -61,12 +67,14 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertTrue(mock_lb_show_details.called)
         self.assertEqual('foo', resp)
 
-    @unittest.skip('incorrect response check')
     @mock.patch('balancer.core.api.update_lb', autospec=True)
     def test_update(self, mock_update_lb):
         resp = self.controller.update(self.req, id='123', body='body')
         self.assertTrue(mock_update_lb.called)
-#        self.assertEqual(resp.status_int, 202)
+        self.assertTrue(hasattr(self.controller.update, "wsgi_code"),
+            "has not redifined HTTP status code")
+        self.assertTrue(self.controller.update.wsgi_code == 202,
+            "incorrect HTTP status code")
 
     @mock.patch('balancer.core.api.lb_add_node', autospec=True)
     def test_add_node(self, mock_lb_add_node):
@@ -75,6 +83,10 @@ class TestLoadBalancersController(unittest.TestCase):
                                                  body={'node': 'foo'})
         self.assertTrue(mock_lb_add_node.called)
         self.assertEqual(resp, 'foo')
+        self.assertTrue(hasattr(self.controller.addNode, "wsgi_code"),
+                                "has not redifined HTTP status code")
+        self.assertTrue(self.controller.addNode.wsgi_code == 202,
+                                    "incorrect HTTP status code")
 
     @mock.patch('balancer.core.api.lb_show_nodes', autospec=True)
     def test_show_nodes(self, mock_lb_show_nodes):
@@ -83,14 +95,15 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertTrue(mock_lb_show_nodes.called)
         self.assertEqual(resp, 'foo')
 
-    @unittest.skip('incorrect response check')
     @mock.patch('balancer.core.api.lb_delete_node', autospec=True)
     def test_delete_node(self, mock_lb_delete_node):
         resp = self.controller.deleteNode(self.req, id='123', nodeID='321')
         self.assertTrue(mock_lb_delete_node.called)
-#        self.assertEqual(resp.status_int, 202)
+        self.assertTrue(hasattr(self.controller.deleteNode, "wsgi_code"),
+            "has not redifined HTTP status code")
+        self.assertTrue(self.controller.deleteNode.wsgi_code == 202,
+            "incorrect HTTP status code")
 
-    @unittest.skip('incorrect response check')
     @mock.patch('balancer.core.api.lb_change_node_status', autospec=True)
     def test_change_node_status(self, mock_lb_change_node_status):
         req_kwargs = {'id': '1',
@@ -98,9 +111,11 @@ class TestLoadBalancersController(unittest.TestCase):
                       'status': 'FAKESTATUSA'}
         resp = self.controller.changeNodeStatus(self.req, **req_kwargs)
         self.assertTrue(mock_lb_change_node_status.called)
-#        self.assertEqual(resp.status_int, 202)
+        self.assertTrue(hasattr(self.controller.changeNodeStatus, "wsgi_code"),
+            "has not redifined HTTP status code")
+        self.assertTrue(self.controller.changeNodeStatus.wsgi_code == 202,
+            "incorrect HTTP status code")
 
-    @unittest.skip('incorrect response check')
     @mock.patch('balancer.core.api.lb_update_node', autospec=True)
     def test_update_node(self, mock_lb_update_node):
         req_kwargs = {'id': '1',
@@ -108,7 +123,10 @@ class TestLoadBalancersController(unittest.TestCase):
                       'body': {'node': 'node'}}
         resp = self.controller.updateNode(self.req, **req_kwargs)
         self.assertTrue(mock_lb_update_node.called)
-#        self.assertEqual(resp.status_int, 202)
+        self.assertTrue(hasattr(self.controller.updateNode, "wsgi_code"),
+            "has not redifined HTTP status code")
+        self.assertTrue(self.controller.updateNode.wsgi_code == 202,
+            "incorrect HTTP status code")
 
     @mock.patch('balancer.core.api.lb_show_probes', autospec=True)
     def test_show_monitoring(self, mock_lb_show_probes):
@@ -117,7 +135,6 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertTrue(mock_lb_show_probes.called)
         self.assertEqual(resp, 'foo')
 
-    @unittest.skip('fails, need to correct Controller.addProbe')
     @mock.patch('balancer.core.api.lb_add_probe', autospec=True)
     def test_add_probe(self, mock_lb_add_probe):
         mock_lb_add_probe.return_value = '1'
@@ -125,14 +142,20 @@ class TestLoadBalancersController(unittest.TestCase):
                       'body': {'healthMonitoring': {'probe': 'foo'}}}
         resp = self.controller.addProbe(self.req, **req_kwargs)
         self.assertTrue(mock_lb_add_probe.called)
-        self.assertEqual(resp, '1')
+        self.assertEqual(resp, 'probe: 1')
+        self.assertTrue(hasattr(self.controller.addProbe, "wsgi_code"),
+            "has not redifined HTTP status code")
+        self.assertTrue(self.controller.addProbe.wsgi_code == 202,
+        "incorrect HTTP status code")
 
-    @unittest.skip('incorrect response check')
     @mock.patch('balancer.core.api.lb_delete_probe', autospec=True)
     def test_delete_probe(self, mock_lb_delete_probe):
         resp = self.controller.deleteProbe(self.req, id='1', probeID='1')
         self.assertTrue(mock_lb_delete_probe.called)
-#        self.assertEqual(resp.status_int, 202)
+        self.assertTrue(hasattr(self.controller.deleteProbe, "wsgi_code"),
+            "has not redifined HTTP status code")
+        self.assertTrue(self.controller.deleteProbe.wsgi_code == 202,
+            "incorrect HTTP status code")
 
     @mock.patch('balancer.core.api.lb_show_sticky', autospec=True)
     def test_show_stickiness(self, mock_lb_show_sticky):
@@ -178,6 +201,10 @@ class TestDeviceController(unittest.TestCase):
         resp = self.controller.create(self.req, body={})
         self.assertTrue(mock_device_create.called)
         self.assertEqual({'devices': 'foo'}, resp)
+        self.assertTrue(hasattr(self.controller.create, "wsgi_code"),
+            "has not redifined HTTP status code")
+        self.assertTrue(self.controller.create.wsgi_code == 202,
+        "incorrect HTTP status code")
 
     @unittest.skip('need to implement Controller.device_info')
     @mock.patch('balancer.core.api.device_info', autospec=True)
