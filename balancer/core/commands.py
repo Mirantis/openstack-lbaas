@@ -19,7 +19,6 @@ import functools
 import logging
 import types
 
-from balancer.common import utils
 from balancer.db import api as db_api
 
 LOG = logging.getLogger(__name__)
