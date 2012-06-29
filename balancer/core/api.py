@@ -184,26 +184,33 @@ def delete_lb(conf, lb_id):
     return
 
 
-def lb_add_node(conf, lb_id, lb_node):
-    logger.debug("Got new node description %s" % lb_node)
+def lb_add_nodes(conf, lb_id, lb_nodes):
+    id_list = []
     balancer_instance = vserver.Balancer(conf)
 
-    balancer_instance.loadFromDB(lb_id)
-    balancer_instance.removeFromDB()
+    for lb_node in lb_nodes:
+        logger.debug("Got new node description %s" % lb_node)
+        balancer_instance.loadFromDB(lb_id)
+        balancer_instance.removeFromDB()
 
-    rs = db_api.server_pack_extra(lb_node)
-    rs['sf_id'] = balancer_instance.sf['id']
-    rs['name'] = rs['id']
+        rs = db_api.server_pack_extra(lb_node)
+        rs['sf_id'] = balancer_instance.sf['id']
+        rs['name'] = rs['id']
 
-    balancer_instance.rs.append(rs)
-    balancer_instance.sf._rservers.append(rs)
-    balancer_instance.savetoDB()
+        balancer_instance.rs.append(rs)
+        balancer_instance.sf._rservers.append(rs)
+        balancer_instance.savetoDB()
 
-    device_driver = drivers.get_device_driver(
-                        balancer_instance.lb['device_id'])
-    with device_driver.request_context() as ctx:
-        commands.add_node_to_loadbalancer(ctx, balancer_instance, rs)
-    return rs['id']
+        device_driver = drivers.get_device_driver(conf, balancer_instance.\
+                                                        lb['device_id'])
+
+        with device_driver.request_context() as ctx:
+            commands.add_node_to_loadbalancer(ctx, balancer_instance, rs)
+
+        id_list.append({'id': balancer_instance.\
+                              rs[len(balancer_instance.rs) - 1]['id']})
+
+    return {'nodes': id_list}
 
 
 def lb_show_nodes(conf, lb_id):
