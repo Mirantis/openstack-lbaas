@@ -46,7 +46,6 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
-    @utils.http_success_code(202)
     def create(self, req, **args):
         logger.debug("Got create request. Request: %s", req)
         try:
