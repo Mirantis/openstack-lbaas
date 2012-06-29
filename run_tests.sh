@@ -64,10 +64,14 @@ function run_pep8 {
   PEP8_INCLUDE="bin/* balancer tools setup.py run_tests.py"
   ${wrapper} pep8 $PEP8_OPTIONS $PEP8_INCLUDE
   RESULT=$?
+  case "$TERM" in
+      *color* ) function out { printf "\033[3%d;1m%s\033[m\n" "$1" "$2"; } ;;
+      * ) function out { printf "%s\n" "$2"; } ;;
+  esac
   if [ $RESULT -eq 0 ]; then
-      printf "\033[32;1mPEP8 OK\033[m\n"
+      out 2 "PEP8 OK"
   else
-      printf "\033[31;1mPEP8 FAIL\033[m\n"
+      out 1 "PEP8 FAIL"
   fi
   return $RESULT
 }
