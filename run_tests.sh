@@ -63,6 +63,13 @@ function run_pep8 {
   PEP8_OPTIONS="--exclude=$PEP8_EXCLUDE --repeat"
   PEP8_INCLUDE="bin/* balancer tools setup.py run_tests.py"
   ${wrapper} pep8 $PEP8_OPTIONS $PEP8_INCLUDE
+  RESULT=$?
+  if [ $RESULT -eq 0 ]; then
+      printf "\033[32;1mPEP8 OK\033[m\n"
+  else
+      printf "\033[31;1mPEP8 FAIL\033[m\n"
+  fi
+  return $RESULT
 }
 
 
@@ -101,14 +108,14 @@ fi
 
 if [ $just_pep8 -eq 1 ]; then
     run_pep8
-    exit
+    exit $?
 fi
 
 run_tests
 RESULT=$?
 
 if [ -z "$noseargs" ]; then
-  run_pep8
+    run_pep8 || exit 1
 fi
 
 if [ $coverage -eq 1 ]; then
