@@ -89,12 +89,12 @@ class HAproxyDriverTestCase (unittest.TestCase):
 
     def test_IPaddressAdd(self):
         interface = RemoteInterface(self.dev,  self.frontend)
-        interface.addIP()
+        interface.add_ip()
         self.assertTrue(True)
 
     def test_IPaddressDelete(self):
         interface = RemoteInterface(self.dev,  self.frontend)
-        interface.delIP()
+        interface.del_ip()
         self.assertTrue(True)
 
     def test_suspendRemoteServerViaSocket(self):
