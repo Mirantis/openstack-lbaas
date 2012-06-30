@@ -71,7 +71,7 @@ class HaproxyDriver(BaseDriver):
                                         self.configfilename))
         remote = RemoteConfig(self.device_ref, self.localpath,
                               self.remotepath, self.configfilename)
-        remote.getConfig()
+        remote.get_config()
         if type_of_operation == 'del':
             config_file.DeleteLinesFromBackendBlock(haproxy_serverfarm,
                                                                 self.del_lines)
@@ -114,7 +114,7 @@ class HaproxyDriver(BaseDriver):
                     self.del_lines)
             config_file.AddLinesToBackendBlock(haproxy_serverfarm,
                     self.new_lines)
-        remote.putConfig()
+        remote.put_config()
 
     def add_real_server_to_server_farm(self, serverfarm, rserver):
         haproxy_serverfarm = HaproxyBackend()
@@ -133,10 +133,10 @@ class HaproxyDriver(BaseDriver):
         logger.debug('[HAPROXY] Creating rserver %s in the \
                      backend block %s' % \
                      (haproxy_rserver.name, haproxy_serverfarm.name))
-        remote.getConfig()
+        remote.get_config()
         config_file.AddRserverToBackendBlock(haproxy_serverfarm, \
                                              haproxy_rserver)
-        remote.putConfig()
+        remote.put_config()
 
     def delete_real_server_from_server_farm(self, serverfarm, rserver):
         haproxy_serverfarm = HaproxyBackend()
@@ -151,10 +151,10 @@ class HaproxyDriver(BaseDriver):
         logger.debug('[HAPROXY] Deleting rserver %s in the \
                      backend block %s' % \
                      (haproxy_rserver.name, haproxy_serverfarm.name))
-        remote.getConfig()
+        remote.get_config()
         config_file.DelRserverFromBackendBlock(haproxy_serverfarm, \
                                                haproxy_rserver)
-        remote.putConfig()
+        remote.put_config()
 
     def create_virtual_ip(self, virtualserver, serverfarm):
         if not bool(virtualserver['name']):
@@ -170,16 +170,16 @@ class HaproxyDriver(BaseDriver):
         #Add new IP address
         remote_interface = RemoteInterface(self.device_ref,
                                            haproxy_virtualserver)
-        remote_interface.addIP()
+        remote_interface.add_ip()
         #Modify remote config file, check and restart remote haproxy
         config_file = HaproxyConfigFile('%s/%s' % (self.localpath, \
                                         self.configfilename))
         remote = RemoteConfig(self.device_ref, self.localpath,
                               self.remotepath, self.configfilename)
-        remote.getConfig()
+        remote.get_config()
         config_file.AddFronted(haproxy_virtualserver, haproxy_serverfarm)
-        remote.putConfig()
-        remote.validationConfig()
+        remote.put_config()
+        remote.validate_config()
 
     def delete_virtual_ip(self, virtualserver):
         logger.debug('[HAPROXY] delete VIP')
@@ -196,15 +196,15 @@ class HaproxyDriver(BaseDriver):
         #Check ip for using in the another frontend
         if not config_file.FindStringInTheBlock('frontend', \
             haproxy_virtualserver.bind_address):
-            logger.debug('[HAPROXY] ip %s does not using in the othe \
-                         frontend, delete it from remote interface' % \
-                         haproxy_virtualserver.bind_address)
+            logger.debug('[HAPROXY] ip %s does not using in the other '
+                                 'frontend, delete it from remote interface' %
+                                  haproxy_virtualserver.bind_address)
             remote_interface = RemoteInterface(self.device_ref,
                                                haproxy_virtualserver)
-            remote_interface.delIP()
-        remote.getConfig()
+            remote_interface.del_ip()
+        remote.get_config()
         config_file.DeleteBlock(haproxy_virtualserver)
-        remote.putConfig()
+        remote.put_config()
 
     def get_statistics(self, serverfarm, rserver):
         haproxy_rserver = HaproxyRserver()
@@ -214,7 +214,7 @@ class HaproxyDriver(BaseDriver):
         remote_socket = RemoteSocketOperation(self.device_ref,
                                         haproxy_serverfarm, haproxy_rserver,
                                         self.interface, self.haproxy_socket)
-        out = remote_socket.getStatistics()
+        out = remote_socket.get_statistics()
         statistics = {}
         if out:
             status_line = out.split(",")
@@ -250,16 +250,16 @@ class HaproxyDriver(BaseDriver):
         remote_socket = RemoteSocketOperation(self.device_ref,
                                         haproxy_serverfarm, haproxy_rserver,
                                         self.interface, self.haproxy_socket)
-        remote_config.getConfig()
+        remote_config.get_config()
         if type_of_operation == 'suspend':
             config_file.EnableDisableRserverInBackendBlock(haproxy_serverfarm,\
                                                    haproxy_rserver, 'disable')
-            remote_socket.suspendServer()
+            remote_socket.suspend_server()
         elif type_of_operation == 'activate':
             config_file.EnableDisableRserverInBackendBlock(haproxy_serverfarm,\
                                                     haproxy_rserver, 'enable')
-            remote_socket.activateServer()
-        remote_config.putConfig()
+            remote_socket.activate_server()
+        remote_config.put_config()
 
     def create_server_farm(self, serverfarm, predictor):
         if not bool(serverfarm['name']):
@@ -281,9 +281,9 @@ class HaproxyDriver(BaseDriver):
                                                 self.configfilename))
         remote = RemoteConfig(self.device_ref, self.localpath,
                               self.remotepath, self.configfilename)
-        remote.getConfig()
+        remote.get_config()
         config_file.AddBackend(haproxy_serverfarm)
-        remote.putConfig()
+        remote.put_config()
 
     def delete_server_farm(self, serverfarm):
         if not bool(serverfarm['name']):
@@ -295,9 +295,9 @@ class HaproxyDriver(BaseDriver):
                                                 self.configfilename))
         remote = RemoteConfig(self.device_ref, self.localpath,
                               self.remotepath, self.configfilename)
-        remote.getConfig()
+        remote.get_config()
         config_file.DeleteBlock(haproxy_serverfarm)
-        remote.putConfig()
+        remote.put_config()
 
 
 class HaproxyConfigBlock:
