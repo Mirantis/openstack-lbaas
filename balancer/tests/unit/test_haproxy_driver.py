@@ -63,7 +63,7 @@ haproxy_rserver1.port = '12345'
 haproxy_rserver1.fall = '11'
 
 
-class HaproxyDriverRemoteConfigTests (unittest.TestCase):
+class TestHaproxyDriverRemoteConfig (unittest.TestCase):
     def setUp(self):
         self.remote_config = RemoteConfig(device_fake, '/tmp',
                         '/etc/haproxy', 'haproxy.conf')
@@ -82,7 +82,7 @@ class HaproxyDriverRemoteConfigTests (unittest.TestCase):
         self.assertFalse(self.remote_config.validate_config())
 
 
-class HaproxyDriverRemoteServiceTests (unittest.TestCase):
+class TestHaproxyDriverRemoteService (unittest.TestCase):
     def setUp(self):
         self.remote_service = RemoteService(device_fake)
         self.remote_service.ssh = Mock()
@@ -97,7 +97,7 @@ class HaproxyDriverRemoteServiceTests (unittest.TestCase):
         self.assertTrue(self.remote_service.restart())
 
 
-class HaproxyDriverRemoteInterfaceTests (unittest.TestCase):
+class TestHaproxyDriverRemoteInterface (unittest.TestCase):
     def setUp(self):
         self.remote_interface = RemoteInterface(device_fake, frontend)
         self.remote_interface.ssh = Mock()
@@ -112,7 +112,7 @@ class HaproxyDriverRemoteInterfaceTests (unittest.TestCase):
         self.assertTrue(self.remote_interface.del_ip())
 
 
-class HaproxyDriverRemoteSocketOperation (unittest.TestCase):
+class TestHaproxyDriverRemoteSocketOperation (unittest.TestCase):
     def setUp(self):
         self.remote_socket = RemoteSocketOperation(device_fake,
                                                 backend, rserver)
@@ -126,6 +126,9 @@ class HaproxyDriverRemoteSocketOperation (unittest.TestCase):
 
     def test_activate_server(self):
         self.assertTrue(self.remote_socket.activate_server())
+
+    def test_get_statistics(self):
+        self.assertTrue(self.remote_socket.get_statistics())
 
 
 if __name__ == "__main__":

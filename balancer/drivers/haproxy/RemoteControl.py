@@ -188,6 +188,6 @@ class RemoteSocketOperation(object):
         ssh_out = stdout.read()
         logger.debug('[HAPROXY] get statistics about reserver %s/%s.'
                     ' Result is \'%s\' ', self.backend_name, self.rserver_name,
-                    out)
+                    ssh_out)
         self.ssh.close()
         return ssh_out
