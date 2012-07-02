@@ -4,7 +4,9 @@ import unittest
 import os
 import shutil
 import filecmp
+import mock
 
+from mock import Mock, MagicMock
 from balancer.drivers.haproxy.HaproxyDriver import HaproxyConfigFile
 from balancer.drivers.haproxy.HaproxyDriver import HaproxyFronted
 from balancer.drivers.haproxy.HaproxyDriver import HaproxyBackend
@@ -16,173 +18,117 @@ from balancer.drivers.haproxy.RemoteControl import RemoteService
 from balancer.drivers.haproxy.RemoteControl import RemoteInterface
 from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation
 
+device_fake = {'ip': '192.168.19.86',
+    'port': '22',
+    'user': 'user',
+    'password': 'swordfish',
+    'extra': {'interface': 'eth0',
+    'socket': '/tmp/haproxy.sock',
+    'remote_conf_dir': '/etc/haproxy',
+    'remote_conf_file': 'haproxy.cfg'}}
+#
+rserver = {'name': 'test_real_server',
+           'address': '123.123.123.123', 'port': '9090',
+           'weight': '8',  'maxCon': '30000'}
+#
+server_farm = {'name': 'SFname',  'type': 'HashAddrPredictor'}
+#
+virtualserver = {'name': 'VirtualServer',
+                 'address': '115.115.115.115',
+                 'port': '8080'}
+#
+probe = {'type': 'http',  'requestMethodType': 'GET',
+         'requestHTTPurl': '/index.html',
+         'minExpectStatus': '200'}
+#
+frontend = HaproxyFronted()
+frontend.bind_address = '1.1.1.1'
+frontend.bind_port = '8080'
+frontend.default_backend = 'server_farm'
+frontend.name = 'test_frontend'
+#
+backend = HaproxyBackend()
+backend.name = 'test_backend'
+backend.balance = 'source'
+#
+haproxy_rserver = HaproxyRserver()
+haproxy_rserver.name = "new_test_server"
+haproxy_rserver.address = '15.15.15.15'
+haproxy_rserver.port = '123'
+haproxy_rserver.fall = '10'
+haproxy_rserver1 = HaproxyRserver()
+haproxy_rserver1.name = "new_test_server_2"
+haproxy_rserver1.address = '25.25.25.25'
+haproxy_rserver1.port = '12345'
+haproxy_rserver1.fall = '11'
 
-@unittest.skip("requires external connectivity")
-class HAproxyDriverTestCase (unittest.TestCase):
 
+class TestHaproxyDriverRemoteConfig (unittest.TestCase):
     def setUp(self):
-        #shutil.copyfile ('./balancer/tests/unit/testfiles/haproxy.cfg',  \
-        #"/tmp/haproxy.cfg")
-        dev = {'ip': '192.168.19.86', 'interface': 'eth0', \
-               'login': 'user', 'password': 'swordfish', \
-               'remotepath': '/etc/haproxy', 'remotename': 'haproxy.cfg'}
-        conf = []
-        self.driver = HaproxyDriver(conf, self.dev)
-        #
-        self.frontend = HaproxyFronted()
-        self.frontend.bind_address = '1.1.1.1'
-        self.frontend.bind_port = '8080'
-        self.frontend.default_backend = 'server_farm'
-        self.frontend.name = 'test_frontend'
-        #
-        self.block_for_delete = HaproxyListen()
-        self.block_for_delete.name = 'ssl-relay'
-        #
-        self.backend = HaproxyBackend()
-        self.backend.name = 'test_backend'
-        self.backend.balance = 'source'
-        #
-        self.haproxy_rserver = HaproxyRserver()
-        self.haproxy_rserver.name = "new_test_server"
-        self.haproxy_rserver.address = '15.15.15.15'
-        self.haproxy_rserver.port = '123'
-        self.haproxy_rserver.fall = '10'
-        self.haproxy_rserver1 = HaproxyRserver()
-        self.haproxy_rserver1.name = "new_test_server_2"
-        self.haproxy_rserver1.address = '25.25.25.25'
-        self.haproxy_rserver1.port = '12345'
-        self.haproxy_rserver1.fall = '11'
-        #
-        self.server_farm = {'name': 'SFname',  'type': 'HashAddrPredictor'}
-        #
-        self.virtualserver = {'name': 'VirtualServer', \
-                                        'address': '115.115.115.115',  \
-                                        'port': '8080'}
-        #
-        self.rserver = {'name': 'test_real_server', \
-                                'address': '123.123.123.123', 'port': '9090', \
-                                'weight': '8',  'maxCon': '30000'}
-        #
-        self.probe = {'type': 'http',  'requestMethodType': 'GET', \
-                                'requestHTTPurl': '/index.html', \
-                                'minExpectStatus': '200'}
+        self.remote_config = RemoteConfig(device_fake, '/tmp',
+                        '/etc/haproxy', 'haproxy.conf')
+        self.remote_config.ssh = Mock()
 
-    def test_AddHTTPProbe(self):
-        self.driver.add_probe_to_server_farm(self.server_farm, self.probe)
-        self.assertTrue(True)
+    def test_get_config(self):
+        self.assertTrue(self.remote_config.get_config())
 
-    def test_DelHTTPProbe(self):
-        self.driver.delete_probe_from_server_farm(self.server_farm, self.probe)
-        self.assertTrue(True)
+    def test_put_config(self):
+        self.assertTrue(self.remote_config.put_config())
 
-    def test_AddLinesToBackendBlock(self):
-        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-        NewLines = ["option httpchk",  "http-check expect status 200"]
-        test.AddLinesToBackendBlock(self.backend, NewLines)
-        self.assertTrue(True)
+    def test_validate_config_bad(self):
+        file_channel = MagicMock(spec=file)
+        self.remote_config.ssh.exec_command.return_value = [file_channel,
+                                              file_channel, file_channel]
+        self.assertFalse(self.remote_config.validate_config())
 
-    def test_DeleteLinesTFromBackendBlock(self):
-        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-        DeletedLines = ["option httpchk",  "http-check expect status 200"]
-        test.DeleteLinesFromBackendBlock(self.backend, DeletedLines)
-        self.assertTrue(True)
 
-    def test_IPaddressAdd(self):
-        interface = RemoteInterface(self.dev,  self.frontend)
-        interface.add_ip()
-        self.assertTrue(True)
+class TestHaproxyDriverRemoteService (unittest.TestCase):
+    def setUp(self):
+        self.remote_service = RemoteService(device_fake)
+        self.remote_service.ssh = Mock()
 
-    def test_IPaddressDelete(self):
-        interface = RemoteInterface(self.dev,  self.frontend)
-        interface.del_ip()
-        self.assertTrue(True)
+    def test_start_service(self):
+        self.assertTrue(self.remote_service.start())
 
-    def test_suspendRemoteServerViaSocket(self):
-        self.assertTrue(True)
+    def test_stop_service(self):
+        self.assertTrue(self.remote_service.stop())
 
-    def test_activateRemoteServerViaSocket(self):
-        self.assertTrue(True)
+    def test_restart_service(self):
+        self.assertTrue(self.remote_service.restart())
 
-    def test_disableRemoteServerInConfig(self):
-        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-        test.EnableDisableRserverInBackendBlock(self.backend,  \
-                                self.haproxy_rserver, 'disable')
-        self.assertTrue(True)
 
-    def test_enableRemoteServerInConfig(self):
-        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-        test.EnableDisableRserverInBackendBlock(self.backend,  \
-                                self.haproxy_rserver,  'enable')
-        self.assertTrue(True)
+class TestHaproxyDriverRemoteInterface (unittest.TestCase):
+    def setUp(self):
+        self.remote_interface = RemoteInterface(device_fake, frontend)
+        self.remote_interface.ssh = Mock()
+        file_channel = MagicMock(spec=file)
+        self.remote_interface.ssh.exec_command.return_value = [file_channel,
+                                                 file_channel, file_channel]
 
-    def test_suspendRServer(self):
-        self.assertTrue(True)
+    def test_add_ip(self):
+        self.assertTrue(self.remote_interface.add_ip())
 
-    def test_activateRServer(self):
-        self.assertTrue(True)
+    def test_del_ip(self):
+        self.assertTrue(self.remote_interface.del_ip())
 
-    def test_getRServerStatistics(self):
-        self.assertTrue(True)
 
-    def test_getSFStatistics(self):
-        self.assertTrue(True)
+class TestHaproxyDriverRemoteSocketOperation (unittest.TestCase):
+    def setUp(self):
+        self.remote_socket = RemoteSocketOperation(device_fake,
+                                                backend, rserver)
+        self.remote_socket.ssh = Mock()
+        file_channel = MagicMock(spec=file)
+        self.remote_socket.ssh.exec_command.return_value = [file_channel,
+                                                file_channel, file_channel]
 
-    def test_FileName(self):
-        filename = HaproxyConfigFile("/tmp/haproxy.cfg")
-        self.assertEqual(filename.GetHAproxyConfigFileName(),  \
-                                             "/tmp/haproxy.cfg")
+    def test_suspend_server(self):
+        self.assertTrue(self.remote_socket.suspend_server())
 
-    def test_AddFrontend(self):
-        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-        test.AddFronted(self.frontend)
-        self.assertTrue(True)
+    def test_activate_server(self):
+        self.assertTrue(self.remote_socket.activate_server())
 
-    def test_AddBackend(self):
-        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-        test.AddBackend(self.backend)
-        self.assertTrue(True)
-
-    def test_DeleteBlock(self):
-        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-        test.DeleteBlock(self.block_for_delete)
-        self.assertTrue(True)
-
-    def test_AddRserverToBackendBlock(self):
-        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-        test.AddRserverToBackendBlock(self.backend,  self.haproxy_rserver)
-        test.AddRserverToBackendBlock(self.backend,  self.haproxy_rserver1)
-        self.assertTrue(True)
-
-    def test_DelRserverFromBackendBlock(self):
-        test = HaproxyConfigFile("/tmp/haproxy.cfg")
-        test.DelRserverFromBackendBlock(self.backend,  self.haproxy_rserver)
-        self.assertTrue(True)
-
-    def test_createServerFarm(self):
-        self.driver.create_server_farm(self.server_farm)
-        self.assertTrue(True)
-
-    def test_deleteServerFarm(self):
-        self.driver.delete_server_farm(self.server_farm)
-        self.assertTrue(True)
-
-    def test_createVirtualServer(self):
-        self.driver.create_virtual_ip(self.virtualserver, self.server_farm)
-        self.assertTrue(True)
-
-    def test_deleteVirtualServer(self):
-        self.driver.delete_virtual_ip(self.virtualserver)
-        self.assertTrue(True)
-
-    def test_addRServerToSF(self):
-        self.driver.add_real_server_to_server_farm(self.server_farm,
-                                                   self.rserver)
-        self.assertTrue(True)
-
-    def test_deleteRServerFromSF(self):
-        self.driver.delete_real_server_from_server_farm(self.server_farm,
-                                                        self.rserver)
-        self.assertTrue(True)
+    def test_get_statistics(self):
+        self.assertTrue(self.remote_socket.get_statistics())
 
 
 if __name__ == "__main__":
