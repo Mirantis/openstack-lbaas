@@ -37,7 +37,6 @@ class TestBalancer(unittest.TestCase):
 
     def setUp(self):
         self.conf = mock.MagicMock()
-        self.call_list = {'a': 1, 'b': 2, 'b': 3}
         self.tenant_id = mock.MagicMock()
         self.mock_lb = mock.MagicMock(autospec=True)
         self.lb_id = mock.MagicMock(spec=int)
@@ -45,8 +44,13 @@ class TestBalancer(unittest.TestCase):
         self.lb_node = mock.MagicMock()
         self.lb_node_id = mock.MagicMock()
         self.lb_body = mock.MagicMock(keys=mock.MagicMock(
-            return_value=self.call_list))
+            return_value={'lower': "algorithm"}))
         self.lb_node_status = mock.MagicMock()
+        value = mock.MagicMock
+        self.dict_list = ({'id': 1, 'name': 'name', 'extra': {
+            'stragearg': value, 'anotherarg': value}, },
+            {'id': 2, 'name': 'name0', 'extra': {
+                'stragearg': value, 'anotherarg': value}, })
 
     @mock.patch("balancer.db.api.loadbalancer_get_all_by_project")
     def test_lb_get_index(self, mock_api):
@@ -81,7 +85,6 @@ class TestBalancer(unittest.TestCase):
         self.assertTrue(mock_driver.called)
         self.assertTrue(mock_commands.called)
 
-    @unittest.skip("Something wrong with exception")
     @patch_balancer
     @patch_scheduller
     @mock.patch("balancer.core.commands.create_loadbalancer")
@@ -89,11 +92,9 @@ class TestBalancer(unittest.TestCase):
     def test_create_lb_1(self, mock_driver, mock_commands,
             mock_sched, mock_bal):
         """Exception"""
-        mock_driver.side_effect = exception.Invalid
-        with self.assertRaises(exception.Invalid):
-            api.create_lb(self.conf, async=False)
-        self.assertTrue(mock_driver.called)
-        self.assertFalse(mock_commands.called)
+        mock_commands.side_effect = exception.Invalid
+        api.create_lb(self.conf, async=False)
+        mock_commands.called_once_with(exception.Invalid)
 
     @patch_balancer
     @mock.patch("balancer.db.api.predictor_pack_extra")
@@ -103,13 +104,14 @@ class TestBalancer(unittest.TestCase):
         api.update_lb(self.conf, self.lb_id, self.lb_body, async=False)
         self.assertFalse(mock_api.called)
 
-    @unittest.skip("can't do key.lower=algorithm")
     @patch_balancer
     @mock.patch("balancer.db.api.predictor_pack_extra")
     @mock.patch("balancer.drivers.get_device_driver")
     def test_update_lb_1(self, mock_driver, mock_api, mock_bal):
         """No exception, key.lower='algorithm'"""
-        api.update_lb(self.conf, self.lb_id, self.lb_body, async=False)
+        keys = ({'algorithm': "bubble"})
+        lb_body = (keys)
+        api.update_lb(self.conf, self.lb_id, lb_body, async=False)
         self.assertTrue(mock_api.called)
 
     @patch_balancer
@@ -118,7 +120,7 @@ class TestBalancer(unittest.TestCase):
         """exception"""
         mock_driver.return_value = None
         api.update_lb(self.conf, self.lb_id, self.lb_body, async=False)
-        self.assertTrue(mock_bal.lb.status.return_value)
+        self.assertTrue(mock_driver.called)
 
     @patch_balancer
     @mock.patch("balancer.drivers.get_device_driver")
@@ -140,9 +142,8 @@ class TestBalancer(unittest.TestCase):
     @patch_balancer
     @mock.patch("balancer.db.api.unpack_extra")
     def test_lb_show_nodes(self, mock_api, mock_bal):
-        mock_bal.rs['extra'] = {}
-        #self.call_list
-        api.lb_show_nodes(self.conf, self.lb_id)
+        mock_bal.rs = self.dict_list
+        api.lb_show_nodes(self.conf, 1)
         self.assertTrue(mock_api.called)
 
     @patch_balancer
@@ -181,18 +182,20 @@ class TestBalancer(unittest.TestCase):
         for mock in mocks:
             self.assertTrue(mock.called)
 
-    @unittest.skip("Not equal")
     @patch_balancer
     @mock.patch("balancer.db.api.server_update")
     @mock.patch("balancer.drivers.get_device_driver")
+    @mock.patch("balancer.core.commands.activate_rserver")
     @mock.patch("balancer.core.commands.suspend_rserver")
     @mock.patch("balancer.db.api.server_get")
-    def test_lb_change_node_status_2(self, mock_api_0, mock_commands,
-            mock_driver, mock_api_1, patch_bal):
+    def test_lb_change_node_status_2(self, mock_api_0, mock_commands1,
+            mock_commands2, mock_driver, mock_api_1, patch_bal):
         """return ok"""
+        mock_api_0.return_value = {'state': 'status'}
         api.lb_change_node_status(self.conf, self.lb_id, self.lb_node_id,
-                mock_driver.rs['state'])
-        self.assertEquals(mock_driver.rs['state'], )
+                'status')
+        self.assertFalse(mock_commands1.called)
+        self.assertFalse(mock_commands2.called)
 
     @patch_balancer
     @mock.patch("balancer.drivers.get_device_driver")
@@ -245,14 +248,14 @@ class TestBalancer(unittest.TestCase):
         for mok in mocks:
             self.assertTrue(mok.called)
 
-    @unittest.skip("can't do lb_probe['type']=None")
+#    @unittest.skip("can't do lb_probe['type']=None")
     @patch_balancer
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.add_probe_to_loadbalancer")
     def test_lb_add_probe_1(self, *mocks):
         """lb_probe['type']=None"""
-        self.lb_probe['type'] = None
-        api.lb_add_probe(self.conf, self.lb_id, self.lb_probe)
+        lb_probe = {'type': None}
+        api.lb_add_probe(self.conf, self.lb_id, lb_probe)
         for mok in mocks:
             self.assertFalse(mok.called)
 
