@@ -1,4 +1,4 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
+#test_lb_update_node_1 vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 import mock
 import unittest
@@ -51,6 +51,8 @@ class TestBalancer(unittest.TestCase):
             'stragearg': value, 'anotherarg': value}, },
             {'id': 2, 'name': 'name0', 'extra': {
                 'stragearg': value, 'anotherarg': value}, })
+        self.dictionary = {'id': 1, 'name': 'name', 'extra': {
+            'stragearg': value, 'anotherarg': value}, }
 
     @mock.patch("balancer.db.api.loadbalancer_get_all_by_project")
     def test_lb_get_index(self, mock_api):
@@ -138,11 +140,10 @@ class TestBalancer(unittest.TestCase):
         self.assertTrue(mock_command.called)
         self.assertTrue(mock_driver.called)
 
-    @unittest.skip("Can't create proper value of rs")
     @patch_balancer
     @mock.patch("balancer.db.api.unpack_extra")
     def test_lb_show_nodes(self, mock_api, mock_bal):
-        mock_bal.rs = self.dict_list
+        mock_bal.return_value.rs = self.dict_list
         api.lb_show_nodes(self.conf, 1)
         self.assertTrue(mock_api.called)
 
@@ -212,7 +213,6 @@ class TestBalancer(unittest.TestCase):
         self.assertTrue(mock_com0.called)
         self.assertTrue(mock_com1.called)
 
-    @unittest.skip("Can't give rs proper value")
     @patch_balancer
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.db.api.server_create")
@@ -223,21 +223,19 @@ class TestBalancer(unittest.TestCase):
     def test_lb_update_node_1(self, mock_com0, mock_com1,
             mock_api0, mock_api1, mock_api2, mock_driver, mock_bal):
         """"""
-        api.lb_update_node(self.conf, self.lb_id, self.lb_node_id,
+        mock_api1.return_value = self.dictionary
+        api.lb_update_node(self.conf, self.lb_id, 1,
                 self.lb_node)
         self.assertTrue(mock_com0.called)
         self.assertTrue(mock_com1.called)
 
-    @unittest.skip("Can't give probes proper value")
     @mock.patch("balancer.db.api.unpack_extra")
     @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
     @mock.patch("balancer.db.api.probe_get_all_by_sf_id")
-    def test_lb_show_probes(self, *mocks):
-        for mok in mocks:
-            mok[0].return_value = {}
-        api.lb_show_probes(self.conf, self.lb_id)
-        for mok in mocks:
-            self.assertTrue(mok.called)
+    def test_lb_show_probes(self, db_api0, db_api1, db_api2):
+        db_api0.return_value = self.dict_list
+        api.lb_show_probes(self.conf, 1)
+        self.assertTrue(db_api2.called)
 
     @patch_balancer
     @mock.patch("balancer.drivers.get_device_driver")
@@ -248,7 +246,6 @@ class TestBalancer(unittest.TestCase):
         for mok in mocks:
             self.assertTrue(mok.called)
 
-#    @unittest.skip("can't do lb_probe['type']=None")
     @patch_balancer
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.add_probe_to_loadbalancer")
@@ -268,12 +265,21 @@ class TestBalancer(unittest.TestCase):
         for mok in mocks:
             self.assertTrue(mok.called)
 
-    @unittest.skip("Can't give stickies proper_value")
     @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
     @mock.patch("balancer.db.api.sticky_get_all_by_sf_id")
     @mock.patch("balancer.db.api.unpack_extra")
-    def test_lb_show_sticky(self, *mocks):
+    def test_lb_show_sticky(self, db_api0, db_api1, db_api2):
+        db_api1.return_value = self.dict_list
         api.lb_show_sticky(self.conf, self.lb_id)
+        self.assertTrue(db_api0.called)
+
+    @patch_balancer
+    @mock.patch("balancer.db.api.sticky_pack_extra")
+    @mock.patch("balancer.drivers.get_device_driver")
+    @mock.patch("balancer.core.commands.add_sticky_to_loadbalancer")
+    def test_lb_add_sticky0(self, *mocks):
+        sticky = mock.MagicMock()
+        api.lb_add_sticky(self.conf, self.lb_id, sticky)
         for mok in mocks:
             self.assertTrue(mok.called)
 
@@ -281,11 +287,11 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.sticky_pack_extra")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.add_sticky_to_loadbalancer")
-    def test_lb_add_sticky(self, *mocks):
-        sticky = mock.MagicMock()
+    def test_lb_add_sticky1(self, *mocks):
+        sticky = {'type': None}
         api.lb_add_sticky(self.conf, self.lb_id, sticky)
         for mok in mocks:
-            self.assertTrue(mok.called)
+            self.assertFalse(mok.called)
 
     @patch_balancer
     @mock.patch("balancer.db.api.sticky_get")
