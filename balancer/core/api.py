@@ -147,7 +147,7 @@ def update_lb(conf, lb_id, lb_body):
     balancer_instance.update()
 
     #Step 5. Deploy new config to device
-    device_driver = drivers.get_device_driver(lb['device_id'])
+    device_driver = drivers.get_device_driver(conf, lb['device_id'])
     try:
         with device_driver.request_context() as ctx:
             commands.update_loadbalancer(ctx, old_balancer_instance,
