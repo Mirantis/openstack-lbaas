@@ -1,4 +1,4 @@
-#test_lb_update_node_1 vim: tabstop=4 shiftwidth=4 softtabstop=4
+#test_lb_update_node_1/ vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 import mock
 import unittest
@@ -37,15 +37,6 @@ class TestBalancer(unittest.TestCase):
 
     def setUp(self):
         self.conf = mock.MagicMock()
-        self.tenant_id = mock.MagicMock()
-        self.mock_lb = mock.MagicMock(autospec=True)
-        self.lb_id = mock.MagicMock(spec=int)
-        self.lb_probe = mock.MagicMock()
-        self.lb_node = mock.MagicMock()
-        self.lb_node_id = mock.MagicMock()
-        self.lb_body = mock.MagicMock(keys=mock.MagicMock(
-            return_value={'lower': "algorithm"}))
-        self.lb_node_status = mock.MagicMock()
         value = mock.MagicMock
         self.dict_list = ({'id': 1, 'name': 'name', 'extra': {
             'stragearg': value, 'anotherarg': value}, },
@@ -53,6 +44,12 @@ class TestBalancer(unittest.TestCase):
                 'stragearg': value, 'anotherarg': value}, })
         self.dictionary = {'id': 1, 'name': 'name', 'extra': {
             'stragearg': value, 'anotherarg': value}, }
+        self.tenant_id = 1
+        self.lb_id = 1
+        self.lb_node = self.dictionary
+        self.lb_node_id = 1
+        self.lb_body_0 = {'bubble': "bubble"}
+        self.lb_body = {'algorithm': "bubble"}
 
     @mock.patch("balancer.db.api.loadbalancer_get_all_by_project")
     def test_lb_get_index(self, mock_api):
@@ -103,7 +100,7 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.drivers.get_device_driver")
     def test_update_lb_0(self, mock_driver, mock_api, mock_bal):
         """No exception, key.lower!='algorithm'"""
-        api.update_lb(self.conf, self.lb_id, self.lb_body, async=False)
+        api.update_lb(self.conf, self.lb_id, self.lb_body_0, async=False)
         self.assertFalse(mock_api.called)
 
     @patch_balancer
@@ -111,9 +108,7 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.drivers.get_device_driver")
     def test_update_lb_1(self, mock_driver, mock_api, mock_bal):
         """No exception, key.lower='algorithm'"""
-        keys = ({'algorithm': "bubble"})
-        lb_body = (keys)
-        api.update_lb(self.conf, self.lb_id, lb_body, async=False)
+        api.update_lb(self.conf, self.lb_id, self.lb_body, async=False)
         self.assertTrue(mock_api.called)
 
     @patch_balancer
@@ -164,9 +159,9 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.server_get")
     def test_lb_change_node_status_0(self, *mocks):
         """Activate server called"""
-        self.lb_node_status = "inservice"
+        lb_node_status = "inservice"
         api.lb_change_node_status(self.conf, self.lb_id, self.lb_node_id,
-                    self.lb_node_status)
+                    lb_node_status)
         for mock in mocks:
             self.assertTrue(mock.called)
 
@@ -177,9 +172,9 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.server_get")
     def test_lb_change_node_status_1(self, *mocks):
         """Suspend server called"""
-        self.lb_node_status = ""
+        lb_node_status = ""
         api.lb_change_node_status(self.conf, self.lb_id, self.lb_node_id,
-                    self.lb_node_status)
+                    lb_node_status)
         for mock in mocks:
             self.assertTrue(mock.called)
 
@@ -234,7 +229,7 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.probe_get_all_by_sf_id")
     def test_lb_show_probes(self, db_api0, db_api1, db_api2):
         db_api0.return_value = self.dict_list
-        api.lb_show_probes(self.conf, 1)
+        api.lb_show_probes(self.conf, self.lb_id)
         self.assertTrue(db_api2.called)
 
     @patch_balancer
@@ -242,7 +237,8 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.core.commands.add_probe_to_loadbalancer")
     def test_lb_add_probe_0(self, *mocks):
         """lb_probe['type']!=None"""
-        api.lb_add_probe(self.conf, self.lb_id, self.lb_probe)
+        lb_probe = {'type': 'Gvido'}
+        api.lb_add_probe(self.conf, self.lb_id, lb_probe)
         for mok in mocks:
             self.assertTrue(mok.called)
 
