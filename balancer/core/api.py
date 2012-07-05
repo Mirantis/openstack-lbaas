@@ -296,7 +296,11 @@ def lb_update_node(conf, lb_id, lb_node_id, lb_node):
 
 
 def lb_show_probes(conf, lb_id):
-    sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    try:
+        sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    except IndexError:
+        return("List is empty")
+
     probes = db_api.probe_get_all_by_sf_id(conf, sf_ref['id'])
 
     list = []
@@ -357,7 +361,10 @@ def lb_delete_probe(conf, lb_id, probe_id):
 
 
 def lb_show_sticky(conf, lb_id):
-    sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    try:
+        sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    except IndexError:
+        return("List is empty")
     stickies = db_api.sticky_get_all_by_sf_id(conf, sf_ref['id'])
 
     list = []
