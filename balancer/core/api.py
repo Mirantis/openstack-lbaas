@@ -201,14 +201,14 @@ def lb_add_nodes(conf, lb_id, lb_nodes):
         balancer_instance.sf._rservers.append(rs)
         balancer_instance.savetoDB()
 
+        rs = balancer_instance.rs[-1]
         device_driver = drivers.get_device_driver(conf, balancer_instance.\
                                                         lb['device_id'])
 
         with device_driver.request_context() as ctx:
             commands.add_node_to_loadbalancer(ctx, balancer_instance, rs)
 
-        id_list.append({'id': balancer_instance.\
-                              rs[len(balancer_instance.rs) - 1]['id']})
+        id_list.append({'id': balancer_instance.rs['id']})
 
     return {'nodes': id_list}
 
