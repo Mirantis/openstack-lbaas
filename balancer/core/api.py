@@ -208,7 +208,7 @@ def lb_add_nodes(conf, lb_id, lb_nodes):
         with device_driver.request_context() as ctx:
             commands.add_node_to_loadbalancer(ctx, balancer_instance, rs)
 
-        id_list.append({'id': balancer_instance.rs['id']})
+        id_list.append({'id': rs['id']})
 
     return {'nodes': id_list}
 

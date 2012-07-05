@@ -137,14 +137,15 @@ class TestRserver(unittest.TestCase):
 
     @mock.patch("balancer.db.api.server_update")
     def test_create_rserver_1(self, mock_func):
-        """ parent_id == "" """
+        """ parent_id is None """
+        self.rs['parent_id'] = None
         cmd.create_rserver(self.ctx, self.rs)
         self.assertTrue(self.ctx.device.create_real_server.called)
         self.assertTrue(mock_func.called)
 
     @mock.patch("balancer.db.api.server_update")
     def test_create_rserver_2(self, mock_func):
-        """ parent_id != "", no exception """
+        """ parent_id is not None, no exception """
         self.rs['parent_id'] = 0
         cmd.create_rserver(self.ctx, self.rs)
         self.assertFalse(self.ctx.device.create_real_server.called)
@@ -153,7 +154,7 @@ class TestRserver(unittest.TestCase):
     @mock.patch("balancer.db.api.server_update")
     def test_create_rserver_3(self, mock_func):
         """Exception"""
-        self.rs['parent_id'] = ""
+        self.rs['parent_id'] = None
         cmd.create_rserver(self.ctx, self.rs)
         rollback_fn = self.ctx.add_rollback.call_args[0][0]
         rollback_fn(False)
