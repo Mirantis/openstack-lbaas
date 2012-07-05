@@ -128,7 +128,7 @@ class API(wsgi.Router):
                        conditions=dict(method=["POST"]))
 
         mapper.connect("/devices/{id}", controller=device_resource,
-                                    action = "delete",
+                                    action="delete",
                                     conditions=dict(method=["DELETE"]))
 
         # TODO(yorik-sar): tasks are broken, there is no processing anymore
