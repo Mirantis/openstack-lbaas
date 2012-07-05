@@ -23,9 +23,9 @@ from openstack.common import exception
 
 from balancer.core import commands
 from balancer.core import lb_status
-from balancer.core.scheduller import Scheduller
+from balancer.core import scheduller
 from balancer import drivers
-from balancer.loadbalancers.vserver import Balancer
+from balancer.loadbalancers import vserver
 from balancer.db import api as db_api
 
 
@@ -65,7 +65,7 @@ def lb_show_details(conf, lb_id):
     #store = Storage(conf)
     #reader = store.getReader()
 
-    lb = Balancer(conf)
+    lb = vserver.Balancer(conf)
     lb.loadFromDB(lb_id)
 
     obj = {'loadbalancer':  db_api.unpack_extra(lb.lb)}
@@ -74,18 +74,18 @@ def lb_show_details(conf, lb_id):
     lbobj['virtualIps'] = [db_api.unpack_extra(v) for v in lb.vips]
     lbobj['healthMonitor'] = [db_api.unpack_extra(v) for v in lb.probes]
     logger.debug("Getting information about loadbalancer with id: %s" % lb_id)
-    #list = reader.getLoadBalancerById(id)
+    #list = reader.getLoadvserver.BalancerById(id)
     logger.debug("Got information: %s" % lbobj)
     return lbobj
 
 
 @asynchronous
 def create_lb(conf, **params):
-    balancer_instance = Balancer(conf)
+    balancer_instance = vserver.Balancer(conf)
 
     #Step 1. Parse parameters came from request
     balancer_instance.parseParams(params)
-    bal_instance = Scheduller.Instance(conf)
+    bal_instance = scheduller.Scheduller.Instance(conf)
     # device = sched.getDevice()
     device = bal_instance.getDeviceByID(balancer_instance.lb['device_id'])
 
@@ -116,10 +116,10 @@ def create_lb(conf, **params):
 @asynchronous
 def update_lb(conf, lb_id, lb_body):
     #Step 1. Load LB from DB
-    old_balancer_instance = Balancer(conf)
-    balancer_instance = Balancer(conf)
+    old_balancer_instance = vserver.Balancer(conf)
+    balancer_instance = vserver.Balancer(conf)
     logger.debug("Loading LB data from DB for Lb id: %s" % lb_id)
-    #TODO add clone function to Balancer in order to avoid double read
+    #TODO add clone function to vserver.Balancer in order to avoid double read
     balancer_instance.loadFromDB(lb_id)
     old_balancer_instance.loadFromDB(lb_id)
 
@@ -165,7 +165,7 @@ def update_lb(conf, lb_id, lb_body):
 
 
 def delete_lb(conf, lb_id):
-    balancer_instance = Balancer(conf)
+    balancer_instance = vserver.Balancer(conf)
     balancer_instance.loadFromDB(lb_id)
 
     #Step 1. Parse parameters came from request
@@ -186,7 +186,7 @@ def delete_lb(conf, lb_id):
 
 def lb_add_node(conf, lb_id, lb_node):
     logger.debug("Got new node description %s" % lb_node)
-    balancer_instance = Balancer(conf)
+    balancer_instance = vserver.Balancer(conf)
 
     balancer_instance.loadFromDB(lb_id)
     balancer_instance.removeFromDB()
@@ -207,7 +207,7 @@ def lb_add_node(conf, lb_id, lb_node):
 
 
 def lb_show_nodes(conf, lb_id):
-    balancer_instance = Balancer(conf)
+    balancer_instance = vserver.Balancer(conf)
     nodes = {'nodes': []}
     balancer_instance.loadFromDB(lb_id)
     for rs in balancer_instance.rs:
@@ -217,7 +217,7 @@ def lb_show_nodes(conf, lb_id):
 
 
 def lb_delete_node(conf, lb_id, lb_node_id):
-    balancer_instance = Balancer(conf)
+    balancer_instance = vserver.Balancer(conf)
     #Step 1: Load balancer from DB
     balancer_instance.loadFromDB(lb_id)
     #Step 3: Get RS object from DB
@@ -234,7 +234,7 @@ def lb_delete_node(conf, lb_id, lb_node_id):
 
 
 def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
-    balancer_instance = Balancer(conf)
+    balancer_instance = vserver.Balancer(conf)
     balancer_instance.loadFromDB(lb_id)
 
     rs = db_api.server_get(conf, lb_node_id)
@@ -261,7 +261,7 @@ def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
 
 
 def lb_update_node(conf, lb_id, lb_node_id, lb_node):
-    balancer_instance = Balancer(conf)
+    balancer_instance = vserver.Balancer(conf)
     balancer_instance.loadFromDB(lb_id)
 
     lb_node_dict = db_api.server_pack_extra(lb_node)
@@ -305,7 +305,7 @@ def lb_add_probe(conf, lb_id, lb_probe):
     if lb_probe['type'] == None:
         return
 
-    balancer_instance = Balancer(conf)
+    balancer_instance = vserver.Balancer(conf)
 
     balancer_instance.loadFromDB(lb_id)
     balancer_instance.removeFromDB()
@@ -326,7 +326,7 @@ def lb_add_probe(conf, lb_id, lb_probe):
 
 
 def lb_delete_probe(conf, lb_id, probe_id):
-    balancer_instance = Balancer(conf)
+    balancer_instance = vserver.Balancer(conf)
 
     #Step 1: Load balancer from DB
     balancer_instance.loadFromDB(lb_id)
@@ -363,7 +363,7 @@ def lb_add_sticky(conf, lb_id, sticky):
     if sticky['type'] == None:
         return
 
-    balancer_instance = Balancer(conf)
+    balancer_instance = vserver.Balancer(conf)
 
     balancer_instance.loadFromDB(lb_id)
     balancer_instance.removeFromDB()
@@ -383,7 +383,7 @@ def lb_add_sticky(conf, lb_id, sticky):
 
 
 def lb_delete_sticky(conf, lb_id, sticky_id):
-    balancer_instance = Balancer(conf)
+    balancer_instance = vserver.Balancer(conf)
 
     #Step 1: Load balancer from DB
     balancer_instance.loadFromDB(lb_id)
@@ -412,7 +412,7 @@ def device_get_index(conf):
 def device_create(conf, **params):
     device_dict = db_api.device_pack_extra(params)
     device = db_api.device_create(conf, device_dict)
-    Scheduller.Instance(conf).addDevice(device)
+    scheduller.Scheduller.Instance(conf).addDevice(device)
     return device['id']
 
 
