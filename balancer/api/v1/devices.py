@@ -137,6 +137,12 @@ class Controller(object):
             raise webob.exc.HTTPForbidden(msg)
         return {'devices': list}
 
+    @utils.http_success_code(202)
+    def delete(self, req, **args):
+        logger.debug("Got delete request. Request: %s", req)
+        core_api.device_delete(self.conf, args['id'])
+        return "OK"
+
     def _validate_params(self,  params):
         pass
 

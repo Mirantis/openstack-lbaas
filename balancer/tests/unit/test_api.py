@@ -202,6 +202,15 @@ class TestDeviceController(unittest.TestCase):
         self.assertTrue(mock_device_create.called)
         self.assertEqual({'devices': 'foo'}, resp)
 
+    @mock.patch('balancer.core.api.device_delete', autospec=True)
+    def test_delete(self, mock_device_delete):
+        resp = self.controller.delete(self.req, id='123')
+        self.assertTrue(mock_device_delete.called)
+        self.assertTrue(hasattr(self.controller.delete, "wsgi_code"),
+                                "has not redifined HTTP status code")
+        self.assertTrue(self.controller.delete.wsgi_code == 202,
+        "incorrect HTTP status code")
+
     @unittest.skip('need to implement Controller.device_info')
     @mock.patch('balancer.core.api.device_info', autospec=True)
     def test_info(self, mock_device_info):
