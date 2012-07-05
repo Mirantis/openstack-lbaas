@@ -302,7 +302,7 @@ def lb_show_probes(conf, lb_id):
 
 def lb_add_probe(conf, lb_id, lb_probe):
     logger.debug("Got new probe description %s" % lb_probe)
-    if lb_probe['type'] == None:
+    if lb_probe['type'] is None:
         return
 
     balancer_instance = vserver.Balancer(conf)
@@ -318,8 +318,11 @@ def lb_add_probe(conf, lb_id, lb_probe):
     balancer_instance.sf._probes.append(prb)
     balancer_instance.savetoDB()
 
-    device_driver = drivers.get_device_driver(
+    prb = balancer_instance.probes[-1]
+
+    device_driver = drivers.get_device_driver(conf,
                         balancer_instance.lb['device_id'])
+
     with device_driver.request_context() as ctx:
         commands.add_probe_to_loadbalancer(ctx, balancer_instance, prb)
     return prb['id']
