@@ -201,10 +201,6 @@ class TestDeviceController(unittest.TestCase):
         resp = self.controller.create(self.req, body={})
         self.assertTrue(mock_device_create.called)
         self.assertEqual({'devices': 'foo'}, resp)
-        self.assertTrue(hasattr(self.controller.create, "wsgi_code"),
-            "has not redifined HTTP status code")
-        self.assertTrue(self.controller.create.wsgi_code == 202,
-        "incorrect HTTP status code")
 
     @unittest.skip('need to implement Controller.device_info')
     @mock.patch('balancer.core.api.device_info', autospec=True)
