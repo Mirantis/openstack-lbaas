@@ -145,8 +145,8 @@ class TestRserver(unittest.TestCase):
 
     @mock.patch("balancer.db.api.server_update")
     def test_create_rserver_2(self, mock_func):
-        """ parent_id is not None, no exception """
-        self.rs['parent_id'] = 0
+        """ parent_id is not None or 0, no exception """
+        self.rs['parent_id'] = 1
         cmd.create_rserver(self.ctx, self.rs)
         self.assertFalse(self.ctx.device.create_real_server.called)
         self.assertFalse(mock_func.called)
