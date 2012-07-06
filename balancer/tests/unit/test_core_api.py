@@ -140,6 +140,13 @@ class TestBalancer(unittest.TestCase):
         self.assertTrue(mock_api.called)
 
     @patch_balancer
+    @mock.patch("balancer.db.api.unpack_extra")
+    def test_lb_show_node(self, mock_api, mock_bal):
+        mock_bal.return_value.rs = self.dict_list
+        api.lb_show_node(self.conf, 1, 1)
+        self.assertTrue(mock_api.called)
+
+    @patch_balancer
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.remove_node_from_loadbalancer")
     @mock.patch("balancer.db.api.server_get")
