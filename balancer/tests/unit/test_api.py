@@ -190,6 +190,13 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertTrue(mock_lb_delete_sticky.called)
 #        self.assertEqual(resp.status_int, 202)
 
+    @mock.patch('balancer.core.api.lb_show_vips', autospec=True)
+    def test_show_vips(self, mock_lb_show_vips):
+        mock_lb_show_vips.return_value = 'foo'
+        resp = self.controller.showVIPs(self.req, id='1')
+        self.assertTrue(mock_lb_show_vips.called)
+        self.assertEqual(resp, 'foo')
+
 
 class TestDeviceController(unittest.TestCase):
     def setUp(self):

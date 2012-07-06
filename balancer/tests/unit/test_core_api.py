@@ -315,6 +315,13 @@ class TestBalancer(unittest.TestCase):
         for mok in mocks:
             self.assertTrue(mok.called)
 
+    @patch_balancer
+    @mock.patch("balancer.db.api.unpack_extra")
+    def test_lb_show_vips(self, mock_api, mock_bal):
+        mock_bal.return_value.vips = self.dict_list
+        api.lb_show_vips(self.conf, 1)
+        self.assertTrue(mock_api.called)
+
 
 class TestDevice(unittest.TestCase):
     def setUp(self):
