@@ -3,6 +3,7 @@ import mock
 import tempfile
 import datetime
 import os
+import shutil
 
 from balancer.db import api as db_api
 from balancer.db import session
@@ -146,13 +147,23 @@ class TestExtra(unittest.TestCase):
 
 
 class TestDBAPI(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        _, cls.golden_filename = tempfile.mkstemp()
+        conf = mock.Mock()
+        conf.sql.connection = "sqlite:///%s" % (cls.golden_filename,)
+        session.sync(conf)
+
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(cls.golden_filename)
+
     def setUp(self):
         self.maxDiff = None
-        _, filename = tempfile.mkstemp()
-        self.filename = filename
+        _, self.filename = tempfile.mkstemp()
         self.conf = mock.Mock()
         self.conf.sql.connection = "sqlite:///%s" % self.filename
-        session.sync(self.conf)
+        shutil.copyfile(self.golden_filename, self.filename)
 
     def tearDown(self):
         os.remove(self.filename)
