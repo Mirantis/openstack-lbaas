@@ -288,10 +288,15 @@ def lb_update_node(conf, lb_id, lb_node_id, lb_node):
     db_api.server_destroy(conf, lb_node_id)
     new_rs = db_api.server_create(conf, new_rs_dict)
 
-    device_driver = drivers.get_device_driver(
+    device_driver = drivers.get_device_driver(conf,
                         balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.remove_node_from_loadbalancer(ctx, balancer_instance, rs)
+
+        balancer_instance.rs.append(new_rs)
+        balancer_instance.sf._rservers.append(rs)
+        balancer_instance.savetoDB()
+
         commands.add_node_to_loadbalancer(ctx, balancer_instance, new_rs)
     return "Node with id %s now has params %s" %\
            (lb_node_id, new_rs_dict)

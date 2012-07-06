@@ -125,7 +125,7 @@ class Controller(object):
     def updateNode(self, req, **args):
         logger.debug("Got updateNode request. Request: %s", req)
         msg = core_api.lb_update_node(self.conf, args['id'],
-                                      args['nodeID'], args['body']['node'])
+                                      args['nodeID'], args['body'])
         return msg
 
     def showMonitoring(self, req, **args):
