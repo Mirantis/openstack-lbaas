@@ -284,7 +284,7 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.add_sticky_to_loadbalancer")
     def test_lb_add_sticky1(self, *mocks):
-        sticky = {'type': None}
+        sticky = {'persistenceType': None}
         api.lb_add_sticky(self.conf, self.lb_id, sticky)
         for mok in mocks:
             self.assertFalse(mok.called)

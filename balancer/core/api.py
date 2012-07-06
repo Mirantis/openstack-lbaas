@@ -363,7 +363,7 @@ def lb_show_sticky(conf, lb_id):
 
 def lb_add_sticky(conf, lb_id, sticky):
     logger.debug("Got new sticky description %s" % sticky)
-    if sticky['persistenceType'] == None:
+    if sticky['persistenceType'] is None:
         return
 
     balancer_instance = vserver.Balancer(conf)
