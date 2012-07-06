@@ -164,6 +164,11 @@ class Controller(object):
                                                          args['stickyID'])
         return "Deleted sticky with id %s" % sticky_id
 
+    def showVIPs(self, req, **args):
+        logger.debug("Got showVIPs request. Request: %s", req)
+        msg = core_api.lb_show_vips(self.conf, args['id'])
+        return msg
+
 
 def create_resource(conf):
     """Loadbalancers resource factory method"""

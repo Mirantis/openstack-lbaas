@@ -424,6 +424,20 @@ def lb_delete_sticky(conf, lb_id, sticky_id):
     return sticky_id
 
 
+def lb_show_vips(conf, lb_id):
+    balancer_instance = vserver.Balancer(conf)
+    balancer_instance.loadFromDB(lb_id)
+
+    vips = {'vips': []}
+    for vip in balancer_instance.vips:
+        vip_dict = db_api.unpack_extra(vip)
+        vips['vips'].append(vip_dict)
+
+    if vips['vips']:
+        return vips
+    return "No virtual IPs found for the loadbalancer with id %s" % lb_id
+
+
 def device_get_index(conf):
     devices = db_api.device_get_all(conf)
     devices = [db_api.unpack_extra(dev) for dev in devices]
