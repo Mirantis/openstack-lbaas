@@ -363,7 +363,7 @@ def lb_show_sticky(conf, lb_id):
 
 def lb_add_sticky(conf, lb_id, sticky):
     logger.debug("Got new sticky description %s" % sticky)
-    if sticky['type'] == None:
+    if sticky['persistenceType'] is None:
         return
 
     balancer_instance = vserver.Balancer(conf)
@@ -378,7 +378,9 @@ def lb_add_sticky(conf, lb_id, sticky):
     balancer_instance.sf._sticky.append(st)
     balancer_instance.savetoDB()
 
-    device_driver = drivers.get_device_driver(
+    st = balancer_instance.sf._sticky[-1]
+
+    device_driver = drivers.get_device_driver(conf,
                         balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.add_sticky_to_loadbalancer(ctx, balancer_instance, st)
