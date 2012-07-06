@@ -95,6 +95,13 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertTrue(mock_lb_show_nodes.called)
         self.assertEqual(resp, 'foo')
 
+    @mock.patch('balancer.core.api.lb_show_node', autospec=True)
+    def test_show_node(self, mock_lb_show_node):
+        mock_lb_show_node.return_value = 'foo'
+        resp = self.controller.showNode(self.req, id='123', nodeID='123')
+        self.assertTrue(mock_lb_show_node.called)
+        self.assertEqual(resp, 'foo')
+
     @mock.patch('balancer.core.api.lb_delete_node', autospec=True)
     def test_delete_node(self, mock_lb_delete_node):
         resp = self.controller.deleteNode(self.req, id='123', nodeID='321')

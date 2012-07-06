@@ -224,6 +224,18 @@ def lb_show_nodes(conf, lb_id):
     return nodes
 
 
+def lb_show_node(conf, lb_id, lb_node_id):
+    balancer_instance = vserver.Balancer(conf)
+    balancer_instance.loadFromDB(lb_id)
+    for rs in balancer_instance.rs:
+        rs_dict = db_api.unpack_extra(rs)
+        if rs['id'] == lb_node_id:
+            return rs_dict
+
+    return "There is no node with id %s for the loadbalancer with id %s" %\
+                                                    (lb_node_id, lb_id)
+
+
 def lb_delete_node(conf, lb_id, lb_node_id):
     balancer_instance = vserver.Balancer(conf)
     #Step 1: Load balancer from DB
