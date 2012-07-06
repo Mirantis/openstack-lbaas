@@ -172,12 +172,15 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertTrue(mock_lb_add_sticky.called)
         self.assertEqual(resp, 'sticky: 1')
 
-    @unittest.skip('incorrect response check')
+    #@unittest.skip('incorrect response check')
     @mock.patch('balancer.core.api.lb_delete_sticky', autospec=True)
     def test_delete_sticky(self, mock_lb_delete_sticky):
         resp = self.controller.deleteSticky(self.req, id='1', stickyID='1')
         self.assertTrue(mock_lb_delete_sticky.called)
-#        self.assertEqual(resp.status_int, 202)
+        self.assertTrue(hasattr(self.controller.delete, "wsgi_code"),
+            "has not redifined HTTP status code")
+        self.assertTrue(self.controller.deleteSticky.wsgi_code == 204,
+            "incorrect HTTP status code")
 
     @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.db.api.virtualserver_get_all_by_lb_id',

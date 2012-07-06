@@ -146,6 +146,7 @@ class Controller(object):
                                        args['body'])
         return "sticky: %s" % st_id
 
+    @utils.http_success_code(204)
     def deleteSticky(self, req, **args):
         logger.debug("Got deleteSticky request. Request: %s", req)
         sticky_id = core_api.lb_delete_sticky(self.conf, args['id'],
