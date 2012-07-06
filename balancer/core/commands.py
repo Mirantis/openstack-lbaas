@@ -103,7 +103,7 @@ def create_rserver(ctx, rs):
         # RS which already deployed and has this IP
         LOG.debug("Creating rserver command execution with rserver: %s", rs)
         LOG.debug("RServer parent_id: %s", rs['parent_id'])
-        if rs['parent_id'] == "":
+        if not rs['parent_id']:
             ctx.device.create_real_server(rs)
             rs['deployed'] = 'True'
             db_api.server_update(ctx.conf, rs['id'], rs)

@@ -91,10 +91,11 @@ class Controller(object):
         return {'loadbalancers': "OK"}
 
     @utils.http_success_code(202)
-    def addNode(self, req, **args):
+    def addNodes(self, req, **args):
         logger.debug("Got addNode request. Request: %s", req)
-        return core_api.lb_add_node(self.conf, args['id'],
-                args['body']['node'])
+
+        return core_api.lb_add_nodes(self.conf, args['id'],
+                args['body']['nodes'])
 
     def showNodes(self, req, **args):
         logger.debug("Got showNodes request. Request: %s", req)

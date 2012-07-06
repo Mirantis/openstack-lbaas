@@ -76,16 +76,16 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertTrue(self.controller.update.wsgi_code == 202,
             "incorrect HTTP status code")
 
-    @mock.patch('balancer.core.api.lb_add_node', autospec=True)
-    def test_add_node(self, mock_lb_add_node):
-        mock_lb_add_node.return_value = 'foo'
-        resp = self.controller.addNode(self.req, id='123',
-                                                 body={'node': 'foo'})
-        self.assertTrue(mock_lb_add_node.called)
+    @mock.patch('balancer.core.api.lb_add_nodes', autospec=True)
+    def test_add_nodes(self, mock_lb_add_nodes):
+        mock_lb_add_nodes.return_value = 'foo'
+        resp = self.controller.addNodes(self.req, id='123',
+                                                 body={'nodes': 'foo'})
+        self.assertTrue(mock_lb_add_nodes.called)
         self.assertEqual(resp, 'foo')
-        self.assertTrue(hasattr(self.controller.addNode, "wsgi_code"),
+        self.assertTrue(hasattr(self.controller.addNodes, "wsgi_code"),
                                 "has not redifined HTTP status code")
-        self.assertTrue(self.controller.addNode.wsgi_code == 202,
+        self.assertTrue(self.controller.addNodes.wsgi_code == 202,
                                     "incorrect HTTP status code")
 
     @mock.patch('balancer.core.api.lb_show_nodes', autospec=True)

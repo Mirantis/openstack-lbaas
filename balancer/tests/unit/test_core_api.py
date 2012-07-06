@@ -47,6 +47,7 @@ class TestBalancer(unittest.TestCase):
         self.tenant_id = 1
         self.lb_id = 1
         self.lb_node = self.dictionary
+        self.lb_nodes = self.dict_list
         self.lb_node_id = 1
         self.lb_body_0 = {'bubble': "bubble"}
         self.lb_body = {'algorithm': "bubble"}
@@ -130,10 +131,12 @@ class TestBalancer(unittest.TestCase):
     @patch_balancer
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.add_node_to_loadbalancer")
-    def test_lb_add_node(self, mock_command, mock_driver, mock_bal):
-        api.lb_add_node(self.conf, self.lb_id, self.lb_node)
+    def test_lb_add_nodes(self, mock_command, mock_driver, mock_bal):
+        api.lb_add_nodes(self.conf, self.lb_id, self.lb_nodes)
         self.assertTrue(mock_command.called)
+        self.assertTrue(mock_command.call_count == 2)
         self.assertTrue(mock_driver.called)
+        self.assertTrue(mock_driver.call_count == 2)
 
     @patch_balancer
     @mock.patch("balancer.db.api.unpack_extra")
