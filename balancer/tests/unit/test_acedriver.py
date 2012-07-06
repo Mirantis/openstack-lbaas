@@ -52,7 +52,7 @@ rs_redirect['extra'] = {'description': 'Created by test. RS type Redirect', \
                         'minCon': '2000000', 'maxCon': '3000000', \
                         'weight': '1', 'rateBandwidth': '100000', \
                         'rateConnection': '999', 'redirectionCode': '301', \
-                        'webHostRedir': 'www.cisco.com'}
+                        'webHostRedir': 'www.cisco.com', 'port': '100500'}
 
 rs_test3 = {'type': 'host', 'name': 'LB_test_rs03', \
             'address': '10.4.15.231', 'state': 'outofservice'}
@@ -364,22 +364,21 @@ sticky_sipHeader['extra'] = {'serverFarm': 'LB_test_sfarm01', \
                              'timeoutActiveConn': 'True'}
 
 vip_loadbalance = {'name': 'LB_test_VIP1', 'ipVersion': 'IPv4', \
-                   'address': '10.250.250.250', 'mask': '255.255.255.0', \
-                   'proto': 'TCP', 'appProto': 'HTTP', 'port': '20', \
-                   'VLAN': "2"}
+                   'address': '10.250.250.250', 'mask': '255.255.255.0'}
+vip_loadbalance['extra'] = {'proto': 'TCP', 'appProto': 'HTTP', \
+                            'port': '20', 'VLAN': "2"}
 
 vip_sticky = {'name': 'LB_test_VIP2', 'ipVersion': 'IPv4', \
-              'address': '10.250.250.251', 'mask': '255.255.255.0', \
-              'proto': 'TCP', 'appProto': 'HTTPS', 'port': '5077', \
-              'VLAN': '2'}
+              'address': '10.250.250.251', 'mask': '255.255.255.0'}
+vip_sticky['extra'] = {'proto': 'TCP', 'appProto': 'HTTPS', \
+                       'port': '5077', 'VLAN': '2'}
 
-vip_test3 = {'name': 'test3', 'ipVersion': 'IPv4', \
-             'address': '10.250.250.253', 'mask': '255.255.255.0', \
-             'proto': 'TCP', 'appProto': 'RTSP', 'port': '507', \
-             'allVLANs': 'True'}
+vip_test = {'name': 'test3', 'ipVersion': 'IPv4', \
+             'address': '10.250.250.253', 'mask': '255.255.255.0'}
+vip_test['extra'] = {'proto': 'TCP', 'appProto': 'RTSP', \
+             'port': '507', 'VLAN': '56'}
 
 
-@unittest.skip("fails enitrely")
 class Ace_DriverTestCase(unittest.TestCase):
     def test_01a_createRServer_typeHost(self):
         print driver.create_real_server(rs_host)
@@ -547,7 +546,7 @@ class Ace_DriverTestCase(unittest.TestCase):
         driver.delete_stickiness(sticky_sipHeader)
 
     def test_12_deleteProbeFromSF(self):
-        driver.delete_probe_from__server_farm(sf_host, probe_http)
+        driver.delete_probe_from_server_farm(sf_host, probe_http)
 
     def test_13_deleteRServerFromSF(self):
         driver.delete_real_server_from_server_farm(sf_host, rs_host)
