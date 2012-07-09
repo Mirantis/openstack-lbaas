@@ -408,7 +408,7 @@ def lb_delete_sticky(conf, lb_id, sticky_id):
     db_api.sticky_destroy(conf, sticky_id)
 
     #Step 5: Delete real server from device
-    device_driver = drivers.get_device_driver(
+    device_driver = drivers.get_device_driver(conf,
                         balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.remove_sticky_from_loadbalancer(ctx, balancer_instance, st)
