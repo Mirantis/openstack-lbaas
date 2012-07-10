@@ -255,28 +255,25 @@ def sticky_destroy_by_sf_id(conf, sf_id, session=None):
 # Server
 
 
-def server_get(conf, server_id, session=None):
+def server_get(conf, server_id, lb_id=None, session=None):
+    import logging
+    logging.debug("lb_id %s" % lb_id)
+    logging.debug("serv_id %s" % server_id)
     session = session or get_session(conf)
-    server_ref = session.query(models.Server).filter_by(id=server_id).first()
+    if lb_id:
+        server_ref = session.query(models.Server).\
+                        distinct().\
+                        filter_by(id=server_id).\
+                        filter(models.ServerFarm.lb_id == lb_id).\
+                        filter(models.Server.sf_id == models.ServerFarm.id).\
+                        first()
+    else:
+        server_ref = session.query(models.Server).\
+                        filter_by(id=server_id).\
+                        first()
     if not server_ref:
         raise exception.ServerNotFound(server_id=server_id)
     return server_ref
-
-
-def server_get_by_lb(conf, lb_rs, server_id, session=None):
-    session = session or get_session(conf)
-    server_ref = session.query(models.Server).filter_by(id=server_id).first()
-
-    if not server_ref:
-        raise exception.ServerNotFound(server_id=server_id)
-
-    dict = unpack_extra(server_ref)
-
-    for rs in lb_rs:
-        rs_dict = unpack_extra(rs)
-        if rs_dict == dict:
-            return server_ref
-    raise exception.ServerNotFound(server_id=server_id)
 
 
 def server_get_all(conf):

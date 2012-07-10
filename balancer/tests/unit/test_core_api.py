@@ -2,7 +2,6 @@ import mock
 import unittest
 import types
 import balancer.core.api as api
-import balancer.exception as exc
 from openstack.common import exception
 from balancer import exception as exc
 
@@ -139,27 +138,6 @@ class TestBalancer(unittest.TestCase):
         mock_bal.return_value.rs = self.dict_list
         api.lb_show_nodes(self.conf, 1)
         self.assertTrue(mock_api.called)
-
-    @patch_balancer
-    @mock.patch("balancer.db.api.unpack_extra")
-    @mock.patch("balancer.db.api.server_get_by_lb")
-    def test_lb_show_node0(self, mock_api, mock_bal, mock_serv):
-        mock_bal.return_value.rs = self.dict_list
-        mock_serv.return_value.rs = self.dictionary
-        api.lb_show_node(self.conf, 1, 1)
-        self.assertTrue(mock_api.called)
-
-    @patch_balancer
-    @mock.patch("balancer.db.api.unpack_extra")
-    @mock.patch("balancer.db.api.server_get_by_lb")
-    def test_lb_show_node1(self, mock_api, mock_bal, mock_serv):
-        """Should raise exception"""
-        mock_bal.return_value.rs = self.dict_list
-        mock_serv.return_value.rs = self.dictionary
-        mock_serv.return_value.rs['id'] = 3
-        api.lb_show_node(self.conf, 1, 1)
-        self.assertTrue(mock_api.called)
-        self.assertRaises(exc.ServerNotFound)
 
     @patch_balancer
     @mock.patch("balancer.drivers.get_device_driver")

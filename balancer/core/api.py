@@ -224,13 +224,6 @@ def lb_show_nodes(conf, lb_id):
     return nodes
 
 
-def lb_show_node(conf, lb_id, lb_node_id):
-    balancer_instance = vserver.Balancer(conf)
-    balancer_instance.loadFromDB(lb_id)
-    return {'node': db_api.unpack_extra(db_api.\
-                    server_get_by_lb(conf, balancer_instance.rs, lb_node_id))}
-
-
 def lb_delete_node(conf, lb_id, lb_node_id):
     balancer_instance = vserver.Balancer(conf)
     #Step 1: Load balancer from DB
