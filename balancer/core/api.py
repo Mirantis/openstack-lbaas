@@ -375,7 +375,6 @@ def lb_add_sticky(conf, lb_id, sticky):
 
     st = db_api.sticky_pack_extra(sticky)
     st['sf_id'] = balancer_instance.sf['id']
-    st['name'] = st['id']
 
     balancer_instance.sf._sticky.append(st)
     balancer_instance.savetoDB()
