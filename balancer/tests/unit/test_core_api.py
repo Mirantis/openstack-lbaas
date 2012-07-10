@@ -340,3 +340,4 @@ class TestDevice(unittest.TestCase):
         params = {'query_params': 2}
         res = 1
         res = api.device_info(params)
+        self.assertEquals(res, None, "Alyarma!")
