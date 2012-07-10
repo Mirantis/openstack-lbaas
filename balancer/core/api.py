@@ -197,7 +197,6 @@ def lb_add_nodes(conf, lb_id, lb_nodes):
 
         rs = db_api.server_pack_extra(lb_node)
         rs['sf_id'] = balancer_instance.sf['id']
-        rs['name'] = rs['id']
 
         balancer_instance.rs.append(rs)
         balancer_instance.sf._rservers.append(rs)
