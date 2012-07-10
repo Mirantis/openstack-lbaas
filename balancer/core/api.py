@@ -20,6 +20,7 @@ import functools
 import eventlet
 
 from openstack.common import exception
+import balancer.exception as exc
 
 from balancer.core import commands
 from balancer.core import lb_status
@@ -427,15 +428,16 @@ def lb_delete_sticky(conf, lb_id, sticky_id):
 def lb_show_vips(conf, lb_id):
     balancer_instance = vserver.Balancer(conf)
     balancer_instance.loadFromDB(lb_id)
+    vips = db_api.virtualserver_get_all_by_sf_id(conf,
+                                                balancer_instance.sf['id'])
+    vip_dict = {"vips": []}
 
-    vips = {'vips': []}
-    for vip in balancer_instance.vips:
-        vip_dict = db_api.unpack_extra(vip)
-        vips['vips'].append(vip_dict)
-
-    if vips['vips']:
-        return vips
-    return "No virtual IPs found for the loadbalancer with id %s" % lb_id
+    if vips:
+        for vip in vips:
+            vip_dict["vips"].append(db_api.unpack_extra(vip))
+        return vip_dict
+    raise exc.VirtualServerNotFound(\
+        "No virtual servers found for loadbalancer with id %s" % lb_id)
 
 
 def device_get_index(conf):
