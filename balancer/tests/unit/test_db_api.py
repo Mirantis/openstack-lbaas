@@ -483,6 +483,16 @@ class TestDBAPI(unittest.TestCase):
         self.assertEqual(dict(server_ref1.iteritems()),
                          dict(server_ref2.iteritems()))
 
+    def test_server_get_by_lb(self):
+        values = get_fake_server('1', 1)
+        server_ref = db_api.server_create(self.conf, values)
+        lb_rs = [db_api.server_create(self.conf, values),
+                 db_api.server_create(self.conf, values)]
+        lb_rs.append(server_ref)
+        self.assertEqual(dict(server_ref.iteritems()),
+                         dict(db_api.server_get_by_lb(self.conf, lb_rs,
+                                                      server_ref['id'])))
+
     def test_server_destroy_by_sf_id(self):
         values = get_fake_server('1', 1)
         server_ref1 = db_api.server_create(self.conf, values)

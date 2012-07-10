@@ -225,8 +225,10 @@ def lb_show_nodes(conf, lb_id):
 
 
 def lb_show_node(conf, lb_id, lb_node_id):
-    rs = db_api.server_get(conf, lb_node_id)
-    return {"node": db_api.unpack_extra(rs)}
+    balancer_instance = vserver.Balancer(conf)
+    balancer_instance.loadFromDB(lb_id)
+    return {'node': db_api.unpack_extra(db_api.\
+                    server_get_by_lb(conf, balancer_instance.rs, lb_node_id))}
 
 
 def lb_delete_node(conf, lb_id, lb_node_id):

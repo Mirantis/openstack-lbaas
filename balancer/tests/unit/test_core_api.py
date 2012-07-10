@@ -141,8 +141,10 @@ class TestBalancer(unittest.TestCase):
 
     @patch_balancer
     @mock.patch("balancer.db.api.unpack_extra")
-    def test_lb_show_node(self, mock_api, mock_bal):
+    @mock.patch("balancer.db.api.server_get_by_lb")
+    def test_lb_show_node(self, mock_api, mock_bal, mock_serv):
         mock_bal.return_value.rs = self.dict_list
+        mock_serv.return_value.rs = self.dictionary
         api.lb_show_node(self.conf, 1, 1)
         self.assertTrue(mock_api.called)
 
@@ -347,4 +349,3 @@ class TestDevice(unittest.TestCase):
         params = {'query_params': 2}
         res = 1
         res = api.device_info(params)
-        self.assertEquals(res, None, "Alyarma!")

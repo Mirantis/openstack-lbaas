@@ -19,8 +19,10 @@
 #    under the License.
 """Balancer base exception handling."""
 
+import webob.exc as exception
 
-class NotFound(Exception):
+
+class NotFound(exception.HTTPNotFound):
     message = 'Resource not found.'
 
     def __init__(self, message=None, **kwargs):

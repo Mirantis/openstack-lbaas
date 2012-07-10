@@ -263,6 +263,22 @@ def server_get(conf, server_id, session=None):
     return server_ref
 
 
+def server_get_by_lb(conf, lb_rs, server_id, session=None):
+    session = session or get_session(conf)
+    server_ref = session.query(models.Server).filter_by(id=server_id).first()
+
+    if not server_ref:
+        raise exception.ServerNotFound(server_id=server_id)
+
+    dict = unpack_extra(server_ref)
+
+    for rs in lb_rs:
+        rs_dict = unpack_extra(rs)
+        if rs_dict == dict:
+            return server_ref
+    raise exception.ServerNotFound(server_id=server_id)
+
+
 def server_get_all(conf):
     session = get_session(conf)
     query = session.query(models.Server)
