@@ -311,7 +311,6 @@ def lb_add_probe(conf, lb_id, lb_probe):
 
     prb = db_api.probe_pack_extra(lb_probe)
     prb['sf_id'] = balancer_instance.sf['id']
-    prb['name'] = prb['id']
 
     balancer_instance.probes.append(prb)
     balancer_instance.sf._probes.append(prb)
