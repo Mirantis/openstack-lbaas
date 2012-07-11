@@ -365,7 +365,7 @@ def lb_show_sticky(conf, lb_id):
     try:
         sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
     except IndexError:
-        return("List is empty")
+        return  exc.ServerFarmNotFound
     stickies = db_api.sticky_get_all_by_sf_id(conf, sf_ref['id'])
 
     list = []
