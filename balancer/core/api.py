@@ -270,9 +270,6 @@ def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
 
 
 def lb_update_node(conf, lb_id, lb_node_id, lb_node):
-    balancer_instance = vserver.Balancer(conf)
-    balancer_instance.loadFromDB(lb_id)
-
     lb_node_dict = db_api.server_pack_extra(lb_node)
     rs = db_api.server_get(conf, lb_node_id)
 
@@ -286,15 +283,15 @@ def lb_update_node(conf, lb_id, lb_node_id, lb_node):
 
     db_api.server_destroy(conf, lb_node_id)
     new_rs_ref = db_api.server_create(conf, new_rs_dict)
-    balancer_instance.rs.append(new_rs_ref)
     new_rs = db_api.server_update(conf, new_rs_ref['id'], new_rs_ref)
-    balancer_instance.sf._rservers.append(new_rs)
 
     device_driver = drivers.get_device_driver(conf,
-                        balancer_instance.lb['device_id'])
+                                    db_api.device_get_by_lb_id(conf, lb_id).id)
+    sf = db_api.serverfarm_get(conf, rs['sf_id'])
+
     with device_driver.request_context() as ctx:
-        commands.remove_node_from_loadbalancer(ctx, balancer_instance, rs)
-        commands.add_node_to_loadbalancer(ctx, balancer_instance, new_rs)
+        commands.delete_rserver_from_server_farm(ctx, sf, rs)
+        commands.add_rserver_to_server_farm(ctx, sf, new_rs)
     return "Node with id %s now has params %s" %\
            (lb_node_id, new_rs_dict)
 

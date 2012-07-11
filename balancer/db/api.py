@@ -65,6 +65,12 @@ def device_get(conf, device_id, session=None):
     return device_ref
 
 
+def device_get_by_lb_id(conf, lb_id):
+    session = get_session(conf)
+    return session.query(models.Device).\
+                   filter(models.LoadBalancer.id == lb_id).first()
+
+
 def device_get_all(conf):
     session = get_session(conf)
     query = session.query(models.Device)

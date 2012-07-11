@@ -193,12 +193,14 @@ class TestBalancer(unittest.TestCase):
     @patch_balancer
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.db.api.server_create")
+    @mock.patch("balancer.db.api.server_update")
     @mock.patch("balancer.db.api.server_get")
     @mock.patch("balancer.db.api.server_destroy")
-    @mock.patch("balancer.core.commands.remove_node_from_loadbalancer")
-    @mock.patch("balancer.core.commands.add_node_to_loadbalancer")
-    def test_lb_update_node_0(self, mock_com0, mock_com1,
-            mock_api0, mock_api1, mock_api2, mock_driver, mock_bal):
+    @mock.patch("balancer.db.api.device_get_by_lb_id")
+    @mock.patch("balancer.db.api.serverfarm_get")
+    @mock.patch("balancer.core.commands.delete_rserver_from_server_farm")
+    @mock.patch("balancer.core.commands.add_rserver_to_server_farm")
+    def test_lb_update_node_0(self, mock_com0, mock_com1, *mocks):
         """"""
         api.lb_update_node(self.conf, self.lb_id, self.lb_node_id,
                 self.lb_node)
@@ -208,14 +210,16 @@ class TestBalancer(unittest.TestCase):
     @patch_balancer
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.db.api.server_create")
+    @mock.patch("balancer.db.api.server_update")
     @mock.patch("balancer.db.api.server_get")
+    @mock.patch("balancer.db.api.device_get_by_lb_id")
+    @mock.patch("balancer.db.api.serverfarm_get")
     @mock.patch("balancer.db.api.server_destroy")
-    @mock.patch("balancer.core.commands.remove_node_from_loadbalancer")
-    @mock.patch("balancer.core.commands.add_node_to_loadbalancer")
-    def test_lb_update_node_1(self, mock_com0, mock_com1,
-            mock_api0, mock_api1, mock_api2, mock_driver, mock_bal):
+    @mock.patch("balancer.core.commands.delete_rserver_from_server_farm")
+    @mock.patch("balancer.core.commands.add_rserver_to_server_farm")
+    def test_lb_update_node_1(self, mock_com0, mock_com1, mock_api0, *mocks):
         """"""
-        mock_api1.return_value = self.dictionary
+        mock_api0.return_value = self.dictionary
         api.lb_update_node(self.conf, self.lb_id, 1,
                 self.lb_node)
         self.assertTrue(mock_com0.called)
