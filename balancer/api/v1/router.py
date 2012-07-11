@@ -107,7 +107,7 @@ class API(wsgi.Router):
                        controller=lb_resource, action="deleteSticky", \
                        conditions=dict(method=["DELETE"]))
 
-        mapper.connect("/loadbalancers/{id}/virtualips",
+        mapper.connect("/loadbalancers/{lb_id}/virtualips",
                         controller=lb_resource, action="showVIPs",
                         conditions=dict(method=["GET"]))
 

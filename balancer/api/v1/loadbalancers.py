@@ -164,10 +164,10 @@ class Controller(object):
                                                          args['stickyID'])
         return "Deleted sticky with id %s" % sticky_id
 
-    def showVIPs(self, req, **args):
+    def showVIPs(self, req, lb_id):
         logger.debug("Got showVIPs request. Request: %s", req)
-        msg = core_api.lb_show_vips(self.conf, args['id'])
-        return msg
+        vips = db_api.virtualserver_get_all_by_lb_id(self.conf, lb_id)
+        return {"vips": vips}
 
 
 def create_resource(conf):

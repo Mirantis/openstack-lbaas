@@ -315,24 +315,6 @@ class TestBalancer(unittest.TestCase):
         for mok in mocks:
             self.assertTrue(mok.called)
 
-    @patch_balancer
-    @mock.patch("balancer.db.api.unpack_extra")
-    @mock.patch("balancer.db.api.virtualserver_get_all_by_sf_id")
-    def test_lb_show_vips0(self, mock_api, mock_bal, mock_get):
-        mock_bal.return_value.vips = self.dict_list
-        api.lb_show_vips(self.conf, 1)
-        self.assertTrue(mock_api.called)
-
-    @patch_balancer
-    @mock.patch("balancer.db.api.unpack_extra")
-    @mock.patch("balancer.db.api.virtualserver_get_all_by_sf_id")
-    def test_lb_show_vips1(self, mock_api, mock_bal, mock_get):
-        """Should raise exception"""
-        mock_bal.return_value.vips = None
-        api.lb_show_vips(self.conf, 1)
-        self.assertTrue(mock_api.called)
-        self.assertRaises(exc.VirtualServerNotFound)
-
 
 class TestDevice(unittest.TestCase):
     def setUp(self):

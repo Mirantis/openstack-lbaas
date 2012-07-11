@@ -444,6 +444,21 @@ def virtualserver_get_all_by_sf_id(conf, sf_id):
     return query.all()
 
 
+def virtualserver_get_all_by_lb_id(conf, lb_id):
+    session = get_session(conf)
+    vip = session.query(models.VirtualServer).\
+                  filter(models.ServerFarm.lb_id == lb_id).\
+                  filter_by(sf_id=models.ServerFarm.id)
+    vips = vip.all()
+    if not len(vips):
+        raise exception.VirtualServerNotFound(
+            "No virtual servers found for loadbalancer with id %s" % lb_id)
+    list = []
+    for vip in vips:
+        list.append(unpack_extra(vip))
+    return list
+
+
 def virtualserver_create(conf, values):
     session = get_session(conf)
     with session.begin():
