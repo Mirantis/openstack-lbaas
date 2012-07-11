@@ -1,13 +1,6 @@
-#test_lb_update_node_1/ vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 import mock
 import unittest
 import types
-#from balancer.core import commands
-#from balancer.loadbalancers import vserver
-#from balancer.devices.DeviceMap import DeviceMap
-#from balancer.core.scheduller import Scheduller
-#from balancer.storage.storage import Storage
 import balancer.core.api as api
 from openstack.common import exception
 from balancer import exception as exc
@@ -244,8 +237,6 @@ class TestBalancer(unittest.TestCase):
         db_api1.return_value = []
         with self.assertRaises(exc.ServerFarmNotFound):
             api.lb_show_probes(self.conf, self.lb_id)
-#        self.assertEquals(api.lb_show_probes(self.conf, self.lb_id),
-#                exc.ServerFarmNotFound)
 
     @patch_balancer
     @mock.patch("balancer.drivers.get_device_driver")
@@ -292,8 +283,6 @@ class TestBalancer(unittest.TestCase):
         db_api2.return_value = []
         with self.assertRaises(exc.ServerFarmNotFound):
             api.lb_show_sticky(self.conf, self.lb_id)
-#        self.assertEquals(api.lb_show_sticky(self.conf, self.lb_id),
-#                exc.ServerFarmNotFound)
 
     @patch_balancer
     @mock.patch("balancer.db.api.sticky_pack_extra")
