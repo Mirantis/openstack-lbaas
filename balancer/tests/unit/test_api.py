@@ -128,8 +128,8 @@ class TestLoadBalancersController(unittest.TestCase):
 
     @mock.patch('balancer.core.api.lb_update_node', autospec=True)
     def test_update_node(self, mock_lb_update_node):
-        req_kwargs = {'id': '1',
-                      'nodeID': '1',
+        req_kwargs = {'lb_id': '1',
+                      'lb_node_id': '1',
                       'body': {'node': 'node'}}
         resp = self.controller.updateNode(self.req, **req_kwargs)
         self.assertTrue(mock_lb_update_node.called)

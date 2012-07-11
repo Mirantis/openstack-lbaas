@@ -275,8 +275,8 @@ def lb_update_node(conf, lb_id, lb_node_id, lb_node):
     for name in lb_node.keys():
         rs[name] = lb_node[name] or rs[name]
 
-    device_driver = drivers.get_device_driver(conf,
-                                    db_api.device_get_by_lb_id(conf, lb_id).id)
+    lb = db_api.loadbalancer_get(conf, lb_id)
+    device_driver = drivers.get_device_driver(conf, lb['device_id'])
     sf = db_api.serverfarm_get(conf, rs['sf_id'])
 
     with device_driver.request_context() as ctx:

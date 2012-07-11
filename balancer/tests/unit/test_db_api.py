@@ -203,15 +203,6 @@ class TestDBAPI(unittest.TestCase):
         self.assertEqual(dict(device_ref1.iteritems()),
                          dict(device_ref2.iteritems()))
 
-    def test_device_get_by_lb_id(self):
-        device_ref1 = db_api.device_create(self.conf, device_fake1)
-        values = get_fake_lb(device_ref1['id'], 'tenant1')
-        lb_ref = db_api.loadbalancer_create(self.conf, values)
-        lb = dict(lb_ref.iteritems())
-        device_ref2 = db_api.device_get_by_lb_id(self.conf, lb['id'])
-        self.assertEqual(dict(device_ref1.iteritems()),
-                         dict(device_ref2.iteritems()))
-
     def test_device_get_several(self):
         device_ref1 = db_api.device_create(self.conf, device_fake1)
         device_ref2 = db_api.device_create(self.conf, device_fake2)
