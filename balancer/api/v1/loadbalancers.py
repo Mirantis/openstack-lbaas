@@ -121,12 +121,11 @@ class Controller(object):
                                                          args['status'])
         return msg
 
-    @utils.http_success_code(202)
     def updateNode(self, req, **args):
         logger.debug("Got updateNode request. Request: %s", req)
-        msg = core_api.lb_update_node(self.conf, args['id'],
+        node = core_api.lb_update_node(self.conf, args['id'],
                                       args['nodeID'], args['body'])
-        return msg
+        return {'node': node}
 
     def showMonitoring(self, req, **args):
         logger.debug("Got showMonitoring request. Request: %s", req)

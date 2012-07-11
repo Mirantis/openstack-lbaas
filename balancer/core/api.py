@@ -270,20 +270,10 @@ def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
 
 
 def lb_update_node(conf, lb_id, lb_node_id, lb_node):
-    lb_node_dict = db_api.server_pack_extra(lb_node)
     rs = db_api.server_get(conf, lb_node_id)
 
-    new_rs_dict = {'id': rs['id'], 'extra': {}}
-    if rs['extra']:
-        new_rs_dict['extra'].update(rs['extra'])
-    for name in rs.keys():
-        if name not in ('id', 'extra'):
-            new_rs_dict[name] = lb_node_dict[name] if lb_node_dict[name]\
-                                                   else rs[name]
-
-    db_api.server_destroy(conf, lb_node_id)
-    new_rs_ref = db_api.server_create(conf, new_rs_dict)
-    new_rs = db_api.server_update(conf, new_rs_ref['id'], new_rs_ref)
+    for name in lb_node.keys():
+        rs[name] = lb_node[name] or rs[name]
 
     device_driver = drivers.get_device_driver(conf,
                                     db_api.device_get_by_lb_id(conf, lb_id).id)
@@ -291,9 +281,9 @@ def lb_update_node(conf, lb_id, lb_node_id, lb_node):
 
     with device_driver.request_context() as ctx:
         commands.delete_rserver_from_server_farm(ctx, sf, rs)
+        new_rs = db_api.server_update(conf, rs['id'], rs)
         commands.add_rserver_to_server_farm(ctx, sf, new_rs)
-    return "Node with id %s now has params %s" %\
-           (lb_node_id, new_rs_dict)
+    return db_api.unpack_extra(new_rs)
 
 
 def lb_show_probes(conf, lb_id):
