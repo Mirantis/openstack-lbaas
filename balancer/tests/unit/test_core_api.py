@@ -236,15 +236,16 @@ class TestBalancer(unittest.TestCase):
         api.lb_show_probes(self.conf, self.lb_id)
         self.assertTrue(db_api2.called)
 
-    @mock.patch("balancer.exception.ServerFarmNotFound")
     @mock.patch("balancer.db.api.unpack_extra")
     @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
     @mock.patch("balancer.db.api.probe_get_all_by_sf_id")
-    def test_lb_show_probes_1(self, db_api0, db_api1, db_api2, mock_exc):
+    def test_lb_show_probes_1(self, db_api0, db_api1, db_api2):
         db_api0.return_value = self.dict_list
         db_api1.return_value = []
-        self.assertEquals(api.lb_show_probes(self.conf, self.lb_id),
-                exc.ServerFarmNotFound)
+        with self.assertRaises(exc.ServerFarmNotFound):
+            api.lb_show_probes(self.conf, self.lb_id)
+#        self.assertEquals(api.lb_show_probes(self.conf, self.lb_id),
+#                exc.ServerFarmNotFound)
 
     @patch_balancer
     @mock.patch("balancer.drivers.get_device_driver")
@@ -289,8 +290,10 @@ class TestBalancer(unittest.TestCase):
     def test_lb_show_sticky1(self, db_api0, db_api1, db_api2):
         db_api1.return_value = self.dict_list
         db_api2.return_value = []
-        self.assertEquals(api.lb_show_sticky(self.conf, self.lb_id),
-                exc.ServerFarmNotFound)
+        with self.assertRaises(exc.ServerFarmNotFound):
+            api.lb_show_sticky(self.conf, self.lb_id)
+#        self.assertEquals(api.lb_show_sticky(self.conf, self.lb_id),
+#                exc.ServerFarmNotFound)
 
     @patch_balancer
     @mock.patch("balancer.db.api.sticky_pack_extra")
