@@ -18,7 +18,6 @@
 import logging
 import functools
 import eventlet
-import exception as exc
 
 from openstack.common import exception
 
@@ -28,6 +27,7 @@ from balancer.core import scheduller
 from balancer import drivers
 from balancer.loadbalancers import vserver
 from balancer.db import api as db_api
+from balancer import exception as exc
 
 
 logger = logging.getLogger(__name__)
