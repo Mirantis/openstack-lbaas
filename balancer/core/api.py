@@ -27,6 +27,7 @@ from balancer.core import scheduller
 from balancer import drivers
 from balancer.loadbalancers import vserver
 from balancer.db import api as db_api
+from balancer import exception as exc
 
 
 logger = logging.getLogger(__name__)
@@ -147,7 +148,7 @@ def update_lb(conf, lb_id, lb_body):
     balancer_instance.update()
 
     #Step 5. Deploy new config to device
-    device_driver = drivers.get_device_driver(lb['device_id'])
+    device_driver = drivers.get_device_driver(conf, lb['device_id'])
     try:
         with device_driver.request_context() as ctx:
             commands.update_loadbalancer(ctx, old_balancer_instance,
@@ -296,7 +297,11 @@ def lb_update_node(conf, lb_id, lb_node_id, lb_node):
 
 
 def lb_show_probes(conf, lb_id):
-    sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    try:
+        sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    except IndexError:
+        raise exc.ServerFarmNotFound
+
     probes = db_api.probe_get_all_by_sf_id(conf, sf_ref['id'])
 
     list = []
@@ -357,7 +362,11 @@ def lb_delete_probe(conf, lb_id, probe_id):
 
 
 def lb_show_sticky(conf, lb_id):
-    sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    try:
+        sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    except IndexError:
+        raise  exc.ServerFarmNotFound
+
     stickies = db_api.sticky_get_all_by_sf_id(conf, sf_ref['id'])
 
     list = []
