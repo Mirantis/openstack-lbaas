@@ -191,21 +191,24 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertTrue(mock_lb_delete_sticky.called)
 #        self.assertEqual(resp.status_int, 202)
 
+    @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.db.api.virtualserver_get_all_by_lb_id',
                                                             autospec=True)
-    def test_show_vips0(self, mock_show_vips):
+    def test_show_vips0(self, mock_get, mock_unpack):
         """VIPs should be found"""
-        mock_show_vips.return_value = 'foo'
+        mock_get.return_value = ['foo']
+        mock_unpack.return_value = 'foo1'
         resp = self.controller.showVIPs(self.req, '1')
-        self.assertTrue(mock_show_vips.called)
-        self.assertEqual(resp, {'vips': 'foo'})
+        self.assertTrue(mock_get.called)
+        self.assertTrue(mock_unpack.called)
+        self.assertEqual(resp, {'vips': ['foo1']})
 
     @mock.patch('balancer.db.api.virtualserver_get_all_by_lb_id',
                                                             autospec=True)
-    def test_show_vips1(self, mock_show_vips):
+    def test_show_vips1(self, mock_get):
         """Should raise exception"""
         resp = self.controller.showVIPs(self.req, '1')
-        self.assertTrue(mock_show_vips.called)
+        self.assertTrue(mock_get.called)
         self.assertRaises(exception.VirtualServerNotFound)
 
 

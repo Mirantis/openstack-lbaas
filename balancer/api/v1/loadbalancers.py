@@ -166,7 +166,8 @@ class Controller(object):
 
     def showVIPs(self, req, lb_id):
         logger.debug("Got showVIPs request. Request: %s", req)
-        vips = db_api.virtualserver_get_all_by_lb_id(self.conf, lb_id)
+        vips = map(db_api.unpack_extra,
+                   db_api.virtualserver_get_all_by_lb_id(self.conf, lb_id))
         return {"vips": vips}
 
 
