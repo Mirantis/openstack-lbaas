@@ -276,27 +276,24 @@ def lb_update_node(conf, lb_id, lb_node_id, lb_node):
     lb_node_dict = db_api.server_pack_extra(lb_node)
     rs = db_api.server_get(conf, lb_node_id)
 
-    new_rs_dict = {}
-    new_rs_dict['id'] = rs['id']
-    new_rs_dict['extra'] = {}
+    new_rs_dict = {'id': rs['id'], 'extra': {}}
     if rs['extra']:
         new_rs_dict['extra'].update(rs['extra'])
-    for name in rs:
+    for name in rs.keys():
         if name not in ('id', 'extra'):
-            new_rs_dict[name] = lb_node_dict.get(name, rs[name])
+            new_rs_dict[name] = lb_node_dict[name] if lb_node_dict[name]\
+                                                   else rs[name]
 
     db_api.server_destroy(conf, lb_node_id)
-    new_rs = db_api.server_create(conf, new_rs_dict)
+    new_rs_ref = db_api.server_create(conf, new_rs_dict)
+    balancer_instance.rs.append(new_rs_ref)
+    new_rs = db_api.server_update(conf, new_rs_ref['id'], new_rs_ref)
+    balancer_instance.sf._rservers.append(new_rs)
 
     device_driver = drivers.get_device_driver(conf,
                         balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.remove_node_from_loadbalancer(ctx, balancer_instance, rs)
-
-        balancer_instance.rs.append(new_rs)
-        balancer_instance.sf._rservers.append(rs)
-        balancer_instance.savetoDB()
-
         commands.add_node_to_loadbalancer(ctx, balancer_instance, new_rs)
     return "Node with id %s now has params %s" %\
            (lb_node_id, new_rs_dict)
