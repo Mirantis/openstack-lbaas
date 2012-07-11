@@ -101,6 +101,11 @@ class Controller(object):
         logger.debug("Got showNodes request. Request: %s", req)
         return core_api.lb_show_nodes(self.conf, args['id'])
 
+    def showNode(self, req, lb_id, lb_node_id):
+        logger.debug("Got showNode request. Request: %s", req)
+        return {'node': db_api.unpack_extra(
+            db_api.server_get(self.conf, lb_node_id, lb_id))}
+
     @utils.http_success_code(202)
     def deleteNode(self, req, **args):
         logger.debug("Got deleteNode request. Request: %s", req)

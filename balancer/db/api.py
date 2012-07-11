@@ -255,9 +255,13 @@ def sticky_destroy_by_sf_id(conf, sf_id, session=None):
 # Server
 
 
-def server_get(conf, server_id, session=None):
+def server_get(conf, server_id, lb_id=None, session=None):
     session = session or get_session(conf)
-    server_ref = session.query(models.Server).filter_by(id=server_id).first()
+    query = session.query(models.Server).filter_by(id=server_id)
+    if lb_id:
+        query = query.filter(models.ServerFarm.lb_id == lb_id).\
+                        filter(models.Server.sf_id == models.ServerFarm.id)
+    server_ref = query.first()
     if not server_ref:
         raise exception.ServerNotFound(server_id=server_id)
     return server_ref

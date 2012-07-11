@@ -476,10 +476,22 @@ class TestDBAPI(unittest.TestCase):
         values['id'] = server['id']
         self.assertEqual(server, values)
 
-    def test_server_get(self):
+    def test_server_get0(self):
         values = get_fake_server('1', 1)
         server_ref1 = db_api.server_create(self.conf, values)
         server_ref2 = db_api.server_get(self.conf, server_ref1['id'])
+        self.assertEqual(dict(server_ref1.iteritems()),
+                         dict(server_ref2.iteritems()))
+
+    def test_server_get1(self):
+        lb_values = get_fake_lb('1', 'tenant1')
+        lb = db_api.loadbalancer_create(self.conf, lb_values)
+        sf_values = get_fake_sf(lb['id'])
+        sf = db_api.serverfarm_create(self.conf, sf_values)
+
+        server_values = get_fake_server(sf['id'], 1)
+        server_ref1 = db_api.server_create(self.conf, server_values)
+        server_ref2 = db_api.server_get(self.conf, server_ref1['id'], lb['id'])
         self.assertEqual(dict(server_ref1.iteritems()),
                          dict(server_ref2.iteritems()))
 
