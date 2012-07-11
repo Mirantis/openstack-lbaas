@@ -18,6 +18,7 @@
 import logging
 import functools
 import eventlet
+import exception as exc
 
 from openstack.common import exception
 
@@ -299,7 +300,7 @@ def lb_show_probes(conf, lb_id):
     try:
         sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
     except IndexError:
-        return("List is empty")
+        return exc.ServerFarmNotFound
 
     probes = db_api.probe_get_all_by_sf_id(conf, sf_ref['id'])
 
