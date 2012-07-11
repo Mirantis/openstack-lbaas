@@ -272,15 +272,13 @@ def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
 def lb_update_node(conf, lb_id, lb_node_id, lb_node):
     rs = db_api.server_get(conf, lb_node_id)
 
-    for name in lb_node.keys():
-        rs[name] = lb_node[name] or rs[name]
-
     lb = db_api.loadbalancer_get(conf, lb_id)
     device_driver = drivers.get_device_driver(conf, lb['device_id'])
     sf = db_api.serverfarm_get(conf, rs['sf_id'])
 
     with device_driver.request_context() as ctx:
         commands.delete_rserver_from_server_farm(ctx, sf, rs)
+        rs.update(lb_node)
         new_rs = db_api.server_update(conf, rs['id'], rs)
         commands.add_rserver_to_server_farm(ctx, sf, new_rs)
     return db_api.unpack_extra(new_rs)
