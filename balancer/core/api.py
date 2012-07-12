@@ -20,6 +20,7 @@ import functools
 import eventlet
 
 from openstack.common import exception
+import balancer.exception as exc
 
 from balancer.core import commands
 from balancer.core import lb_status

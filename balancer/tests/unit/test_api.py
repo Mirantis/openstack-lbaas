@@ -1,5 +1,6 @@
 import unittest
 import mock
+import balancer.exception as exception
 
 from balancer.api.v1 import loadbalancers
 from balancer.api.v1 import devices
@@ -189,6 +190,26 @@ class TestLoadBalancersController(unittest.TestCase):
         resp = self.controller.deleteSticky(self.req, id='1', stickyID='1')
         self.assertTrue(mock_lb_delete_sticky.called)
 #        self.assertEqual(resp.status_int, 202)
+
+    @mock.patch('balancer.db.api.unpack_extra', autospec=True)
+    @mock.patch('balancer.db.api.virtualserver_get_all_by_lb_id',
+                                                            autospec=True)
+    def test_show_vips0(self, mock_get, mock_unpack):
+        """VIPs should be found"""
+        mock_get.return_value = ['foo']
+        mock_unpack.return_value = 'foo1'
+        resp = self.controller.showVIPs(self.req, '1')
+        self.assertTrue(mock_get.called)
+        self.assertTrue(mock_unpack.called)
+        self.assertEqual(resp, {'vips': ['foo1']})
+
+    @mock.patch('balancer.db.api.virtualserver_get_all_by_lb_id',
+                                                           autospec=True)
+    def test_show_vips1(self, mock_get):
+        """Should raise exception"""
+        mock_get.side_effect = exception.VirtualServerNotFound()
+        with self.assertRaises(exception.VirtualServerNotFound):
+            self.controller.showVIPs(self.req, '1')
 
 
 class TestDeviceController(unittest.TestCase):
