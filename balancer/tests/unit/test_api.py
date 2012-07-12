@@ -204,12 +204,12 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertEqual(resp, {'vips': ['foo1']})
 
     @mock.patch('balancer.db.api.virtualserver_get_all_by_lb_id',
-                                                            autospec=True)
+                                                           autospec=True)
     def test_show_vips1(self, mock_get):
         """Should raise exception"""
-        resp = self.controller.showVIPs(self.req, '1')
-        self.assertTrue(mock_get.called)
-        self.assertRaises(exception.VirtualServerNotFound)
+        mock_get.side_effect = exception.VirtualServerNotFound()
+        with self.assertRaises(exception.VirtualServerNotFound):
+            self.controller.showVIPs(self.req, '1')
 
 
 class TestDeviceController(unittest.TestCase):
