@@ -75,7 +75,7 @@ class API(wsgi.Router):
                         controller=lb_resource, action="showNode",\
                         conditions=dict(method=["GET"]))
 
-        mapper.connect("/loadbalancers/{id}/nodes/{nodeID}", \
+        mapper.connect("/loadbalancers/{lb_id}/nodes/{lb_node_id}", \
                        controller=lb_resource, action="updateNode", \
                        conditions=dict(method=["PUT"]))
 
