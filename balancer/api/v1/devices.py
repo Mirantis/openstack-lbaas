@@ -20,8 +20,9 @@ import logging
 from openstack.common import exception
 from openstack.common import wsgi
 from balancer.api import utils
-
+import balancer.exception as exc
 from balancer.core import api as core_api
+import balancer.db.api as db_api
 
 logger = logging.getLogger('balancer.api.v1.devices')
 
@@ -65,33 +66,14 @@ class Controller(object):
         return {'devices': list}
 
     def show(self, req, **args):
-        logger.debug("Got device data request. Request: %s Arguments: %s" % \
-                                                                   (req, args))
+        logger.debug("Got device data request. Request: %s Id: %s" % \
+                                                                   (req, args['id']))
         try:
-            return {"list": "OK"}
-            # TODO(yorik-sar): actually implement method
-            logger.debug(msg)
-            self._validate_params(params)
-            task = self._service_controller.createTask()
-            task.parameters = params
-            mapper = DeviceActionMapper()
-            worker = mapper.getWorker(task, "show", self.conf)
-            if worker.type == SYNCHRONOUS_WORKER:
-                result = worker.run()
-                return {'devices': result}
-            if worker.type == ASYNCHRONOUS_WORKER:
-                task.worker = worker
-                self._service_controller.addTask(task)
-                return {'task_id': task.id}
+            device = db_api.device_get(self.conf, args['id'])
+            result = db_api.unpack_extra(device)
+            return {'device': result}
         except exception.NotFound:
-            msg = "Element not found"
-            logger.debug(msg)
-            raise webob.exc.HTTPNotFound(msg)
-        except exception.NotAuthorized:
-            msg = _("Unauthorized access")
-            logger.debug(msg)
-            raise webob.exc.HTTPForbidden(msg)
-        return {'devices': list}
+            raise exc.DeviceNotFound
 
     def device_status(self, req, **args):
         # NOTE(yorik-sar): broken, there is no processing anymore
