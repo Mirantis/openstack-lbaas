@@ -67,7 +67,7 @@ class Controller(object):
 
     def show(self, req, **args):
         logger.debug("Got device data request. Request: %s Id: %s" % \
-                                                                   (req, args['id']))
+                                                    (req, args['id']))
         try:
             device = db_api.device_get(self.conf, args['id'])
             result = db_api.unpack_extra(device)
