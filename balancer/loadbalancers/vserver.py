@@ -167,6 +167,7 @@ class Balancer():
 
         for vip in self.vips:
             vip['sf_id'] = sf_ref['id']
+            vip['lb_id'] = lb_ref['id']
             try:
                 vip_ref = db_api.virtualserver_update(self.conf, vip['id'],
                                                       vip)
