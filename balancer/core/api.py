@@ -149,6 +149,10 @@ def update_lb(conf, lb_id, lb_body):
             else:
                 logger.debug("Got unknown attribute %s of LB. Value is %s"\
                 % (key, lb_body[key]))
+        else:
+            if lb.extra and hasattr(lb.extra, 'keys'):
+                if key in lb.extra.keys():
+                    lb.extra[key] = lb.body[key]
 
     #Step 3: Save updated data in DB
     lb.status = lb_status.PENDING_UPDATE
@@ -171,6 +175,8 @@ def update_lb(conf, lb_id, lb_body):
     #    balancer.loadbalancers.loadbalancer.LB_ACTIVE_STATUS
     #balancer_instance.update()
     #self._task.status = STATUS_DONE
+    lb.status = lb_status.ACTIVE
+    balancer_instance.update()
     return lb['id']
 
 
