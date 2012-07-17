@@ -28,7 +28,7 @@ from balancer.core import scheduller
 from balancer import drivers
 from balancer.loadbalancers import vserver
 from balancer.db import api as db_api
-from balancer import exception as exc
+#from balancer import exception as exc
 
 
 logger = logging.getLogger(__name__)
@@ -145,7 +145,7 @@ def update_lb(conf, lb_id, lb_body):
                 % (key, lb_body[key]))
 
     #Step 3: Save updated data in DB
-    lb.status = lb_status.PENDING_UPDATE
+    lb.status = lb_status.ACTIVE
     balancer_instance.update()
 
     #Step 5. Deploy new config to device
