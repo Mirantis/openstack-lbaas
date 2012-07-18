@@ -125,6 +125,10 @@ class TestLoadBalancersController(unittest.TestCase):
                       'body': {'node': 'node'}}
         resp = self.controller.updateNode(self.req, **req_kwargs)
         self.assertTrue(mock_lb_update_node.called)
+        self.assertTrue(hasattr(self.controller.updateNode, "wsgi_code"),
+            "has not redifined HTTP status code")
+        self.assertTrue(self.controller.updateNode.wsgi_code == 202,
+            "incorrect HTTP status code")
 
     @mock.patch('balancer.core.api.lb_show_probes', autospec=True)
     def test_show_monitoring(self, mock_lb_show_probes):

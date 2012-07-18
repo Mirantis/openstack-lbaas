@@ -112,6 +112,7 @@ class Controller(object):
                                                          args['status'])
         return msg
 
+    @utils.http_success_code(202)
     def updateNode(self, req, lb_id, lb_node_id, body):
         logger.debug("Got updateNode request. Request: %s", req)
         node = core_api.lb_update_node(self.conf, lb_id, lb_node_id, body)
