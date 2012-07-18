@@ -311,7 +311,6 @@ def lb_add_probe(conf, lb_id, lb_probe):
 
     prb = db_api.probe_pack_extra(lb_probe)
     prb['sf_id'] = balancer_instance.sf['id']
-    prb['name'] = prb['id']
 
     balancer_instance.probes.append(prb)
     balancer_instance.sf._probes.append(prb)
@@ -376,7 +375,6 @@ def lb_add_sticky(conf, lb_id, sticky):
 
     st = db_api.sticky_pack_extra(sticky)
     st['sf_id'] = balancer_instance.sf['id']
-    st['name'] = st['id']
 
     balancer_instance.sf._sticky.append(st)
     balancer_instance.savetoDB()
