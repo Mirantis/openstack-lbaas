@@ -176,7 +176,6 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertTrue(mock_lb_add_sticky.called)
         self.assertEqual(resp, 'sticky: 1')
 
-    #@unittest.skip('incorrect response check')
     @mock.patch('balancer.core.api.lb_delete_sticky', autospec=True)
     def test_delete_sticky(self, mock_lb_delete_sticky):
         resp = self.controller.deleteSticky(self.req, id='1', stickyID='1')
