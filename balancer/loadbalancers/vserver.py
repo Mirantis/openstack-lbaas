@@ -38,10 +38,10 @@ class Balancer():
 
     def parseParams(self, params):
         obj_dict = params.copy()
-        nodes_list = obj_dict.pop('nodes') or []
-        probes_list = obj_dict.get('healthMonitor') or []
-        vips_list = obj_dict.get('virtualIps') or []
-        stic = obj_dict.get('sessionPersistence') or []
+        nodes_list = obj_dict.pop('nodes', [])
+        probes_list = obj_dict.get('healthMonitor', [])
+        vips_list = obj_dict.get('virtualIps', [])
+        stic = obj_dict.get('sessionPersistence', [])
 
         try:
             lb = obj_dict.pop('lb')
