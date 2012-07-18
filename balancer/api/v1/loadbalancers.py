@@ -65,7 +65,7 @@ class Controller(object):
     def delete(self, req, **args):
         logger.debug("Got delete request. Request: %s", req)
         core_api.delete_lb(self.conf, args['id'])
-        return "OK"
+        return "204"
 
     def show(self, req, **args):
         logger.debug("Got loadbalancerr info request. Request: %s", req)
