@@ -145,7 +145,7 @@ def update_lb(conf, lb_id, lb_body):
                 % (key, lb_body[key]))
 
     #Step 3: Save updated data in DB
-    lb.status = lb_status.ACTIVE
+    lb.status = lb_status.PENDING_UPDATE
     balancer_instance.update()
 
     #Step 5. Deploy new config to device
@@ -154,6 +154,8 @@ def update_lb(conf, lb_id, lb_body):
         with device_driver.request_context() as ctx:
             commands.update_loadbalancer(ctx, old_balancer_instance,
                     balancer_instance)
+            lb.status = lb_status.ACTIVE
+            balancer_instance.update()
     except:
         old_balancer_instance.lb.status = lb_status.ERROR
         old_balancer_instance.update()
