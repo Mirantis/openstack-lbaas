@@ -102,7 +102,6 @@ class Controller(object):
         logger.debug("Got deleteNode request. Request: %s", req)
         core_api.lb_delete_node(self.conf, args['id'],
                 args['nodeID'])
-        return "204"
 
     def changeNodeStatus(self, req, **args):
         logger.debug("Got changeNodeStatus request. Request: %s", req)
@@ -133,7 +132,6 @@ class Controller(object):
         logger.debug("Got deleteProbe request. Request: %s", req)
         core_api.lb_delete_probe(self.conf, args['id'],
                 args['probeID'])
-        return "204"
 
     def showStickiness(self, req, **args):
         logger.debug("Got showStickiness request. Request: %s", req)
@@ -151,7 +149,6 @@ class Controller(object):
         logger.debug("Got deleteSticky request. Request: %s", req)
         core_api.lb_delete_sticky(self.conf, args['id'],
                 args['stickyID'])
-        return "204"
 
     def showVIPs(self, req, lb_id):
         logger.debug("Got showVIPs request. Request: %s", req)
