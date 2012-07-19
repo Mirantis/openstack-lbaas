@@ -128,8 +128,19 @@ def update_lb(conf, lb_id, lb_body):
         if key not in lb_model.keys():
             extra[key] = lb_body[key]
     extra = {'extra': extra}
-    fresh_lb_model = db_api.loadbalancer_update(conf, lb_id, extra)
-    return db_api.unpack_extra(fresh_lb_model)
+    db_api.loadbalancer_update(conf, lb_id,
+                               {'status': lb_status.PENDING_UPDATE})
+    new_lb_model = db_api.loadbalancer_update(conf, lb_id, extra)
+    device_driver = drivers.get_device_driver(conf, lb_model['device_id'])
+    with device_driver.request_context() as ctx:
+        try:
+            commands.update_loadbalancer(ctx, lb_model, new_lb_model)
+        except Exception as e:
+            db_api.loadbalancer_update(conf, lb_id,
+                                       {'status': lb_status.ERROR})
+            return e
+    db_api.loadbalancer_update(conf, lb_id, {'status': lb_status.ACTIVE})
+    return db_api.unpack_extra(db_api.loadbalancer_get(conf, lb_id))
 
 
 def delete_lb(conf, lb_id):
