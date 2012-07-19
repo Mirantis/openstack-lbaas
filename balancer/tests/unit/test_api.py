@@ -13,6 +13,12 @@ class TestLoadBalancersController(unittest.TestCase):
         self.controller = loadbalancers.Controller(self.conf)
         self.req = mock.Mock()
 
+    def code_assert(self, code, func):
+        self.assertTrue(hasattr(func, "wsgi_code"),
+                "has not redifined HTTP status code")
+        self.assertTrue(func.wsgi_code == code,
+                "incorrect HTTP status code")
+
     @mock.patch('balancer.core.api.lb_find_for_vm', autospec=True)
     def test_find_lb_for_vm(self, mock_lb_find_for_vm):
         mock_lb_find_for_vm.return_value = 'foo'
@@ -49,10 +55,7 @@ class TestLoadBalancersController(unittest.TestCase):
     def test_delete(self, mock_delete_lb):
         resp = self.controller.delete(self.req, id='123')
         self.assertTrue(mock_delete_lb.called)
-        self.assertTrue(hasattr(self.controller.delete, "wsgi_code"),
-            "has not redifined HTTP status code")
-        self.assertTrue(self.controller.delete.wsgi_code == 204,
-            "incorrect HTTP status code")
+        self.code_assert(204, self.controller.delete)
 
     @mock.patch('balancer.core.api.lb_get_data', autospec=True)
     def test_show(self, mock_lb_get_data):
