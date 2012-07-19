@@ -122,14 +122,10 @@ def create_lb(conf, **params):
 
 
 def update_lb(conf, lb_id, lb_body):
-    lb_model = db_api.loadbalancer_update(conf, lb_id, lb_body)
-    extra = lb_model.extra
-    for key in lb_body:
-        if key not in lb_model.keys():
-            extra[key] = lb_body[key]
-    extra = {'extra': extra}
     db_api.loadbalancer_update(conf, lb_id,
                                {'status': lb_status.PENDING_UPDATE})
+    lb_model = db_api.loadbalancer_update(conf, lb_id, lb_body)
+    extra = db_api.loadbalancer_pack_extra(lb_body).extra
     new_lb_model = db_api.loadbalancer_update(conf, lb_id, extra)
     device_driver = drivers.get_device_driver(conf, lb_model['device_id'])
     with device_driver.request_context() as ctx:
