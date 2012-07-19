@@ -108,10 +108,7 @@ class TestLoadBalancersController(unittest.TestCase):
     def test_delete_node(self, mock_lb_delete_node):
         resp = self.controller.deleteNode(self.req, id='123', nodeID='321')
         self.assertTrue(mock_lb_delete_node.called)
-        self.assertTrue(hasattr(self.controller.deleteNode, "wsgi_code"),
-            "has not redifined HTTP status code")
-        self.assertTrue(self.controller.deleteNode.wsgi_code == 204,
-            "incorrect HTTP status code")
+        self.code_assert(204, self.controller.deleteNode)
 
     @mock.patch('balancer.core.api.lb_change_node_status', autospec=True)
     def test_change_node_status(self, mock_lb_change_node_status):
@@ -155,10 +152,7 @@ class TestLoadBalancersController(unittest.TestCase):
     def test_delete_probe(self, mock_lb_delete_probe):
         resp = self.controller.deleteProbe(self.req, id='1', probeID='1')
         self.assertTrue(mock_lb_delete_probe.called)
-        self.assertTrue(hasattr(self.controller.deleteProbe, "wsgi_code"),
-            "has not redifined HTTP status code")
-        self.assertTrue(self.controller.deleteProbe.wsgi_code == 204,
-            "incorrect HTTP status code")
+        self.code_assert(204, self.controller.deleteProbe)
 
     @mock.patch('balancer.core.api.lb_show_sticky', autospec=True)
     def test_show_stickiness(self, mock_lb_show_sticky):
@@ -180,10 +174,7 @@ class TestLoadBalancersController(unittest.TestCase):
     def test_delete_sticky(self, mock_lb_delete_sticky):
         resp = self.controller.deleteSticky(self.req, id='1', stickyID='1')
         self.assertTrue(mock_lb_delete_sticky.called)
-        self.assertTrue(hasattr(self.controller.delete, "wsgi_code"),
-            "has not redifined HTTP status code")
-        self.assertTrue(self.controller.deleteSticky.wsgi_code == 204,
-            "incorrect HTTP status code")
+        self.code_assert(204, self.controller.deleteSticky)
 
     @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.db.api.virtualserver_get_all_by_lb_id',
