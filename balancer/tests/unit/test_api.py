@@ -221,7 +221,7 @@ class TestDeviceController(unittest.TestCase):
         self.assertTrue(mock_device_delete.called)
         self.assertTrue(hasattr(self.controller.delete, "wsgi_code"),
                                 "has not redifined HTTP status code")
-        self.assertTrue(self.controller.delete.wsgi_code == 202,
+        self.assertTrue(self.controller.delete.wsgi_code == 204,
         "incorrect HTTP status code")
 
     @unittest.skip('need to implement Controller.device_info')
