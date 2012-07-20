@@ -126,7 +126,7 @@ def update_lb(conf, lb_id, lb_body):
                                {'status': lb_status.PENDING_UPDATE})
     lb_model = db_api.loadbalancer_update(conf, lb_id, lb_body)
     extra = db_api.loadbalancer_pack_extra(lb_body).extra
-    new_lb_model = db_api.loadbalancer_update(conf, lb_id, extra)
+    new_lb_model = db_api.loadbalancer_update(conf, lb_id, {'extra': extra})
     device_driver = drivers.get_device_driver(conf, lb_model['device_id'])
     with device_driver.request_context() as ctx:
         try:
