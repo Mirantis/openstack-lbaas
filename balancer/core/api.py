@@ -323,7 +323,7 @@ def lb_add_probe(conf, lb_id, lb_probe):
 
     with device_driver.request_context() as ctx:
         commands.add_probe_to_loadbalancer(ctx, balancer_instance, prb)
-    return prb['id']
+    return dict(prb)
 
 
 def lb_delete_probe(conf, lb_id, probe_id):
