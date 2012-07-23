@@ -293,9 +293,9 @@ def remove_node_from_loadbalancer(ctx, balancer, rserver):
     delete_rserver(ctx, rserver)
 
 
-def add_probe_to_loadbalancer(ctx, balancer, probe):
-    create_probe(ctx, probe)
-    add_probe_to_server_farm(ctx, balancer.sf, probe)
+def add_probe_to_loadbalancer(ctx, sf_ref, probe_ref):
+    create_probe(ctx, probe_ref)
+    add_probe_to_server_farm(ctx, sf_ref, probe_ref)
 
 
 def makeDeleteProbeFromLBChain(ctx, balancer, probe):

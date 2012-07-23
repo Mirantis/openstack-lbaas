@@ -299,31 +299,28 @@ def lb_show_probes(conf, lb_id):
     return dict
 
 
-def lb_add_probe(conf, lb_id, lb_probe):
-    logger.debug("Got new probe description %s" % lb_probe)
-    if lb_probe['type'] is None:
+def lb_add_probe(conf, lb_id, probe_dict):
+    logger.debug("Got new probe description %s" % probe_dict)
+    # NOTE(akscram): historically strange validation, wrong place for it.
+    if probe_dict['type'] is None:
         return
 
-    balancer_instance = vserver.Balancer(conf)
+    lb_ref = db_api.loadbalancer_get(conf, lb_id)
+    # NOTE(akscram): server farms are really only create problems than
+    #                they solve multiply use of the virtual IPs.
+    try:
+        sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_ref['id'])[0]
+    except IndexError:
+        raise exc.ServerFarmNotFound
 
-    balancer_instance.loadFromDB(lb_id)
-    balancer_instance.removeFromDB()
-
-    prb = db_api.probe_pack_extra(lb_probe)
-    prb['sf_id'] = balancer_instance.sf['id']
-
-    balancer_instance.probes.append(prb)
-    balancer_instance.sf._probes.append(prb)
-    balancer_instance.savetoDB()
-
-    prb = balancer_instance.probes[-1]
-
-    device_driver = drivers.get_device_driver(conf,
-                        balancer_instance.lb['device_id'])
-
+    values = db_api.probe_pack_extra(probe_dict)
+    values['lb_id'] = lb_ref['id']
+    values['sf_id'] = sf_ref['id']
+    probe_ref = db_api.probe_create(conf, values)
+    device_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
     with device_driver.request_context() as ctx:
-        commands.add_probe_to_loadbalancer(ctx, balancer_instance, prb)
-    return prb['id']
+        commands.add_probe_to_loadbalancer(ctx, sf_ref, probe_ref)
+    return db_api.unpack_extra(probe_ref)
 
 
 def lb_delete_probe(conf, lb_id, probe_id):

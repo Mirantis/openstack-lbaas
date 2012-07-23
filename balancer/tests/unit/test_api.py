@@ -140,12 +140,13 @@ class TestLoadBalancersController(unittest.TestCase):
 
     @mock.patch('balancer.core.api.lb_add_probe', autospec=True)
     def test_add_probe(self, mock_lb_add_probe):
-        mock_lb_add_probe.return_value = '1'
-        req_kwargs = {'id': '1',
-                      'body': {'healthMonitoring': {'probe': 'foo'}}}
-        resp = self.controller.addProbe(self.req, **req_kwargs)
+        mock_lb_add_probe.return_value = {'id': '2'}
+        body = {'healthMonitoring': {'probe': 'foo'}}
+        resp = self.controller.addProbe(self.req, '1', body)
         self.assertTrue(mock_lb_add_probe.called)
-        self.assertEqual(resp, 'probe: 1')
+        mock_lb_add_probe.assert_called_once_with(self.conf, '1',
+                                                  {'probe': 'foo'})
+        self.assertEqual(resp, {'healthMonitoring': {'id': '2'}})
 
     @mock.patch('balancer.core.api.lb_delete_probe', autospec=True)
     def test_delete_probe(self, mock_lb_delete_probe):

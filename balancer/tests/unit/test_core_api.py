@@ -242,9 +242,13 @@ class TestBalancer(unittest.TestCase):
         with self.assertRaises(exc.ServerFarmNotFound):
             api.lb_show_probes(self.conf, self.lb_id)
 
-    @patch_balancer
+    @mock.patch("balancer.db.api.loadbalancer_get")
+    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
+    @mock.patch("balancer.db.api.probe_pack_extra")
+    @mock.patch("balancer.db.api.probe_create")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.add_probe_to_loadbalancer")
+    @mock.patch("balancer.db.api.unpack_extra")
     def test_lb_add_probe_0(self, *mocks):
         """lb_probe['type']!=None"""
         lb_probe = {'type': 'Gvido'}
@@ -252,9 +256,13 @@ class TestBalancer(unittest.TestCase):
         for mok in mocks:
             self.assertTrue(mok.called)
 
-    @patch_balancer
+    @mock.patch("balancer.db.api.loadbalancer_get")
+    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
+    @mock.patch("balancer.db.api.probe_pack_extra")
+    @mock.patch("balancer.db.api.probe_create")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.add_probe_to_loadbalancer")
+    @mock.patch("balancer.db.api.unpack_extra")
     def test_lb_add_probe_1(self, *mocks):
         """lb_probe['type']=None"""
         lb_probe = {'type': None}

@@ -122,11 +122,12 @@ class Controller(object):
         result = core_api.lb_show_probes(self.conf, args['id'])
         return result
 
-    def addProbe(self, req, **args):
+    def addProbe(self, req, lb_id, body):
         logger.debug("Got addProbe request. Request: %s", req)
-        probe_id = core_api.lb_add_probe(self.conf, args['id'],
-                               args['body']['healthMonitoring'])
-        return "probe: %s" % probe_id
+        probe = core_api.lb_add_probe(self.conf, lb_id,
+                                      body['healthMonitoring'])
+        logger.debug("Return probe: %r", probe)
+        return {'healthMonitoring': probe}
 
     @utils.http_success_code(204)
     def deleteProbe(self, req, **args):
