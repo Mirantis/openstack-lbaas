@@ -353,7 +353,7 @@ class Resource(object):
         #TODO check why it fails with original openstack code
         #self.dispatch(self.serializer, action, response,
          #             action_result, request)
-        if action_result != None:
+        if action_result is not None:
             self.serializer.default(response,  action_result)
         msg = "Response: %s" % response
         logger.debug(msg)
