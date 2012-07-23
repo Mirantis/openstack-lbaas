@@ -265,7 +265,7 @@ def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
 
     rs['name'] = rsname
     db_api.server_update(conf, rs['id'], rs)
-    return "Node %s has status %s" % (lb_node_id, rs['state'])
+    return db_api.unpack_extra(rs)
 
 
 def lb_update_node(conf, lb_id, lb_node_id, lb_node):

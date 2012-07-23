@@ -107,15 +107,15 @@ class Controller(object):
 
     def changeNodeStatus(self, req, **args):
         logger.debug("Got changeNodeStatus request. Request: %s", req)
-        msg = core_api.lb_change_node_status(self.conf, args['id'],
+        result = core_api.lb_change_node_status(self.conf, args['id'],
                                                          args['nodeID'],
                                                          args['status'])
-        return msg
+        return {"node": result}
 
     def updateNode(self, req, lb_id, lb_node_id, body):
         logger.debug("Got updateNode request. Request: %s", req)
-        node = core_api.lb_update_node(self.conf, lb_id, lb_node_id, body)
-        return {'node': node}
+        result = core_api.lb_update_node(self.conf, lb_id, lb_node_id, body)
+        return {"node": result}
 
     def showMonitoring(self, req, **args):
         logger.debug("Got showMonitoring request. Request: %s", req)
