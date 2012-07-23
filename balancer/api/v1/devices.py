@@ -66,14 +66,9 @@ class Controller(object):
         return {'devices': list}
 
     def show(self, req, **args):
-        logger.debug("Got device data request. Request: %s Id: %s" % \
-                                                    (req, args['id']))
-        try:
-            device = db_api.device_get(self.conf, args['id'])
-            result = db_api.unpack_extra(device)
-            return {'device': result}
-        except exception.NotFound:
-            raise exc.DeviceNotFound
+        logger.debug("Got device data request. Request: %s" % req)
+        result = core_api.device_get_data(self.conf, args['id'])
+        return {'device': result}
 
     def device_status(self, req, **args):
         # NOTE(yorik-sar): broken, there is no processing anymore
