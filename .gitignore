@@ -1,5 +1,6 @@
-*.swp
 *.pyc
 .venv
 balancer.sqlite
 covhtml
+run_tests.log
+.coverage

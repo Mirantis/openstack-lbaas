@@ -54,8 +54,7 @@ fi
 
 function run_tests {
   # Just run the test suites in current environment
-  ${wrapper} rm -f tests.sqlite
-  ${wrapper} $NOSETESTS 2> run_tests.err.log
+  ${wrapper} $NOSETESTS 2> run_tests.log
 }
 
 function run_pep8 {
