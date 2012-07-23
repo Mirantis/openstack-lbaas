@@ -183,7 +183,6 @@ def delete_lb(conf, lb_id):
         commands.delete_loadbalancer(ctx, balancer_instance)
 
     balancer_instance.removeFromDB()
-    return
 
 
 def lb_add_nodes(conf, lb_id, lb_nodes):

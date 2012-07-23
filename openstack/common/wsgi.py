@@ -37,6 +37,7 @@ from openstack.common import exception
 
 logger = logging.getLogger('openstack.common.wsgi')
 
+
 class WritableLogger(object):
     """A thin wrapper that responds to `write` and logs."""
 
@@ -352,7 +353,8 @@ class Resource(object):
         #TODO check why it fails with original openstack code
         #self.dispatch(self.serializer, action, response,
          #             action_result, request)
-        self.serializer.default(response,  action_result)
+        if action_result is not None:
+            self.serializer.default(response,  action_result)
         msg = "Response: %s" % response
         logger.debug(msg)
         return response
