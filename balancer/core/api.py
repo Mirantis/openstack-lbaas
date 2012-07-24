@@ -28,7 +28,7 @@ from balancer.core import scheduller
 from balancer import drivers
 from balancer.loadbalancers import vserver
 from balancer.db import api as db_api
-from balancer import exception as exc
+#from balancer import exception as exc
 
 
 logger = logging.getLogger(__name__)
@@ -154,6 +154,8 @@ def update_lb(conf, lb_id, lb_body):
         with device_driver.request_context() as ctx:
             commands.update_loadbalancer(ctx, old_balancer_instance,
                     balancer_instance)
+            lb.status = lb_status.ACTIVE
+            balancer_instance.update()
     except:
         old_balancer_instance.lb.status = lb_status.ERROR
         old_balancer_instance.update()
