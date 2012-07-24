@@ -122,9 +122,7 @@ def update_lb(conf, lb_id, lb_body):
     balancer_instance = vserver.Balancer(conf)
     logger.debug("Loading LB data from DB for Lb id: %s" % lb_id)
     #TODO add clone function to vserver.Balancer in order to avoid double read
-    balancer_instance.loadFromDB(lb_id)def device_get_data(conf, device_id):
-    device_ref = db_api.device_get(conf, device_id)
-    return db_api.unpack_extra(device_ref)
+    balancer_instance.loadFromDB(lb_id)
     old_balancer_instance.loadFromDB(lb_id)
 
     #Step 2. Parse parameters came from request
