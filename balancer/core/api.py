@@ -435,8 +435,3 @@ def device_delete(conf, device_id):
 #    sched = sc.scheduller
 #    sched.addDevice(dev)
     return
-
-
-def device_get_data(conf, device_id):
-    device_ref = db_api.device_get(conf, device_id)
-    return db_api.unpack_extra(device_ref)

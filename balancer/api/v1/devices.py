@@ -67,8 +67,8 @@ class Controller(object):
 
     def show(self, req, **args):
         logger.debug("Got device data request. Request: %s" % req)
-        result = core_api.device_get_data(self.conf, args['id'])
-        return {'device': result}
+        device_ref = db_api.device_get(self.conf, args['id'])
+        return {'device': db_api.unpack_extra(device_ref)}
 
     def device_status(self, req, **args):
         # NOTE(yorik-sar): broken, there is no processing anymore
