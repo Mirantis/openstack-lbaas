@@ -125,6 +125,7 @@ def update_lb(conf, lb_id, lb_body):
     lb_model = db_api.loadbalancer_get(conf, lb_id)
     sub_model = db_api.loadbalancer_pack_extra(lb_body)
     sub_model['id'] = lb_id
+    sub_model['created_at'] = lb_model['created_at']
     sub_model['status'] = lb_status.PENDING_UPDATE
     new_lb_model = db_api.loadbalancer_update(conf, lb_id, sub_model)
     device_driver = drivers.get_device_driver(conf, lb_model['device_id'])
