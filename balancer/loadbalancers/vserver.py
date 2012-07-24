@@ -93,7 +93,6 @@ class Balancer():
             vs_ref = db_api.virtualserver_pack_extra(vip)
             vs_ref['transport'] = lb_ref['extra'].get('transport')
             vs_ref['appProto'] = lb_ref['protocol']
-            vs_ref['name'] = vs_ref['id']
             self.vips.append(vs_ref)
             self.vips.append(vs_ref)
 
