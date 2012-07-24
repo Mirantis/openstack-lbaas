@@ -278,9 +278,10 @@ def delete_loadbalancer(ctx, balancer):
     delete_server_farm(ctx, balancer.sf)
 
 
-def update_loadbalancer(ctx, old_bal,  new_bal):
+def update_loadbalancer(ctx, old_bal,  new_bal, sf):
     if old_bal.algorithm != new_bal.algorithm:
-        create_server_farm(ctx, new_bal.sf)
+        for s in sf:
+            create_server_farm(ctx, s)
 
 
 def add_node_to_loadbalancer(ctx, balancer, rserver):

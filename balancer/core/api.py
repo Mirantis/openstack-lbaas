@@ -121,6 +121,7 @@ def create_lb(conf, **params):
     return lb['id']
 
 
+@asynchronous
 def update_lb(conf, lb_id, lb_body):
     lb_model = db_api.loadbalancer_get(conf, lb_id)
     sub_model = db_api.loadbalancer_pack_extra(lb_body)
@@ -129,16 +130,16 @@ def update_lb(conf, lb_id, lb_body):
     sub_model['status'] = lb_status.PENDING_UPDATE
     new_lb_model = db_api.loadbalancer_update(conf, lb_id, sub_model)
     device_driver = drivers.get_device_driver(conf, lb_model['device_id'])
+    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_model['id'])
     with device_driver.request_context() as ctx:
         try:
-            commands.update_loadbalancer(ctx, lb_model, new_lb_model)
+            commands.update_loadbalancer(ctx, lb_model, new_lb_model, sf)
         except Exception as e:
             db_api.loadbalancer_update(conf, lb_id,
                                        {'status': lb_status.ERROR})
             return e
     db_api.loadbalancer_update(conf, lb_id,
                                {'status': lb_status.ACTIVE})
-    return new_lb_model['id']
 
 
 def delete_lb(conf, lb_id):
