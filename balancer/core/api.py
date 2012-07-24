@@ -188,7 +188,7 @@ def delete_lb(conf, lb_id):
 
 
 def lb_add_nodes(conf, lb_id, lb_nodes):
-    id_list = []
+    node_list = []
     balancer_instance = vserver.Balancer(conf)
 
     for lb_node in lb_nodes:
@@ -210,9 +210,9 @@ def lb_add_nodes(conf, lb_id, lb_nodes):
         with device_driver.request_context() as ctx:
             commands.add_node_to_loadbalancer(ctx, balancer_instance, rs)
 
-        id_list.append({'id': rs['id']})
+        node_list.append(db_api.unpack_extra(rs))
 
-    return {'nodes': id_list}
+    return {'nodes': node_list}
 
 
 def lb_show_nodes(conf, lb_id):
