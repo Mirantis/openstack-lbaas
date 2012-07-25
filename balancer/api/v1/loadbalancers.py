@@ -59,7 +59,7 @@ class Controller(object):
                                                 'tenant_id': tenant_id})
         params['lb'] = lb_ref
         core_api.create_lb(self.conf, **params)
-        return {'loadbalancers': {'id': lb_ref['id']}}
+        return {'loadbalancer': {'id': lb_ref['id']}}
 
     @utils.http_success_code(204)
     def delete(self, req, **args):
