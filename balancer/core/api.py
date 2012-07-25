@@ -59,9 +59,10 @@ def lb_find_for_vm(conf, vm_id, tenant_id=''):
 def lb_get_data(conf, lb_id):
     logger.debug("Getting information about loadbalancer with id: %s" % lb_id)
     lb = db_api.loadbalancer_get(conf, lb_id)
+    lb_dict = db_api.unpack_extra(lb)
+    lb_dict.pop("virtualIps")
     logger.debug("Got information: %s" % list)
-    return db_api.unpack_extra(lb)
-
+    return lb_dict
 
 def lb_show_details(conf, lb_id):
     #store = Storage(conf)
