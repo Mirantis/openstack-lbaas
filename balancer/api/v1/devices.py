@@ -49,21 +49,11 @@ class Controller(object):
 
     def create(self, req, **args):
         logger.debug("Got create request. Request: %s", req)
-        try:
-            params = args['body']
-            logger.debug("Request params: %s" % params)
-            self._validate_params(params)
-            result = core_api.device_create(self.conf, **params)
-            return {'devices': result}
-        except exception.NotFound:
-            msg = "Element not found"
-            logger.debug(msg)
-            raise webob.exc.HTTPNotFound(msg)
-        except exception.NotAuthorized:
-            msg = _("Unauthorized access")
-            logger.debug(msg)
-            raise webob.exc.HTTPForbidden(msg)
-        return {'devices': list}
+        params = args['body']
+        logger.debug("Request params: %s" % params)
+        self._validate_params(params)
+        result = core_api.device_create(self.conf, **params)
+        return {'device': result}
 
     def show(self, req, **args):
         logger.debug("Got device data request. Request: %s" % req)
