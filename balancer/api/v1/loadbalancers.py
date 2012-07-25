@@ -150,9 +150,9 @@ class Controller(object):
 
     def addSticky(self, req, **args):
         logger.debug("Got addSticky request. Request: %s", req)
-        st_id = core_api.lb_add_sticky(self.conf, args['id'],
+        sticky = core_api.lb_add_sticky(self.conf, args['id'],
                                        args['body'])
-        return "sticky: %s" % st_id
+        return sticky
 
     @utils.http_success_code(204)
     def deleteSticky(self, req, **args):
