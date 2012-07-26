@@ -103,6 +103,10 @@ class API(wsgi.Router):
                        controller=lb_resource, action="showStickiness", \
                        conditions=dict(method=["GET"]))
 
+        mapper.connect("/loadbalancers/{id}/sessionPersistence/{stickyID}", \
+                       controller=lb_resource, action="showSticky", \
+                       conditions=dict(method=["GET"]))
+
         mapper.connect("/loadbalancers/{id}/sessionPersistence", \
                        controller=lb_resource, \
                        action="addSticky", conditions=dict(method=["PUT"]))

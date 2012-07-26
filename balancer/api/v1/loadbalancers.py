@@ -143,6 +143,12 @@ class Controller(object):
         result = core_api.lb_show_sticky(self.conf, args['id'])
         return result
 
+    def showSticky(self, req, **args):
+        logger.debug("Got showStickiness request. Request: %s", req)
+        result = core_api.lb_show_sticky_by_id(
+                self.conf, args['id'], args['stickyID'])
+        return result
+
     def addSticky(self, req, **args):
         logger.debug("Got addSticky request. Request: %s", req)
         st_id = core_api.lb_add_sticky(self.conf, args['id'],

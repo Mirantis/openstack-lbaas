@@ -296,6 +296,13 @@ class TestBalancer(unittest.TestCase):
         with self.assertRaises(exc.ServerFarmNotFound):
             api.lb_show_sticky(self.conf, self.lb_id)
 
+    @mock.patch("balancer.db.api.sticky_get")
+    @mock.patch("balancer.db.api.unpack_extra")
+    def test_lb_show_sticky_by_id(self, db_api0, db_api1):
+        db_api1.return_value = self.dict_list
+        api.lb_show_sticky_by_id(self.conf, self.lb_id, 1)
+        self.assertTrue(db_api0.called)
+
     @patch_balancer
     @mock.patch("balancer.db.api.sticky_pack_extra")
     @mock.patch("balancer.drivers.get_device_driver")
