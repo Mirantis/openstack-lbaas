@@ -419,7 +419,11 @@ def device_create(conf, **params):
     device_dict = db_api.device_pack_extra(params)
     device = db_api.device_create(conf, device_dict)
     scheduller.Scheduller.Instance(conf).addDevice(device)
-    return device['id']
+    list = []
+    dict = {"device": {}}
+    list.append(db_api.unpack_extra(device))
+    dict["device"] = list
+    return dict
 
 
 def device_info(params):

@@ -53,7 +53,7 @@ class Controller(object):
         logger.debug("Request params: %s" % params)
         self._validate_params(params)
         result = core_api.device_create(self.conf, **params)
-        return {'device': result}
+        return result
 
     def show(self, req, **args):
         logger.debug("Got device data request. Request: %s" % req)
