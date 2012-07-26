@@ -242,6 +242,14 @@ class TestBalancer(unittest.TestCase):
         with self.assertRaises(exc.ServerFarmNotFound):
             api.lb_show_probes(self.conf, self.lb_id)
 
+    @mock.patch("balancer.db.api.unpack_extra")
+    @mock.patch("balancer.db.api.probe_get")
+    def test_lb_show_probe_by_id(self, db_api0, db_api1):
+        db_api0.return_value = self.dict_list
+        api.lb_show_probe_by_id(self.conf, self.lb_id, 1)
+        self.assertTrue(db_api0.called)
+        self.assertTrue(db_api1.called)
+
     @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
     @mock.patch("balancer.db.api.probe_pack_extra")

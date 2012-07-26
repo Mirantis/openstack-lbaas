@@ -120,6 +120,12 @@ class Controller(object):
         result = core_api.lb_show_probes(self.conf, args['id'])
         return result
 
+    def showProbe(self, req, **args):
+        logger.debug("Got showProbe request. Request: %s", req)
+        result = core_api.lb_show_probe_by_id(
+                self.conf, args['id'], args['probeID'])
+        return result
+
     def addProbe(self, req, lb_id, body):
         logger.debug("Got addProbe request. Request: %s", req)
         probe = core_api.lb_add_probe(self.conf, lb_id,
