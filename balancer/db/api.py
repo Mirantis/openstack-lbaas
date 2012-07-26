@@ -44,8 +44,18 @@ def unpack_extra(obj_ref):
     return obj_dict
 
 
+def pack_update(model, values):
+    for k, v in values.iteritems():
+        if k in model.keys():
+            model[k] = v
+        else:
+            model['extra'].update({k: v})
+    return model
+
+
 device_pack_extra = functools.partial(pack_extra, models.Device)
 loadbalancer_pack_extra = functools.partial(pack_extra, models.LoadBalancer)
+loadbalancer_pack_update = functools.partial(pack_update, models.LoadBalancer)
 serverfarm_pack_extra = functools.partial(pack_extra, models.ServerFarm)
 virtualserver_pack_extra = functools.partial(pack_extra, models.VirtualServer)
 server_pack_extra = functools.partial(pack_extra, models.Server)

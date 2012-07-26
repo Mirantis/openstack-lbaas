@@ -278,8 +278,8 @@ def delete_loadbalancer(ctx, balancer):
     delete_server_farm(ctx, balancer.sf)
 
 
-def update_loadbalancer(ctx, old_bal,  new_bal, sf):
-    if old_bal.algorithm != new_bal.algorithm:
+def update_loadbalancer(ctx, old_algo, new_algo, sf):
+    if old_algo != new_algo:
         for s in sf:
             create_server_farm(ctx, s)
 
