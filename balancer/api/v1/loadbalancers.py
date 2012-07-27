@@ -152,7 +152,7 @@ class Controller(object):
         logger.debug("Got addSticky request. Request: %s", req)
         sticky = core_api.lb_add_sticky(self.conf, args['id'],
                                        args['body'])
-        return sticky
+        return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
     @utils.http_success_code(204)
     def deleteSticky(self, req, **args):

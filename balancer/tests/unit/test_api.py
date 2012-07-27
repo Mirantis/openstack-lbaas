@@ -171,14 +171,15 @@ class TestLoadBalancersController(unittest.TestCase):
         self.controller.showSticky(self.req, id='1', stickyID=1)
         self.assertTrue(mock_func.called)
 
+    @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.core.api.lb_add_sticky', autospec=True)
-    def test_add_sticky(self, mock_lb_add_sticky):
-        mock_lb_add_sticky.return_value = '1'
+    def test_add_sticky(self, mock_lb_add_sticky, mock_unpack):
+        mock_unpack.return_value = '1'
         req_kwargs = {'id': '1',
                       'body': {'sessionPersistence': 'foo'}}
         resp = self.controller.addSticky(self.req, **req_kwargs)
         self.assertTrue(mock_lb_add_sticky.called)
-        self.assertEqual(resp, 'sticky: 1')
+        self.assertEqual(resp, {"sessionPersistence": "1"})
 
     @mock.patch('balancer.core.api.lb_delete_sticky', autospec=True)
     def test_delete_sticky(self, mock_lb_delete_sticky):
