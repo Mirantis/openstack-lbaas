@@ -47,6 +47,10 @@ def asynchronous(func):
 def lb_get_index(conf, tenant_id=''):
     lbs = db_api.loadbalancer_get_all_by_project(conf, tenant_id)
     lbs = [db_api.unpack_extra(lb) for lb in lbs]
+
+    for lb in lbs:
+        if 'virtualIps' in lb:
+            lb.pop('virtualIps')
     return lbs
 
 

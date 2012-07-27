@@ -46,10 +46,15 @@ class TestBalancer(unittest.TestCase):
         self.lb_body_0 = {'bubble': "bubble"}
         self.lb_body = {'algorithm': "bubble"}
 
+    @mock.patch("balancer.db.api.unpack_extra")
     @mock.patch("balancer.db.api.loadbalancer_get_all_by_project")
-    def test_lb_get_index(self, mock_api):
-        api.lb_get_index(self.conf, self.tenant_id)
+    def test_lb_get_index(self, mock_api, mock_extra):
+        mock_api.return_value = self.dict_list
+        mock_extra.return_value = {'id': 1, 'virtualIps': 1}
+        res = api.lb_get_index(self.conf, self.tenant_id)
         self.assertTrue(mock_api.called)
+        self.assertTrue(mock_extra.called)
+        self.assertEquals(res[0], {'id': 1})
 
     @mock.patch("balancer.db.api.loadbalancer_get_all_by_vm_id")
     def test_lb_find_for_vm(self, mock_api):
