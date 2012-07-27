@@ -410,7 +410,8 @@ class TestLoadbalancer(unittest.TestCase):
     @mock.patch("balancer.core.commands.create_server_farm")
     def test_update_loadbalancer(self, mock_func):
         self.lb0 = mock.MagicMock()
-        cmd.update_loadbalancer(self.ctx, self.balancer, self.lb0)
+        sf = [{'sf':'1'}]
+        cmd.update_loadbalancer(self.ctx, self.balancer, self.lb0, sf)
         self.assertTrue(mock_func.called, "function not called")
 
     @mock.patch("balancer.core.commands.create_rserver")

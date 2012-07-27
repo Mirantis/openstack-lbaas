@@ -145,6 +145,18 @@ class TestExtra(unittest.TestCase):
                     'other': 'fakeother'}
         self.assertEqual(values, expected)
 
+    def test_pack_update(self):
+        model = mock.Mock()
+        model_inst = model.return_value = mock.MagicMock()
+        model_inst.__iter__.return_value = ['name', 'type']
+        values = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother'}
+        obj_ref = db_api.pack_extra(model, values)
+        expected = [mock.call('name', 'fakename'),
+                    mock.call('type', 'faketype'),
+                    mock.call('extra', {'other': 'fakeother'})]
+        self.assertTrue(model_inst.__iter__.called)
+        self.assertEqual(model_inst.__setitem__.mock_calls, expected)
+
 
 class TestDBAPI(unittest.TestCase):
     @classmethod
