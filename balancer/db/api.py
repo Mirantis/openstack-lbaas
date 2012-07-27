@@ -48,7 +48,7 @@ def pack_update(model, values):
     for k, v in values.iteritems():
         if k in model.keys():
             model[k] = v
-        else:
+        elif 'extra' in model.keys():
             model['extra'].update({k: v})
     return model
 
