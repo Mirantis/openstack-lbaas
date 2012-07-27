@@ -300,15 +300,6 @@ def lb_show_probes(conf, lb_id):
     return dict
 
 
-def lb_show_probe_by_id(conf, lb_id, probe_id):
-    probe = db_api.probe_get(conf, probe_id)
-    list = []
-    dict = {"healthMonitoring": {}}
-    list.append(db_api.unpack_extra(probe))
-    dict['healthMonitoring'] = list
-    return dict
-
-
 def lb_add_probe(conf, lb_id, probe_dict):
     logger.debug("Got new probe description %s" % probe_dict)
     # NOTE(akscram): historically strange validation, wrong place for it.
