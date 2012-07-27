@@ -220,12 +220,13 @@ class TestDeviceController(unittest.TestCase):
         self.assertTrue(mock_device_get_index.called)
         self.assertEqual({'devices': 'foo'}, resp)
 
+    @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.core.api.device_create', autospec=True)
-    def test_create(self, mock_device_create):
-        mock_device_create.return_value = 'foo'
-        resp = self.controller.create(self.req, body={})
+    def test_create(self, mock_device_create, mock_unpack):
+        mock_unpack.return_value = 'foo'
+        res = self.controller.create(self.req, body={})
         self.assertTrue(mock_device_create.called)
-        self.assertEqual({'devices': 'foo'}, resp)
+        self.assertEqual({'device': 'foo'}, res)
 
     @mock.patch('balancer.core.api.device_delete', autospec=True)
     def test_delete(self, mock_device_delete):
