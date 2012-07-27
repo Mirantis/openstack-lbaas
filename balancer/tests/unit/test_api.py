@@ -166,12 +166,10 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertTrue(mock_lb_show_sticky.called)
         self.assertEqual(resp, 'foo')
 
-    @mock.patch('balancer.core.api.lb_show_sticky_by_id', autospec=True)
+    @mock.patch('balancer.db.api.sticky_get', autospec=True)
     def test_show_sticky(self, mock_func):
-        mock_func.return_value = 'foo'
-        resp = self.controller.showSticky(self.req, id='1', stickyID=1)
+        self.controller.showSticky(self.req, id='1', stickyID=1)
         self.assertTrue(mock_func.called)
-        self.assertEqual(resp, 'foo')
 
     @mock.patch('balancer.core.api.lb_add_sticky', autospec=True)
     def test_add_sticky(self, mock_lb_add_sticky):
