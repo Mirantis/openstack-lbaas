@@ -361,15 +361,6 @@ def lb_show_sticky(conf, lb_id):
     return dict
 
 
-def lb_show_sticky_by_id(conf, lb_id, sticky_id):
-    sticky = db_api.sticky_get(conf, sticky_id)
-    dict = {"sessionPersistence": {}}
-    list = []
-    list.append(db_api.unpack_extra(sticky))
-    dict['sessionPersistence'] = list
-    return dict
-
-
 def lb_add_sticky(conf, lb_id, sticky):
     logger.debug("Got new sticky description %s" % sticky)
     if sticky['persistenceType'] is None:
