@@ -100,7 +100,7 @@ class TestBalancer(unittest.TestCase):
 
     @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
     @mock.patch("balancer.db.api.loadbalancer_update")
-    @mock.patch("balancer.db.api.loadbalancer_pack_extra")
+    @mock.patch("balancer.db.api.pack_update")
     @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.drivers.get_device_driver")
     def test_update_lb_0(self, *mocks):
@@ -113,7 +113,7 @@ class TestBalancer(unittest.TestCase):
 
     @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
     @mock.patch("balancer.db.api.loadbalancer_update")
-    @mock.patch("balancer.db.api.loadbalancer_pack_extra")
+    @mock.patch("balancer.db.api.pack_update")
     @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.update_loadbalancer")
