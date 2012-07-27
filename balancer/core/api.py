@@ -137,7 +137,7 @@ def update_lb(conf, lb_id, lb_body):
         except Exception as e:
             db_api.loadbalancer_update(conf, lb_id,
                                        {'status': lb_status.ERROR})
-            return e
+            raise e
     db_api.loadbalancer_update(conf, lb_id,
                                {'status': lb_status.ACTIVE})
 
