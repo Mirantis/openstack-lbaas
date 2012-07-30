@@ -79,8 +79,8 @@ class Controller(object):
     @utils.http_success_code(202)
     def update(self, req, **args):
         logger.debug("Got update request. Request: %s", req)
-        id = core_api.update_lb(self.conf, args['id'], args['body'])
-        return {'loadbalancers': {'id': args['id']}}
+        core_api.update_lb(self.conf, args['id'], args['body'])
+        return {'loadbalancer': {'id': args['id']}}
 
     def addNodes(self, req, **args):
         logger.debug("Got addNode request. Request: %s", req)
