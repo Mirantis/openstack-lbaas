@@ -64,33 +64,33 @@ class Controller(object):
     @utils.http_success_code(204)
     def delete(self, req, **args):
         logger.debug("Got delete request. Request: %s", req)
-        core_api.delete_lb(self.conf, args['id'])
+        core_api.delete_lb(self.conf, args['lb_id'])
 
     def show(self, req, **args):
         logger.debug("Got loadbalancerr info request. Request: %s", req)
-        result = core_api.lb_get_data(self.conf, args['id'])
+        result = core_api.lb_get_data(self.conf, args['lb_id'])
         return {'loadbalancer': result}
 
     def showDetails(self, req, **args):
         logger.debug("Got loadbalancerr info request. Request: %s", req)
-        result = core_api.lb_show_details(self.conf, args['id'])
+        result = core_api.lb_show_details(self.conf, args['lb_id'])
         return result
 
     @utils.http_success_code(202)
     def update(self, req, **args):
         logger.debug("Got update request. Request: %s", req)
-        core_api.update_lb(self.conf, args['id'], args['body'])
-        return {'loadbalancer': {'id': args['id']}}
+        core_api.update_lb(self.conf, args['lb_id'], args['body'])
+        return {'loadbalancer': {'id': args['lb_id']}}
 
     def addNodes(self, req, **args):
         logger.debug("Got addNode request. Request: %s", req)
 
-        return core_api.lb_add_nodes(self.conf, args['id'],
+        return core_api.lb_add_nodes(self.conf, args['lb_id'],
                 args['body']['nodes'])
 
     def showNodes(self, req, **args):
         logger.debug("Got showNodes request. Request: %s", req)
-        return core_api.lb_show_nodes(self.conf, args['id'])
+        return core_api.lb_show_nodes(self.conf, args['lb_id'])
 
     def showNode(self, req, lb_id, lb_node_id):
         logger.debug("Got showNode request. Request: %s", req)
@@ -100,13 +100,13 @@ class Controller(object):
     @utils.http_success_code(204)
     def deleteNode(self, req, **args):
         logger.debug("Got deleteNode request. Request: %s", req)
-        core_api.lb_delete_node(self.conf, args['id'],
-                args['nodeID'])
+        core_api.lb_delete_node(self.conf, args['lb_id'],
+                                           args['lb_node_id'])
 
     def changeNodeStatus(self, req, **args):
         logger.debug("Got changeNodeStatus request. Request: %s", req)
-        result = core_api.lb_change_node_status(self.conf, args['id'],
-                                                         args['nodeID'],
+        result = core_api.lb_change_node_status(self.conf, args['lb_id'],
+                                                         args['lb_node_id'],
                                                          args['status'])
         return {"node": result}
 
@@ -117,7 +117,7 @@ class Controller(object):
 
     def showMonitoring(self, req, **args):
         logger.debug("Got showMonitoring request. Request: %s", req)
-        result = core_api.lb_show_probes(self.conf, args['id'])
+        result = core_api.lb_show_probes(self.conf, args['lb_id'])
         return result
 
     def showProbe(self, req, **args):
@@ -135,12 +135,12 @@ class Controller(object):
     @utils.http_success_code(204)
     def deleteProbe(self, req, **args):
         logger.debug("Got deleteProbe request. Request: %s", req)
-        core_api.lb_delete_probe(self.conf, args['id'],
-                args['probeID'])
+        core_api.lb_delete_probe(self.conf, args['lb_id'],
+                                            args['lb_probe_id'])
 
     def showStickiness(self, req, **args):
         logger.debug("Got showStickiness request. Request: %s", req)
-        result = core_api.lb_show_sticky(self.conf, args['id'])
+        result = core_api.lb_show_sticky(self.conf, args['lb_id'])
         return result
 
     def showSticky(self, req, **args):
@@ -150,15 +150,15 @@ class Controller(object):
 
     def addSticky(self, req, **args):
         logger.debug("Got addSticky request. Request: %s", req)
-        sticky = core_api.lb_add_sticky(self.conf, args['id'],
+        sticky = core_api.lb_add_sticky(self.conf, args['lb_id'],
                                        args['body'])
         return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
     @utils.http_success_code(204)
     def deleteSticky(self, req, **args):
         logger.debug("Got deleteSticky request. Request: %s", req)
-        core_api.lb_delete_sticky(self.conf, args['id'],
-                args['stickyID'])
+        core_api.lb_delete_sticky(self.conf, args['lb_id'],
+                                             args['lb_sticky_id'])
 
     def showVIPs(self, req, lb_id):
         logger.debug("Got showVIPs request. Request: %s", req)

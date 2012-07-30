@@ -57,7 +57,7 @@ class Controller(object):
 
     def show(self, req, **args):
         logger.debug("Got device data request. Request: %s" % req)
-        device_ref = db_api.device_get(self.conf, args['id'])
+        device_ref = db_api.device_get(self.conf, args['device_id'])
         return {'device': db_api.unpack_extra(device_ref)}
 
     def device_status(self, req, **args):
@@ -107,7 +107,7 @@ class Controller(object):
     @utils.http_success_code(204)
     def delete(self, req, **args):
         logger.debug("Got delete request. Request: %s", req)
-        core_api.device_delete(self.conf, args['id'])
+        core_api.device_delete(self.conf, args['device_id'])
 
     def _validate_params(self,  params):
         pass
