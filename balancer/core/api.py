@@ -64,6 +64,7 @@ def lb_get_data(conf, lb_id):
     logger.debug("Got information: %s" % list)
     return lb_dict
 
+
 def lb_show_details(conf, lb_id):
     #store = Storage(conf)
     #reader = store.getReader()

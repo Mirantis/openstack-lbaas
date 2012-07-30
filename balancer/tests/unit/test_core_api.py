@@ -57,10 +57,13 @@ class TestBalancer(unittest.TestCase):
         api.lb_find_for_vm(self.conf, vm_id, self.tenant_id)
         self.assertTrue(mock_api.called)
 
+    @mock.patch("balancer.db.api.unpack_extra")
     @mock.patch("balancer.db.api.loadbalancer_get")
-    def test_get_data(self, mock_api):
+    def test_get_data(self, mock_api, mock_unpack):
+        mock_unpack.return_value = {"virtualIps": 1}
         api.lb_get_data(self.conf, self.lb_id)
         self.assertTrue(mock_api.called)
+        self.assertTrue(mock_unpack.called)
 
     @patch_balancer
     @mock.patch("balancer.db.api.unpack_extra")
