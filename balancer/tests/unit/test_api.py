@@ -138,6 +138,11 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertTrue(mock_lb_show_probes.called)
         self.assertEqual(resp, 'foo')
 
+    @mock.patch('balancer.db.api.probe_get', autospec=True)
+    def test_show_probe_by_id(self, mock_lb_show_probe_by_id):
+        self.controller.showProbe(self.req, id='1', probeID='1')
+        self.assertTrue(mock_lb_show_probe_by_id.called)
+
     @mock.patch('balancer.core.api.lb_add_probe', autospec=True)
     def test_add_probe(self, mock_lb_add_probe):
         mock_lb_add_probe.return_value = {'id': '2'}
