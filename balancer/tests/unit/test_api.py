@@ -60,6 +60,7 @@ class TestLoadBalancersController(unittest.TestCase):
         resp = self.controller.delete(self.req, 1)
         self.assertTrue(mock_delete_lb.called)
         self.code_assert(204, self.controller.delete)
+        self.assertEqual(resp, None)
 
     @mock.patch('balancer.core.api.lb_get_data', autospec=True)
     def test_show(self, mock_lb_get_data):
@@ -114,25 +115,32 @@ class TestLoadBalancersController(unittest.TestCase):
         resp = self.controller.deleteNode(self.req, 1, 1)
         self.assertTrue(mock_lb_delete_node.called)
         self.code_assert(204, self.controller.deleteNode)
+        self.assertEqual(resp, None)
 
     @mock.patch('balancer.core.api.lb_change_node_status', autospec=True)
     def test_change_node_status(self, mock_lb_change_node_status):
+        mock_lb_change_node_status.return_value = {'nodeID': '1',
+                                                   'status': 'Foostatus'}
         resp = self.controller.changeNodeStatus(self.req, 1, 1, 'Foostatus',
                 {})
         self.assertTrue(mock_lb_change_node_status.called)
         self.assertFalse(hasattr(
             self.controller.changeNodeStatus, "wsgi_code"),
             "has not redifined HTTP status code")
+        self.assertEqual(resp, {"node": {'nodeID': '1',
+                                         'status': 'FAKESTATUSA'}})
 
     @mock.patch('balancer.core.api.lb_update_node', autospec=True)
     def test_update_node(self, mock_lb_update_node):
         req_kwargs = {'lb_id': '1',
                       'id': '1',
                       'body': {'node': 'node'}}
+        mock_lb_update_node.return_value = {'nodeID': '1'}
         resp = self.controller.updateNode(self.req, **req_kwargs)
         self.assertTrue(mock_lb_update_node.called)
         self.assertFalse(hasattr(self.controller.updateNode, "wsgi_code"),
             "has not redifined HTTP status code")
+        self.assertEqual(resp, {"node": {'nodeID': '1'}})
 
     @mock.patch('balancer.core.api.lb_show_probes', autospec=True)
     def test_show_monitoring(self, mock_lb_show_probes):
@@ -141,10 +149,14 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertTrue(mock_lb_show_probes.called)
         self.assertEqual(resp, 'foo')
 
+    @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.db.api.probe_get', autospec=True)
-    def test_show_probe_by_id(self, mock_lb_show_probe_by_id):
-        self.controller.showProbe(self.req, 1, 1)
+    def test_show_probe_by_id(self, mock_lb_show_probe_by_id, mock_extra):
+        mock_lb_show_probe_by_id.return_value = ['foo']
+        mock_extra.return_value = 'foo'
+        resp = self.controller.showProbe(self.req, id='1', probeID='1')
         self.assertTrue(mock_lb_show_probe_by_id.called)
+        self.assertEqual(resp, {'healthMonitoring': 'foo'})
 
     @mock.patch('balancer.core.api.lb_add_probe', autospec=True)
     def test_add_probe(self, mock_lb_add_probe):
@@ -161,6 +173,7 @@ class TestLoadBalancersController(unittest.TestCase):
         resp = self.controller.deleteProbe(self.req, 1, 1)
         self.assertTrue(mock_lb_delete_probe.called)
         self.code_assert(204, self.controller.deleteProbe)
+        self.assertEqual(resp, None)
 
     @mock.patch('balancer.core.api.lb_show_sticky', autospec=True)
     def test_show_stickiness(self, mock_lb_show_sticky):
@@ -188,6 +201,7 @@ class TestLoadBalancersController(unittest.TestCase):
         resp = self.controller.deleteSticky(self.req, 1, 1)
         self.assertTrue(mock_lb_delete_sticky.called)
         self.code_assert(204, self.controller.deleteSticky)
+        self.assertEqual(resp, None)
 
     @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.db.api.virtualserver_get_all_by_lb_id',
@@ -207,7 +221,8 @@ class TestLoadBalancersController(unittest.TestCase):
         """Should raise exception"""
         mock_get.side_effect = exception.VirtualServerNotFound()
         with self.assertRaises(exception.VirtualServerNotFound):
-            self.controller.showVIPs(self.req, '1')
+            resp = self.controller.showVIPs(self.req, '1')
+            self.assertEqual(resp, None)
 
     @mock.patch('balancer.core.api.lb_add_vip', autospec=True)
     def test_add_vip(self, mock_lb_add_vip):
@@ -269,6 +284,7 @@ class TestDeviceController(unittest.TestCase):
                                 "has not redifined HTTP status code")
         self.assertTrue(self.controller.delete.wsgi_code == 204,
         "incorrect HTTP status code")
+        self.assertEqual(None, resp)
 
     @unittest.skip('need to implement Controller.device_info')
     @mock.patch('balancer.core.api.device_info', autospec=True)
