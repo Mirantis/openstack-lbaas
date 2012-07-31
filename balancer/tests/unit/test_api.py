@@ -45,7 +45,7 @@ class TestLoadBalancersController(unittest.TestCase):
         resp = self.controller.create(self.req, body={})
         self.assertTrue(mock_loadbalancer_create.called)
         self.assertTrue(mock_create_lb.called)
-        self.assertEqual(resp, {'loadbalancers': {'id': '1'}})
+        self.assertEqual(resp, {'loadbalancer': {'id': '1'}})
         self.assertTrue(hasattr(self.controller.create, "wsgi_code"),
             "has not redifined HTTP status code")
         self.assertTrue(self.controller.create.wsgi_code == 202,
