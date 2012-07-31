@@ -470,7 +470,7 @@ class TestBalancer(unittest.TestCase):
         mock_extra.return_value = {'id': 1}
         mock_bal.return_value.sf._sticky = []
         resp = api.lb_add_sticky(self.conf, self.lb_id, sticky)
-        self.assertEqual(resp, 1)
+        self.assertEqual(resp['id'], 1)
         self.assertTrue(mock_add.called)
         self.assertTrue(mock_driver.called)
 
@@ -517,7 +517,7 @@ class TestDevice(unittest.TestCase):
     def test_device_create(self,  mock_f1, mock_f2):
         mock_f1.return_value = {'id': 1}
         resp = api.device_create(self.conf)
-        self.assertEqual(resp, 1)
+        self.assertEqual(resp, {'id': 1})
         self.assertTrue(mock_f1.called, "device_create not called")
         self.assertTrue(mock_f2.called, "device_pack_extra not called")
 

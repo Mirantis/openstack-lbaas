@@ -49,6 +49,7 @@ class Controller(object):
     def create(self, req, body):
         logger.debug("Got create request. Request: %s", req)
         params = body
+        params = device_body
         logger.debug("Request params: %s" % params)
         self._validate_params(params)
         device = core_api.device_create(self.conf, **params)

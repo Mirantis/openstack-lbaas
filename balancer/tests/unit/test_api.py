@@ -128,7 +128,7 @@ class TestLoadBalancersController(unittest.TestCase):
             self.controller.changeNodeStatus, "wsgi_code"),
             "has not redifined HTTP status code")
         self.assertEqual(resp, {"node": {'nodeID': '1',
-                                         'status': 'FAKESTATUSA'}})
+                                         'status': 'Foostatus'}})
 
     @mock.patch('balancer.core.api.lb_update_node', autospec=True)
     def test_update_node(self, mock_lb_update_node):
@@ -154,7 +154,7 @@ class TestLoadBalancersController(unittest.TestCase):
     def test_show_probe_by_id(self, mock_lb_show_probe_by_id, mock_extra):
         mock_lb_show_probe_by_id.return_value = ['foo']
         mock_extra.return_value = 'foo'
-        resp = self.controller.showProbe(self.req, id='1', probeID='1')
+        resp = self.controller.showProbe(self.req, 1, 1)
         self.assertTrue(mock_lb_show_probe_by_id.called)
         self.assertEqual(resp, {'healthMonitoring': 'foo'})
 
