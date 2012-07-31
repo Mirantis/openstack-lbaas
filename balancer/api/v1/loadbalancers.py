@@ -80,7 +80,7 @@ class Controller(object):
     def update(self, req, **args):
         logger.debug("Got update request. Request: %s", req)
         core_api.update_lb(self.conf, args['id'], args['body'])
-        return {'loadbalancers': "OK"}
+        return {'loadbalancer': {'id': args['id']}}
 
     def addNodes(self, req, **args):
         logger.debug("Got addNode request. Request: %s", req)
