@@ -123,10 +123,13 @@ def get_fake_predictor(sf_id):
 
 
 class TestExtra(unittest.TestCase):
-    def test_pack_extra(self):
-        #TODO: where must be new test
-        pass
-    
+    @mock.patch("balancer.db.api.pack_update")
+    def test_pack_extra(self, mock):
+        model = mock.MagicMock()
+        values = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother'}
+        db_api.pack_extra(model, values)
+        self.assertTrue(mock.called)
+
     def test_unpack_extra(self):
         obj_ref = {'name': 'fakename',
                    'type': 'faketype',
@@ -136,11 +139,37 @@ class TestExtra(unittest.TestCase):
                     'type': 'faketype',
                     'other': 'fakeother'}
         self.assertEqual(values, expected)
-        
-    def test_pack_update(self):
-        #TODO: there must be a test
-        pass
-        
+
+    def test_pack_update_0(self):
+        """1 way"""
+        obj_ref = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
+                'extra': {'dejkstra': 'dejkstra'}}
+        values = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
+                'extra': None}
+        db_api.pack_update(obj_ref, values)
+        self.assertEqual(values, obj_ref)
+
+    def test_pack_update_1(self):
+        """else way"""
+        values = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
+                'dejkstra': 'dejkstra'}
+        obj_ref = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
+                'extra': None}
+        final = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
+                'extra': {'dejkstra': 'dejkstra'}}
+        db_api.pack_update(obj_ref, values)
+        self.assertEqual(obj_ref, final)
+
+    def test_pack_update_2(self):
+        """else way"""
+        values = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
+                'dejkstra': 'dejkstra'}
+        obj_ref = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
+                'extra': {'dejkstra': 'fool'}}
+        final = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
+                'extra': {'dejkstra': 'dejkstra'}}
+        db_api.pack_update(obj_ref, values)
+        self.assertEqual(obj_ref, final)
 
 '''
 class TestDBAPI(unittest.TestCase):
