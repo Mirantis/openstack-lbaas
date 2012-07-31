@@ -142,8 +142,9 @@ class TestExtra(unittest.TestCase):
 
     def test_pack_update_0(self):
         """1 way"""
-        obj_ref = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
-                'extra': {'dejkstra': 'dejkstra'}}
+        obj_ref = {'name': 'fakename', 'type': 'faketype',
+                   'other': 'fakeother',
+                   'extra': {'dejkstra': 'dejkstra'}}
         values = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
                 'extra': None}
         db_api.pack_update(obj_ref, values)
@@ -151,10 +152,12 @@ class TestExtra(unittest.TestCase):
 
     def test_pack_update_1(self):
         """else way"""
-        values = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
-                'dejkstra': 'dejkstra'}
-        obj_ref = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
-                'extra': None}
+        values = {'name': 'fakename', 'type': 'faketype',
+                  'other': 'fakeother',
+                  'dejkstra': 'dejkstra'}
+        obj_ref = {'name': 'fakename', 'type': 'faketype',
+                   'other': 'fakeother',
+                   'extra': None}
         final = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
                 'extra': {'dejkstra': 'dejkstra'}}
         db_api.pack_update(obj_ref, values)
@@ -164,8 +167,9 @@ class TestExtra(unittest.TestCase):
         """else way"""
         values = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
                 'dejkstra': 'dejkstra'}
-        obj_ref = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
-                'extra': {'dejkstra': 'fool'}}
+        obj_ref = {'name': 'fakename', 'type': 'faketype',
+                   'other': 'fakeother',
+                   'extra': {'dejkstra': 'fool'}}
         final = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
                 'extra': {'dejkstra': 'dejkstra'}}
         db_api.pack_update(obj_ref, values)
