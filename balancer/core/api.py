@@ -385,7 +385,7 @@ def lb_add_sticky(conf, lb_id, sticky):
                         balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.add_sticky_to_loadbalancer(ctx, balancer_instance, st)
-    return st['id']
+    return st
 
 
 def lb_delete_sticky(conf, lb_id, sticky_id):
