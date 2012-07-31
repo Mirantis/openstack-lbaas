@@ -78,13 +78,10 @@ class TestLoadBalancersController(unittest.TestCase):
 
     @mock.patch('balancer.core.api.update_lb', autospec=True)
     def test_update(self, mock_update_lb):
-        resp = self.controller.update(self.req, 1, {})
+        resp = self.controller.update(self.req, '123', {})
         self.assertTrue(mock_update_lb.called)
-        self.assertEquals(resp, {"loadbalancer": {"id": 1}})
-        self.assertTrue(hasattr(self.controller.update, "wsgi_code"),
-            "has not redifined HTTP status code")
-        self.assertTrue(self.controller.update.wsgi_code == 202,
-            "incorrect HTTP status code")
+        self.code_assert(202, self.controller.update)
+        self.assertEqual(resp, {'loadbalancer': {'id': '123'}})
 
     @mock.patch('balancer.core.api.lb_add_nodes', autospec=True)
     def test_add_nodes(self, mock_lb_add_nodes):

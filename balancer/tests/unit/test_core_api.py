@@ -517,7 +517,7 @@ class TestDevice(unittest.TestCase):
     def test_device_create(self,  mock_f1, mock_f2):
         mock_f1.return_value = {'id': 1}
         resp = api.device_create(self.conf)
-        self.assertEqual(resp, {'id': 1})
+        self.assertEqual(resp['id'], 1)
         self.assertTrue(mock_f1.called, "device_create not called")
         self.assertTrue(mock_f2.called, "device_pack_extra not called")
 
