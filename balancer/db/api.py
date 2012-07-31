@@ -155,6 +155,18 @@ def loadbalancer_destroy(conf, lb_id):
     with session.begin():
         lb_ref = loadbalancer_get(conf, lb_id, session=session)
         session.delete(lb_ref)
+        
+def lb_count_active_by_device(conf, device_id):
+    session = get_session(conf)
+    with session.begin():
+        lbs = (session.query(models.LoadBalancer)
+               .filter(device_id=device_id)
+               .all())
+        if not lbs:
+            raise exception.LoadBalancerForDeviceNotFound(device_id=device_id)
+        return len(lbs)
+        
+    
 
 # Probe
 
