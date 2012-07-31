@@ -129,7 +129,6 @@ def update_lb(conf, lb_id, lb_body):
     db_api.pack_update(lb_ref, lb_body)
     new_lb_ref = db_api.loadbalancer_update(conf, lb_id, lb_ref)
     device_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
-
     with device_driver.request_context() as ctx:
         try:
             commands.update_loadbalancer(ctx, old_lb_ref, new_lb_ref)

@@ -104,10 +104,15 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.pack_update")
     @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.drivers.get_device_driver")
+    @mock.patch("balancer.core.commands.update_loadbalancer")
     def test_update_lb_0(self, *mocks):
         """No exception, key.lower!='algorithm'"""
         #TODO: there must be a test
-        pass
+        api.update_lb(self.conf, self.lb_id, self.lb_body_0, async=False)
+        for mock in mocks:
+            self.assertTrue(mock.called)
+        mocks[3].assert_called_with(self.conf, self.lb_id,
+                {'status': "ACTIVE"})
 
     @patch_balancer
     @mock.patch("balancer.db.api.predictor_pack_extra")
