@@ -110,7 +110,12 @@ class BaseDriver(object):
 
     def get_statistics(self, serverfarm, rserver):
         raise NotImplementedError
-
+    
+    def get_capabilities(self):
+        try:
+            return self.device_ref['extra'].get('capabilities', [])
+        except Exception:
+            return []
 
 def is_sequence(arg):
     return (not hasattr(arg, "strip") and
