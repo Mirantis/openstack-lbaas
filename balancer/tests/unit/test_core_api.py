@@ -72,6 +72,8 @@ class TestBalancer(unittest.TestCase):
     def test_get_data(self, mock_api, mock_unpack):
         mock_unpack.return_value = {'id': 1, "virtualIps": 1}
         resp = api.lb_get_data(self.conf, self.lb_id)
+        self.assertEqual(resp, {"id": 1})
+        self.assertTrue(mock_api.called)
         self.assertTrue(mock_unpack.called)
         self.assertTrue(mock_api.called)
         self.assertEqual(resp, {'id': 1})
