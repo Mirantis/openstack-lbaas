@@ -42,7 +42,7 @@ class TestLoadBalancersController(unittest.TestCase):
         mock_loadbalancer_create.return_value = {'id': '1'}
         mock_create_lb.return_value = {'id': '1'}
         self.req.headers = {'X-Tenant-Id': 'fake_tenant_id'}
-        resp = self.controller.create(self.req, body={})
+        resp = self.controller.create(self.req, {})
         self.assertTrue(mock_loadbalancer_create.called)
         self.assertTrue(mock_create_lb.called)
         self.assertEqual(resp, {'loadbalancer': {'id': '1'}})
@@ -53,29 +53,29 @@ class TestLoadBalancersController(unittest.TestCase):
 
     @mock.patch('balancer.core.api.delete_lb', autospec=True)
     def test_delete(self, mock_delete_lb):
-        resp = self.controller.delete(self.req, id='123')
+        resp = self.controller.delete(self.req, 1)
         self.assertTrue(mock_delete_lb.called)
         self.code_assert(204, self.controller.delete)
 
     @mock.patch('balancer.core.api.lb_get_data', autospec=True)
     def test_show(self, mock_lb_get_data):
         mock_lb_get_data.return_value = 'foo'
-        resp = self.controller.show(self.req, id='123')
+        resp = self.controller.show(self.req, 1)
         self.assertTrue(mock_lb_get_data.called)
         self.assertEqual(resp, {'loadbalancer': 'foo'})
 
     @mock.patch('balancer.core.api.lb_show_details', autospec=True)
     def test_show_details(self, mock_lb_show_details):
         mock_lb_show_details.return_value = 'foo'
-        resp = self.controller.showDetails(self.req, id='123')
+        resp = self.controller.showDetails(self.req, 1)
         self.assertTrue(mock_lb_show_details.called)
         self.assertEqual('foo', resp)
 
     @mock.patch('balancer.core.api.update_lb', autospec=True)
     def test_update(self, mock_update_lb):
-        resp = self.controller.update(self.req, id='123', body='body')
+        resp = self.controller.update(self.req, 1, {})
         self.assertTrue(mock_update_lb.called)
-        self.assertEquals(resp, {"loadbalancer": {"id": "123"}})
+        self.assertEquals(resp, {"loadbalancer": {"id": 1}})
         self.assertTrue(hasattr(self.controller.update, "wsgi_code"),
             "has not redifined HTTP status code")
         self.assertTrue(self.controller.update.wsgi_code == 202,
@@ -84,15 +84,15 @@ class TestLoadBalancersController(unittest.TestCase):
     @mock.patch('balancer.core.api.lb_add_nodes', autospec=True)
     def test_add_nodes(self, mock_lb_add_nodes):
         mock_lb_add_nodes.return_value = 'foo'
-        resp = self.controller.addNodes(self.req, id='123',
-                                                 body={'nodes': 'foo'})
+        resp = self.controller.addNodes(self.req, lb_id='123',
+                                                 lb_nodes={'nodes': 'foo'})
         self.assertTrue(mock_lb_add_nodes.called)
         self.assertEqual(resp, 'foo')
 
     @mock.patch('balancer.core.api.lb_show_nodes', autospec=True)
     def test_show_nodes(self, mock_lb_show_nodes):
         mock_lb_show_nodes.return_value = 'foo'
-        resp = self.controller.showNodes(self.req, id='123')
+        resp = self.controller.showNodes(self.req, 1)
         self.assertTrue(mock_lb_show_nodes.called)
         self.assertEqual(resp, 'foo')
 
@@ -107,16 +107,13 @@ class TestLoadBalancersController(unittest.TestCase):
 
     @mock.patch('balancer.core.api.lb_delete_node', autospec=True)
     def test_delete_node(self, mock_lb_delete_node):
-        resp = self.controller.deleteNode(self.req, id='123', nodeID='321')
+        resp = self.controller.deleteNode(self.req, 1, 1)
         self.assertTrue(mock_lb_delete_node.called)
         self.code_assert(204, self.controller.deleteNode)
 
     @mock.patch('balancer.core.api.lb_change_node_status', autospec=True)
     def test_change_node_status(self, mock_lb_change_node_status):
-        req_kwargs = {'id': '1',
-                      'nodeID': '1',
-                      'status': 'FAKESTATUSA'}
-        resp = self.controller.changeNodeStatus(self.req, **req_kwargs)
+        resp = self.controller.changeNodeStatus(self.req, 1, 1, 'Foostatus')
         self.assertTrue(mock_lb_change_node_status.called)
         self.assertFalse(hasattr(
             self.controller.changeNodeStatus, "wsgi_code"),
@@ -135,13 +132,13 @@ class TestLoadBalancersController(unittest.TestCase):
     @mock.patch('balancer.core.api.lb_show_probes', autospec=True)
     def test_show_monitoring(self, mock_lb_show_probes):
         mock_lb_show_probes.return_value = 'foo'
-        resp = self.controller.showMonitoring(self.req, id='1')
+        resp = self.controller.showMonitoring(self.req, 1)
         self.assertTrue(mock_lb_show_probes.called)
         self.assertEqual(resp, 'foo')
 
     @mock.patch('balancer.db.api.probe_get', autospec=True)
     def test_show_probe_by_id(self, mock_lb_show_probe_by_id):
-        self.controller.showProbe(self.req, id='1', probeID='1')
+        self.controller.showProbe(self.req, 1, 1)
         self.assertTrue(mock_lb_show_probe_by_id.called)
 
     @mock.patch('balancer.core.api.lb_add_probe', autospec=True)
@@ -156,35 +153,34 @@ class TestLoadBalancersController(unittest.TestCase):
 
     @mock.patch('balancer.core.api.lb_delete_probe', autospec=True)
     def test_delete_probe(self, mock_lb_delete_probe):
-        resp = self.controller.deleteProbe(self.req, id='1', probeID='1')
+        resp = self.controller.deleteProbe(self.req, 1, 1)
         self.assertTrue(mock_lb_delete_probe.called)
         self.code_assert(204, self.controller.deleteProbe)
 
     @mock.patch('balancer.core.api.lb_show_sticky', autospec=True)
     def test_show_stickiness(self, mock_lb_show_sticky):
         mock_lb_show_sticky.return_value = 'foo'
-        resp = self.controller.showStickiness(self.req, id='1')
+        resp = self.controller.showStickiness(self.req, 1)
         self.assertTrue(mock_lb_show_sticky.called)
         self.assertEqual(resp, 'foo')
 
     @mock.patch('balancer.db.api.sticky_get', autospec=True)
     def test_show_sticky(self, mock_func):
-        self.controller.showSticky(self.req, id='1', stickyID=1)
+        self.controller.showSticky(self.req, 1, 1)
         self.assertTrue(mock_func.called)
 
     @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.core.api.lb_add_sticky', autospec=True)
     def test_add_sticky(self, mock_lb_add_sticky, mock_unpack):
         mock_unpack.return_value = '1'
-        req_kwargs = {'id': '1',
-                      'body': {'sessionPersistence': 'foo'}}
-        resp = self.controller.addSticky(self.req, **req_kwargs)
+        resp = self.controller.addSticky(self.req, 1,
+                {'sessionPersistence': 'foo'})
         self.assertTrue(mock_lb_add_sticky.called)
         self.assertEqual(resp, {"sessionPersistence": "1"})
 
     @mock.patch('balancer.core.api.lb_delete_sticky', autospec=True)
     def test_delete_sticky(self, mock_lb_delete_sticky):
-        resp = self.controller.deleteSticky(self.req, id='1', stickyID='1')
+        resp = self.controller.deleteSticky(self.req, 1, 1)
         self.assertTrue(mock_lb_delete_sticky.called)
         self.code_assert(204, self.controller.deleteSticky)
 
@@ -226,13 +222,13 @@ class TestDeviceController(unittest.TestCase):
     @mock.patch('balancer.core.api.device_create', autospec=True)
     def test_create(self, mock_device_create, mock_unpack):
         mock_unpack.return_value = 'foo'
-        res = self.controller.create(self.req, body={})
+        res = self.controller.create(self.req, {})
         self.assertTrue(mock_device_create.called)
         self.assertEqual({'device': 'foo'}, res)
 
     @mock.patch('balancer.core.api.device_delete', autospec=True)
     def test_delete(self, mock_device_delete):
-        resp = self.controller.delete(self.req, id='123')
+        resp = self.controller.delete(self.req, 1)
         self.assertTrue(mock_device_delete.called)
         self.assertTrue(hasattr(self.controller.delete, "wsgi_code"),
                                 "has not redifined HTTP status code")

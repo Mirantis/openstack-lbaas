@@ -52,7 +52,8 @@ class API(wsgi.Router):
         mapper.connect("/loadbalancers/{lb_id}", controller=lb_resource,
                 action="show", conditions={'method': ["GET"]})
 
-        mapper.connect("/loadbalancers/{lb_id}/details", controller=lb_resource,
+        mapper.connect("/loadbalancers/{lb_id}/details",
+                controller=lb_resource,
                 action="showDetails", conditions={'method': ["GET"]})
 
         mapper.connect("/loadbalancers/{lb_id}", controller=lb_resource,
@@ -87,15 +88,17 @@ class API(wsgi.Router):
                        controller=lb_resource, action="showMonitoring", \
                        conditions={'method': ["GET"]})
 
-        mapper.connect("/loadbalancers/{id}/healthMonitoring/{probeID}", \
+        mapper.connect(
+                "/loadbalancers/{lb_id}/healthMonitoring/{lb_probe_id}", \
                        controller=lb_resource, action="showProbe", \
-                       conditions=dict(method=["GET"]))
+                       conditions={'method': ["GET"]})
 
         mapper.connect("/loadbalancers/{lb_id}/healthMonitoring", \
                        controller=lb_resource, \
                        action="addProbe", conditions={'method': ["POST"]})
 
-        mapper.connect("/loadbalancers/{lb_id}/healthMonitoring/{lb_probe_id}", \
+        mapper.connect(
+                "/loadbalancers/{lb_id}/healthMonitoring/{lb_probe_id}", \
                        controller=lb_resource, action="deleteProbe", \
                        conditions={'method': ["DELETE"]})
 
@@ -103,15 +106,17 @@ class API(wsgi.Router):
                        controller=lb_resource, action="showStickiness", \
                        conditions={'method': ["GET"]})
 
-        mapper.connect("/loadbalancers/{id}/sessionPersistence/{stickyID}", \
+        mapper.connect(
+                "/loadbalancers/{lb_id}/sessionPersistence/{lb_sticky_id}", \
                        controller=lb_resource, action="showSticky", \
-                       conditions=dict(method=["GET"]))
+                       conditions={'method': "GET"})
 
         mapper.connect("/loadbalancers/{lb_id}/sessionPersistence", \
                        controller=lb_resource, \
                        action="addSticky", conditions={'method': ["PUT"]})
 
-        mapper.connect("/loadbalancers/{lb_id}/sessionPersistence/{lb_sticky_id}", \
+        mapper.connect(
+                "/loadbalancers/{lb_id}/sessionPersistence/{lb_sticky_id}", \
                        controller=lb_resource, action="deleteSticky", \
                        conditions={'method': ["DELETE"]})
 
@@ -129,7 +134,8 @@ class API(wsgi.Router):
         mapper.resource("device", "devices", controller=device_resource,
                         collection={'detail': 'GET'})
 
-        mapper.connect("/devices/", controller=device_resource, action="index")
+        mapper.connect("/devices/", controller=device_resource,
+                action="index")
 
         mapper.connect("/devices/{device_id}", controller=device_resource,
                        action="show")
@@ -137,7 +143,8 @@ class API(wsgi.Router):
         # NOTE(yorik-sar): broken
         #mapper.connect("/devices/{id}/status", controller=device_resource,
         #               action="device_status")
-        mapper.connect("/devices/{device_id}/info", controller=device_resource,
+        mapper.connect("/devices/{device_id}/info",
+                controller=device_resource,
                        action="device_info")
 
         mapper.connect("/devices/",

@@ -118,9 +118,9 @@ class Controller(object):
         result = core_api.lb_show_probes(self.conf, lb_id)
         return result
 
-    def showProbe(self, req, **args):
+    def showProbe(self, req, lb_id, lb_probe_id):
         logger.debug("Got showProbe request. Request: %s", req)
-        probe = db_api.probe_get(self.conf, args['probeID'])
+        probe = db_api.probe_get(self.conf, lb_probe_id)
         return {"healthMonitoring": db_api.unpack_extra(probe)}
 
     def addProbe(self, req, lb_id, body):
@@ -135,27 +135,25 @@ class Controller(object):
         logger.debug("Got deleteProbe request. Request: %s", req)
         core_api.lb_delete_probe(self.conf, lb_id, lb_probe_id)
 
-    def showStickiness(self, req, **args):
+    def showStickiness(self, req, lb_id):
         logger.debug("Got showStickiness request. Request: %s", req)
-        result = core_api.lb_show_sticky(self.conf, args['lb_id'])
+        result = core_api.lb_show_sticky(self.conf, lb_id)
         return result
 
-    def showSticky(self, req, **args):
+    def showSticky(self, req, lb_id, lb_sticky_id):
         logger.debug("Got showStickiness request. Request: %s", req)
-        sticky = db_api.sticky_get(self.conf, args['stickyID'])
+        sticky = db_api.sticky_get(self.conf, lb_sticky_id)
         return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
-    def addSticky(self, req, **args):
+    def addSticky(self, req, lb_id, lb_sticky_body):
         logger.debug("Got addSticky request. Request: %s", req)
-        sticky = core_api.lb_add_sticky(self.conf, args['lb_id'],
-                                       args['body'])
+        sticky = core_api.lb_add_sticky(self.conf, lb_id, lb_sticky_body)
         return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
     @utils.http_success_code(204)
-    def deleteSticky(self, req, **args):
+    def deleteSticky(self, req, lb_id, lb_sticky_id):
         logger.debug("Got deleteSticky request. Request: %s", req)
-        core_api.lb_delete_sticky(self.conf, args['lb_id'],
-                                             args['lb_sticky_id'])
+        core_api.lb_delete_sticky(self.conf, lb_id, lb_sticky_id)
 
     def showVIPs(self, req, lb_id):
         logger.debug("Got showVIPs request. Request: %s", req)
