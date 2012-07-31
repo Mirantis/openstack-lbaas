@@ -98,34 +98,31 @@ class TestBalancer(unittest.TestCase):
         api.create_lb(self.conf, async=False)
         mock_commands.called_once_with(exception.Invalid)
 
-    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
+    #@patch_balancer
+    #@mock.patch("balancer.db.api.predictor_pack_extra")
     @mock.patch("balancer.db.api.loadbalancer_update")
     @mock.patch("balancer.db.api.pack_update")
     @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.drivers.get_device_driver")
     def test_update_lb_0(self, *mocks):
-        """No exception"""
-        api.update_lb(self.conf, self.lb_id, self.lb_body_0, async=False)
-        for mock in mocks:
-            self.assertTrue(mock.called)
-        mocks[3].assert_called_with(self.conf, self.lb_id,
-                {'status': "ACTIVE"})
+        """No exception, key.lower!='algorithm'"""
+        #TODO: there must be a test
+        pass
 
-    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
-    @mock.patch("balancer.db.api.loadbalancer_update")
-    @mock.patch("balancer.db.api.pack_update")
-    @mock.patch("balancer.db.api.loadbalancer_get")
+    @patch_balancer
+    @mock.patch("balancer.db.api.predictor_pack_extra")
     @mock.patch("balancer.drivers.get_device_driver")
-    @mock.patch("balancer.core.commands.update_loadbalancer")
-    def test_update_lb_1(self, *mocks):
+    def test_update_lb_1(self, mock_driver, mock_api, mock_bal):
+        """No exception, key.lower='algorithm'"""
+        #TODO: there must be a test
+        pass
+
+    @patch_balancer
+    @mock.patch("balancer.drivers.get_device_driver")
+    def test_update_lb_2(self, mock_driver, mock_bal):
         """exception"""
-        mocks[0].side_effect = Exception
-        with self.assertRaises(Exception):
-            api.update_lb(self.conf, self.lb_id, self.lb_body, async=False)
-        for mock in mocks:
-            self.assertTrue(mock.called)
-        mocks[4].assert_called_with(self.conf, self.lb_id,
-                {'status': "ERROR"})
+        #TODO: there must be a test
+        pass
 
     @patch_balancer
     @mock.patch("balancer.drivers.get_device_driver")

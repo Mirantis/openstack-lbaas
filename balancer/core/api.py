@@ -18,6 +18,7 @@
 import logging
 import functools
 import eventlet
+import copy
 
 from openstack.common import exception
 import balancer.exception as exc
@@ -123,21 +124,19 @@ def create_lb(conf, **params):
 
 @asynchronous
 def update_lb(conf, lb_id, lb_body):
-    lb_model = db_api.loadbalancer_get(conf, lb_id)
-    old_algo = lb_model['algorithm']
-    new_lb_model = db_api.loadbalancer_update(conf, lb_id,
-                            db_api.pack_update(lb_model, lb_body))
-    new_algo = new_lb_model['algorithm']
-    device_driver = drivers.get_device_driver(conf, lb_model['device_id'])
-    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_model['id'])
+    lb_ref = db_api.loadbalancer_get(conf, lb_id)
+    old_lb_ref = copy.deepcopy(lb_ref)
+    db_api.pack_update(lb_ref, lb_body)
+    new_lb_ref = db_api.loadbalancer_update(conf, lb_id, lb_ref)
+    device_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
 
     with device_driver.request_context() as ctx:
         try:
-            commands.update_loadbalancer(ctx, old_algo, new_algo, sf)
-        except Exception as e:
+            commands.update_loadbalancer(ctx, old_lb_ref, new_lb_ref)
+        except Exception:
             db_api.loadbalancer_update(conf, lb_id,
                                        {'status': lb_status.ERROR})
-            raise e
+            raise
     db_api.loadbalancer_update(conf, lb_id,
                                {'status': lb_status.ACTIVE})
 

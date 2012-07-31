@@ -30,11 +30,7 @@ from balancer import exception
 # XXX(akscram): pack_ and unpack_ are helper methods to compatibility
 def pack_extra(model, values):
     obj_ref = model()
-    obj_dict = values.copy()
-    for name in obj_ref:
-        if name != 'extra' and name in obj_dict:
-            obj_ref[name] = obj_dict.pop(name)
-    obj_ref['extra'] = obj_dict
+    pack_update(obj_ref, values)
     return obj_ref
 
 
@@ -44,18 +40,19 @@ def unpack_extra(obj_ref):
     return obj_dict
 
 
-def pack_update(model, values):
+def pack_update(obj_ref, values):
+    obj_dict = values.copy()
     for k, v in values.iteritems():
-        if k in model.keys():
-            model[k] = v
-        elif 'extra' in model.keys():
-            model['extra'].update({k: v})
-    return model
+        if k in obj_ref.keys():
+            obj_ref[k] = obj_dict.pop(k)
+        elif obj_ref['extra'] is not None:
+            obj_ref['extra'].update({k: v})
+        else:
+            obj_ref['extra'] = obj_dict.copy()
 
 
 device_pack_extra = functools.partial(pack_extra, models.Device)
 loadbalancer_pack_extra = functools.partial(pack_extra, models.LoadBalancer)
-loadbalancer_pack_update = functools.partial(pack_update, models.LoadBalancer)
 serverfarm_pack_extra = functools.partial(pack_extra, models.ServerFarm)
 virtualserver_pack_extra = functools.partial(pack_extra, models.VirtualServer)
 server_pack_extra = functools.partial(pack_extra, models.Server)
