@@ -171,7 +171,7 @@ class TestExtra(unittest.TestCase):
         db_api.pack_update(obj_ref, values)
         self.assertEqual(obj_ref, final)
 
-'''
+
 class TestDBAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -766,4 +766,4 @@ class TestDBAPI(unittest.TestCase):
             db_api.virtualserver_get(self.conf, virtualserver['id'])
         err = cm.exception
         self.assertEqual(err.kwargs, {'virtualserver_id': virtualserver['id']})
-'''
+
