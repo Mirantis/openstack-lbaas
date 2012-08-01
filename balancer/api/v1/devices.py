@@ -47,9 +47,9 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
-    def create(self, req, device_body):
+    def create(self, req, body):
         logger.debug("Got create request. Request: %s", req)
-        params = device_body
+        params = body
         logger.debug("Request params: %s" % params)
         self._validate_params(params)
         device = core_api.device_create(self.conf, **params)

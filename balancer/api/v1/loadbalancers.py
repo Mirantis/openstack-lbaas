@@ -49,10 +49,10 @@ class Controller(object):
         return {'loadbalancers': result}
 
     @utils.http_success_code(202)
-    def create(self, req, lb_body):
+    def create(self, req, body):
         logger.debug("Got create request. Request: %s", req)
         #here we need to decide which device should be used
-        params = lb_body
+        params = body
         # We need to create LB object and return its id
         tenant_id = req.headers.get('X-Tenant-Id', "")
         lb_ref = db_api.loadbalancer_create(self.conf, {
@@ -77,9 +77,9 @@ class Controller(object):
         return result
 
     @utils.http_success_code(202)
-    def update(self, req, lb_id, lb_body):
+    def update(self, req, lb_id, body):
         logger.debug("Got update request. Request: %s", req)
-        core_api.update_lb(self.conf, lb_id, lb_body)
+        core_api.update_lb(self.conf, lb_id, body)
         return {'loadbalancer': {'id': lb_id}}
 
     def addNodes(self, req, lb_id, lb_nodes):
@@ -145,9 +145,9 @@ class Controller(object):
         sticky = db_api.sticky_get(self.conf, lb_sticky_id)
         return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
-    def addSticky(self, req, lb_id, lb_sticky_body):
+    def addSticky(self, req, lb_id, body):
         logger.debug("Got addSticky request. Request: %s", req)
-        sticky = core_api.lb_add_sticky(self.conf, lb_id, lb_sticky_body)
+        sticky = core_api.lb_add_sticky(self.conf, lb_id, body)
         return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
     @utils.http_success_code(204)
