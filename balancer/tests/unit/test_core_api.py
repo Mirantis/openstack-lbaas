@@ -98,29 +98,31 @@ class TestBalancer(unittest.TestCase):
         api.create_lb(self.conf, async=False)
         mock_commands.called_once_with(exception.Invalid)
 
-    @patch_balancer
-    @mock.patch("balancer.db.api.predictor_pack_extra")
+    @mock.patch("balancer.core.commands.update_loadbalancer")
+    @mock.patch("balancer.db.api.loadbalancer_update")
+    @mock.patch("balancer.db.api.pack_update")
+    @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.drivers.get_device_driver")
-    def test_update_lb_0(self, mock_driver, mock_api, mock_bal):
-        """No exception, key.lower!='algorithm'"""
-        api.update_lb(self.conf, self.lb_id, self.lb_body_0, async=False)
-        self.assertFalse(mock_api.called)
-
-    @patch_balancer
-    @mock.patch("balancer.db.api.predictor_pack_extra")
-    @mock.patch("balancer.drivers.get_device_driver")
-    def test_update_lb_1(self, mock_driver, mock_api, mock_bal):
-        """No exception, key.lower='algorithm'"""
+    def test_update_lb_0(self, *mocks):
+        """No exception"""
         api.update_lb(self.conf, self.lb_id, self.lb_body, async=False)
-        self.assertTrue(mock_api.called)
+        for mock in mocks:
+            self.assertTrue(mock.called)
+        mocks[3].assert_called_with(self.conf, self.lb_id,
+                {'status': "ACTIVE"})
 
-    @patch_balancer
+    @mock.patch("balancer.core.commands.update_loadbalancer")
+    @mock.patch("balancer.db.api.loadbalancer_update")
+    @mock.patch("balancer.db.api.pack_update")
+    @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.drivers.get_device_driver")
-    def test_update_lb_2(self, mock_driver, mock_bal):
-        """exception"""
-        mock_driver.return_value = None
-        api.update_lb(self.conf, self.lb_id, self.lb_body, async=False)
-        self.assertTrue(mock_driver.called)
+    def test_update_lb_2(self, *mocks):
+        """Exception"""
+        mocks[4].return_value = Exception
+        with self.assertRaises(Exception):
+            api.update_lb(self.conf, self.lb_id, self.lb_body, async=False)
+            mocks[3].assert_called_with(self.conf, self.lb_id,
+                {'status': "ERROR"})
 
     @patch_balancer
     @mock.patch("balancer.drivers.get_device_driver")

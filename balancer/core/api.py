@@ -18,6 +18,7 @@
 import logging
 import functools
 import eventlet
+import copy
 
 from openstack.common import exception
 import balancer.exception as exc
@@ -123,55 +124,20 @@ def create_lb(conf, **params):
 
 @asynchronous
 def update_lb(conf, lb_id, lb_body):
-    #Step 1. Load LB from DB
-    old_balancer_instance = vserver.Balancer(conf)
-    balancer_instance = vserver.Balancer(conf)
-    logger.debug("Loading LB data from DB for Lb id: %s" % lb_id)
-    #TODO add clone function to vserver.Balancer in order to avoid double read
-    balancer_instance.loadFromDB(lb_id)
-    old_balancer_instance.loadFromDB(lb_id)
-
-    #Step 2. Parse parameters came from request
-    lb = balancer_instance.lb
-    #old_predictor_id = None
-    #port_updated = False
-    for key in lb_body.keys():
-        if hasattr(lb, key):
-            logger.debug("updating attribute %s of LB. Value is %s"\
-            % (key, lb_body[key]))
-            setattr(lb, key, lb_body[key])
-            if key.lower() == "algorithm":
-                #old_predictor_id = balancer_instance.sf._predictor.id
-#                balancer_instance.sf._predictor =\
-#                createPredictor(lb_body[key])
-                balancer_instance.sf._predictor = \
-                db_api.predictor_pack_extra({'type': lb_body[key]})
-            else:
-                logger.debug("Got unknown attribute %s of LB. Value is %s"\
-                % (key, lb_body[key]))
-
-    #Step 3: Save updated data in DB
-    lb.status = lb_status.PENDING_UPDATE
-    balancer_instance.update()
-
-    #Step 5. Deploy new config to device
-    device_driver = drivers.get_device_driver(conf, lb['device_id'])
-    try:
-        with device_driver.request_context() as ctx:
-            commands.update_loadbalancer(ctx, old_balancer_instance,
-                    balancer_instance)
-            lb.status = lb_status.ACTIVE
-            balancer_instance.update()
-    except:
-        old_balancer_instance.lb.status = lb_status.ERROR
-        old_balancer_instance.update()
-        return
-
-    #balancer_instance.lb.status =\
-    #    balancer.loadbalancers.loadbalancer.LB_ACTIVE_STATUS
-    #balancer_instance.update()
-    #self._task.status = STATUS_DONE
-    return lb['id']
+    lb_ref = db_api.loadbalancer_get(conf, lb_id)
+    old_lb_ref = copy.deepcopy(lb_ref)
+    db_api.pack_update(lb_ref, lb_body)
+    new_lb_ref = db_api.loadbalancer_update(conf, lb_id, lb_ref)
+    device_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
+    with device_driver.request_context() as ctx:
+        try:
+            commands.update_loadbalancer(ctx, old_lb_ref, new_lb_ref)
+        except Exception:
+            db_api.loadbalancer_update(conf, lb_id,
+                                       {'status': lb_status.ERROR})
+            raise
+    db_api.loadbalancer_update(conf, lb_id,
+                               {'status': lb_status.ACTIVE})
 
 
 def delete_lb(conf, lb_id):
