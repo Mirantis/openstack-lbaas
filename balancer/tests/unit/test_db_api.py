@@ -770,4 +770,3 @@ class TestDBAPI(unittest.TestCase):
             db_api.virtualserver_get(self.conf, virtualserver['id'])
         err = cm.exception
         self.assertEqual(err.kwargs, {'virtualserver_id': virtualserver['id']})
-
