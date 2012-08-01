@@ -82,7 +82,6 @@ class TestBalancer(unittest.TestCase):
         self.assertEqual(resp, {"id": 1})
         self.assertTrue(mock_api.called)
         self.assertTrue(mock_unpack.called)
-        self.assertEqual(resp, {'id': 1})
         mock_api.assert_called_once_with(self.conf, self.lb_id)
         mock_unpack.assert_called_once_with([{"id": 1, "virtualIps": 1}])
 
@@ -95,6 +94,11 @@ class TestBalancer(unittest.TestCase):
         mock_api.side_effect = [{'nodes': [], 'healthMonitor': [],
                                  'virtualIps': []}, 'node', 'vip', 'probe']
         resp = api.lb_show_details(self.conf, self.lb_id)
+        mock_bal.assert_called_once_with(self.conf)
+        mock_api.assert_any_call(mock_bal.return_value.lb)
+        mock_api.assert_any_call('node')
+        mock_api.assert_any_call('vip')
+        mock_api.assert_any_call('probe')
         self.assertTrue(mock_bal.called)
         self.assertTrue(mock_api.called)
         self.assertEqual(resp, {'nodes': ['node'], 'virtualIps': ['vip'],
@@ -112,6 +116,7 @@ class TestBalancer(unittest.TestCase):
         self.assertEqual(resp, 1)
         self.assertTrue(mock_driver.called)
         self.assertTrue(mock_commands.called)
+        mock_bal.assert_called_once_with(self.conf)
         device = mock_sched.Instance(self.conf).\
                 getDeviceByID(mock_sched.Instance(self.conf).lb['device_id'])
         mock_driver.assert_called_once_with(self.conf, device['id'])
@@ -131,6 +136,7 @@ class TestBalancer(unittest.TestCase):
         device = mock_sched.Instance(self.conf).\
                 getDeviceByID(mock_sched.Instance(self.conf).lb['device_id'])
         mock_driver.assert_called_once_with(self.conf, device['id'])
+        mock_bal.assert_called_once_with(self.conf)
         self.assertTrue(mock_bal.return_value.lb.status == "ERROR")
 
     @mock.patch("balancer.core.commands.update_loadbalancer")
@@ -205,8 +211,6 @@ class TestBalancer(unittest.TestCase):
         self.assertTrue(mock_driver.call_count == 2)
         self.assertTrue(mock_extra.called)
         self.assertTrue(mock_extra.call_count == 2)
-        self.assertTrue(mock_command.called)
-        self.assertTrue(mock_command.call_count == 2)
         self.assertEqual(resp, {'nodes': [{'node': 'foo'}, {'node': 'foo'}]})
         mock_bal.assert_called_once_with(self.conf)
         mock_driver.assert_called_with(self.conf, 2)
@@ -244,6 +248,7 @@ class TestBalancer(unittest.TestCase):
         self.assertTrue(mock_command.called)
         self.assertTrue(mock_driver.called)
         self.assertTrue(mock_bal.called)
+        mock_bal.assert_called_once_with(self.conf)
         mock_destroy.assert_called_once_with(self.conf, self.lb_node_id)
         mock_get.assert_called_once_with(self.conf, self.lb_node_id)
         mock_driver.assert_called_once_with(self.conf, 2)
@@ -354,6 +359,10 @@ class TestBalancer(unittest.TestCase):
         resp = api.lb_update_node(self.conf, self.lb_id, self.lb_node_id,
                                   self.lb_node)
         self.assertEqual(resp, self.dictionary)
+        mock_update.assert_called_once_with(self.conf,
+                                            mock_get.return_value['id'],
+                                            mock_get.return_value)
+        mock_extra.assert_called_once_with(mock_update.return_value)
         mock_get.assert_called_once_with(self.conf, self.lb_node_id)
         mock_sf.assert_called_once_with(self.conf,
                                         mock_get.return_value['sf_id'])

@@ -58,10 +58,7 @@ class TestLoadBalancersController(unittest.TestCase):
                         self.conf,
                         {'tenant_id': self.req.headers.get('X-Tenant-Id', "")})
         self.assertEqual(resp, {'loadbalancer': {'id': '1'}})
-        self.assertTrue(hasattr(self.controller.create, "wsgi_code"),
-            "has not redifined HTTP status code")
-        self.assertTrue(self.controller.create.wsgi_code == 202,
-        "incorrect HTTP status code")
+        self.code_assert(202, self.controller.create)
 
     @mock.patch('balancer.core.api.delete_lb', autospec=True)
     def test_delete(self, mock_delete_lb):
@@ -208,11 +205,16 @@ class TestLoadBalancersController(unittest.TestCase):
         mock_lb_show_sticky.assert_called_once_with(self.conf, 1)
         self.assertEqual(resp, 'foo')
 
+    @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.db.api.sticky_get', autospec=True)
-    def test_show_sticky(self, mock_func):
-        self.controller.showSticky(self.req, 1, 1)
-        mock_func.assert_called_once_with(self.conf, 1)
+    def test_show_sticky(self, mock_func, mock_extra):
+        mock_extra.return_value = 'foo'
+        resp = self.controller.showSticky(self.req, 1, 1)
         self.assertTrue(mock_func.called)
+        self.assertTrue(mock_extra.called)
+        mock_func.assert_called_once_with(self.conf, 1)
+        mock_extra.assert_called_once_with(mock_func.return_value)
+        self.assertEqual(resp, {'sessionPersistence': 'foo'})
 
     @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.core.api.lb_add_sticky', autospec=True)

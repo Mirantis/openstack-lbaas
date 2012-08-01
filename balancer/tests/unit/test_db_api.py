@@ -226,7 +226,9 @@ class TestDBAPI(unittest.TestCase):
         device_ref1 = db_api.device_create(self.conf, device_fake1)
         device_ref2 = db_api.device_create(self.conf, device_fake2)
         devices = db_api.device_get_all(self.conf)
-        self.assertEqual(len(devices), 2)
+        self.assertEqual([dict(dev.iteritems()) for dev in devices],
+                         [dict(dev.iteritems()) for dev in [device_ref1,
+                                                            device_ref2]])
 
     def test_device_get(self):
         device_ref1 = db_api.device_create(self.conf, device_fake1)

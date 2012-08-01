@@ -348,6 +348,8 @@ class TestServerFarm(unittest.TestCase):
         cmd.delete_server_farm(self.ctx, self.server_farm)
         self.assertTrue(self.ctx.device.delete_server_farm.called)
         self.assertTrue(mock_upd.called, "upd not called")
+        mock_upd.assert_called_once_with(self.ctx.conf, self.server_farm['id'],
+                                         self.server_farm)
 
     def test_add_rserver_to_server_farm_0(self):
         "No exception, if statement = True"
