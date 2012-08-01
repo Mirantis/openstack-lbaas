@@ -317,6 +317,16 @@ class TestDBAPI(unittest.TestCase):
         self.assertEqual(lbs2[0]['id'], lb_ref2['id'])
         self.assertEqual(len(lbs3), 0)
 
+    def test_lb_count_active_by_device(self):
+        lb_fake1 = get_fake_lb('1', 'tenant1')
+        lb_fake2 = get_fake_lb('1', 'tenant2')
+        from balancer.core import lb_status
+        lb_fake2['status'] = lb_status.ACTIVE
+        lb_ref1 = db_api.loadbalancer_create(self.conf, lb_fake1)
+        lb_ref2 = db_api.loadbalancer_create(self.conf, lb_fake2)
+        result = db_api.lb_count_active_by_device(self.conf, '1')
+        self.assertEqual(result, 1)
+
     def test_loadbalancer_destroy(self):
         values = get_fake_lb('1', 'tenant1')
         lb = db_api.loadbalancer_create(self.conf, values)

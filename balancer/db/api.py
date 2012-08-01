@@ -164,9 +164,10 @@ def lb_count_active_by_device(conf, device_id):
     session = get_session(conf)
     with session.begin():
         lbs_count = session.query(func.count(models.LoadBalancer.id)).\
-                                  filter(device_id=device_id).\
-                                  filter(status=lb_status.ACTIVE)
-        return lbs_count
+                                  filter_by(device_id=device_id).\
+                                  filter_by(status=lb_status.ACTIVE).\
+                                  all()
+        return lbs_count[0][0]
 
 
 # Probe
