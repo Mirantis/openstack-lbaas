@@ -22,9 +22,12 @@
 import functools
 import datetime
 
+from sqlalchemy import func
+
 from balancer.db import models
 from balancer.db.session import get_session
 from balancer import exception
+from balancer.core import lb_status
 
 
 # XXX(akscram): pack_ and unpack_ are helper methods to compatibility
@@ -155,18 +158,16 @@ def loadbalancer_destroy(conf, lb_id):
     with session.begin():
         lb_ref = loadbalancer_get(conf, lb_id, session=session)
         session.delete(lb_ref)
-        
+
+
 def lb_count_active_by_device(conf, device_id):
     session = get_session(conf)
     with session.begin():
-        lbs = (session.query(models.LoadBalancer)
-               .filter(device_id=device_id)
-               .all())
-        if not lbs:
-            raise exception.LoadBalancerForDeviceNotFound(device_id=device_id)
-        return len(lbs)
-        
-    
+        lbs_count = session.query(func.count(models.LoadBalancer.id)).\
+                                  filter(device_id=device_id).\
+                                  filter(status=lb_status.ACTIVE)
+        return lbs_count
+
 
 # Probe
 
