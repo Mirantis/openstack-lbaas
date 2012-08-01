@@ -45,10 +45,10 @@ def pack_update(obj_ref, values):
     for k, v in values.iteritems():
         if k in obj_ref.keys():
             obj_ref[k] = obj_dict.pop(k)
-        elif obj_ref['extra'] is not None:
-            obj_ref['extra'].update({k: v})
-        else:
-            obj_ref['extra'] = obj_dict.copy()
+    if obj_ref['extra'] is not None:
+        obj_ref['extra'].update(obj_dict)
+    else:
+        obj_ref['extra'] = obj_dict.copy()
 
 
 device_pack_extra = functools.partial(pack_extra, models.Device)
