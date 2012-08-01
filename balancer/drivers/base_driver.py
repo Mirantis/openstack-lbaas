@@ -113,9 +113,9 @@ class BaseDriver(object):
 
     def get_capabilities(self):
         try:
-            return self.device_ref['extra'].get('capabilities', [])
-        except Exception:
-            return []
+            return self.device_ref['extra'].get('capabilities')
+        except KeyError, TypeError:
+            return None
 
 
 def is_sequence(arg):
