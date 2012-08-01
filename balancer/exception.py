@@ -36,9 +36,7 @@ class DeviceNotFound(NotFound):
 
 class LoadBalancerNotFound(NotFound):
     message = 'LoadBalancer not found'
-    
-class LoadBalancerForDeviceNotFound(NotFound):
-    message = 'LoadBalancer for device not found'
+
 
 class ProbeNotFound(NotFound):
     message = 'Probe not found'

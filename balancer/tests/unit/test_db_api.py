@@ -8,6 +8,7 @@ import shutil
 from balancer.db import api as db_api
 from balancer.db import session
 from balancer import exception
+from balancer.core import lb_status
 
 
 device_fake1 = {'name': 'fake1',
@@ -320,7 +321,6 @@ class TestDBAPI(unittest.TestCase):
     def test_lb_count_active_by_device(self):
         lb_fake1 = get_fake_lb('1', 'tenant1')
         lb_fake2 = get_fake_lb('1', 'tenant2')
-        from balancer.core import lb_status
         lb_fake2['status'] = lb_status.ACTIVE
         lb_ref1 = db_api.loadbalancer_create(self.conf, lb_fake1)
         lb_ref2 = db_api.loadbalancer_create(self.conf, lb_fake2)

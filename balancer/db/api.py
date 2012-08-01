@@ -22,8 +22,6 @@
 import functools
 import datetime
 
-from sqlalchemy import func
-
 from balancer.db import models
 from balancer.db.session import get_session
 from balancer import exception
@@ -163,11 +161,11 @@ def loadbalancer_destroy(conf, lb_id):
 def lb_count_active_by_device(conf, device_id):
     session = get_session(conf)
     with session.begin():
-        lbs_count = session.query(func.count(models.LoadBalancer.id)).\
+        lbs_count = session.query(models.LoadBalancer).\
                                   filter_by(device_id=device_id).\
                                   filter_by(status=lb_status.ACTIVE).\
-                                  all()
-        return lbs_count[0][0]
+                                  count()
+        return lbs_count
 
 
 # Probe
