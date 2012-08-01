@@ -214,14 +214,13 @@ class Balancer():
     def removeFromDB(self):
         lb_id = self.lb['id']
         sf_id = self.sf['id']
-        db_api.loadbalancer_destroy(self.conf, lb_id)
-        db_api.serverfarm_destroy(self.conf, sf_id)
         db_api.predictor_destroy_by_sf_id(self.conf, sf_id)
         db_api.server_destroy_by_sf_id(self.conf, sf_id)
         db_api.probe_destroy_by_sf_id(self.conf, sf_id)
         db_api.virtualserver_destroy_by_sf_id(self.conf, sf_id)
         db_api.sticky_destroy_by_sf_id(self.conf, sf_id)
-
+        db_api.serverfarm_destroy(self.conf, sf_id)
+        db_api.loadbalancer_destroy(self.conf, lb_id)
 
 #    def deploy(self,  driver,  context):
 #        #Step 1. Deploy server farm
