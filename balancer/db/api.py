@@ -197,7 +197,7 @@ def probe_destroy(conf, probe_id):
 
 def probe_destroy_by_sf_id(conf, sf_id, session=None):
     session = session or get_session(conf)
-    with session.begin(subtransactions=True):
+    with session.begin():
         session.query(models.Probe).filter_by(sf_id=sf_id).delete()
 
 # Sticky
@@ -249,7 +249,7 @@ def sticky_destroy(conf, sticky_id):
 
 def sticky_destroy_by_sf_id(conf, sf_id, session=None):
     session = session or get_session(conf)
-    with session.begin(subtransactions=True):
+    with session.begin():
         session.query(models.Sticky).filter_by(sf_id=sf_id).delete()
 
 # Server
@@ -335,7 +335,7 @@ def server_destroy(conf, server_id):
 
 def server_destroy_by_sf_id(conf, sf_id, session=None):
     session = session or get_session(conf)
-    with session.begin(subtransactions=True):
+    with session.begin():
         session.query(models.Server).filter_by(sf_id=sf_id).delete()
 
 # ServerFarm
@@ -423,7 +423,7 @@ def predictor_destroy(conf, predictor_id):
 
 def predictor_destroy_by_sf_id(conf, sf_id, session=None):
     session = session or get_session(conf)
-    with session.begin(subtransactions=True):
+    with session.begin():
         session.query(models.Predictor).filter_by(sf_id=sf_id).delete()
 
 # VirtualServer
@@ -481,5 +481,5 @@ def virtualserver_destroy(conf, vserver_id):
 
 def virtualserver_destroy_by_sf_id(conf, sf_id, session=None):
     session = session or get_session(conf)
-    with session.begin(subtransactions=True):
+    with session.begin():
         session.query(models.VirtualServer).filter_by(sf_id=sf_id).delete()
