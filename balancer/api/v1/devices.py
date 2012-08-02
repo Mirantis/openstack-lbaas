@@ -47,17 +47,17 @@ class Controller(object):
             logger.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
-    def create(self, req, **args):
+    def create(self, req, body):
         logger.debug("Got create request. Request: %s", req)
-        params = args['body']
+        params = body
         logger.debug("Request params: %s" % params)
         self._validate_params(params)
         device = core_api.device_create(self.conf, **params)
         return {"device": db_api.unpack_extra(device)}
 
-    def show(self, req, **args):
+    def show(self, req, id):
         logger.debug("Got device data request. Request: %s" % req)
-        device_ref = db_api.device_get(self.conf, args['id'])
+        device_ref = db_api.device_get(self.conf, id)
         return {'device': db_api.unpack_extra(device_ref)}
 
     def device_status(self, req, **args):
@@ -105,9 +105,9 @@ class Controller(object):
         return {'devices': list}
 
     @utils.http_success_code(204)
-    def delete(self, req, **args):
+    def delete(self, req, id):
         logger.debug("Got delete request. Request: %s", req)
-        core_api.device_delete(self.conf, args['id'])
+        core_api.device_delete(self.conf, id)
 
     def _validate_params(self,  params):
         pass
