@@ -82,10 +82,10 @@ class Controller(object):
         core_api.update_lb(self.conf, id, body)
         return {'loadbalancer': {'id': id}}
 
-    def addNodes(self, req, id, lb_nodes):
+    def addNodes(self, req, id, body):
         logger.debug("Got addNode request. Request: %s", req)
 
-        return core_api.lb_add_nodes(self.conf, id, lb_nodes)
+        return core_api.lb_add_nodes(self.conf, id, body['nodes'])
 
     def showNodes(self, req, id):
         logger.debug("Got showNodes request. Request: %s", req)
