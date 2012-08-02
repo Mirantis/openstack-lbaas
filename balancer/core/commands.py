@@ -278,9 +278,11 @@ def delete_loadbalancer(ctx, balancer):
     delete_server_farm(ctx, balancer.sf)
 
 
-def update_loadbalancer(ctx, old_bal,  new_bal):
-    if old_bal.algorithm != new_bal.algorithm:
-        create_server_farm(ctx, new_bal.sf)
+def update_loadbalancer(ctx, old_bal_ref,  new_bal_ref):
+    if old_bal_ref['algorithm'] != new_bal_ref['algorithm']:
+        sf_ref = db_api.serverfarm_get_all_by_lb_id(ctx.conf,
+                                                    new_bal_ref['id'])[0]
+        create_server_farm(ctx, sf_ref)
 
 
 def add_node_to_loadbalancer(ctx, balancer, rserver):

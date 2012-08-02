@@ -407,8 +407,9 @@ class TestLoadbalancer(unittest.TestCase):
         self.assertTrue(mf7.called, "delete_sticky not called")
         self.assertTrue(mf4.called, "delete_server_farm not called")
 
+    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
     @mock.patch("balancer.core.commands.create_server_farm")
-    def test_update_loadbalancer(self, mock_func):
+    def test_update_loadbalancer(self, mock_func, mock_get):
         self.lb0 = mock.MagicMock()
         cmd.update_loadbalancer(self.ctx, self.balancer, self.lb0)
         self.assertTrue(mock_func.called, "function not called")
