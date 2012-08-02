@@ -5,7 +5,7 @@ from balancer.db import api as db_api
 drivers_opt = cfg.ListOpt('device_drivers',
         default=[
             'ace=balancer.drivers.cisco_ace.ace_driver.AceDriver',
-            'haproxy=balancer.drivers.haproxy.HaproxyDriver.HaproxyDriver'
+            'haproxy=balancer.drivers.haproxy.HaproxyDriver.HaproxyDriver',
         ],
         help="Balancer devices' drivers.")
 
