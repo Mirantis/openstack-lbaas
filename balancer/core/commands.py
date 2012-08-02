@@ -50,7 +50,7 @@ class RollbackContextManager(object):
         while rollback_stack:
             rollback_stack.pop()(good)
         if not good:
-            raise exc_value, exc_type, exc_tb
+            raise exc_type, exc_value, exc_tb
 
 
 class Rollback(Exception):
