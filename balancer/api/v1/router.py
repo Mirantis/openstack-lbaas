@@ -113,7 +113,7 @@ class API(wsgi.Router):
 
         mapper.connect("/loadbalancers/{id}/sessionPersistence", \
                        controller=lb_resource, \
-                       action="addSticky", conditions={'method': ["PUT"]})
+                       action="addSticky", conditions={'method': ["POST"]})
 
         mapper.connect(
                 "/loadbalancers/{lb_id}/sessionPersistence/{id}", \
