@@ -41,7 +41,7 @@ class Balancer():
         nodes_list = obj_dict.pop('nodes', [])
         probes_list = obj_dict.get('healthMonitor', [])
         vips_list = obj_dict.get('virtualIps', [])
-        stic = obj_dict.get('sessionPersistence', [])
+        stickies_list = obj_dict.get('sessionPersistence', [])
 
         try:
             lb = obj_dict.pop('lb')
@@ -96,14 +96,9 @@ class Balancer():
             self.vips.append(vs_ref)
             self.vips.append(vs_ref)
 
-# NOTE(ash): broken
-#        if stic != None:
-#            for st in stic:
-#                st = createSticky(stic['type'])
-#                st.loadFromDict(stic)
-#                st.sf_id = sf.id
-#                st.name = st.id
-#                self.sf._sticky.append(st)
+        for sticky in stickies_list:
+            sticky_ref = db_api.sticky_pack_extra(sticky)
+            self.sf._sticky.append(sticky_ref)
 
     def update(self):
         db_api.loadbalancer_update(self.conf, self.lb['id'], self.lb)
