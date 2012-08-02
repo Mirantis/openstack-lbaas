@@ -147,7 +147,7 @@ class TestExtra(unittest.TestCase):
                    'other': 'fakeother',
                    'extra': {'dejkstra': 'dejkstra'}}
         values = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
-                'extra': None}
+                'extra': {}}
         db_api.pack_update(obj_ref, values)
         self.assertEqual(values, obj_ref)
 
@@ -158,7 +158,7 @@ class TestExtra(unittest.TestCase):
                   'dejkstra': 'dejkstra'}
         obj_ref = {'name': 'fakename', 'type': 'faketype',
                    'other': 'fakeother',
-                   'extra': None}
+                   'extra': {}}
         final = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
                 'extra': {'dejkstra': 'dejkstra'}}
         db_api.pack_update(obj_ref, values)

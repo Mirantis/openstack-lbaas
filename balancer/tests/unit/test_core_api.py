@@ -146,11 +146,20 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.drivers.get_device_driver")
     def test_update_lb_0(self, *mocks):
         """No exception"""
-        api.update_lb(self.conf, self.lb_id, self.lb_body, async=False)
+        resp = api.update_lb(self.conf, self.lb_id, self.lb_body,
+                             async=False)
         for mock in mocks:
             self.assertTrue(mock.called)
+        mocks[0].assert_called_once_with(self.conf,
+                                         mocks[1].return_value['device_id'])
+        mocks[1].assert_called_once_with(self.conf, self.lb_id)
+        mocks[2].assert_called_once_with(mocks[1].return_value, self.lb_body)
         mocks[3].assert_called_with(self.conf, self.lb_id,
                 {'status': "ACTIVE"})
+        with mocks[0].return_value.request_context() as ctx:
+            mocks[4].assert_called_once_with(ctx, mocks[1].return_value,
+                                             mocks[3].return_value)
+        self.assertEqual(resp, None)
 
     @mock.patch("balancer.core.commands.update_loadbalancer")
     @mock.patch("balancer.db.api.loadbalancer_update")
@@ -158,23 +167,6 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.drivers.get_device_driver")
     def test_update_lb_1(self, *mocks):
-        """No exception, key.lower='algorithm'"""
-        mock_bal.return_value.lb.__getitem__.side_effect = [2, self.lb_id]
-        resp = api.update_lb(self.conf, self.lb_id, self.lb_body,
-                             async=False)
-        self.assertEqual(resp, self.lb_id)
-        self.assertTrue(mock_api.called)
-        self.assertTrue(mock_bal.call_count == 2)
-        mock_bal.assert_called_with(self.conf)
-        mock_driver.assert_called_once_with(self.conf, 2)
-        mock_api.assert_called_once_with({'type': 'bubble'})
-
-    @mock.patch("balancer.core.commands.update_loadbalancer")
-    @mock.patch("balancer.db.api.loadbalancer_update")
-    @mock.patch("balancer.db.api.pack_update")
-    @mock.patch("balancer.db.api.loadbalancer_get")
-    @mock.patch("balancer.drivers.get_device_driver")
-    def test_update_lb_2(self, *mocks):
         """Exception"""
         mocks[4].return_value = Exception
         with self.assertRaises(Exception):
