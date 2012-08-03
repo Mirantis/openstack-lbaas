@@ -250,7 +250,7 @@ def lb_update_node(conf, lb_id, lb_node_id, lb_node):
 
     with device_driver.request_context() as ctx:
         commands.delete_rserver_from_server_farm(ctx, sf, rs)
-        rs.update(lb_node)
+        db_api.pack_update(rs, lb_node)
         new_rs = db_api.server_update(conf, rs['id'], rs)
         commands.add_rserver_to_server_farm(ctx, sf, new_rs)
     return db_api.unpack_extra(new_rs)
