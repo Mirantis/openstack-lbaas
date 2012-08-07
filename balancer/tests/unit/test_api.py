@@ -315,21 +315,12 @@ class TestRouter(unittest.TestCase):
             self.assertEquals(action0, action)
             mok = mock.mocksignature(getattr(controller, action))
             if method == "POST" or method == "PUT":
-                try:
-                    if "status" not in m:
-                        m['body'] = {}
+                if "status" not in m:
+                    m['body'] = {}
                     print m
-                    mok('SELF', 'REQUEST', **m)
-                except TypeError:
-                    self.fail('Arguments in route "%s %s" does not match \
-                            %s.%s.%s '
-                            'signature' % (method, url, controller.__module__,
-                                       controller.__name__, action))
-            else:
-                try:
-                    mok('SELF', 'REQUEST', **m)
-                except TypeError:
-                    self.fail('Arguments in route "%s %s" does not match \
-                            %s.%s.%s '
+            try:
+                mok('SELF', 'REQUEST', **m)
+            except TypeError:
+                self.fail('Arguments in route "%s %s" does not match %s.%s.%s '
                             'signature' % (method, url, controller.__module__,
                                        controller.__name__, action))
