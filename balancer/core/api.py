@@ -364,18 +364,17 @@ def lb_delete_sticky(conf, lb_id, sticky_id):
     #Step 1: Load balancer from DB
     balancer_instance.loadFromDB(lb_id)
 
-    #Step 2: Get reader and writer
     #Step 3: Get sticky object from DB
     st = db_api.sticky_get(conf, sticky_id)
 
-    #Step 4: Delete sticky from DB
-    db_api.sticky_destroy(conf, sticky_id)
-
-    #Step 5: Delete real server from device
+    #Step 4: Delete real server from device
     device_driver = drivers.get_device_driver(conf,
                         balancer_instance.lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.remove_sticky_from_loadbalancer(ctx, balancer_instance, st)
+
+    #Step 5: Delete sticky from DB
+    db_api.sticky_destroy(conf, sticky_id)
     return sticky_id
 
 
