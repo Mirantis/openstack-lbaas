@@ -1,9 +1,13 @@
 import unittest
 import mock
+import logging
 import balancer.exception as exception
-
+from openstack.common import wsgi
 from balancer.api.v1 import loadbalancers
 from balancer.api.v1 import devices
+from balancer.api.v1 import router
+
+LOG = logging.getLogger()
 
 
 class TestLoadBalancersController(unittest.TestCase):
@@ -242,3 +246,90 @@ class TestDeviceController(unittest.TestCase):
         resp = self.controller.device_info(self.req)
         self.assertTrue(mock_device_info.called)
         self.assertEqual({'devices': 'foo'}, resp)
+
+
+class TestRouter(unittest.TestCase):
+    def setUp(self):
+        config = mock.MagicMock(spec=dict)
+        self.obj = router.API(config)
+
+    def test_mapper(self):
+        list_of_methods = (
+            ("/loadbalancers", "GET", loadbalancers.Controller, "index"),
+            ("/loadbalancers/find_for_VM/{vm_id}", "GET",
+                loadbalancers.Controller, "findLBforVM"),
+            ("/loadbalancers/{id}", "GET", loadbalancers.Controller,
+                "show"),
+            ("/loadbalancers/{id}/details", "GET", loadbalancers.Controller,
+                "showDetails"),
+            ("/loadbalancers/{id}", "DELETE", loadbalancers.Controller,
+                "delete"),
+            ("/loadbalancers/{id}", "PUT", loadbalancers.Controller,
+                "update"),
+            ("/loadbalancers/{id}/nodes", "POST", loadbalancers.Controller,
+                "addNodes"),
+            ("/loadbalancers/{id}/nodes", "GET", loadbalancers.Controller,
+                "showNodes"),
+            ("/loadbalancers/{lb_id}/nodes/{id}", "DELETE",
+                loadbalancers.Controller, "deleteNode"),
+            ("/loadbalancers/{lb_id}/nodes/{id}", "GET",
+                loadbalancers.Controller, "showNode"),
+            ("/loadbalancers/{lb_id}/nodes/{id}", "PUT",
+                loadbalancers.Controller, "updateNode"),
+            ("/loadbalancers/{lb_id}/nodes/{id}/{status}", "PUT",
+                loadbalancers.Controller, "changeNodeStatus"),
+            ("/loadbalancers/{id}/healthMonitoring", "GET",
+                loadbalancers.Controller, "showMonitoring"),
+            ("/loadbalancers/{lb_id}/healthMonitoring/{id}",
+                "GET", loadbalancers.Controller, "showProbe"),
+            ("/loadbalancers/{id}/healthMonitoring", "POST",
+                loadbalancers.Controller, "addProbe"),
+            ("/loadbalancers/{lb_id}/healthMonitoring/{id}", "DELETE",
+                loadbalancers.Controller, "deleteProbe"),
+            ("/loadbalancers/{id}/sessionPersistence", "GET",
+                loadbalancers.Controller, "showStickiness"),
+            ("/loadbalancers/{lb_id}/sessionPersistence/{id}", "GET",
+                loadbalancers.Controller, "showSticky"),
+            ("/loadbalancers/{id}/sessionPersistence", "POST",
+                loadbalancers.Controller, "addSticky"),
+            ("/loadbalancers/{lb_id}/sessionPersistence/{id}",
+                "DELETE", loadbalancers.Controller, "deleteSticky"),
+            ("/loadbalancers/{id}/virtualips", "GET",
+                loadbalancers.Controller, "showVIPs"),
+            ("/loadbalancers", "POST", loadbalancers.Controller, "create"),
+            ("/devices", "GET", devices.Controller, "index"),
+            ("/devices/{id}", "GET", devices.Controller, "show"),
+            ("/devices/{id}/info", "GET", devices.Controller, "device_info"),
+            ("/devices", "POST", devices.Controller, "create"),
+            ("/devices/{id}", "DELETE", devices.Controller, "delete"),
+        )
+        for url, method, controller, action in list_of_methods:
+            LOG.info('Verifying %s to %s', method, url)
+            m = self.obj.map.match(url, {"REQUEST_METHOD": method})
+            self.assertTrue(m is not None)
+            controller0 = m.pop('controller')
+            action0 = m.pop('action')
+            self.assertTrue(isinstance(controller0, wsgi.Resource))
+            self.assertTrue(isinstance(controller0.controller,
+                controller))
+            self.assertEquals(action0, action)
+            mok = mock.mocksignature(getattr(controller, action))
+            if method == "POST" or method == "PUT":
+                try:
+                    if "status" not in m:
+                        m['body'] = {}
+                    print m
+                    mok('SELF', 'REQUEST', **m)
+                except TypeError:
+                    self.fail('Arguments in route "%s %s" does not match \
+                            %s.%s.%s '
+                            'signature' % (method, url, controller.__module__,
+                                       controller.__name__, action))
+            else:
+                try:
+                    mok('SELF', 'REQUEST', **m)
+                except TypeError:
+                    self.fail('Arguments in route "%s %s" does not match \
+                            %s.%s.%s '
+                            'signature' % (method, url, controller.__module__,
+                                       controller.__name__, action))
