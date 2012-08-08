@@ -114,10 +114,13 @@ def schedule_loadbalancer(conf, lb_ref):
     device_filters = get_functions(conf.device_filters)
     cost_functions = get_functions(conf.device_cost_functions)
     all_device = db_api.device_get_all(conf)
+    filtered_devices = []
     for dev_func in device_filters:
-        all_device = dev_func(all_device, lb_ref)
+        for dev in all_device:
+            filtered_devices.append(dev_func(dev, lb_ref))
     for cost_func in cost_functions:
-        all_device = cost_func(all_device)
-    if not all_device:
+        for dev in all_device:
+            filtered_devices.append(cost_func(dev, lb_ref))
+    if not filtered_devices:
         return None
-    return all_device[0]
+    return filtered_devices[0]
