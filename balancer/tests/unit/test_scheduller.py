@@ -8,7 +8,6 @@ class TestScheduller(unittest.TestCase):
         self.conf = mock.MagicMock()
 
     @mock.patch('balancer.db.api.device_get_all')
-    @mock.patch('balancer.core.scheduller.get_functions')
     def test_schedule_loadbalancer(self, *mocs):
         lb_ref = {}
         schedull.schedule_loadbalancer(self.conf, lb_ref)

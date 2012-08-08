@@ -88,7 +88,8 @@ class Scheduller(object):
 
 
 from balancer.common import cfg
-import importlib
+from collections import OrderedDict
+from balancer.common.utils import import_class
 
 bind_opts = [
     cfg.ListOpt('device_filters', default=[]),
@@ -96,31 +97,25 @@ bind_opts = [
 ]
 
 
-def get_functions(opts):
-    lst_functions = []
-    if not opts:
-        return []
-    for opt in opts:
-        func_name = opt.split('.')[-1]
-        module_name = opt[:-len(func_name) - 1]
-        module = importlib.import_module(module_name)
-        lst_functions.append(module.__getattribute__(func_name))
-    return lst_functions
-
-
 def schedule_loadbalancer(conf, lb_ref):
     conf.register_opts(bind_opts)
-    #get opts by conf.device_filters
-    device_filters = get_functions(conf.device_filters)
-    cost_functions = get_functions(conf.device_cost_functions)
+    device_filters = [import_class(foo) for foo in conf.device_filters]
+    cost_functions = [import_class(foo) for foo in conf.device_cost_functions]
     all_device = db_api.device_get_all(conf)
     filtered_devices = []
     for dev_func in device_filters:
         for dev in all_device:
             filtered_devices.append(dev_func(dev, lb_ref))
+    costed = dict()
     for cost_func in cost_functions:
-        for dev in all_device:
-            filtered_devices.append(cost_func(dev, lb_ref))
-    if not filtered_devices:
+        for dev in filtered_devices:
+            costed.update(cost_func(dev, lb_ref))
+    if not device_filters and not cost_functions:
+        try:
+            return all_device[0]
+        except KeyError:
+            return None
+    elif not costed:
         return None
-    return filtered_devices[0]
+    costed = OrderedDict(sorted(costed.items(), key=lambda v: v[1]))
+    return costed.items()[0][0]
