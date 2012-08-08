@@ -22,6 +22,7 @@ from openstack.common import wsgi
 from balancer.api import utils
 from balancer.core import api as core_api
 import balancer.db.api as db_api
+from balancer import drivers
 
 logger = logging.getLogger('balancer.api.v1.devices')
 
@@ -112,6 +113,19 @@ class Controller(object):
         logger.debug("Got algorithms request. Request: %s", req)
         algorithms = core_api.device_show_algorithms(self.conf)
         return {'algorithms': algorithms}
+
+    def show_protocols(self, req):
+        logger.debug("Got protocols request. Request: %s", req)
+        devices = db_api.device_get_all(self.conf)
+        protocols = []
+        for device in devices:
+            device_driver = drivers.get_device_driver(self.conf, device['id'])
+            with device_driver.request_context() as ctx:
+                capabilities = device_driver.get_capabilities()
+            if capabilities is not None:
+                protocols += [a for a in capabilities['protocols']
+                        if a not in protocols]
+        return {'protocols': protocols}
 
     def _validate_params(self,  params):
         pass

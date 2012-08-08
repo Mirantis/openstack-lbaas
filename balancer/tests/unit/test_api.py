@@ -245,6 +245,7 @@ class TestDeviceController(unittest.TestCase):
         self.conf = mock.Mock()
         self.controller = devices.Controller(self.conf)
         self.req = mock.Mock()
+        self.dict_list = ({'id': 1}, {'id': 2},)
 
     @mock.patch('balancer.core.api.device_get_index', autospec=True)
     def test_index(self, mock_device_get_index):
@@ -282,6 +283,25 @@ class TestDeviceController(unittest.TestCase):
     def test_show_algorithms_0(self, mock_core_api):
         resp = self.controller.show_algorithms(self.req)
         self.assertTrue(mock_core_api.called)
+
+    @mock.patch('balancer.db.api.device_get_all')
+    @mock.patch('balancer.drivers.get_device_driver')
+    def test_show_protocols_0(self, mock_driver, mock_db_api):
+        """capabilities = None"""
+        mock_driver.get_capabilities = None
+        mock_db_api.return_value = self.dict_list
+        resp = self.controller.show_protocols(self.req)
+        self.assertEqual(resp, {'protocols': []})
+
+    @mock.patch('balancer.db.api.device_get_all')
+    @mock.patch('balancer.drivers.get_device_driver')
+    def test_show_protocols_1(self, mock_driver, mock_db_api):
+        """capabilities"""
+        mock_db_api.return_value = self.dict_list
+        mock_driver.return_value = drv = mock.MagicMock()
+        drv.get_capabilities.return_value = {"protocols": ["CRYSIS"]}
+        resp = self.controller.show_protocols(self.req)
+        self.assertEqual(resp, {'protocols': ["CRYSIS"]})
 
 
 class TestRouter(unittest.TestCase):
