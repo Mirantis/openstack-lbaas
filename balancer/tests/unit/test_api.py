@@ -117,7 +117,8 @@ class TestLoadBalancersController(unittest.TestCase):
 
     @mock.patch('balancer.core.api.lb_change_node_status', autospec=True)
     def test_change_node_status(self, mock_lb_change_node_status):
-        resp = self.controller.changeNodeStatus(self.req, 1, 1, 'Foostatus')
+        resp = self.controller.changeNodeStatus(self.req, 1, 1, 'Foostatus',
+                {})
         self.assertTrue(mock_lb_change_node_status.called)
         self.assertFalse(hasattr(
             self.controller.changeNodeStatus, "wsgi_code"),
@@ -315,9 +316,7 @@ class TestRouter(unittest.TestCase):
             self.assertEquals(action0, action)
             mok = mock.mocksignature(getattr(controller, action))
             if method == "POST" or method == "PUT":
-                if "status" not in m:
-                    m['body'] = {}
-                    print m
+                m['body'] = {}
             try:
                 mok('SELF', 'REQUEST', **m)
             except TypeError:

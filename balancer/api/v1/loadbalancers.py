@@ -101,7 +101,7 @@ class Controller(object):
         logger.debug("Got deleteNode request. Request: %s", req)
         core_api.lb_delete_node(self.conf, lb_id, id)
 
-    def changeNodeStatus(self, req, lb_id, id, status):
+    def changeNodeStatus(self, req, lb_id, id, status, body):
         logger.debug("Got changeNodeStatus request. Request: %s", req)
         result = core_api.lb_change_node_status(self.conf, lb_id, id,
                                                          status)
