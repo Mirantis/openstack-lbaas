@@ -378,6 +378,38 @@ def lb_delete_sticky(conf, lb_id, sticky_id):
     return sticky_id
 
 
+def lb_add_vip(conf, lb_id, vip_dict):
+    logger.debug("Called lb_add_vip(), conf: %r, lb_id: %s, vip_dict: %r",
+                 conf, lb_id, vip_dict)
+    lb_ref = db_api.loadbalancer_get(conf, lb_id)
+    # NOTE(akscram): server farms are really only create problems than
+    #                they solve multiply use of the virtual IPs.
+    try:
+        sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_ref['id'])[0]
+    except IndexError:
+        raise exc.ServerFarmNotFound
+
+    values = db_api.virtualserver_pack_extra(vip_dict)
+    values['lb_id'] = lb_ref['id']
+    values['sf_id'] = sf_ref['id']
+    vip_ref = db_api.virtualserver_create(conf, values)
+    device_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
+    with device_driver.request_context() as ctx:
+        commands.create_vip(ctx, vip_ref, sf_ref)
+    return db_api.unpack_extra(vip_ref)
+
+
+def lb_delete_vip(conf, lb_id, vip_id):
+    logger.debug("Called lb_delete_vip(), conf: %r, lb_id: %s, vip_id: %s",
+                 conf, lb_id, vip_id)
+    lb_ref = db_api.loadbalancer_get(conf, lb_id)
+    vip_ref = db_api.virtualserver_get(conf, vip_id)
+    db_api.virtualserver_destroy(conf, vip_id)
+    device_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
+    with device_driver.request_context() as ctx:
+        commands.delete_vip(ctx, vip_ref)
+
+
 def device_get_index(conf):
     devices = db_api.device_get_all(conf)
     devices = [db_api.unpack_extra(dev) for dev in devices]

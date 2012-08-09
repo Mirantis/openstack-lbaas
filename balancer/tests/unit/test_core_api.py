@@ -289,6 +289,108 @@ class TestBalancer(unittest.TestCase):
         for mok in mocks:
             self.assertTrue(mok.called)
 
+    @mock.patch("balancer.db.api.unpack_extra", autospec=True)
+    @mock.patch("balancer.core.commands.create_vip", autospec=True)
+    @mock.patch("balancer.drivers.get_device_driver", autospec=True)
+    @mock.patch("balancer.db.api.virtualserver_create", autospec=True)
+    @mock.patch("balancer.db.api.virtualserver_pack_extra", autospec=True)
+    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id", autospec=True)
+    @mock.patch("balancer.db.api.loadbalancer_get", autospec=True)
+    def test_lb_add_vip(self,
+                        mock_loadbalancer_get,
+                        mock_serverfarm_get_all_by_lb_id,
+                        mock_virtualserver_pack_extra,
+                        mock_virtualserver_create,
+                        mock_get_device_driver,
+                        mock_create_vip,
+                        mock_unpack_extra):
+        # Mock
+        mock_loadbalancer_get.return_value = lb_ref = mock.MagicMock()
+        lb_ref.__getitem__.side_effect = ['fakelbid1', 'fakelbid2',
+                                          'fakedeviceid']
+        sf_ref = mock.MagicMock()
+        sf_ref.__getitem__.return_value = 'fakesfid'
+        mock_serverfarm_get_all_by_lb_id.return_value = [sf_ref]
+        mock_virtualserver_pack_extra.return_value = {}
+        mock_virtualserver_create.return_value = vip_ref = mock.Mock()
+        ctx = mock.MagicMock()
+        ctx.__enter__.return_value = enter_ctx = mock.Mock()
+        mock_get_device_driver.return_value = \
+            mock.Mock(request_context=mock.Mock(return_value=ctx))
+        # Call
+        api.lb_add_vip(self.conf, 'fakelbid', 'fakevipdict')
+        # Assert
+        mock_loadbalancer_get.assert_called_once_with(self.conf, 'fakelbid')
+        mock_serverfarm_get_all_by_lb_id.assert_called_once_with(self.conf,
+                                                                 'fakelbid1')
+        mock_virtualserver_pack_extra.assert_called_once_with('fakevipdict')
+        mock_virtualserver_create.assert_called_once_with(self.conf,
+            {'lb_id': 'fakelbid2', 'sf_id': 'fakesfid'})
+        mock_get_device_driver.assert_called_once_with(self.conf,
+                                                       'fakedeviceid')
+        mock_create_vip.assert_called_once_with(enter_ctx, vip_ref, sf_ref)
+        mock_unpack_extra.assert_called_once_with(vip_ref)
+        self.assertEqual(lb_ref.__getitem__.call_args_list,
+                         [mock.call('id'),
+                          mock.call('id'),
+                          mock.call('device_id')])
+
+    @mock.patch("balancer.db.api.unpack_extra", autospec=True)
+    @mock.patch("balancer.core.commands.create_vip", autospec=True)
+    @mock.patch("balancer.drivers.get_device_driver", autospec=True)
+    @mock.patch("balancer.db.api.virtualserver_create", autospec=True)
+    @mock.patch("balancer.db.api.virtualserver_pack_extra", autospec=True)
+    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id", autospec=True)
+    @mock.patch("balancer.db.api.loadbalancer_get", autospec=True)
+    def test_lb_add_vip_failed(self,
+                               mock_loadbalancer_get,
+                               mock_serverfarm_get_all_by_lb_id,
+                               mock_virtualserver_pack_extra,
+                               mock_virtualserver_create,
+                               mock_get_device_driver,
+                               mock_create_vip,
+                               mock_unpack_extra):
+        mock_serverfarm_get_all_by_lb_id.return_value = []
+        with self.assertRaises(exc.ServerFarmNotFound):
+            api.lb_add_vip(self.conf, 'fakelbid', 'fakevipdict')
+        self.assertTrue(mock_loadbalancer_get.called)
+        self.assertTrue(mock_serverfarm_get_all_by_lb_id.called)
+        self.assertFalse(mock_virtualserver_pack_extra.called)
+        self.assertFalse(mock_virtualserver_create.called)
+        self.assertFalse(mock_get_device_driver.called)
+        self.assertFalse(mock_create_vip.called)
+        self.assertFalse(mock_unpack_extra.called)
+
+    @mock.patch("balancer.core.commands.delete_vip", autospec=True)
+    @mock.patch("balancer.drivers.get_device_driver", autospec=True)
+    @mock.patch("balancer.db.api.virtualserver_destroy", autospec=True)
+    @mock.patch("balancer.db.api.virtualserver_get", autospec=True)
+    @mock.patch("balancer.db.api.loadbalancer_get", autospec=True)
+    def test_lb_delete_vip(self,
+                           mock_loadbalancer_get,
+                           mock_virtualserver_get,
+                           mock_virtualserver_destroy,
+                           mock_get_device_driver,
+                           mock_delete_vip):
+        # Mock
+        mock_loadbalancer_get.return_value = lb_ref = mock.MagicMock()
+        lb_ref.__getitem__.return_value = 'fakedeviceid'
+        mock_virtualserver_get.return_value = vip_ref = mock.Mock()
+        ctx = mock.MagicMock()
+        ctx.__enter__.return_value = enter_ctx = mock.Mock()
+        mock_get_device_driver.return_value = \
+            mock.Mock(request_context=mock.Mock(return_value=ctx))
+        # Call
+        api.lb_delete_vip(self.conf, 'fakelbid', 'fakevipid')
+        # Assert
+        mock_loadbalancer_get.assert_called_once_with(self.conf, 'fakelbid')
+        mock_virtualserver_get.assert_called_once_with(self.conf, 'fakevipid')
+        mock_virtualserver_destroy.assert_called_once_with(self.conf,
+                                                           'fakevipid')
+        mock_get_device_driver.assert_called_once_with(self.conf,
+                                                       'fakedeviceid')
+        mock_delete_vip.assert_called_once_with(enter_ctx, vip_ref)
+
     @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
     @mock.patch("balancer.db.api.sticky_get_all_by_sf_id")
     @mock.patch("balancer.db.api.unpack_extra")
