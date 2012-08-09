@@ -62,17 +62,17 @@ function run_pep8 {
   PEP8_OPTIONS="--exclude=$PEP8_EXCLUDE --repeat"
   PEP8_INCLUDE="bin/* balancer tools setup.py run_tests.py"
   ${wrapper} pep8 $PEP8_OPTIONS $PEP8_INCLUDE
-  RESULT=$?
+  PEP_RESULT=$?
   case "$TERM" in
       *color* ) function out { printf "\033[3%d;1m%s\033[m\n" "$1" "$2"; } ;;
       * ) function out { printf "%s\n" "$2"; } ;;
   esac
-  if [ $RESULT -eq 0 ]; then
+  if [ $PEP_RESULT -eq 0 ]; then
       out 2 "PEP8 OK"
   else
       out 1 "PEP8 FAIL"
   fi
-  return $RESULT
+  return $PEP_RESULT
 }
 
 
@@ -115,7 +115,7 @@ if [ $just_pep8 -eq 1 ]; then
 fi
 
 run_tests
-RESULT=$?
+TEST_RESULT=$?
 
 if [ -z "$noseargs" ]; then
     run_pep8 || exit 1
@@ -126,4 +126,4 @@ if [ $coverage -eq 1 ]; then
     ${wrapper} coverage html -d covhtml -i --include='balancer/*' --omit='balancer/db/migrate_repo*,balancer/common*,balancer/tests*'
 fi
 
-exit $RESULT
+exit $TEST_RESULT
