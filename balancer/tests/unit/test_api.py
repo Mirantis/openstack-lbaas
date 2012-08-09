@@ -329,6 +329,13 @@ class TestRouter(unittest.TestCase):
             # Virtual IPs
             ("/loadbalancers/{id}/virtualIps", "GET",
                 loadbalancers.Controller, "showVIPs"),
+            ("/loadbalancers/{lb_id}/virtualIps", "POST",
+                loadbalancers.Controller, "addVIP"),
+            ("/loadbalancers/{lb_id}/virtualIps/{id}", "GET",
+                loadbalancers.Controller, "showVIP"),
+            ("/loadbalancers/{lb_id}/virtualIps/{id}", "DELETE",
+                loadbalancers.Controller, "deleteVIP"),
+
             ("/loadbalancers", "POST", loadbalancers.Controller, "create"),
             ("/devices", "GET", devices.Controller, "index"),
             ("/devices/{id}", "GET", devices.Controller, "show"),
