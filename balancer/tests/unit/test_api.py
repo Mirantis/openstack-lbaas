@@ -212,7 +212,8 @@ class TestLoadBalancersController(unittest.TestCase):
     @mock.patch('balancer.core.api.lb_add_vip', autospec=True)
     def test_add_vip(self, mock_lb_add_vip):
         mock_lb_add_vip.return_value = 'fakevip'
-        resp = self.controller.addVIP(self.req, 'fakelbid', 'fakebody')
+        resp = self.controller.addVIP(self.req, 'fakelbid',
+                                      {'virtualIp': 'fakebody'})
         self.assertTrue(mock_lb_add_vip.called)
         mock_lb_add_vip.assert_called_once_with(self.conf, 'fakelbid',
                                                 'fakebody')

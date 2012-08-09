@@ -163,7 +163,7 @@ class Controller(object):
     def addVIP(self, req, lb_id, body):
         logger.debug("Called addVIP(), req: %r, lb_id: %s, body: %r",
                      req, lb_id, body)
-        vip = core_api.lb_add_vip(self.conf, lb_id, body)
+        vip = core_api.lb_add_vip(self.conf, lb_id, body['virtualIp'])
         return {'virtualIp': vip}
 
     def showVIP(self, req, lb_id, id):
