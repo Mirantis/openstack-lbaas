@@ -494,3 +494,22 @@ class TestDevice(unittest.TestCase):
         drv.get_capabilities.return_value = {}
         resp = api.device_show_algorithms(self.conf)
         self.assertEqual(resp, [])
+
+    @mock.patch('balancer.db.api.device_get_all')
+    @mock.patch('balancer.drivers.get_device_driver')
+    def test_show_protocols_0(self, mock_driver, mock_db_api):
+        """capabilities = None"""
+        mock_driver.get_capabilities = None
+        mock_db_api.return_value = self.dict_list
+        resp = api.device_show_protocols(self.conf)
+        self.assertEqual(resp, [])
+
+    @mock.patch('balancer.db.api.device_get_all')
+    @mock.patch('balancer.drivers.get_device_driver')
+    def test_show_protocols_1(self, mock_driver, mock_db_api):
+        """capabilities"""
+        mock_db_api.return_value = self.dict_list
+        mock_driver.return_value = drv = mock.MagicMock()
+        drv.get_capabilities.return_value = {"protocols": ["CRYSIS"]}
+        resp = api.device_show_protocols(self.conf)
+        self.assertEqual(resp, ["CRYSIS"])
