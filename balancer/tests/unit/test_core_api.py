@@ -443,6 +443,7 @@ class TestBalancer(unittest.TestCase):
 class TestDevice(unittest.TestCase):
     def setUp(self):
         self.conf = mock.MagicMock(register_group=mock.MagicMock)
+        self.dict_list = ({'id': 1}, {'id': 2},)
 
     @mock.patch("balancer.db.api.device_get_all")
     @mock.patch("balancer.db.api.unpack_extra")
@@ -465,3 +466,32 @@ class TestDevice(unittest.TestCase):
         res = 1
         res = api.device_info(params)
         self.assertEquals(res, None, "Alyarma!")
+
+    @mock.patch('balancer.db.api.device_get_all')
+    @mock.patch('balancer.drivers.get_device_driver')
+    def test_device_show_algorithms_0(self, mock_driver, mock_db_api):
+        """capabilities = None"""
+        mock_driver.get_capabilities = None
+        mock_db_api.return_value = self.dict_list
+        resp = api.device_show_algorithms(self.conf)
+        self.assertEqual(resp, [])
+
+    @mock.patch('balancer.db.api.device_get_all')
+    @mock.patch('balancer.drivers.get_device_driver')
+    def test_device_show_algorithms_1(self, mock_driver, mock_db_api):
+        """capabilities is not empty, not None"""
+        mock_db_api.return_value = self.dict_list
+        mock_driver.return_value = drv = mock.MagicMock()
+        drv.get_capabilities.return_value = {"algorithms": ["CRYSIS"]}
+        resp = api.device_show_algorithms(self.conf)
+        self.assertEqual(resp, ["CRYSIS"])
+
+    @mock.patch('balancer.db.api.device_get_all')
+    @mock.patch('balancer.drivers.get_device_driver')
+    def test_device_show_algorithms_2(self, mock_driver, mock_db_api):
+        """capabilities is empty"""
+        mock_db_api.return_value = self.dict_list
+        mock_driver.return_value = drv = mock.MagicMock()
+        drv.get_capabilities.return_value = {}
+        resp = api.device_show_algorithms(self.conf)
+        self.assertEqual(resp, [])
