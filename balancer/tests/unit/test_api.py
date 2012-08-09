@@ -325,7 +325,9 @@ class TestRouter(unittest.TestCase):
                 loadbalancers.Controller, "addSticky"),
             ("/loadbalancers/{lb_id}/sessionPersistence/{id}",
                 "DELETE", loadbalancers.Controller, "deleteSticky"),
-            ("/loadbalancers/{id}/virtualips", "GET",
+
+            # Virtual IPs
+            ("/loadbalancers/{id}/virtualIps", "GET",
                 loadbalancers.Controller, "showVIPs"),
             ("/loadbalancers", "POST", loadbalancers.Controller, "create"),
             ("/devices", "GET", devices.Controller, "index"),
