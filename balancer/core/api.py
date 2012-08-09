@@ -404,10 +404,10 @@ def lb_delete_vip(conf, lb_id, vip_id):
                  conf, lb_id, vip_id)
     lb_ref = db_api.loadbalancer_get(conf, lb_id)
     vip_ref = db_api.virtualserver_get(conf, vip_id)
-    db_api.virtualserver_destroy(conf, vip_id)
     device_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
     with device_driver.request_context() as ctx:
         commands.delete_vip(ctx, vip_ref)
+    db_api.virtualserver_destroy(conf, vip_id)
 
 
 def device_get_index(conf):
