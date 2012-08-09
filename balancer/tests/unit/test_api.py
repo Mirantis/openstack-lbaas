@@ -199,7 +199,7 @@ class TestLoadBalancersController(unittest.TestCase):
         resp = self.controller.showVIPs(self.req, '1')
         self.assertTrue(mock_get.called)
         self.assertTrue(mock_unpack.called)
-        self.assertEqual(resp, {'vips': ['foo1']})
+        self.assertEqual(resp, {'virtualIps': ['foo1']})
 
     @mock.patch('balancer.db.api.virtualserver_get_all_by_lb_id',
                                                            autospec=True)

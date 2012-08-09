@@ -158,7 +158,7 @@ class Controller(object):
         logger.debug("Got showVIPs request. Request: %s", req)
         vips = map(db_api.unpack_extra,
                    db_api.virtualserver_get_all_by_lb_id(self.conf, id))
-        return {"vips": vips}
+        return {"virtualIps": vips}
 
 
 def create_resource(conf):
