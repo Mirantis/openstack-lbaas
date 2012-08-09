@@ -449,7 +449,7 @@ def device_show_protocols(conf):
         with device_driver.request_context() as ctx:
             capabilities = device_driver.get_capabilities()
         if capabilities is not None:
-            protocols += [a for a in capabilities['protocols']
+            protocols += [a for a in capabilities.get('protocols', [])
                     if a not in protocols]
     return protocols
 
