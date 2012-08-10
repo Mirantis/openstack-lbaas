@@ -60,7 +60,3 @@ class PredictorNotFound(NotFound):
 
 class VirtualServerNotFound(NotFound):
     message = 'Virtual Server not found'
-
-
-class BadRequest(exception.HTTPBadRequest):
-    message = 'Bad request'
