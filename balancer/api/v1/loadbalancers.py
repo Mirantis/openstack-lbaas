@@ -158,7 +158,25 @@ class Controller(object):
         logger.debug("Got showVIPs request. Request: %s", req)
         vips = map(db_api.unpack_extra,
                    db_api.virtualserver_get_all_by_lb_id(self.conf, id))
-        return {"vips": vips}
+        return {"virtualIps": vips}
+
+    def addVIP(self, req, lb_id, body):
+        logger.debug("Called addVIP(), req: %r, lb_id: %s, body: %r",
+                     req, lb_id, body)
+        vip = core_api.lb_add_vip(self.conf, lb_id, body['virtualIp'])
+        return {'virtualIp': vip}
+
+    def showVIP(self, req, lb_id, id):
+        logger.debug("Called showVIP(), req: %r, lb_id: %s, id: %s",
+                     req, lb_id, id)
+        vip_ref = db_api.virtualserver_get(self.conf, id)
+        return {'virtualIp': db_api.unpack_extra(vip_ref)}
+
+    @utils.http_success_code(204)
+    def deleteVIP(self, req, lb_id, id):
+        logger.debug("Called deleteVIP(), req: %r, lb_id: %s, id: %s",
+                     req, lb_id, id)
+        core_api.lb_delete_vip(self.conf, lb_id, id)
 
 
 def create_resource(conf):

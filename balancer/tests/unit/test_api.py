@@ -199,7 +199,7 @@ class TestLoadBalancersController(unittest.TestCase):
         resp = self.controller.showVIPs(self.req, '1')
         self.assertTrue(mock_get.called)
         self.assertTrue(mock_unpack.called)
-        self.assertEqual(resp, {'vips': ['foo1']})
+        self.assertEqual(resp, {'virtualIps': ['foo1']})
 
     @mock.patch('balancer.db.api.virtualserver_get_all_by_lb_id',
                                                            autospec=True)
@@ -208,6 +208,36 @@ class TestLoadBalancersController(unittest.TestCase):
         mock_get.side_effect = exception.VirtualServerNotFound()
         with self.assertRaises(exception.VirtualServerNotFound):
             self.controller.showVIPs(self.req, '1')
+
+    @mock.patch('balancer.core.api.lb_add_vip', autospec=True)
+    def test_add_vip(self, mock_lb_add_vip):
+        mock_lb_add_vip.return_value = 'fakevip'
+        resp = self.controller.addVIP(self.req, 'fakelbid',
+                                      {'virtualIp': 'fakebody'})
+        self.assertTrue(mock_lb_add_vip.called)
+        mock_lb_add_vip.assert_called_once_with(self.conf, 'fakelbid',
+                                                'fakebody')
+        self.assertEqual(resp, {'virtualIp': 'fakevip'})
+
+    @mock.patch('balancer.db.api.unpack_extra', autospec=True)
+    @mock.patch('balancer.db.api.virtualserver_get', autospec=True)
+    def test_show_vip(self, mock_virtualserver_get, mock_unpack_extra):
+        mock_virtualserver_get.return_value = 'fakevip'
+        mock_unpack_extra.return_value = 'packedfakevip'
+        resp = self.controller.showVIP(self.req, 'fakelbid', 'fakeid')
+        self.assertTrue(mock_virtualserver_get.called)
+        self.assertTrue(mock_unpack_extra.called)
+        mock_virtualserver_get.assert_called_once_with(self.conf, 'fakeid')
+        mock_unpack_extra.assert_called_once_with('fakevip')
+        self.assertEqual(resp, {'virtualIp': 'packedfakevip'})
+
+    @mock.patch('balancer.core.api.lb_delete_vip', autospec=True)
+    def test_delete_vip(self, mock_lb_delete_vip):
+        resp = self.controller.deleteVIP(self.conf, 'fakelbid', 'fakeid')
+        self.assertTrue(mock_lb_delete_vip.called)
+        mock_lb_delete_vip.assert_called_once_with(self.conf, 'fakelbid',
+                                                   'fakeid')
+        self.code_assert(204, self.controller.deleteVIP)
 
 
 class TestDeviceController(unittest.TestCase):
@@ -295,8 +325,17 @@ class TestRouter(unittest.TestCase):
                 loadbalancers.Controller, "addSticky"),
             ("/loadbalancers/{lb_id}/sessionPersistence/{id}",
                 "DELETE", loadbalancers.Controller, "deleteSticky"),
-            ("/loadbalancers/{id}/virtualips", "GET",
+
+            # Virtual IPs
+            ("/loadbalancers/{id}/virtualIps", "GET",
                 loadbalancers.Controller, "showVIPs"),
+            ("/loadbalancers/{lb_id}/virtualIps", "POST",
+                loadbalancers.Controller, "addVIP"),
+            ("/loadbalancers/{lb_id}/virtualIps/{id}", "GET",
+                loadbalancers.Controller, "showVIP"),
+            ("/loadbalancers/{lb_id}/virtualIps/{id}", "DELETE",
+                loadbalancers.Controller, "deleteVIP"),
+
             ("/loadbalancers", "POST", loadbalancers.Controller, "create"),
             ("/devices", "GET", devices.Controller, "index"),
             ("/devices/{id}", "GET", devices.Controller, "show"),

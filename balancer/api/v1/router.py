@@ -120,9 +120,18 @@ class API(wsgi.Router):
                        controller=lb_resource, action="deleteSticky", \
                        conditions={'method': ["DELETE"]})
 
-        mapper.connect("/loadbalancers/{id}/virtualips",
+        mapper.connect("/loadbalancers/{id}/virtualIps",
                         controller=lb_resource, action="showVIPs",
                         conditions={'method': ["GET"]})
+        mapper.connect("/loadbalancers/{lb_id}/virtualIps",
+                       controller=lb_resource, action="addVIP",
+                       conditions={"method": ["POST"]})
+        mapper.connect("/loadbalancers/{lb_id}/virtualIps/{id}",
+                       controller=lb_resource, action="showVIP",
+                       conditions={"method": ["GET"]})
+        mapper.connect("/loadbalancers/{lb_id}/virtualIps/{id}",
+                       controller=lb_resource, action="deleteVIP",
+                       conditions={"method": ["DELETE"]})
 
         mapper.connect("/loadbalancers/",
                        controller=lb_resource,
