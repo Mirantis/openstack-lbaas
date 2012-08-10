@@ -101,21 +101,30 @@ def schedule_loadbalancer(conf, lb_ref):
     conf.register_opts(bind_opts)
     device_filters = [import_class(foo) for foo in conf.device_filters]
     cost_functions = [import_class(foo) for foo in conf.device_cost_functions]
+    names = [name.rpartition('.')[-1] for name in conf.device_cost_functions]
+    conf.register_opts([cfg.FloatOpt('device_cost_%s_weight' % name)
+                        for name in names], default=1.)
+    cost_weights = {name: conf.__getattr__('device_cost_%s_weight' % name)
+                    for name in names}
     all_device = db_api.device_get_all(conf)
-    filtered_devices = []
-    for dev_func in device_filters:
-        for dev in all_device:
-            filtered_devices.append(dev_func(dev, lb_ref))
-    costed = dict()
-    for cost_func in cost_functions:
-        for dev in filtered_devices:
-            costed.update(cost_func(dev, lb_ref))
-    if not device_filters and not cost_functions:
+    if not device_filters:
         try:
             return all_device[0]
         except KeyError:
             return None
-    elif not costed:
-        return None
-    costed = OrderedDict(sorted(costed.items(), key=lambda v: v[1]))
-    return costed.items()[0][0]
+    else:
+        filtered_devices = []
+        for dev_func in device_filters:
+            for dev in all_device:
+                if dev_func(lb_ref, dev):
+                    filtered_devices.append(dev)
+        costed = dict()
+        for dev in filtered_devices:
+                for cost_func in cost_functions:
+                    w = cost_weights[cost_func.func_name] * cost_func(lb_ref, dev)
+                    costed.setdefault(dev, 0.)
+                    costed[dev] += w
+        if not costed:
+            return None
+        costed = OrderedDict(sorted(costed.items(), key=lambda v: v[1]))
+        return costed.items()[0][0]
