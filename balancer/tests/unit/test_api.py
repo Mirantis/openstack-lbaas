@@ -42,11 +42,11 @@ class TestLoadBalancersController(unittest.TestCase):
 
     @mock.patch('balancer.core.api.create_lb', autospec=True)
     @mock.patch('balancer.db.api.loadbalancer_create', autospec=True)
-    def test_create(self, mock_loadbalancer_create, mock_create_lb):
+    def test_create_0(self, mock_loadbalancer_create, mock_create_lb):
         mock_loadbalancer_create.return_value = {'id': '1'}
         mock_create_lb.return_value = {'id': '1'}
         self.req.headers = {'X-Tenant-Id': 'fake_tenant_id'}
-        resp = self.controller.create(self.req, {})
+        resp = self.controller.create(self.req, {'virtualIps': "correct"})
         self.assertTrue(mock_loadbalancer_create.called)
         self.assertTrue(mock_create_lb.called)
         self.assertEqual(resp, {'loadbalancer': {'id': '1'}})
@@ -54,6 +54,15 @@ class TestLoadBalancersController(unittest.TestCase):
             "has not redifined HTTP status code")
         self.assertTrue(self.controller.create.wsgi_code == 202,
         "incorrect HTTP status code")
+
+    @mock.patch('balancer.core.api.create_lb', autospec=True)
+    @mock.patch('balancer.db.api.loadbalancer_create', autospec=True)
+    def test_create_1(self, mock_loadbalancer_create, mock_create_lb):
+        mock_loadbalancer_create.return_value = {'id': '1'}
+        mock_create_lb.return_value = {'id': '1'}
+        self.req.headers = {'X-Tenant-Id': 'fake_tenant_id'}
+        with self.assertRaises(exception.BadRequest):
+            resp = self.controller.create(self.req, {})
 
     @mock.patch('balancer.core.api.delete_lb', autospec=True)
     def test_delete(self, mock_delete_lb):
