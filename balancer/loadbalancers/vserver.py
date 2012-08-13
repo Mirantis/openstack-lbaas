@@ -94,7 +94,6 @@ class Balancer():
             vs_ref['transport'] = lb_ref['extra'].get('transport')
             vs_ref['appProto'] = lb_ref['protocol']
             self.vips.append(vs_ref)
-            self.vips.append(vs_ref)
 
         for sticky in stickies_list:
             sticky_ref = db_api.sticky_pack_extra(sticky)
