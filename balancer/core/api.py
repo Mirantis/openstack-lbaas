@@ -65,7 +65,8 @@ def lb_get_data(conf, lb_id):
     logger.debug("Getting information about loadbalancer with id: %s" % lb_id)
     lb = db_api.loadbalancer_get(conf, lb_id)
     lb_dict = db_api.unpack_extra(lb)
-    lb_dict.pop("virtualIps")
+    if 'virtualIps' in lb_dict:
+        lb_dict.pop("virtualIps")
     logger.debug("Got information: %s" % list)
     return lb_dict
 
