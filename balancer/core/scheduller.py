@@ -15,7 +15,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import logging
 import threading
 
@@ -86,7 +85,6 @@ class Scheduller(object):
         self._list.append(device)
         self._device_count += 1
 
-
 from balancer.common import cfg
 from collections import OrderedDict
 from balancer.common.utils import import_class
@@ -100,30 +98,34 @@ bind_opts = [
 def schedule_loadbalancer(conf, lb_ref):
     conf.register_opts(bind_opts)
     device_filters = [import_class(foo) for foo in conf.device_filters]
-    cost_functions = [import_class(foo) for foo in conf.device_cost_functions]
-    names = [name.rpartition('.')[-1] for name in conf.device_cost_functions]
-    conf.register_opts([cfg.FloatOpt('device_cost_%s_weight' % name)
-                        for name in names], default=1.)
-    cost_weights = {name: conf.__getattr__('device_cost_%s_weight' % name)
-                    for name in names}
     all_device = db_api.device_get_all(conf)
     if not device_filters:
         try:
             return all_device[0]
-        except KeyError:
+        except IndexError:
             return None
     else:
+        cost_functions = [import_class(foo) for foo in
+                          conf.device_cost_functions]
+        names = [name.rpartition('.')[-1] for name in
+                 conf.device_cost_functions]
+        conf.register_opts([cfg.FloatOpt('device_cost_%s_weight' % name)
+                            for name in names], default=1.)
+        cost_weights = {name: getattr(conf, 'device_cost_%s_weight' % name)
+                        for name in names}
         filtered_devices = []
-        for dev_func in device_filters:
-            for dev in all_device:
+        for dev in all_device:
+            for dev_func in device_filters:
                 if dev_func(lb_ref, dev):
                     filtered_devices.append(dev)
+                    break
         costed = dict()
         for dev in filtered_devices:
                 for cost_func in cost_functions:
-                    w = cost_weights[cost_func.func_name] * cost_func(lb_ref, dev)
-                    costed.setdefault(dev, 0.)
-                    costed[dev] += w
+                    w = cost_weights[cost_func.func_name] * cost_func(lb_ref,
+                                                                      dev)
+                    w += costed.setdefault(dev, 0.)
+                    costed[dev] = w
         if not costed:
             return None
         costed = OrderedDict(sorted(costed.items(), key=lambda v: v[1]))
