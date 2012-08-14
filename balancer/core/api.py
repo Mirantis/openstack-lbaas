@@ -72,19 +72,36 @@ def lb_get_data(conf, lb_id):
 
 
 def lb_show_details(conf, lb_id):
-    #store = Storage(conf)
-    #reader = store.getReader()
+    lb = db_api.loadbalancer_get(conf, lb_id)
+    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    vips = db_api.virtualserver_get_all_by_sf_id(conf, sf['id'])
+    rs = db_api.server_get_all_by_sf_id(conf, sf['id'])
+    predictor = db_api.predictor_get_all_by_sf_id(conf, sf['id'])[0]
+    probes = db_api.probe_get_all_by_sf_id(conf, sf['id'])
+    stickies = db_api.sticky_get_all_by_sf_id(conf, sf['id'])
 
-    lb = vserver.Balancer(conf)
-    lb.loadFromDB(lb_id)
+    sf._predictor = predictor
+    sf._rservers = []
+    for rs in rs:
+        sf._rservers.append(rs)
 
-    obj = {'loadbalancer':  db_api.unpack_extra(lb.lb)}
+    sf._probes = []
+    for probe in probes:
+        sf._probes.append(probe)
+
+    sf._sticky = []
+    for st in stickies:
+        sf._sticky.append(st)
+
+#    lb = vserver.Balancer(conf)
+#    lb.loadFromDB(lb_id)
+#
+    obj = {'loadbalancer':  db_api.unpack_extra(lb)}
     lbobj = obj['loadbalancer']
-    lbobj['nodes'] = [db_api.unpack_extra(v) for v in lb.rs]
-    lbobj['virtualIps'] = [db_api.unpack_extra(v) for v in lb.vips]
-    lbobj['healthMonitor'] = [db_api.unpack_extra(v) for v in lb.probes]
+    lbobj['nodes'] = db_api.unpack_extra(rs)
+    lbobj['virtualIps'] = [db_api.unpack_extra(vip) for vip in vips]
+    lbobj['healthMonitor'] = [db_api.unpack_extra(probe) for probe in probes]
     logger.debug("Getting information about loadbalancer with id: %s" % lb_id)
-    #list = reader.getLoadvserver.BalancerById(id)
     logger.debug("Got information: %s" % lbobj)
     return lbobj
 
