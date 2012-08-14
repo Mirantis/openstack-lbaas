@@ -278,6 +278,11 @@ class TestDeviceController(unittest.TestCase):
         self.assertTrue(mock_device_info.called)
         self.assertEqual({'devices': 'foo'}, resp)
 
+    @mock.patch('balancer.core.api.device_show_algorithms')
+    def test_show_algorithms_0(self, mock_core_api):
+        resp = self.controller.show_algorithms(self.req)
+        self.assertTrue(mock_core_api.called)
+
 
 class TestRouter(unittest.TestCase):
     def setUp(self):

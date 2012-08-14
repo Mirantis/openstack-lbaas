@@ -20,7 +20,6 @@ import logging
 from openstack.common import exception
 from openstack.common import wsgi
 from balancer.api import utils
-import balancer.exception as exc
 from balancer.core import api as core_api
 import balancer.db.api as db_api
 
@@ -108,6 +107,11 @@ class Controller(object):
     def delete(self, req, id):
         logger.debug("Got delete request. Request: %s", req)
         core_api.device_delete(self.conf, id)
+
+    def show_algorithms(self, req):
+        logger.debug("Got algorithms request. Request: %s", req)
+        algorithms = core_api.device_show_algorithms(self.conf)
+        return {'algorithms': algorithms}
 
     def _validate_params(self,  params):
         pass
