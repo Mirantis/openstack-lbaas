@@ -29,7 +29,6 @@ from balancer.core import scheduler
 from balancer import drivers
 from balancer.loadbalancers import vserver
 from balancer.db import api as db_api
-#from balancer import exception as exc
 
 
 logger = logging.getLogger(__name__)
@@ -76,34 +75,15 @@ def lb_show_details(conf, lb_id):
     sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
     vips = db_api.virtualserver_get_all_by_sf_id(conf, sf['id'])
     rs = db_api.server_get_all_by_sf_id(conf, sf['id'])
-    predictor = db_api.predictor_get_all_by_sf_id(conf, sf['id'])[0]
     probes = db_api.probe_get_all_by_sf_id(conf, sf['id'])
     stickies = db_api.sticky_get_all_by_sf_id(conf, sf['id'])
 
-    sf._predictor = predictor
-    sf._rservers = []
-    for rs in rs:
-        sf._rservers.append(rs)
-
-    sf._probes = []
-    for probe in probes:
-        sf._probes.append(probe)
-
-    sf._sticky = []
-    for st in stickies:
-        sf._sticky.append(st)
-
-#    lb = vserver.Balancer(conf)
-#    lb.loadFromDB(lb_id)
-#
-    obj = {'loadbalancer':  db_api.unpack_extra(lb)}
-    lbobj = obj['loadbalancer']
-    lbobj['nodes'] = db_api.unpack_extra(rs)
-    lbobj['virtualIps'] = [db_api.unpack_extra(vip) for vip in vips]
-    lbobj['healthMonitor'] = [db_api.unpack_extra(probe) for probe in probes]
-    logger.debug("Getting information about loadbalancer with id: %s" % lb_id)
-    logger.debug("Got information: %s" % lbobj)
-    return lbobj
+    lb_ref = db_api.unpack_extra(lb)
+    lb_ref['nodes'] = [db_api.unpack_extra(rserver) for rserver in rs]
+    lb_ref['virtualIps'] = [db_api.unpack_extra(vip) for vip in vips]
+    lb_ref['healthMonitor'] = [db_api.unpack_extra(probe) for probe in probes]
+    lb_ref['sessionPersistence'] = [db_api.unpack_extra(sticky) for sticky in stickies]
+    return lb_ref
 
 
 @asynchronous
@@ -131,10 +111,6 @@ def create_lb(conf, **params):
         balancer_instance.lb.status = lb_status.ACTIVE
     balancer_instance.update()
 
-    #balancer_instance.lb.status = \
-    #   balancer.loadbalancers.loadbalancer.LB_ACTIVE_STATUS
-    #balancer_instance.update()
-    #self._task.status = STATUS_DONE
     return lb['id']
 
 
@@ -157,22 +133,12 @@ def update_lb(conf, lb_id, lb_body):
 
 
 def delete_lb(conf, lb_id):
-    balancer_instance = vserver.Balancer(conf)
-    balancer_instance.loadFromDB(lb_id)
-
-    #Step 1. Parse parameters came from request
-    #bal_deploy.parseParams(params)
-
-    #        #Step 2. Delete config in DB
-    #        balancer_instance.removeFromDB()
-
-    #Step 3. Destruct config at device
-    device_id = balancer_instance.lb['device_id']
-    device_driver = drivers.get_device_driver(conf, device_id)
+#    balancer_instance = vserver.Balancer(conf)
+#    balancer_instance.loadFromDB(lb_id)
+    lb = db_api.loadbalancer_get(conf, lb_id)
+    device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
-        commands.delete_loadbalancer(ctx, balancer_instance)
-
-    balancer_instance.removeFromDB()
+        commands.delete_loadbalancer(ctx, lb, conf)
 
 
 def lb_add_nodes(conf, lb_id, lb_nodes):

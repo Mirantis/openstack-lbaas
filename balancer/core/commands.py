@@ -261,21 +261,30 @@ def create_loadbalancer(ctx, balancer):
         create_vip(ctx, vip, balancer.sf)
 
 
-def delete_loadbalancer(ctx, balancer):
-    for vip in balancer.vips:
+def delete_loadbalancer(ctx, lb, conf):
+    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb['id'])[0]
+    vips = db_api.virtualserver_get_all_by_sf_id(conf, sf['id'])
+    rs = db_api.server_get_all_by_sf_id(conf, sf['id'])
+    probes = db_api.probe_get_all_by_sf_id(conf, sf['id'])
+    stickies = db_api.sticky_get_all_by_sf_id(conf, sf['id'])
+    for vip in vips:
         delete_vip(ctx, vip)
-#    for pr in balancer.probes:
-#        DeleteProbeFromSFCommand(driver,  context,  balancer.sf,  pr)
-#        DeleteProbeCommand(driver,  context,  pr)
-    for rserver in balancer.rs:
-        delete_rserver_from_server_farm(ctx, balancer.sf, rserver)
+    for rserver in rs:
+        delete_rserver_from_server_farm(ctx, sf, rserver)
         delete_rserver(ctx, rserver)
-    for probe in balancer.probes:
-        remove_probe_from_server_farm(ctx, balancer.sf, probe)
+    for probe in probes:
+        remove_probe_from_server_farm(ctx, sf, probe)
         delete_probe(ctx, probe)
-    for sticky in balancer.sf._sticky:
+    for sticky in stickies:
         delete_sticky(ctx, sticky)
-    delete_server_farm(ctx, balancer.sf)
+    delete_server_farm(ctx, sf)
+    db_api.predictor_destroy_by_sf_id(conf, sf['id'])
+    db_api.server_destroy_by_sf_id(conf, sf['id'])
+    db_api.probe_destroy_by_sf_id(conf, sf['id'])
+    db_api.virtualserver_destroy_by_sf_id(conf, sf['id'])
+    db_api.sticky_destroy_by_sf_id(conf, sf['id'])
+    db_api.serverfarm_destroy(conf, sf['id'])
+    db_api.loadbalancer_destroy(conf, lb['id'])
 
 
 def update_loadbalancer(ctx, old_bal_ref,  new_bal_ref):
