@@ -88,7 +88,7 @@ class Scheduller(object):
 
 from balancer.common import cfg
 from collections import OrderedDict
-from balancer.common.utils import import_class
+from balancer.common import utils
 
 bind_opts = [
     cfg.ListOpt('device_filters', default=[]),
@@ -98,11 +98,11 @@ bind_opts = [
 
 def schedule_loadbalancer(conf, lb_ref):
     conf.register_opts(bind_opts)
-    device_filters = [import_class(foo) for foo in conf.device_filters]
+    device_filters = [utils.import_class(foo) for foo in conf.device_filters]
     all_devices = db_api.device_get_all(conf)
     if not all_devices:
         raise exp.DeviceNotFound
-    cost_functions = [import_class(foo) for foo in
+    cost_functions = [utils.import_class(foo) for foo in
                       conf.device_cost_functions]
     names = [name.rpartition('.')[-1] for name in
              conf.device_cost_functions]
