@@ -34,6 +34,10 @@ class DeviceNotFound(NotFound):
     message = 'Device not found'
 
 
+class NoValidDevice(NotFound):
+    message = 'Suitable device not found'
+
+
 class LoadBalancerNotFound(NotFound):
     message = 'LoadBalancer not found'
 

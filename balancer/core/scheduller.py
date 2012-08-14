@@ -15,7 +15,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import logging
 import threading
 
@@ -23,6 +22,7 @@ from openstack.common import exception
 #from balancer.storage.storage import *
 from balancer.common.utils import Singleton
 from balancer.db import api as db_api
+from balancer import exception as exp
 
 logger = logging.getLogger(__name__)
 
@@ -84,3 +84,42 @@ class Scheduller(object):
         self._device_map[device['id']] = device
         self._list.append(device)
         self._device_count += 1
+
+
+from balancer.common import cfg
+from collections import OrderedDict
+from balancer.common import utils
+
+bind_opts = [
+    cfg.ListOpt('device_filters', default=[]),
+    cfg.ListOpt('device_cost_functions', default=[]),
+]
+
+
+def schedule_loadbalancer(conf, lb_ref):
+    conf.register_opts(bind_opts)
+    device_filters = [utils.import_class(foo) for foo in conf.device_filters]
+    all_devices = db_api.device_get_all(conf)
+    if not all_devices:
+        raise exp.DeviceNotFound
+    cost_functions = [utils.import_class(foo) for foo in
+                      conf.device_cost_functions]
+    names = [name.rpartition('.')[-1] for name in
+             conf.device_cost_functions]
+    conf.register_opts([cfg.FloatOpt('device_cost_%s_weight' % name)
+                        for name in names], default=1.)
+    cost_weights = {name: getattr(conf, 'device_cost_%s_weight' % name)
+                    for name in names}
+    filtered_devices = [dev for dev in all_devices
+                        if all(filt(lb_ref, dev) for filt in device_filters)]
+    if not filtered_devices:
+        raise exp.NoValidDevice
+    costed = dict()
+    for dev in filtered_devices:
+        for cost_func in cost_functions:
+            w = cost_weights[cost_func.func_name] * cost_func(lb_ref,
+                                                              dev)
+            w += costed.setdefault(dev, 0.)
+            costed[dev] = w
+    costed = OrderedDict(sorted(costed.items(), key=lambda v: v[1]))
+    return costed.items()[0][0]
