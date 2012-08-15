@@ -53,15 +53,12 @@ def schedule_loadbalancer(conf, lb_ref):
 
 
 def filter_capabilities(conf, lb_ref, dev_ref):
-    conf.register_opt(cfg.ListOpt('device_filter_capabilities', default=[]))
-    opts = conf.device_filter_capabilities or ['algorithm']
-    res = []
-    for opt in opts:
-        try:
-            res.append(lb_ref[opt] == dev_ref['extra']['capabilities'][opt])
-        except KeyError:
-            res.append(False)
-    return all(res)
+    conf.register_opt(cfg.ListOpt('device_filter_capabilities',
+                                  default=['algorithm']))
+    for opt in conf.device_filter_capabilities:
+        if not (lb_ref[opt] in dev_ref['extra']['capabilities'].get(opt)):
+            return False
+    return True
 
 
 def lbs_on(conf, lb_ref, dev_ref):

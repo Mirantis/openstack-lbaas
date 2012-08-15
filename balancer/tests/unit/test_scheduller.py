@@ -57,7 +57,7 @@ class TestFilters(unittest.TestCase):
         self.dev_ref.clear()
 
     def test_filter_capabilities_proper(self):
-        self.conf.device_filter_capabilities = []
+        self.conf.device_filter_capabilities = ['algorithm']
         self.lb_ref['algorithm'] = 'test'
         self.dev_ref.update({'extra': {'capabilities': {'algorithm': 'test'}}})
         res = schedull.filter_capabilities(self.conf, self.lb_ref,
@@ -65,7 +65,9 @@ class TestFilters(unittest.TestCase):
         self.assertTrue(res)
 
     def test_filter_capabilities_not_proper(self):
-        self.conf.device_filter_capabilities = []
+        self.conf.device_filter_capabilities = ['algorithm']
+        self.lb_ref['algorithm'] = 'round'
+        self.dev_ref.update({'extra': {'capabilities': {'algorithm': 'test'}}})
         res = schedull.filter_capabilities(self.conf, self.lb_ref,
                                            self.dev_ref)
         self.assertFalse(res)
