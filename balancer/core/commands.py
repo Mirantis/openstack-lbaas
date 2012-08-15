@@ -299,8 +299,8 @@ def add_node_to_loadbalancer(ctx, sf, rserver):
     add_rserver_to_server_farm(ctx, sf, rserver)
 
 
-def remove_node_from_loadbalancer(ctx, balancer, rserver):
-    delete_rserver_from_server_farm(ctx, balancer.sf, rserver)
+def remove_node_from_loadbalancer(ctx, sf, rserver):
+    delete_rserver_from_server_farm(ctx, sf, rserver)
     delete_rserver(ctx, rserver)
 
 
