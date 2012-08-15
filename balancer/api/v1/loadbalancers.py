@@ -154,6 +154,7 @@ class Controller(object):
         logger.debug("Got deleteSticky request. Request: %s", req)
         core_api.lb_delete_sticky(self.conf, lb_id, id)
 
+    @utils.http_success_code(200)
     def showVIPs(self, req, id):
         logger.debug("Got showVIPs request. Request: %s", req)
         vips = map(db_api.unpack_extra,
