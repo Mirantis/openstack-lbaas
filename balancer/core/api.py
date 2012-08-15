@@ -256,23 +256,13 @@ def lb_add_probe(conf, lb_id, probe_dict):
 
 
 def lb_delete_probe(conf, lb_id, probe_id):
-    balancer_instance = vserver.Balancer(conf)
-
-    #Step 1: Load balancer from DB
-    balancer_instance.loadFromDB(lb_id)
-
-    #Step 2: Get reader and writer
-    #Step 3: Get RS object from DB
-    prb = db_api.probe_get(conf, probe_id)
-
-    #Step 4: Delete RS from DB
+    lb = db_api.loadbalancer_get(conf, lb_id)
+    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    probe = db_api.probe_get(conf, probe_id)
     db_api.probe_destroy(conf, probe_id)
-
-    #Step 5: Delete real server from device
-    device_driver = drivers.get_device_driver(conf,
-                        balancer_instance.lb['device_id'])
+    device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
-        commands.remove_probe_from_server_farm(ctx, balancer_instance, prb)
+        commands.remove_probe_from_server_farm(ctx, sf, probe)
     return probe_id
 
 
