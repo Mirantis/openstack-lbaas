@@ -26,7 +26,8 @@ class TestDecorators(unittest.TestCase):
 
 class TestBalancer(unittest.TestCase):
     patch_balancer = mock.patch("balancer.loadbalancers.vserver.Balancer")
-    patch_scheduller = mock.patch("balancer.core.scheduller.Scheduller")
+    patch_scheduller = mock.patch(
+            "balancer.core.scheduller.schedule_loadbalancer")
     patch_logger = mock.patch("logging.getLogger")
 
     def setUp(self):
@@ -452,14 +453,12 @@ class TestDevice(unittest.TestCase):
         api.device_get_index(self.conf)
         self.assertTrue(mock_f2.called, "None")
 
-    @mock.patch("balancer.core.scheduller.Scheduller.Instance")
     @mock.patch("balancer.db.api.device_pack_extra")
     @mock.patch("balancer.db.api.device_create")
-    def test_device_create(self,  mock_f1, mock_f2, mock_f3):
+    def test_device_create(self,  mock_f1, mock_f2):
         api.device_create(self.conf)
         self.assertTrue(mock_f2.called, "device_pack_extra not called")
         self.assertTrue(mock_f1.called, "device_create not called")
-        self.assertTrue(mock_f3.called, "scheduller not called")
 
     def test_device_info(self):
         params = {'query_params': 2}
