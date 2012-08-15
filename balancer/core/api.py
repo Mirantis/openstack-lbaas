@@ -177,11 +177,9 @@ def lb_delete_node(conf, lb_id, lb_node_id):
 
 
 def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
-    balancer_instance = vserver.Balancer(conf)
-    balancer_instance.loadFromDB(lb_id)
-
+    lb = db_api.loadbalancer_get(conf, lb_id)
     rs = db_api.server_get(conf, lb_node_id)
-    sf = balancer_instance.sf
+    sf = db_api.serverfarm_get(conf, rs['sf_id'])
     if rs['state'] == lb_node_status:
         return "OK"
 
@@ -190,8 +188,7 @@ def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
     if rs['parent_id'] != "":
         rs['name'] = rs['parent_id']
     logger.debug("Changing RServer status to: %s" % lb_node_status)
-    device_driver = drivers.get_device_driver(conf,
-                        balancer_instance.lb['device_id'])
+    device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
         if lb_node_status == "inservice":
             commands.activate_rserver(ctx, sf, rs)
