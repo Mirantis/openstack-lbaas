@@ -95,9 +95,7 @@ def create_lb(conf, **params):
 
     #Step 1. Parse parameters came from request
     balancer_instance.parseParams(params)
-    bal_instance = scheduller.Scheduller.Instance(conf)
-    # device = sched.getDevice()
-    device = bal_instance.getDeviceByID(balancer_instance.lb['device_id'])
+    device = scheduller.schedule_loadbalancer(conf, balancer_instance.lb)
 
     lb = balancer_instance.getLB()
     lb['device_id'] = device['id']
@@ -420,7 +418,6 @@ def device_get_index(conf):
 def device_create(conf, **params):
     device_dict = db_api.device_pack_extra(params)
     device = db_api.device_create(conf, device_dict)
-    scheduller.Scheduller.Instance(conf).addDevice(device)
     return device
 
 

@@ -26,7 +26,7 @@ from balancer import exception as exp
 
 logger = logging.getLogger(__name__)
 
-
+'''
 @Singleton
 class Scheduller(object):
 
@@ -84,7 +84,7 @@ class Scheduller(object):
         self._device_map[device['id']] = device
         self._list.append(device)
         self._device_count += 1
-
+'''
 
 from balancer.common import cfg
 from balancer.common import utils
@@ -104,7 +104,7 @@ def schedule_loadbalancer(conf, lb_ref):
     cost_functions = []
     for fullname in conf.device_cost_functions:
         conf_name = 'device_cost_%s_weight' % fullname.rpartition('.')[-1]
-        conf.register_opt(cfg.FloatOpt(conf_name))
+        conf.register_opt(cfg.FloatOpt(conf_name, default=1.))
         cost_functions.append(
                 (utils.import_class(fullname), getattr(conf, conf_name)))
     filtered_devices = [dev for dev in all_devices
