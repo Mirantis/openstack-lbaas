@@ -294,9 +294,10 @@ def update_loadbalancer(ctx, old_bal_ref,  new_bal_ref):
         create_server_farm(ctx, sf_ref)
 
 
-def add_node_to_loadbalancer(ctx, balancer, rserver):
-    create_rserver(ctx, rserver)
-    add_rserver_to_server_farm(ctx, balancer.sf, rserver)
+def add_node_to_loadbalancer(ctx, sf, rserver):
+    rs = db_api.unpack_extra(rserver)
+    create_rserver(ctx, rs)
+    add_rserver_to_server_farm(ctx, sf, rs)
 
 
 def remove_node_from_loadbalancer(ctx, balancer, rserver):

@@ -141,31 +141,32 @@ def delete_lb(conf, lb_id):
         commands.delete_loadbalancer(ctx, lb, conf)
 
 
-def lb_add_nodes(conf, lb_id, lb_nodes):
+def lb_add_nodes(conf, lb_id, nodes):
     node_list = []
-    balancer_instance = vserver.Balancer(conf)
+#    balancer_instance = vserver.Balancer(conf)
+    lb = db_api.loadbalancer_get(conf, lb_id)
+    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
 
-    for lb_node in lb_nodes:
-        logger.debug("Got new node description %s" % lb_node)
-        balancer_instance.loadFromDB(lb_id)
-        balancer_instance.removeFromDB()
+    for node in nodes:
+#        logger.debug("Got new node description %s" % lb_node)
+#        balancer_instance.loadFromDB(lb_id)
+#        balancer_instance.removeFromDB()
 
-        rs = db_api.server_pack_extra(lb_node)
-        rs['sf_id'] = balancer_instance.sf['id']
+        rs = db_api.server_pack_extra(node)
+        rs['sf_id'] = sf['id']
 
-        balancer_instance.rs.append(rs)
-        balancer_instance.sf._rservers.append(rs)
-        balancer_instance.savetoDB()
-
-        rs = balancer_instance.rs[-1]
-        device_driver = drivers.get_device_driver(conf, balancer_instance.\
-                                                        lb['device_id'])
-
+#        balancer_instance.rs.append(rs)
+#        balancer_instance.sf._rservers.append(rs)
+#        balancer_instance.savetoDB()        for rs in rs:
+#        try:
+#            rs_ref = db_api.server_update(conf, rs['id'], rs)
+#        except exc.ServerNotFound:
+        db_api.server_create(conf, rs)
+        device_driver = drivers.get_device_driver(conf, lb['device_id'])
         with device_driver.request_context() as ctx:
-            commands.add_node_to_loadbalancer(ctx, balancer_instance, rs)
-
+            commands.add_node_to_loadbalancer(ctx, sf, rs)
+            logger.debug("Failed here")
         node_list.append(db_api.unpack_extra(rs))
-
     return {'nodes': node_list}
 
 
