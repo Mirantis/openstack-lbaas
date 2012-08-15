@@ -157,13 +157,12 @@ def lb_add_nodes(conf, lb_id, nodes):
 
 
 def lb_show_nodes(conf, lb_id):
-    balancer_instance = vserver.Balancer(conf)
-    nodes = {'nodes': []}
-    balancer_instance.loadFromDB(lb_id)
-    for rs in balancer_instance.rs:
-        rs_dict = db_api.unpack_extra(rs)
-        nodes['nodes'].append(rs_dict)
-    return nodes
+    node_list = []
+#    lb = db_api.loadbalancer_get(conf, lb_id)
+    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    node_list = map(db_api.unpack_extra,
+                    db_api.server_get_all_by_sf_id(conf, sf['id']))
+    return {'nodes': node_list}
 
 
 def lb_delete_node(conf, lb_id, lb_node_id):
