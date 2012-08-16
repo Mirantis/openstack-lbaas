@@ -18,11 +18,13 @@
 from balancer.db import api as db_api
 from balancer import exception as exp
 from balancer.common import cfg, utils
-
+from balancer import drivers
 
 bind_opts = [
-    cfg.ListOpt('device_filters', default=[]),
-    cfg.ListOpt('device_cost_functions', default=[]),
+    cfg.ListOpt('device_filters',
+        default=['balancer.core.scheduller.filter_capabilities']),
+    cfg.ListOpt('device_cost_functions',
+        default=['balancer.core.scheduller.lbs_on']),
 ]
 
 
@@ -39,14 +41,36 @@ def schedule_loadbalancer(conf, lb_ref):
         cost_functions.append(
                 (utils.import_class(fullname), getattr(conf, conf_name)))
     filtered_devices = [dev for dev in all_devices
-                        if all(filt(lb_ref, dev) for filt in device_filters)]
+                        if all(filt(conf, lb_ref, dev)
+                        for filt in device_filters)]
     if not filtered_devices:
         raise exp.NoValidDevice
     costed = []
     for dev in filtered_devices:
         w = 0.
         for cost_func, weight in cost_functions:
-            w += weight * cost_func(lb_ref, dev)
+            w += weight * cost_func(conf, lb_ref, dev)
         costed.append((w, dev))
     costed.sort()
     return costed[0][1]
+
+
+def filter_capabilities(conf, lb_ref, dev_ref):
+    conf.register_opt(cfg.ListOpt('device_filter_capabilities',
+                                  default=['algorithm']))
+    device_driver = drivers.get_device_driver(conf, dev_ref['id'])
+    with device_driver.request_context() as ctx:
+        capabilities = device_driver.get_capabilities()
+    for opt in conf.device_filter_capabilities:
+        lb_req = lb_ref.get(opt)
+        if not lb_ref:
+            continue
+        dev_caps = capabilities.get(opt + 's', [])
+        if not (lb_req in dev_caps):
+            return False
+    return True
+
+
+def lbs_on(conf, lb_ref, dev_ref):
+    return float(
+            db_api.lb_count_active_by_device(conf, dev_ref['id']))
