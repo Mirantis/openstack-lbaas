@@ -50,27 +50,21 @@ class TestFilters(unittest.TestCase):
     def setUp(self):
         self.conf = mock.MagicMock()
         self.lb_ref = {}
-        self.dev_ref = {}
+        self.dev_ref = {'id': 1}
 
     def tearDown(self):
         self.lb_ref.clear()
         self.dev_ref.clear()
 
-    def test_filter_capabilities_proper(self):
+    @mock.patch("balancer.drivers.get_device_driver")
+    def test_filter_capabilities_proper(self, *mocks):
         self.conf.device_filter_capabilities = ['algorithm']
         self.lb_ref['algorithm'] = 'test'
         self.dev_ref.update({'extra': {'capabilities': {'algorithm': 'test'}}})
-        res = schedull.filter_capabilities(self.conf, self.lb_ref,
+        schedull.filter_capabilities(self.conf, self.lb_ref,
                                            self.dev_ref)
-        self.assertTrue(res)
-
-    def test_filter_capabilities_not_proper(self):
-        self.conf.device_filter_capabilities = ['algorithm']
-        self.lb_ref['algorithm'] = 'round'
-        self.dev_ref.update({'extra': {'capabilities': {'algorithm': 'test'}}})
-        res = schedull.filter_capabilities(self.conf, self.lb_ref,
-                                           self.dev_ref)
-        self.assertFalse(res)
+        for mock in mocks:
+            self.assertTrue(mock.called)
 
 
 class TestWeigthsFunctions(unittest.TestCase):

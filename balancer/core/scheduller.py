@@ -18,6 +18,7 @@
 from balancer.db import api as db_api
 from balancer import exception as exp
 from balancer.common import cfg, utils
+from balancer import drivers
 
 bind_opts = [
     cfg.ListOpt('device_filters', default=[]),
@@ -55,9 +56,11 @@ def schedule_loadbalancer(conf, lb_ref):
 def filter_capabilities(conf, lb_ref, dev_ref):
     conf.register_opt(cfg.ListOpt('device_filter_capabilities',
                                   default=['algorithm']))
-    for opt in conf.device_filter_capabilities:
-        if not (lb_ref[opt] in dev_ref['extra']['capabilities'].get(opt)):
-            return False
+    dev_driver = drivers.get_device_driver(conf, dev_ref['id'])
+    with dev_driver.get_capabilities() as ctx:
+        for opt in conf.device_filter_capabilities:
+            if not (lb_ref[opt] in ctx.get(opt)):
+                return False
     return True
 
 
