@@ -3,6 +3,7 @@ import unittest
 
 import balancer.core.scheduller as schedull
 from balancer import exception as exp
+from balancer.common import cfg
 
 
 def fake_filter(conf, lb_ref, dev_ref):
@@ -45,8 +46,20 @@ class TestScheduller(unittest.TestCase):
             schedull.schedule_loadbalancer(self.conf, self.lb_ref)
             self.assertTrue(dev_get_all.called)
 
+    @mock.patch('balancer.db.api.device_get_all')
+    def test_scheduler_no_cfg(self, dev_get_all):
+        conf = cfg.ConfigOpts(default_config_files=[])
+        conf._oparser = mock.Mock()
+        conf._oparser.parse_args.return_value = mock.Mock(), None
+        conf._oparser.parse_args.return_value[0].__dict__ = self.attrs
+        conf()
+        dev_get_all.return_value = ['a', 'b', 'c', 'd']
+        res = schedull.schedule_loadbalancer(conf, self.lb_ref)
+        self.assertTrue(dev_get_all.called)
+        self.assertEqual('c', res)
 
-class TestFilters(unittest.TestCase):
+
+class TestFilterCapabilities(unittest.TestCase):
     def setUp(self):
         self.conf = mock.MagicMock()
         self.conf.device_filter_capabilities = ['algorithm']
@@ -54,7 +67,7 @@ class TestFilters(unittest.TestCase):
         self.dev_ref = {'id': 1}
 
     @mock.patch("balancer.drivers.get_device_driver", autospec=True)
-    def test_filter_capabilities_proper(self, mock_getdev):
+    def test_proper(self, mock_getdev):
         self.lb_ref['algorithm'] = 'test'
         mock_getdev.return_value.get_capabilities.return_value = {
                 'algorithms': ['test'],
@@ -64,7 +77,7 @@ class TestFilters(unittest.TestCase):
         self.assertTrue(res)
 
     @mock.patch("balancer.drivers.get_device_driver", autospec=True)
-    def test_filter_capabilities_no_req(self, mock_getdev):
+    def test_no_req(self, mock_getdev):
         mock_getdev.return_value.get_capabilities.return_value = {
                 'algorithms': ['test'],
         }
@@ -73,7 +86,7 @@ class TestFilters(unittest.TestCase):
         self.assertTrue(res)
 
     @mock.patch("balancer.drivers.get_device_driver", autospec=True)
-    def test_filter_capabilities_no_cap(self, mock_getdev):
+    def test_no_cap(self, mock_getdev):
         self.lb_ref['algorithm'] = 'test'
         mock_getdev.return_value.get_capabilities.return_value = {}
         res = schedull.filter_capabilities(self.conf, self.lb_ref,
@@ -81,12 +94,26 @@ class TestFilters(unittest.TestCase):
         self.assertFalse(res)
 
     @mock.patch("balancer.drivers.get_device_driver", autospec=True)
-    def test_filter_capabilities_none_cap(self, mock_getdev):
+    def test_none_cap(self, mock_getdev):
         self.lb_ref['algorithm'] = 'test'
         mock_getdev.return_value.get_capabilities.return_value = None
         res = schedull.filter_capabilities(self.conf, self.lb_ref,
                                            self.dev_ref)
         self.assertFalse(res)
+
+    @mock.patch("balancer.drivers.get_device_driver", autospec=True)
+    def test_no_cfg(self, mock_getdev):
+        conf = cfg.ConfigOpts(default_config_files=[])
+        conf._oparser = mock.Mock()
+        conf._oparser.parse_args.return_value = mock.Mock(), None
+        conf._oparser.parse_args.return_value[0].__dict__ = {}
+        conf()
+        self.lb_ref['algorithm'] = 'test'
+        mock_getdev.return_value.get_capabilities.return_value = {
+                'algorithms': ['test'],
+        }
+        res = schedull.filter_capabilities(conf, self.lb_ref, self.dev_ref)
+        self.assertTrue(res)
 
 
 class TestWeigthsFunctions(unittest.TestCase):
@@ -97,7 +124,7 @@ class TestWeigthsFunctions(unittest.TestCase):
 
     @mock.patch('balancer.db.api.lb_count_active_by_device')
     def test_lbs_on(self, lb_count):
-        lb_count.return_value = 3.
+        lb_count.return_value = 3
         self.dev_ref['id'] = '1'
         res = schedull.lbs_on(self.conf, self.lb_ref, self.dev_ref)
-        self.assertEqual(res, 3.)
+        self.assertEqual(res, 3)
