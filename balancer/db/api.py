@@ -469,9 +469,6 @@ def virtualserver_get_all_by_lb_id(conf, lb_id):
     vips = session.query(models.VirtualServer).\
                   filter(models.ServerFarm.lb_id == lb_id).\
                   filter_by(sf_id=models.ServerFarm.id).all()
-    if not vips:
-        raise exception.VirtualServerNotFound(
-            "No virtual servers found for loadbalancer with id %s" % lb_id)
     return vips
 
 
