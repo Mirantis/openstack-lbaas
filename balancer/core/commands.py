@@ -106,12 +106,12 @@ def create_rserver(ctx, rs):
         if not rs['parent_id']:
             ctx.device.create_real_server(rs)
             rs['deployed'] = 'True'
-            db_api.server_create(ctx.conf, rs)
+            db_api.server_update(ctx.conf, rs['id'], rs)
         yield
     except Exception:
         ctx.device.delete_real_server(rs)
         rs['deployed'] = 'False'
-        db_api.server_create(ctx.conf, rs)
+        db_api.server_update(ctx.conf, rs['id'], rs)
         raise
 
 

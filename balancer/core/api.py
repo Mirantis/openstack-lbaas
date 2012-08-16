@@ -133,8 +133,6 @@ def update_lb(conf, lb_id, lb_body):
 
 
 def delete_lb(conf, lb_id):
-#    balancer_instance = vserver.Balancer(conf)
-#    balancer_instance.loadFromDB(lb_id)
     lb = db_api.loadbalancer_get(conf, lb_id)
     device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
@@ -142,23 +140,22 @@ def delete_lb(conf, lb_id):
 
 
 def lb_add_nodes(conf, lb_id, nodes):
-    node_list = []
+    nodes_list = []
     lb = db_api.loadbalancer_get(conf, lb_id)
     sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
-
     for node in nodes:
-        rs = db_api.server_pack_extra(node)
-        rs['sf_id'] = sf['id']
+        values = db_api.server_pack_extra(node)
+        values['sf_id'] = sf['id']
+        rs_ref = db_api.server_create(conf, values)
         device_driver = drivers.get_device_driver(conf, lb['device_id'])
         with device_driver.request_context() as ctx:
-            commands.add_node_to_loadbalancer(ctx, sf, rs)
-        node_list.append(db_api.unpack_extra(rs))
-    return {'nodes': node_list}
+            commands.add_node_to_loadbalancer(ctx, sf, rs_ref)
+        nodes_list.append(db_api.unpack_extra(rs_ref))
+    return {'nodes': nodes_list}
 
 
 def lb_show_nodes(conf, lb_id):
     node_list = []
-#    lb = db_api.loadbalancer_get(conf, lb_id)
     sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
     node_list = map(db_api.unpack_extra,
                     db_api.server_get_all_by_sf_id(conf, sf['id']))
@@ -282,47 +279,27 @@ def lb_show_sticky(conf, lb_id):
     return dict
 
 
-def lb_add_sticky(conf, lb_id, sticky):
-    logger.debug("Got new sticky description %s" % sticky)
-    if sticky['persistenceType'] is None:
+def lb_add_sticky(conf, lb_id, st):
+    logger.debug("Got new sticky description %s" % st)
+    if st['persistenceType'] is None:
         return
-
-    balancer_instance = vserver.Balancer(conf)
-
-    balancer_instance.loadFromDB(lb_id)
-    balancer_instance.removeFromDB()
-
-    st = db_api.sticky_pack_extra(sticky)
-    st['sf_id'] = balancer_instance.sf['id']
-
-    balancer_instance.sf._sticky.append(st)
-    balancer_instance.savetoDB()
-
-    st = balancer_instance.sf._sticky[-1]
-
-    device_driver = drivers.get_device_driver(conf,
-                        balancer_instance.lb['device_id'])
+    lb = db_api.loadbalancer_get(conf, lb_id)
+    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    values = db_api.sticky_pack_extra(st)
+    values['sf_id'] = sf['id']
+    sticky_ref = db_api.sticky_create(conf, values)
+    device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
-        commands.add_sticky_to_loadbalancer(ctx, balancer_instance, st)
-    return st
+        commands.add_sticky_to_loadbalancer(ctx, lb, sticky_ref)
+    return db_api.unpack_extra(sticky_ref)
 
 
 def lb_delete_sticky(conf, lb_id, sticky_id):
-    balancer_instance = vserver.Balancer(conf)
-
-    #Step 1: Load balancer from DB
-    balancer_instance.loadFromDB(lb_id)
-
-    #Step 3: Get sticky object from DB
-    st = db_api.sticky_get(conf, sticky_id)
-
-    #Step 4: Delete real server from device
-    device_driver = drivers.get_device_driver(conf,
-                        balancer_instance.lb['device_id'])
+    lb = db_api.loadbalancer_get(conf, lb_id)
+    sticky = db_api.sticky_get(conf, sticky_id)
+    device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
-        commands.remove_sticky_from_loadbalancer(ctx, balancer_instance, st)
-
-    #Step 5: Delete sticky from DB
+        commands.remove_sticky_from_loadbalancer(ctx, lb, sticky)
     db_api.sticky_destroy(conf, sticky_id)
     return sticky_id
 
