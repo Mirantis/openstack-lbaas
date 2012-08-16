@@ -80,6 +80,14 @@ class TestFilters(unittest.TestCase):
                                            self.dev_ref)
         self.assertFalse(res)
 
+    @mock.patch("balancer.drivers.get_device_driver", autospec=True)
+    def test_filter_capabilities_none_cap(self, mock_getdev):
+        self.lb_ref['algorithm'] = 'test'
+        mock_getdev.return_value.get_capabilities.return_value = None
+        res = schedull.filter_capabilities(self.conf, self.lb_ref,
+                                           self.dev_ref)
+        self.assertFalse(res)
+
 
 class TestWeigthsFunctions(unittest.TestCase):
     def setUp(self):
