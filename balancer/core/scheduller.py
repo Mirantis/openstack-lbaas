@@ -56,11 +56,12 @@ def schedule_loadbalancer(conf, lb_ref):
 def filter_capabilities(conf, lb_ref, dev_ref):
     conf.register_opt(cfg.ListOpt('device_filter_capabilities',
                                   default=['algorithm']))
-    dev_driver = drivers.get_device_driver(conf, dev_ref['id'])
-    with dev_driver.get_capabilities() as ctx:
-        for opt in conf.device_filter_capabilities:
-            if not (lb_ref[opt] in ctx.get(opt)):
-                return False
+    device_driver = drivers.get_device_driver(conf, dev_ref['id'])
+    with device_driver.request_context() as ctx:
+        capabilities = device_driver.get_capabilities()
+    for opt in conf.device_filter_capabilities:
+        if not (lb_ref[opt] in capabilities.get(opt)):
+            return False
     return True
 
 
