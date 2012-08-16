@@ -49,22 +49,36 @@ class TestScheduller(unittest.TestCase):
 class TestFilters(unittest.TestCase):
     def setUp(self):
         self.conf = mock.MagicMock()
+        self.conf.device_filter_capabilities = ['algorithm']
         self.lb_ref = {}
         self.dev_ref = {'id': 1}
 
-    def tearDown(self):
-        self.lb_ref.clear()
-        self.dev_ref.clear()
-
-    @mock.patch("balancer.drivers.get_device_driver")
-    def test_filter_capabilities_proper(self, *mocks):
-        self.conf.device_filter_capabilities = ['algorithm']
+    @mock.patch("balancer.drivers.get_device_driver", autospec=True)
+    def test_filter_capabilities_proper(self, mock_getdev):
         self.lb_ref['algorithm'] = 'test'
-        self.dev_ref.update({'extra': {'capabilities': {'algorithm': 'test'}}})
-        schedull.filter_capabilities(self.conf, self.lb_ref,
+        mock_getdev.return_value.get_capabilities.return_value = {
+                'algorithms': ['test'],
+        }
+        res = schedull.filter_capabilities(self.conf, self.lb_ref,
                                            self.dev_ref)
-        for mock in mocks:
-            self.assertTrue(mock.called)
+        self.assertTrue(res)
+
+    @mock.patch("balancer.drivers.get_device_driver", autospec=True)
+    def test_filter_capabilities_no_req(self, mock_getdev):
+        mock_getdev.return_value.get_capabilities.return_value = {
+                'algorithms': ['test'],
+        }
+        res = schedull.filter_capabilities(self.conf, self.lb_ref,
+                                           self.dev_ref)
+        self.assertTrue(res)
+
+    @mock.patch("balancer.drivers.get_device_driver", autospec=True)
+    def test_filter_capabilities_no_cap(self, mock_getdev):
+        self.lb_ref['algorithm'] = 'test'
+        mock_getdev.return_value.get_capabilities.return_value = {}
+        res = schedull.filter_capabilities(self.conf, self.lb_ref,
+                                           self.dev_ref)
+        self.assertFalse(res)
 
 
 class TestWeigthsFunctions(unittest.TestCase):
