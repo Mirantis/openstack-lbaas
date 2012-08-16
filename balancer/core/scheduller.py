@@ -63,7 +63,7 @@ def filter_capabilities(conf, lb_ref, dev_ref):
         capabilities = device_driver.get_capabilities()
     for opt in conf.device_filter_capabilities:
         lb_req = lb_ref.get(opt)
-        if not lb_ref:
+        if not lb_req:
             continue
         dev_caps = capabilities.get(opt + 's', [])
         if not (lb_req in dev_caps):

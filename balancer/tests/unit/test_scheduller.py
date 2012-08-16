@@ -50,7 +50,7 @@ class TestFilters(unittest.TestCase):
     def setUp(self):
         self.conf = mock.MagicMock()
         self.conf.device_filter_capabilities = ['algorithm']
-        self.lb_ref = {}
+        self.lb_ref = {'id': 5}
         self.dev_ref = {'id': 1}
 
     @mock.patch("balancer.drivers.get_device_driver", autospec=True)
