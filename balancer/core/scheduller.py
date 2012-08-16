@@ -14,11 +14,14 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import logging
 
 from balancer.db import api as db_api
 from balancer import exception as exp
 from balancer.common import cfg, utils
 from balancer import drivers
+
+LOG = logging.getLogger(__name__)
 
 bind_opts = [
     cfg.ListOpt('device_filters',
@@ -37,9 +40,12 @@ def schedule_loadbalancer(conf, lb_ref):
     cost_functions = []
     for fullname in conf.device_cost_functions:
         conf_name = 'device_cost_%s_weight' % fullname.rpartition('.')[-1]
-        conf.register_opt(cfg.FloatOpt(conf_name, default=1.))
-        cost_functions.append(
-                (utils.import_class(fullname), getattr(conf, conf_name)))
+        try:
+            weight = getattr(conf, conf_name)
+        except cfg.NoSuchOptError:
+            conf.register_opt(cfg.FloatOpt(conf_name, default=1.))
+            weight = getattr(conf, conf_name)
+        cost_functions.append((utils.import_class(fullname), weight))
     filtered_devices = [dev for dev in all_devices
                         if all(filt(conf, lb_ref, dev)
                         for filt in device_filters)]
@@ -56,21 +62,28 @@ def schedule_loadbalancer(conf, lb_ref):
 
 
 def filter_capabilities(conf, lb_ref, dev_ref):
-    conf.register_opt(cfg.ListOpt('device_filter_capabilities',
-                                  default=['algorithm']))
+    try:
+        device_filter_capabilities = conf.device_filter_capabilities
+    except cfg.NoSuchOptError:
+        conf.register_opt(cfg.ListOpt('device_filter_capabilities',
+                                      default=['algorithm']))
+        device_filter_capabilities = conf.device_filter_capabilities
     device_driver = drivers.get_device_driver(conf, dev_ref['id'])
     with device_driver.request_context() as ctx:
         capabilities = device_driver.get_capabilities()
-    for opt in conf.device_filter_capabilities:
+    if capabilities is None:
+        capabilities = {}
+    for opt in device_filter_capabilities:
         lb_req = lb_ref.get(opt)
-        if not lb_ref:
+        if not lb_req:
             continue
         dev_caps = capabilities.get(opt + 's', [])
         if not (lb_req in dev_caps):
+            LOG.debug('Device %s does not support %s "%s"', dev_ref['id'], opt,
+                    lb_req)
             return False
     return True
 
 
 def lbs_on(conf, lb_ref, dev_ref):
-    return float(
-            db_api.lb_count_active_by_device(conf, dev_ref['id']))
+    return db_api.lb_count_active_by_device(conf, dev_ref['id'])
