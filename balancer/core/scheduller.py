@@ -21,8 +21,10 @@ from balancer.common import cfg, utils
 from balancer import drivers
 
 bind_opts = [
-    cfg.ListOpt('device_filters', default=[]),
-    cfg.ListOpt('device_cost_functions', default=[]),
+    cfg.ListOpt('device_filters',
+        default=['balancer.core.scheduller.filter_capabilities']),
+    cfg.ListOpt('device_cost_functions',
+        default=['balancer.core.scheduller.lbs_on']),
 ]
 
 
