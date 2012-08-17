@@ -56,9 +56,6 @@ class Controller(object):
         logger.debug("Headers: %s", req.headers)
         # We need to create LB object and return its id
         tenant_id = req.headers.get('X-Tenant-Id', "")
-  #      lb_ref = db_api.loadbalancer_create(self.conf, {
-  #                                              'tenant_id': tenant_id})
-  #      params['lb'] = lb_ref
         params['tenant_id'] = tenant_id
         lb_id = core_api.create_lb(self.conf, params)
         return {'loadbalancer': {'id': lb_id}}

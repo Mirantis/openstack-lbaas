@@ -45,13 +45,10 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertEqual(resp, {'loadbalancers': 'foo'})
 
     @mock.patch('balancer.core.api.create_lb', autospec=True)
-    @mock.patch('balancer.db.api.loadbalancer_create', autospec=True)
-    def test_create(self, mock_loadbalancer_create, mock_create_lb):
-        mock_loadbalancer_create.return_value = {'id': '1'}
-        mock_create_lb.return_value = {'id': '1'}
+    def test_create(self, mock_create_lb):
+        mock_create_lb.return_value = '1'
         self.req.headers = {'X-Tenant-Id': 'fake_tenant_id'}
         resp = self.controller.create(self.req, {})
-        self.assertTrue(mock_loadbalancer_create.called)
         self.assertTrue(mock_create_lb.called)
         mock_create_lb.assert_called_once_with(self.conf, lb={'id': '1'})
         mock_loadbalancer_create.assert_called_once_with(
