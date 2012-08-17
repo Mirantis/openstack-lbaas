@@ -169,6 +169,10 @@ class API(wsgi.Router):
                        controller=device_resource,
                        action="show_algorithms",
                        conditions={'method': ["GET"]})
+        mapper.connect("/protocols",
+                       controller=device_resource,
+                       action="show_protocols",
+                       conditions={'method': ["GET"]})
        # TODO(yorik-sar): tasks are broken, there is no processing anymore
         #tasks_resource = tasks.create_resource(self.conf)
         #mapper.resource("tasks", "tasks", controller=tasks_resource,

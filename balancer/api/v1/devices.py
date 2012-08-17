@@ -113,6 +113,11 @@ class Controller(object):
         algorithms = core_api.device_show_algorithms(self.conf)
         return {'algorithms': algorithms}
 
+    def show_protocols(self, req):
+        logger.debug("Got protocols request. Request: %s", req)
+        protocols = core_api.device_show_protocols(self.conf)
+        return {'protocols': protocols}
+
     def _validate_params(self,  params):
         pass
 

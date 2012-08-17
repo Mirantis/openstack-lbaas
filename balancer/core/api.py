@@ -441,6 +441,19 @@ def device_show_algorithms(conf):
     return algorithms
 
 
+def device_show_protocols(conf):
+    devices = db_api.device_get_all(conf)
+    protocols = []
+    for device in devices:
+        device_driver = drivers.get_device_driver(conf, device['id'])
+        with device_driver.request_context() as ctx:
+            capabilities = device_driver.get_capabilities()
+        if capabilities is not None:
+            protocols += [a for a in capabilities.get('protocols', [])
+                    if a not in protocols]
+    return protocols
+
+
 # NOTE(ash): unused func
 def device_delete(conf, device_id):
     db_api.device_destroy(conf, device_id)
