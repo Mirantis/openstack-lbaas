@@ -27,7 +27,6 @@ from balancer.core import commands
 from balancer.core import lb_status
 from balancer.core import scheduler
 from balancer import drivers
-from balancer.loadbalancers import vserver
 from balancer.db import api as db_api
 
 
@@ -82,36 +81,28 @@ def lb_show_details(conf, lb_id):
     lb_ref['nodes'] = [db_api.unpack_extra(rserver) for rserver in rs]
     lb_ref['virtualIps'] = [db_api.unpack_extra(vip) for vip in vips]
     lb_ref['healthMonitor'] = [db_api.unpack_extra(probe) for probe in probes]
-    lb_ref['sessionPersistence'] = [db_api.unpack_extra(sticky) for sticky in stickies]
+    lb_ref['sessionPersistence'] = [db_api.unpack_extra(sticky)\
+            for sticky in stickies]
     return lb_ref
 
 
-@asynchronous
-def create_lb(conf, **params):
-    balancer_instance = vserver.Balancer(conf)
-
-    #Step 1. Parse parameters came from request
-    balancer_instance.parseParams(params)
-    device = scheduler.schedule_loadbalancer(conf, balancer_instance.lb)
-
-    lb = balancer_instance.getLB()
-    lb['device_id'] = device['id']
-
-    #Step 2. Save config in DB
-    balancer_instance.savetoDB()
-
-    #Step 3. Deploy config to device
+#@asynchronous
+def create_lb(conf, params):
+    values = db_api.loadbalancer_pack_extra(params)
+    lb_ref = db_api.loadbalancer_create(conf, values)
+    device = scheduller.schedule_loadbalancer(conf, lb_ref)
     device_driver = drivers.get_device_driver(conf, device['id'])
+    lb_ref['device_id'] = device['id']
     try:
         with device_driver.request_context() as ctx:
-            commands.create_loadbalancer(ctx, balancer_instance)
+            commands.create_loadbalancer(ctx, lb_ref, conf)
     except (exception.Error, exception.Invalid):
-        balancer_instance.lb.status = lb_status.ERROR
+        lb_ref.status = lb_status.ERROR
     else:
-        balancer_instance.lb.status = lb_status.ACTIVE
-    balancer_instance.update()
+        lb_ref.status = lb_status.ACTIVE
+    db_api.loadbalancer_update(conf, lb_ref['id'], lb_ref)
 
-    return lb['id']
+    return lb_ref['id']
 
 
 @asynchronous

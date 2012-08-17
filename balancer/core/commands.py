@@ -45,7 +45,8 @@ class RollbackContextManager(object):
     def __exit__(self, exc_type, exc_value, exc_tb):
         good = exc_type is None
         if not good:
-            LOG.error("Rollback because of: %s", exc_value, exc_info=(exc_value, exc_type, exc_tb))
+            LOG.error("Rollback because of: %s", exc_value,
+                    exc_info=(exc_value, exc_type, exc_tb))
         rollback_stack = self.context.rollback_stack
         while rollback_stack:
             rollback_stack.pop()(good)
@@ -157,8 +158,7 @@ def create_server_farm(ctx, sf):
     try:
         pr = db_api.predictor_get_all_by_sf_id(ctx.conf, sf['id'])
         ctx.device.create_server_farm(sf, pr)
-        sf['deployed'] = 'True'
-        db_api.serverfarm_update(ctx.conf, sf['id'], sf)
+        db_api.serverfarm_update(ctx.conf, sf['id'], {'deployed': True})
         yield
     except Exception:
         delete_server_farm(ctx, sf)
@@ -194,8 +194,7 @@ def delete_probe(ctx, probe):
 def create_probe(ctx, probe):
     try:
         ctx.device.create_probe(probe)
-        probe['deployed'] = 'True'
-        db_api.probe_update(ctx.conf, probe['id'], probe)
+        db_api.probe_update(ctx.conf, probe['id'], {'deployed': True})
         yield
     except Exception:
         delete_probe(ctx, probe)
@@ -236,29 +235,43 @@ def delete_vip(ctx, vip):
 def create_vip(ctx, vip, server_farm):
     try:
         ctx.device.create_virtual_ip(vip, server_farm)
-        vip['deployed'] = 'True'
-        db_api.virtualserver_update(ctx.conf, vip['id'], vip)
+        db_api.virtualserver_update(ctx.conf, vip['id'], {'deployed': True})
         yield
     except Exception:
         delete_vip(ctx, vip)
         raise
 
 
-def create_loadbalancer(ctx, balancer):
-    for probe in balancer.probes:
-        create_probe(ctx,  probe)
+def create_loadbalancer(ctx, balancer, conf):
+    lb = db_api.unpack_extra(balancer)
+    sf = db_api.server_pack_extra({})
     port = 80
-    create_server_farm(ctx, balancer.sf)
-    for rserver in balancer.rs:
-        create_rserver(ctx, rserver)
-        add_rserver_to_server_farm(ctx, balancer.sf, rserver)
-        port = rserver['port']
-    for probe in balancer.probes:
-        probe['port'] = port
-        create_probe(ctx,  probe)
-        add_probe_to_server_farm(ctx, balancer.sf, probe)
-    for vip in balancer.vips:
-        create_vip(ctx, vip, balancer.sf)
+    if 'nodes' in lb:
+        for node in lb['nodes']:
+            node_values = db_api.server_pack_extra(node)
+            node_values['sf_id'] = sf['id']
+            rs_ref = db_api.server_create(conf, node_values)
+            create_rserver(ctx, rs_ref)
+            add_rserver_to_server_farm(ctx, sf, rs_ref)
+            port = rs_ref['port']
+
+    if 'healthMonitoring' in lb:
+        for probe in lb['healthMonitoring']:
+            probe_values = db_api.probe_pack_extra(probe)
+            probe_values['lb_id'] = lb['id']
+            probe_values['sf_id'] = sf['id']
+            probe_ref = db_api.probe_create(conf, probe_values)
+            create_probe(ctx,  probe_ref)
+            add_probe_to_server_farm(ctx, sf, probe_ref)
+
+    if 'virtualIps' in lb:
+        for vip in lb['virtualIps']:
+            vip_values = db_api.virtualserver_pack_extra(vip)
+            vip_values['lb_id'] = lb['id']
+            vip_values['sf_id'] = sf['id']
+            vip_ref = db_api.virtualserver_create(conf, vip_values)
+            create_vip(ctx, vip_ref, sf)
+    db_api.loadbalancer_update(conf, lb['id'], {'deployed': True})
 
 
 def delete_loadbalancer(ctx, lb, conf):
