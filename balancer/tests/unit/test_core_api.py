@@ -185,29 +185,21 @@ class TestBalancer(unittest.TestCase):
         with mock_driver.return_value.request_context() as ctx:
             mock_command.assert_called_once_with(ctx, mock_bal.return_value)
 
-    @patch_balancer
     @mock.patch("balancer.db.api.unpack_extra")
+    @mock.patch("balancer.db.api.server_create")
+    @mock.patch("balancer.db.api.server_pack_extra")
+    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
+    @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.add_node_to_loadbalancer")
-    def test_lb_add_nodes(self, mock_command, mock_driver, mock_extra,
-                          mock_bal):
-        mock_extra.return_value = {'node': 'foo'}
-        mock_bal.return_value.lb.__getitem__.return_value = 2
-        mock_bal.return_value.rs.__getitem__.return_value = ['foo']
-        resp = api.lb_add_nodes(self.conf, self.lb_id, self.lb_nodes)
-        self.assertTrue(mock_command.called)
-        self.assertTrue(mock_command.call_count == 2)
-        self.assertTrue(mock_driver.called)
-        self.assertTrue(mock_driver.call_count == 2)
-        self.assertTrue(mock_extra.called)
-        self.assertTrue(mock_extra.call_count == 2)
-        self.assertEqual(resp, {'nodes': [{'node': 'foo'}, {'node': 'foo'}]})
-        mock_bal.assert_called_once_with(self.conf)
-        mock_driver.assert_called_with(self.conf, 2)
-        mock_extra.assert_called_with(['foo'])
-        with mock_driver.return_value.request_context() as ctx:
-            mock_command.assert_called_with(ctx, mock_bal.return_value,
-                                            ['foo'])
+    def test_lb_add_nodes(self, *mocks):
+        mocks[3].return_value = {'device_id': 1}
+        mocks[4].return_value = {'id': 1}
+        api.lb_add_nodes(self.conf, self.lb_id, self.lb_nodes)
+        i = 0
+        for mok in mocks:
+            self.assertTrue(mok.called, "This mock didn't call %s" % i)
+            i = i + 1
 
     @patch_balancer
     @mock.patch("balancer.db.api.unpack_extra")
