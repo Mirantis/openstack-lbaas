@@ -242,15 +242,15 @@ def create_vip(ctx, vip, server_farm):
         raise
 
 
-def create_loadbalancer(ctx, balancer, conf):
+def create_loadbalancer(ctx, balancer):
     lb = db_api.unpack_extra(balancer)
-    sf = db_api.server_pack_extra({})
+    sf = db_api.serverfarm_pack_extra({})
     port = 80
     if 'nodes' in lb:
         for node in lb['nodes']:
             node_values = db_api.server_pack_extra(node)
             node_values['sf_id'] = sf['id']
-            rs_ref = db_api.server_create(conf, node_values)
+            rs_ref = db_api.server_create(ctx.conf, node_values)
             create_rserver(ctx, rs_ref)
             add_rserver_to_server_farm(ctx, sf, rs_ref)
             port = rs_ref['port']
@@ -260,7 +260,7 @@ def create_loadbalancer(ctx, balancer, conf):
             probe_values = db_api.probe_pack_extra(probe)
             probe_values['lb_id'] = lb['id']
             probe_values['sf_id'] = sf['id']
-            probe_ref = db_api.probe_create(conf, probe_values)
+            probe_ref = db_api.probe_create(ctx.conf, probe_values)
             create_probe(ctx,  probe_ref)
             add_probe_to_server_farm(ctx, sf, probe_ref)
 
@@ -269,17 +269,17 @@ def create_loadbalancer(ctx, balancer, conf):
             vip_values = db_api.virtualserver_pack_extra(vip)
             vip_values['lb_id'] = lb['id']
             vip_values['sf_id'] = sf['id']
-            vip_ref = db_api.virtualserver_create(conf, vip_values)
+            vip_ref = db_api.virtualserver_create(ctx.conf, vip_values)
             create_vip(ctx, vip_ref, sf)
-    db_api.loadbalancer_update(conf, lb['id'], {'deployed': True})
+    db_api.loadbalancer_update(ctx.conf, lb['id'], {'deployed': True})
 
 
-def delete_loadbalancer(ctx, lb, conf):
-    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb['id'])[0]
-    vips = db_api.virtualserver_get_all_by_sf_id(conf, sf['id'])
-    rs = db_api.server_get_all_by_sf_id(conf, sf['id'])
-    probes = db_api.probe_get_all_by_sf_id(conf, sf['id'])
-    stickies = db_api.sticky_get_all_by_sf_id(conf, sf['id'])
+def delete_loadbalancer(ctx, lb):
+    sf = db_api.serverfarm_get_all_by_lb_id(ctx.conf, lb['id'])[0]
+    vips = db_api.virtualserver_get_all_by_sf_id(ctx.conf, sf['id'])
+    rs = db_api.server_get_all_by_sf_id(ctx.conf, sf['id'])
+    probes = db_api.probe_get_all_by_sf_id(ctx.conf, sf['id'])
+    stickies = db_api.sticky_get_all_by_sf_id(ctx.conf, sf['id'])
     for vip in vips:
         delete_vip(ctx, vip)
     for rserver in rs:
@@ -291,13 +291,13 @@ def delete_loadbalancer(ctx, lb, conf):
     for sticky in stickies:
         delete_sticky(ctx, sticky)
     delete_server_farm(ctx, sf)
-    db_api.predictor_destroy_by_sf_id(conf, sf['id'])
-    db_api.server_destroy_by_sf_id(conf, sf['id'])
-    db_api.probe_destroy_by_sf_id(conf, sf['id'])
-    db_api.virtualserver_destroy_by_sf_id(conf, sf['id'])
-    db_api.sticky_destroy_by_sf_id(conf, sf['id'])
-    db_api.serverfarm_destroy(conf, sf['id'])
-    db_api.loadbalancer_destroy(conf, lb['id'])
+    db_api.predictor_destroy_by_sf_id(ctx.conf, sf['id'])
+    db_api.server_destroy_by_sf_id(ctx.conf, sf['id'])
+    db_api.probe_destroy_by_sf_id(ctx.conf, sf['id'])
+    db_api.virtualserver_destroy_by_sf_id(ctx.conf, sf['id'])
+    db_api.sticky_destroy_by_sf_id(ctx.conf, sf['id'])
+    db_api.serverfarm_destroy(ctx.conf, sf['id'])
+    db_api.loadbalancer_destroy(ctx.conf, lb['id'])
 
 
 def update_loadbalancer(ctx, old_bal_ref,  new_bal_ref):

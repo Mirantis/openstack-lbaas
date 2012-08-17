@@ -95,7 +95,7 @@ def create_lb(conf, params):
     lb_ref['device_id'] = device['id']
     try:
         with device_driver.request_context() as ctx:
-            commands.create_loadbalancer(ctx, lb_ref, conf)
+            commands.create_loadbalancer(ctx, lb_ref)
     except (exception.Error, exception.Invalid):
         lb_ref.status = lb_status.ERROR
     else:
@@ -127,7 +127,7 @@ def delete_lb(conf, lb_id):
     lb = db_api.loadbalancer_get(conf, lb_id)
     device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
-        commands.delete_loadbalancer(ctx, lb, conf)
+        commands.delete_loadbalancer(ctx, lb)
 
 
 def lb_add_nodes(conf, lb_id, nodes):
