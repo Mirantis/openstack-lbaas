@@ -86,11 +86,10 @@ def lb_show_details(conf, lb_id):
     return lb_ref
 
 
-#@asynchronous
 def create_lb(conf, params):
     values = db_api.loadbalancer_pack_extra(params)
     lb_ref = db_api.loadbalancer_create(conf, values)
-    device = scheduller.schedule_loadbalancer(conf, lb_ref)
+    device = scheduler.schedule_loadbalancer(conf, lb_ref)
     device_driver = drivers.get_device_driver(conf, device['id'])
     lb_ref['device_id'] = device['id']
     try:
