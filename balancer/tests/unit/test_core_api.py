@@ -82,8 +82,8 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.probe_get_all_by_sf_id")
     @mock.patch("balancer.db.api.sticky_get_all_by_sf_id")
     def test_lb_show_details(self, *mocks):
-        mocks[5].return_value = {"virtualIps": 1, "nodes": 2, "healthMonitor": 3,
-                "sessionPersistence": 4}
+        mocks[5].return_value = {"virtualIps": 1, "nodes": 2,
+                "healthMonitor": 3, "sessionPersistence": 4}
         mocks[6].return_value = mock.MagicMock(spec=models.ServerFarm)
         api.lb_show_details(self.conf, self.lb_id)
         i = 0
