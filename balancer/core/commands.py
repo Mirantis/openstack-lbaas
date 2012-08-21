@@ -19,7 +19,7 @@ import functools
 import logging
 import types
 
-from balancer.db import api as db_api
+import balancer.db.api as db_api
 
 LOG = logging.getLogger(__name__)
 
@@ -242,37 +242,37 @@ def create_vip(ctx, vip, server_farm):
         raise
 
 
-def create_loadbalancer(ctx, balancer):
+def create_loadbalancer(ctx, balancer, nodes, probes, vips):
     lb = db_api.unpack_extra(balancer)
-    sf = db_api.serverfarm_pack_extra({})
-    port = 80
-    if 'nodes' in lb:
-        for node in lb['nodes']:
-            node_values = db_api.server_pack_extra(node)
-            node_values['sf_id'] = sf['id']
-            rs_ref = db_api.server_create(ctx.conf, node_values)
-            create_rserver(ctx, rs_ref)
-            add_rserver_to_server_farm(ctx, sf, rs_ref)
-            port = rs_ref['port']
+    sf = db_api.serverfarm_create(ctx.conf, {'lb_id': lb['id']})
+    if 'algorithm' in lb:
+        predictor_params = {'sf_id': sf['id'], 'type': lb['algorithm']}
+    else:
+        predictor_params = {'sf_id': sf['id']}
+    db_api.predictor_create(ctx.conf, predictor_params)
+    create_server_farm(ctx, sf)
+    for node in nodes:
+        node_values = db_api.server_pack_extra(node)
+        node_values['sf_id'] = sf['id']
+        rs_ref = db_api.server_create(ctx.conf, node_values)
+        create_rserver(ctx, rs_ref)
+        add_rserver_to_server_farm(ctx, sf, rs_ref)
 
-    if 'healthMonitoring' in lb:
-        for probe in lb['healthMonitoring']:
-            probe_values = db_api.probe_pack_extra(probe)
-            probe_values['lb_id'] = lb['id']
-            probe_values['sf_id'] = sf['id']
-            probe_ref = db_api.probe_create(ctx.conf, probe_values)
-            create_probe(ctx,  probe_ref)
-            add_probe_to_server_farm(ctx, sf, probe_ref)
+    for probe in probes:
+        probe_values = db_api.probe_pack_extra(probe)
+        probe_values['lb_id'] = lb['id']
+        probe_values['sf_id'] = sf['id']
+        probe_ref = db_api.probe_create(ctx.conf, probe_values)
+        create_probe(ctx,  probe_ref)
+        add_probe_to_server_farm(ctx, sf, probe_ref)
 
-    if 'virtualIps' in lb:
-        for vip in lb['virtualIps']:
-            vip_values = db_api.virtualserver_pack_extra(vip)
-            vip_values['lb_id'] = lb['id']
-            vip_values['sf_id'] = sf['id']
-            vip_ref = db_api.virtualserver_create(ctx.conf, vip_values)
-            create_vip(ctx, vip_ref, sf)
+    for vip in vips:
+        vip_values = db_api.virtualserver_pack_extra(vip)
+        vip_values['lb_id'] = lb['id']
+        vip_values['sf_id'] = sf['id']
+        vip_ref = db_api.virtualserver_create(ctx.conf, vip_values)
+        create_vip(ctx, vip_ref, sf)
     db_api.loadbalancer_update(ctx.conf, lb['id'], {'deployed': True})
-
 
 def delete_loadbalancer(ctx, lb):
     sf = db_api.serverfarm_get_all_by_lb_id(ctx.conf, lb['id'])[0]

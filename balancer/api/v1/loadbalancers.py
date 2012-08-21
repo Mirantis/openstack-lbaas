@@ -52,7 +52,7 @@ class Controller(object):
     def create(self, req, body):
         logger.debug("Got create request. Request: %s", req)
         #here we need to decide which device should be used
-        params = body
+        params = body.copy()
         logger.debug("Headers: %s", req.headers)
         # We need to create LB object and return its id
         tenant_id = req.headers.get('X-Tenant-Id', "")

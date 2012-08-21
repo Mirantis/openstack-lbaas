@@ -87,20 +87,24 @@ def lb_show_details(conf, lb_id):
 
 
 def create_lb(conf, params):
+    nodes = params.pop('nodes', [])
+    probes = params.pop('healthMonitoring', [])
+    vips = params.pop('virtualIps', [])
     values = db_api.loadbalancer_pack_extra(params)
     lb_ref = db_api.loadbalancer_create(conf, values)
     device = scheduler.schedule_loadbalancer(conf, lb_ref)
     device_driver = drivers.get_device_driver(conf, device['id'])
-    lb_ref['device_id'] = device['id']
+    lb = db_api.unpack_extra(lb_ref)
+    lb['device_id'] = device['id']
+    lb_ref = db_api.loadbalancer_pack_extra(lb)
     try:
         with device_driver.request_context() as ctx:
-            commands.create_loadbalancer(ctx, lb_ref)
+            commands.create_loadbalancer(ctx, lb_ref, nodes, probes, vips)
     except (exception.Error, exception.Invalid):
         lb_ref.status = lb_status.ERROR
     else:
         lb_ref.status = lb_status.ACTIVE
-    db_api.loadbalancer_update(conf, lb_ref['id'], lb_ref)
-
+    db_api.loadbalancer_update(conf, lb['id'], lb_ref)
     return lb_ref['id']
 
 
