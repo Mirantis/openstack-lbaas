@@ -141,7 +141,7 @@ def lb_add_nodes(conf, lb_id, nodes):
         with device_driver.request_context() as ctx:
             commands.add_node_to_loadbalancer(ctx, sf, rs_ref)
         nodes_list.append(db_api.unpack_extra(rs_ref))
-    return {'nodes': nodes_list}
+    return nodes_list
 
 
 def lb_show_nodes(conf, lb_id):
@@ -149,7 +149,7 @@ def lb_show_nodes(conf, lb_id):
     sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
     node_list = map(db_api.unpack_extra,
                     db_api.server_get_all_by_sf_id(conf, sf['id']))
-    return {'nodes': node_list}
+    return node_list
 
 
 def lb_delete_node(conf, lb_id, lb_node_id):

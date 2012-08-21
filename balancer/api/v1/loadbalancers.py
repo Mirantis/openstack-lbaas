@@ -84,11 +84,11 @@ class Controller(object):
     def addNodes(self, req, id, body):
         logger.debug("Got addNode request. Request: %s", req)
 
-        return core_api.lb_add_nodes(self.conf, id, body['nodes'])
+        return {'nodes': core_api.lb_add_nodes(self.conf, id, body['nodes'])}
 
     def showNodes(self, req, id):
         logger.debug("Got showNodes request. Request: %s", req)
-        return core_api.lb_show_nodes(self.conf, id)
+        return {'nodes': core_api.lb_show_nodes(self.conf, id)}
 
     def showNode(self, req, lb_id, id):
         logger.debug("Got showNode request. Request: %s", req)

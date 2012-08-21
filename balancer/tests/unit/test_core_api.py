@@ -86,10 +86,8 @@ class TestBalancer(unittest.TestCase):
                 "healthMonitor": 3, "sessionPersistence": 4}
         mocks[6].return_value = mock.MagicMock(spec=models.ServerFarm)
         api.lb_show_details(self.conf, self.lb_id)
-        i = 0
         for mok in mocks:
-            self.assertTrue(mok.called, "This mock %s didn't call" % i)
-            i = i + 1
+            self.assertTrue(mok.called, "This mock %s didn't call" % mok)
 
     @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.db.api.unpack_extra")
@@ -116,10 +114,8 @@ class TestBalancer(unittest.TestCase):
         mocks[2].return_value = {'id': 1}
         mocks[4].return_value = mock.MagicMock()
         api.create_lb(self.conf, self.dict_list)
-        i = 0
         for mok in mocks:
-            self.assertTrue(mok.called, "Mock %s didn't call" % i)
-            i = i + 1
+            self.assertTrue(mok.called, "Mock %s didn't call" % mok)
 
     @mock.patch("balancer.db.api.loadbalancer_update")
     @mock.patch("balancer.db.api.loadbalancer_create")
@@ -191,10 +187,8 @@ class TestBalancer(unittest.TestCase):
         mocks[2].return_value = {'device_id': 1}
         mocks[3].return_value = [{'id': 1}]
         api.lb_add_nodes(self.conf, self.lb_id, self.lb_nodes)
-        i = 0
         for mok in mocks:
-            self.assertTrue(mok.called, "This mock didn't call %s" % i)
-            i = i + 1
+            self.assertTrue(mok.called, "This mock didn't call %s" % mok)
 
     @mock.patch("balancer.db.api.unpack_extra")
     @mock.patch("balancer.db.api.server_get_all_by_sf_id")
