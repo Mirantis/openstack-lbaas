@@ -25,7 +25,7 @@ import balancer.exception as exc
 
 from balancer.core import commands
 from balancer.core import lb_status
-from balancer.core import scheduller
+from balancer.core import scheduler
 from balancer import drivers
 from balancer.loadbalancers import vserver
 from balancer.db import api as db_api
@@ -95,7 +95,7 @@ def create_lb(conf, **params):
 
     #Step 1. Parse parameters came from request
     balancer_instance.parseParams(params)
-    device = scheduller.schedule_loadbalancer(conf, balancer_instance.lb)
+    device = scheduler.schedule_loadbalancer(conf, balancer_instance.lb)
 
     lb = balancer_instance.getLB()
     lb['device_id'] = device['id']

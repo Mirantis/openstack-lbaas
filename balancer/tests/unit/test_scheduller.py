@@ -1,7 +1,7 @@
 import mock
 import unittest
 
-import balancer.core.scheduller as schedull
+from balancer.core import scheduler
 from balancer import exception as exp
 from balancer.common import cfg
 
@@ -14,7 +14,7 @@ def fake_cost(conf, lb_ref, dev_ref):
     return 1. * ord(dev_ref)
 
 
-class TestScheduller(unittest.TestCase):
+class TestScheduler(unittest.TestCase):
     def setUp(self):
         self.conf = mock.MagicMock()
         self.lb_ref = mock.Mock()
@@ -29,13 +29,13 @@ class TestScheduller(unittest.TestCase):
     def test_scheduler_no_proper_devs(self, dev_get_all):
         dev_get_all.return_value = ['a', 'b']
         with self.assertRaises(exp.NoValidDevice):
-            schedull.schedule_loadbalancer(self.conf, self.lb_ref)
+            scheduler.schedule_loadbalancer(self.conf, self.lb_ref)
             self.assertTrue(dev_get_all.called)
 
     @mock.patch('balancer.db.api.device_get_all')
     def test_scheduler_with_proper_devs(self, dev_get_all):
         dev_get_all.return_value = ['a', 'b', 'c', 'd']
-        res = schedull.schedule_loadbalancer(self.conf, self.lb_ref)
+        res = scheduler.schedule_loadbalancer(self.conf, self.lb_ref)
         self.assertTrue(dev_get_all.called)
         self.assertEqual('c', res)
 
@@ -43,7 +43,7 @@ class TestScheduller(unittest.TestCase):
     def test_scheduler_without_devices(self, dev_get_all):
         dev_get_all.return_value = []
         with self.assertRaises(exp.DeviceNotFound):
-            schedull.schedule_loadbalancer(self.conf, self.lb_ref)
+            scheduler.schedule_loadbalancer(self.conf, self.lb_ref)
             self.assertTrue(dev_get_all.called)
 
     @mock.patch('balancer.db.api.device_get_all')
@@ -54,7 +54,7 @@ class TestScheduller(unittest.TestCase):
         conf._oparser.parse_args.return_value[0].__dict__ = self.attrs
         conf()
         dev_get_all.return_value = ['a', 'b', 'c', 'd']
-        res = schedull.schedule_loadbalancer(conf, self.lb_ref)
+        res = scheduler.schedule_loadbalancer(conf, self.lb_ref)
         self.assertTrue(dev_get_all.called)
         self.assertEqual('c', res)
 
@@ -72,7 +72,7 @@ class TestFilterCapabilities(unittest.TestCase):
         mock_getdev.return_value.get_capabilities.return_value = {
                 'algorithms': ['test'],
         }
-        res = schedull.filter_capabilities(self.conf, self.lb_ref,
+        res = scheduler.filter_capabilities(self.conf, self.lb_ref,
                                            self.dev_ref)
         self.assertTrue(res)
 
@@ -81,7 +81,7 @@ class TestFilterCapabilities(unittest.TestCase):
         mock_getdev.return_value.get_capabilities.return_value = {
                 'algorithms': ['test'],
         }
-        res = schedull.filter_capabilities(self.conf, self.lb_ref,
+        res = scheduler.filter_capabilities(self.conf, self.lb_ref,
                                            self.dev_ref)
         self.assertTrue(res)
 
@@ -89,7 +89,7 @@ class TestFilterCapabilities(unittest.TestCase):
     def test_no_cap(self, mock_getdev):
         self.lb_ref['algorithm'] = 'test'
         mock_getdev.return_value.get_capabilities.return_value = {}
-        res = schedull.filter_capabilities(self.conf, self.lb_ref,
+        res = scheduler.filter_capabilities(self.conf, self.lb_ref,
                                            self.dev_ref)
         self.assertFalse(res)
 
@@ -97,7 +97,7 @@ class TestFilterCapabilities(unittest.TestCase):
     def test_none_cap(self, mock_getdev):
         self.lb_ref['algorithm'] = 'test'
         mock_getdev.return_value.get_capabilities.return_value = None
-        res = schedull.filter_capabilities(self.conf, self.lb_ref,
+        res = scheduler.filter_capabilities(self.conf, self.lb_ref,
                                            self.dev_ref)
         self.assertFalse(res)
 
@@ -112,7 +112,7 @@ class TestFilterCapabilities(unittest.TestCase):
         mock_getdev.return_value.get_capabilities.return_value = {
                 'algorithms': ['test'],
         }
-        res = schedull.filter_capabilities(conf, self.lb_ref, self.dev_ref)
+        res = scheduler.filter_capabilities(conf, self.lb_ref, self.dev_ref)
         self.assertTrue(res)
 
 
@@ -126,5 +126,5 @@ class TestWeigthsFunctions(unittest.TestCase):
     def test_lbs_on(self, lb_count):
         lb_count.return_value = 3
         self.dev_ref['id'] = '1'
-        res = schedull.lbs_on(self.conf, self.lb_ref, self.dev_ref)
+        res = scheduler.lbs_on(self.conf, self.lb_ref, self.dev_ref)
         self.assertEqual(res, 3)

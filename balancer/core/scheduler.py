@@ -25,9 +25,9 @@ LOG = logging.getLogger(__name__)
 
 bind_opts = [
     cfg.ListOpt('device_filters',
-        default=['balancer.core.scheduller.filter_capabilities']),
+        default=['balancer.core.scheduler.filter_capabilities']),
     cfg.ListOpt('device_cost_functions',
-        default=['balancer.core.scheduller.lbs_on']),
+        default=['balancer.core.scheduler.lbs_on']),
 ]
 
 

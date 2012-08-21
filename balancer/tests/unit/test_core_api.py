@@ -26,8 +26,8 @@ class TestDecorators(unittest.TestCase):
 
 class TestBalancer(unittest.TestCase):
     patch_balancer = mock.patch("balancer.loadbalancers.vserver.Balancer")
-    patch_scheduller = mock.patch(
-            "balancer.core.scheduller.schedule_loadbalancer")
+    patch_scheduler = mock.patch(
+            "balancer.core.scheduler.schedule_loadbalancer")
     patch_logger = mock.patch("logging.getLogger")
 
     def setUp(self):
@@ -78,7 +78,7 @@ class TestBalancer(unittest.TestCase):
         self.assertTrue(mock_api.called)
 
     @patch_balancer
-    @patch_scheduller
+    @patch_scheduler
     @mock.patch("balancer.core.commands.create_loadbalancer")
     @mock.patch("balancer.drivers.get_device_driver")
     def test_create_lb_0(self, mock_driver, mock_commands,
@@ -89,7 +89,7 @@ class TestBalancer(unittest.TestCase):
         self.assertTrue(mock_commands.called)
 
     @patch_balancer
-    @patch_scheduller
+    @patch_scheduler
     @mock.patch("balancer.core.commands.create_loadbalancer")
     @mock.patch("balancer.drivers.get_device_driver")
     def test_create_lb_1(self, mock_driver, mock_commands,
