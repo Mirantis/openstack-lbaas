@@ -49,18 +49,9 @@ class API(wsgi.Router):
                        controller=lb_resource,
                        action="findLBforVM", conditions={'method': ["GET"]})
 
-        #mapper.connect("/loadbalancers/{id}", controller=lb_resource,
-        #        action="show", conditions={'method': ["GET"]})
-
         mapper.connect("/loadbalancers/{id}/details",
                 controller=lb_resource,
                 action="showDetails", conditions={'method': ["GET"]})
-
-        #mapper.connect("/loadbalancers/{id}", controller=lb_resource,
-        #        action="delete", conditions={'method': ["DELETE"]})
-
-        #mapper.connect("/loadbalancers/{id}", controller=lb_resource,
-        #        action="update", conditions={'method': ["PUT"]})
 
         mapper.connect("/loadbalancers/{id}/nodes", controller=lb_resource,
                 action="addNodes", conditions={'method': ["POST"]})
@@ -160,10 +151,6 @@ class API(wsgi.Router):
                        controller=device_resource,
                        action="create",
                        conditions={'method': ["POST"]})
-
-        #mapper.connect("/devices/{id}", controller=device_resource,
-        #                            action="delete",
-        #                            conditions={'method': ["DELETE"]})
 
         mapper.connect("/algorithms",
                        controller=device_resource,
