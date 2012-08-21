@@ -87,7 +87,8 @@ class TestBalancer(unittest.TestCase):
         mocks[6].return_value = mock.MagicMock(spec=models.ServerFarm)
         api.lb_show_details(self.conf, self.lb_id)
         for mok in mocks:
-            self.assertTrue(mok.called, "This mock %s didn't call" % mok)
+            self.assertTrue(mok.called, "This mock %s didn't call"
+                    % mok._mock_name)
 
     @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.db.api.unpack_extra")
@@ -115,7 +116,8 @@ class TestBalancer(unittest.TestCase):
         mocks[4].return_value = mock.MagicMock()
         api.create_lb(self.conf, self.dict_list)
         for mok in mocks:
-            self.assertTrue(mok.called, "Mock %s didn't call" % mok)
+            self.assertTrue(mok.called, "Mock %s didn't call"
+                    % mok._mock_name)
 
     @mock.patch("balancer.db.api.loadbalancer_update")
     @mock.patch("balancer.db.api.loadbalancer_create")
@@ -188,7 +190,8 @@ class TestBalancer(unittest.TestCase):
         mocks[3].return_value = [{'id': 1}]
         api.lb_add_nodes(self.conf, self.lb_id, self.lb_nodes)
         for mok in mocks:
-            self.assertTrue(mok.called, "This mock didn't call %s" % mok)
+            self.assertTrue(mok.called, "This mock didn't call %s"
+                    % mok._mock_name)
 
     @mock.patch("balancer.db.api.unpack_extra")
     @mock.patch("balancer.db.api.server_get_all_by_sf_id")

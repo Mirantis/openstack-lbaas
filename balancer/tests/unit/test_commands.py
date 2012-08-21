@@ -442,7 +442,8 @@ class TestLoadbalancer(unittest.TestCase):
             'virtualIps': [{'name': "vip0"}, {'name': "vip1"}]}
         cmd.create_loadbalancer(self.ctx, self.balancer)
         for mok in mocks:
-            self.assertTrue(mok.called, "This mock didn't call %s" % mok)
+            self.assertTrue(mok.called, "This mock didn't call %s"
+                    % mok._mock_name)
 
     @mock.patch("balancer.db.api.virtualserver_pack_extra")
     @mock.patch("balancer.db.api.virtualserver_create")
@@ -465,11 +466,14 @@ class TestLoadbalancer(unittest.TestCase):
                 'virtualIps': [{'name': "vip0"}, {'name': "vip1"}]}
         cmd.create_loadbalancer(self.ctx, self.balancer)
         for mok in mocks[0:5]:
-            self.assertTrue(mok.called, "This mock didn't call %s" % mok)
+            self.assertTrue(mok.called, "This mock didn't call %s"
+                    % mok._mock_name)
         for mok in mocks[6:10]:
-            self.assertFalse(mok.called, "This mock called %s" % mok)
+            self.assertFalse(mok.called, "This mock called %s"
+                    % mok._mock_name)
         for mok in mocks[11:13]:
-            self.assertTrue(mok.called, "This mock didn't call %s" % mok)
+            self.assertTrue(mok.called, "This mock didn't call %s"
+                    % mok._mock_name)
 
     @mock.patch("balancer.db.api.virtualserver_pack_extra")
     @mock.patch("balancer.db.api.virtualserver_create")
@@ -492,11 +496,14 @@ class TestLoadbalancer(unittest.TestCase):
                 'virtualIps': [{'name': "vip0"}, {'name': "vip1"}]}
         cmd.create_loadbalancer(self.ctx, self.balancer)
         for mok in mocks[0:1]:
-            self.assertTrue(mok.called, "This mock didn't call %s" % mok)
+            self.assertTrue(mok.called, "This mock didn't call %s"
+                    % mok._mock_name)
         for mok in mocks[2:5]:
-            self.assertFalse(mok.called, "This mock called %s" % mok)
+            self.assertFalse(mok.called, "This mock called %s"
+                    % mok._mock_name)
         for mok in mocks[6:13]:
-            self.assertTrue(mok.called, "This mock didn't call %s" % mok)
+            self.assertTrue(mok.called, "This mock didn't call %s"
+                    % mok._mock_name)
 
     @mock.patch("balancer.db.api.virtualserver_pack_extra")
     @mock.patch("balancer.db.api.virtualserver_create")
@@ -519,9 +526,11 @@ class TestLoadbalancer(unittest.TestCase):
                 'healthMonitoring': [{'name': "probe0"}, {'name': "probe1"}]}
         cmd.create_loadbalancer(self.ctx, self.balancer)
         for mok in mocks[0:10]:
-            self.assertTrue(mok.called, "This mock didn't call %s" % mok)
+            self.assertTrue(mok.called, "This mock didn't call %s"
+                    % mok._mock_name)
         for mok in mocks[11:13]:
-            self.assertFalse(mok.called, "This mock called %s" % mok)
+            self.assertFalse(mok.called, "This mock called %s"
+                    % mok._mock_name)
 
     @mock.patch("balancer.core.commands.delete_sticky")
     @mock.patch("balancer.core.commands.remove_probe_from_server_farm")
@@ -548,7 +557,8 @@ class TestLoadbalancer(unittest.TestCase):
         mocks[12].return_value = {'id': 1}
         cmd.delete_loadbalancer(self.ctx, self.balancer)
         for mok in mocks:
-            self.assertTrue(mok.called, "This mock didn't call %s" % mok)
+            self.assertTrue(mok.called, "This mock didn't call %s"
+                    % mok._mock_name)
 
     @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
     @mock.patch("balancer.core.commands.create_server_farm")
