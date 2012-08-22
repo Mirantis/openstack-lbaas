@@ -321,6 +321,10 @@ def lb_add_vip(conf, tenant_id, lb_id, vip_dict):
     values = db_api.virtualserver_pack_extra(vip_dict)
     values['lb_id'] = lb_ref['id']
     values['sf_id'] = sf_ref['id']
+    # XXX(akscram): Set default protocol from LoadBalancer to
+    #               VirtualServer if it is not present.
+    if 'protocol' not in values['extra']:
+        values['extra']['protocol'] = lb_ref['protocol']
     vip_ref = db_api.virtualserver_create(conf, values)
     device_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
     with device_driver.request_context() as ctx:
