@@ -1,0 +1,3 @@
+include MANIFEST.in README
+include balancer/db/migrate_repo/README
+include balancer/db/migrate_repo/migrate.cfg
