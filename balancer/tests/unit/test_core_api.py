@@ -112,14 +112,13 @@ class TestBalancer(unittest.TestCase):
             mock_sched, mock_bal):
         """No exception"""
         mock_bal.return_value.getLB.return_value = {'id': 1}
+        mock_sched.return_value = {'id': 42}
         resp = api.create_lb(self.conf, async=False)
         self.assertEqual(resp, 1)
         self.assertTrue(mock_driver.called)
         self.assertTrue(mock_commands.called)
         mock_bal.assert_called_once_with(self.conf)
-        device = mock_sched.Instance(self.conf).\
-                getDeviceByID(mock_sched.Instance(self.conf).lb['device_id'])
-        mock_driver.assert_called_once_with(self.conf, device['id'])
+        mock_driver.assert_called_once_with(self.conf, 42)
         with mock_driver.return_value.request_context() as ctx:
             mock_commands.assert_called_once_with(ctx, mock_bal.return_value)
 
@@ -131,11 +130,10 @@ class TestBalancer(unittest.TestCase):
             mock_sched, mock_bal):
         """Exception"""
         mock_bal.return_value.lb.status = None
+        mock_sched.return_value = {'id': 42}
         mock_commands.side_effect = exception.Invalid
         api.create_lb(self.conf, async=False)
-        device = mock_sched.Instance(self.conf).\
-                getDeviceByID(mock_sched.Instance(self.conf).lb['device_id'])
-        mock_driver.assert_called_once_with(self.conf, device['id'])
+        mock_driver.assert_called_once_with(self.conf, 42)
         mock_bal.assert_called_once_with(self.conf)
         self.assertTrue(mock_bal.return_value.lb.status == "ERROR")
 

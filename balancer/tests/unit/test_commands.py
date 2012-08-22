@@ -469,9 +469,10 @@ class TestLoadbalancer(unittest.TestCase):
     @mock.patch("balancer.core.commands.create_server_farm")
     def test_update_loadbalancer(self, mock_func, mock_get):
         self.lb0 = mock.MagicMock()
+        mock_get.return_value = ['serverfarm']
         cmd.update_loadbalancer(self.ctx, self.balancer, self.lb0)
         self.assertTrue(mock_func.called, "function not called")
-        mock_func.assert_called_once_with(self.ctx, self.lb0.sf)
+        mock_func.assert_called_once_with(self.ctx, 'serverfarm')
 
     @mock.patch("balancer.core.commands.create_rserver")
     @mock.patch("balancer.core.commands.add_rserver_to_server_farm")
