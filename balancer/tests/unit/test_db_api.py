@@ -147,7 +147,7 @@ class TestExtra(unittest.TestCase):
                    'other': 'fakeother',
                    'extra': {'dejkstra': 'dejkstra'}}
         values = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
-                'extra': None}
+                'extra': {}}
         db_api.pack_update(obj_ref, values)
         self.assertEqual(values, obj_ref)
 
@@ -158,7 +158,7 @@ class TestExtra(unittest.TestCase):
                   'dejkstra': 'dejkstra'}
         obj_ref = {'name': 'fakename', 'type': 'faketype',
                    'other': 'fakeother',
-                   'extra': None}
+                   'extra': {}}
         final = {'name': 'fakename', 'type': 'faketype', 'other': 'fakeother',
                 'extra': {'dejkstra': 'dejkstra'}}
         db_api.pack_update(obj_ref, values)
@@ -226,7 +226,9 @@ class TestDBAPI(unittest.TestCase):
         device_ref1 = db_api.device_create(self.conf, device_fake1)
         device_ref2 = db_api.device_create(self.conf, device_fake2)
         devices = db_api.device_get_all(self.conf)
-        self.assertEqual(len(devices), 2)
+        self.assertEqual([dict(dev.iteritems()) for dev in devices],
+                         [dict(dev.iteritems()) for dev in [device_ref1,
+                                                            device_ref2]])
 
     def test_device_get(self):
         device_ref1 = db_api.device_create(self.conf, device_fake1)
@@ -288,8 +290,10 @@ class TestDBAPI(unittest.TestCase):
         lb_ref2 = db_api.loadbalancer_create(self.conf, values)
         lbs1 = db_api.loadbalancer_get_all_by_project(self.conf, 'tenant1')
         lbs2 = db_api.loadbalancer_get_all_by_project(self.conf, 'tenant2')
-        self.assertEqual(len(lbs1), 1)
-        self.assertEqual(len(lbs2), 1)
+        self.assertEqual([dict(lb_ref1.iteritems())],
+                         [dict(lb.iteritems()) for lb in lbs1])
+        self.assertEqual([dict(lb_ref2.iteritems())],
+                         [dict(lb.iteritems()) for lb in lbs2])
         self.assertNotEqual(lbs1[0]['id'], lbs2[0]['id'])
 
     def test_loadbalancer_get_all_by_vm_id(self):
@@ -312,11 +316,11 @@ class TestDBAPI(unittest.TestCase):
         lbs1 = db_api.loadbalancer_get_all_by_vm_id(self.conf, 1, 'tenant1')
         lbs2 = db_api.loadbalancer_get_all_by_vm_id(self.conf, 30, 'tenant2')
         lbs3 = db_api.loadbalancer_get_all_by_vm_id(self.conf, 20, 'tenant2')
-        self.assertEqual(len(lbs1), 1)
-        self.assertEqual(lbs1[0]['id'], lb_ref1['id'])
-        self.assertEqual(len(lbs2), 1)
-        self.assertEqual(lbs2[0]['id'], lb_ref2['id'])
-        self.assertEqual(len(lbs3), 0)
+        self.assertEqual([dict(lb_ref1.iteritems())],
+                         [dict(lb.iteritems()) for lb in lbs1])
+        self.assertEqual([dict(lb_ref2.iteritems())],
+                         [dict(lb.iteritems()) for lb in lbs2])
+        self.assertFalse(lbs3)
 
     def test_lb_count_active_by_device(self):
         lb_fake1 = get_fake_lb('1', 'tenant1')
@@ -346,10 +350,12 @@ class TestDBAPI(unittest.TestCase):
 
     def test_probe_get_all(self):
         values = get_fake_probe('1')
-        db_api.probe_create(self.conf, values)
-        db_api.probe_create(self.conf, values)
+        probe_ref1 = db_api.probe_create(self.conf, values)
+        probe_ref2 = db_api.probe_create(self.conf, values)
         probes = db_api.probe_get_all(self.conf)
-        self.assertEqual(len(probes), 2)
+        self.assertEqual([dict(probe.iteritems()) for probe in probes],
+                         [dict(probe.iteritems()) for probe in [probe_ref1,
+                                                                probe_ref2]])
 
     def test_probe_get_all_by_sf_id(self):
         values = get_fake_probe('1')
@@ -358,10 +364,10 @@ class TestDBAPI(unittest.TestCase):
         pr2 = db_api.probe_create(self.conf, values)
         probes1 = db_api.probe_get_all_by_sf_id(self.conf, '1')
         probes2 = db_api.probe_get_all_by_sf_id(self.conf, '2')
-        self.assertEqual(len(probes1), 1)
-        self.assertEqual(probes1[0]['id'], pr1['id'])
-        self.assertEqual(len(probes2), 1)
-        self.assertEqual(probes2[0]['id'], pr2['id'])
+        self.assertEqual([dict(pr1.iteritems())],
+                         [dict(pr.iteritems()) for pr in probes1])
+        self.assertEqual([dict(pr2.iteritems())],
+                         [dict(pr.iteritems()) for pr in probes2])
 
     def test_probe_update(self):
         values = get_fake_probe('1')
@@ -392,7 +398,8 @@ class TestDBAPI(unittest.TestCase):
         db_api.probe_destroy_by_sf_id(self.conf, '1')
         probes = db_api.probe_get_all(self.conf)
         self.assertEqual(len(probes), 1)
-        self.assertEqual(probes[0]['id'], probe_ref2['id'])
+        self.assertEqual(dict(probe_ref2.iteritems()),
+                         dict(probes[0].iteritems()))
 
     def test_probe_destroy(self):
         values = get_fake_probe('1')
@@ -413,10 +420,11 @@ class TestDBAPI(unittest.TestCase):
 
     def test_sticky_get_all(self):
         values = get_fake_sticky('1')
-        db_api.sticky_create(self.conf, values)
-        db_api.sticky_create(self.conf, values)
-        stickies = db_api.sticky_get_all(self.conf)
-        self.assertEqual(len(stickies), 2)
+        st1 = db_api.sticky_create(self.conf, values)
+        st2 = db_api.sticky_create(self.conf, values)
+        stickies = [dict(sticky.iteritems()) for sticky
+                                           in db_api.sticky_get_all(self.conf)]
+        self.assertEqual(stickies, [dict(st.iteritems()) for st in [st1, st2]])
 
     def test_sticky_get_all_by_sf_id(self):
         values = get_fake_sticky('1')
@@ -426,9 +434,9 @@ class TestDBAPI(unittest.TestCase):
         stickies1 = db_api.sticky_get_all_by_sf_id(self.conf, '1')
         stickies2 = db_api.sticky_get_all_by_sf_id(self.conf, '2')
         self.assertEqual(len(stickies1), 1)
-        self.assertEqual(stickies1[0]['id'], st1['id'])
+        self.assertEqual(dict(st1.iteritems()), dict(stickies1[0].iteritems()))
         self.assertEqual(len(stickies2), 1)
-        self.assertEqual(stickies2[0]['id'], st2['id'])
+        self.assertEqual(dict(st2.iteritems()), dict(stickies2[0].iteritems()))
 
     def test_sticky_update(self):
         values = get_fake_sticky('1')
@@ -461,7 +469,8 @@ class TestDBAPI(unittest.TestCase):
         sticky_ref2 = db_api.sticky_create(self.conf, values)
         db_api.sticky_destroy_by_sf_id(self.conf, '1')
         stickies = db_api.sticky_get_all(self.conf)
-        self.assertEqual(len(stickies), 1)
+        self.assertEqual([dict(sticky_ref2.iteritems())],
+                         [dict(st.iteritems()) for st in stickies])
 
     def test_sticky_destroy(self):
         values = get_fake_sticky('1')
@@ -482,22 +491,27 @@ class TestDBAPI(unittest.TestCase):
 
     def test_server_get_all(self):
         values = get_fake_server('1', 1)
-        db_api.server_create(self.conf, values)
-        db_api.server_create(self.conf, values)
+        server1 = db_api.server_create(self.conf, values)
+        server2 = db_api.server_create(self.conf, values)
         servers = db_api.server_get_all(self.conf)
-        self.assertEqual(len(servers), 2)
+        self.assertEqual([dict(server.iteritems()) for server in servers],
+                         [dict(server.iteritems()) for server in [server1,
+                                                                  server2]])
 
     def test_server_get_all_by_sf_id(self):
         values = get_fake_server('1', 1)
-        st1 = db_api.server_create(self.conf, values)
+        sr1 = db_api.server_create(self.conf, values)
+        sr2 = db_api.server_create(self.conf, values)
         values = get_fake_server('2', 1)
-        st2 = db_api.server_create(self.conf, values)
+        sr3 = db_api.server_create(self.conf, values)
+        sr4 = db_api.server_create(self.conf, values)
         servers1 = db_api.server_get_all_by_sf_id(self.conf, '1')
         servers2 = db_api.server_get_all_by_sf_id(self.conf, '2')
-        self.assertEqual(len(servers1), 1)
-        self.assertEqual(servers1[0]['id'], st1['id'])
-        self.assertEqual(len(servers2), 1)
-        self.assertEqual(servers2[0]['id'], st2['id'])
+
+        self.assertEqual([dict(server.iteritems()) for server in servers1],
+                         [dict(server.iteritems()) for server in [sr1, sr2]])
+        self.assertEqual([dict(server.iteritems()) for server in servers2],
+                         [dict(server.iteritems()) for server in [sr3, sr4]])
 
     def test_server_update(self):
         values = get_fake_server('1', 1)
@@ -542,7 +556,8 @@ class TestDBAPI(unittest.TestCase):
         server_ref2 = db_api.server_create(self.conf, values)
         db_api.server_destroy_by_sf_id(self.conf, '1')
         servers = db_api.server_get_all(self.conf)
-        self.assertEqual(len(servers), 1)
+        self.assertEqual([dict(server_ref2.iteritems())],
+                         [dict(server.iteritems()) for server in servers])
 
     def test_server_destroy(self):
         values = get_fake_server('1', 1)
@@ -559,7 +574,7 @@ class TestDBAPI(unittest.TestCase):
         server1 = db_api.server_create(self.conf, values1)
         server2 = db_api.server_create(self.conf, values2)
         server = db_api.server_get_by_address(self.conf, '10.0.0.1')
-        self.assertEqual(server['id'], server1['id'])
+        self.assertEqual(dict(server.iteritems()), dict(server1.iteritems()))
         with self.assertRaises(exception.ServerNotFound) as cm:
             db_api.server_get_by_address(self.conf, '192.168.0.1')
         err = cm.exception
@@ -590,15 +605,15 @@ class TestDBAPI(unittest.TestCase):
         self.assertEqual(err.kwargs, expected)
 
     def test_server_get_all_by_parent_id(self):
-        values1 = get_fake_server('1', 1, '10.0.0.1', '1')
-        values2 = get_fake_server('1', 1, '10.0.0.2', '2')
+        values1 = get_fake_server('1', 1, '10.0.0.1', 1)
+        values2 = get_fake_server('1', 1, '10.0.0.2', 2)
         values3 = get_fake_server('1', 1, '10.0.0.3')
         server_ref1 = db_api.server_create(self.conf, values1)
         server_ref2 = db_api.server_create(self.conf, values2)
         server_ref3 = db_api.server_create(self.conf, values3)
-        servers = db_api.server_get_all_by_parent_id(self.conf, '1')
-        self.assertEqual(len(servers), 1)
-        self.assertEqual(servers[0]['id'], server_ref1['id'])
+        servers = db_api.server_get_all_by_parent_id(self.conf, 1)
+        self.assertEqual([dict(server_ref1.iteritems())],
+                         [dict(server.iteritems()) for server in servers])
 
     def test_serverfarm_create(self):
         values = get_fake_sf('1')
@@ -608,17 +623,17 @@ class TestDBAPI(unittest.TestCase):
         values['id'] = serverfarm['id']
         self.assertEqual(serverfarm, values)
 
-    def test_serverfarm_get_all_by_sf_id(self):
+    def test_serverfarm_get_all_by_lb_id(self):
         values1 = get_fake_sf('1')
         values2 = get_fake_sf('2')
         sf_ref1 = db_api.serverfarm_create(self.conf, values1)
         sf_ref2 = db_api.serverfarm_create(self.conf, values2)
         sfs1 = db_api.serverfarm_get_all_by_lb_id(self.conf, '1')
         sfs2 = db_api.serverfarm_get_all_by_lb_id(self.conf, '2')
-        self.assertEqual(len(sfs1), 1)
-        self.assertEqual(sfs1[0]['id'], sf_ref1['id'])
-        self.assertEqual(len(sfs2), 1)
-        self.assertEqual(sfs2[0]['id'], sf_ref2['id'])
+        self.assertEqual([dict(sf_ref1.iteritems())],
+                         [dict(sf.iteritems()) for sf in sfs1])
+        self.assertEqual([dict(sf_ref2.iteritems())],
+                         [dict(sf.iteritems()) for sf in sfs2])
 
     def test_serverfarm_update(self):
         values = get_fake_sf('1')
@@ -666,10 +681,10 @@ class TestDBAPI(unittest.TestCase):
         predictor2 = db_api.predictor_create(self.conf, values)
         predictors1 = db_api.predictor_get_all_by_sf_id(self.conf, '1')
         predictors2 = db_api.predictor_get_all_by_sf_id(self.conf, '2')
-        self.assertEqual(len(predictors1), 1)
-        self.assertEqual(predictors1[0]['id'], predictor1['id'])
-        self.assertEqual(len(predictors2), 1)
-        self.assertEqual(predictors2[0]['id'], predictor2['id'])
+        self.assertEqual([dict(predictor1.iteritems())],
+                         [dict(pr.iteritems()) for pr in predictors1])
+        self.assertEqual([dict(predictor2.iteritems())],
+                         [dict(pr.iteritems()) for pr in predictors2])
 
     def test_predictor_update(self):
         values = get_fake_predictor('1')
@@ -702,7 +717,8 @@ class TestDBAPI(unittest.TestCase):
         err = cm.exception
         self.assertEqual(err.kwargs, {'predictor_id': predictor_ref1['id']})
         predictor_ref3 = db_api.predictor_get(self.conf, predictor_ref2['id'])
-        self.assertEqual(predictor_ref3['id'], predictor_ref2['id'])
+        self.assertEqual(dict(predictor_ref2.iteritems()),
+                         dict(predictor_ref3.iteritems()))
 
     def test_predictor_destroy(self):
         values = get_fake_predictor('1')
@@ -724,14 +740,18 @@ class TestDBAPI(unittest.TestCase):
     def test_virtualserver_get_all_by_sf_id(self):
         values = get_fake_virtualserver('1', '1')
         virtualserver1 = db_api.virtualserver_create(self.conf, values)
-        values = get_fake_virtualserver('2', '1')
         virtualserver2 = db_api.virtualserver_create(self.conf, values)
+        values = get_fake_virtualserver('2', '1')
+        virtualserver3 = db_api.virtualserver_create(self.conf, values)
+        virtualserver4 = db_api.virtualserver_create(self.conf, values)
         virtualservers1 = db_api.virtualserver_get_all_by_sf_id(self.conf, '1')
         virtualservers2 = db_api.virtualserver_get_all_by_sf_id(self.conf, '2')
-        self.assertEqual(len(virtualservers1), 1)
-        self.assertEqual(virtualservers1[0]['id'], virtualserver1['id'])
-        self.assertEqual(len(virtualservers2), 1)
-        self.assertEqual(virtualservers2[0]['id'], virtualserver2['id'])
+        self.assertEqual([dict(vs.iteritems()) for vs in virtualservers1],
+                         [dict(vs.iteritems()) for vs in [virtualserver1,
+                                                          virtualserver2]])
+        self.assertEqual([dict(vs.iteritems()) for vs in virtualservers2],
+                         [dict(vs.iteritems()) for vs in [virtualserver3,
+                                                          virtualserver4]])
 
     def test_virtualserver_update(self):
         values = get_fake_virtualserver('1', '1')
@@ -770,7 +790,8 @@ class TestDBAPI(unittest.TestCase):
         self.assertEqual(err.kwargs, expected)
         virtualserver_ref3 = db_api.virtualserver_get(self.conf,
                                                       virtualserver_ref2['id'])
-        self.assertEqual(virtualserver_ref3['id'], virtualserver_ref2['id'])
+        self.assertEqual(dict(virtualserver_ref2.iteritems()),
+                         dict(virtualserver_ref3.iteritems()))
 
     def test_virtualserver_destroy(self):
         values = get_fake_virtualserver('1', '1')

@@ -125,9 +125,9 @@ def delete_rserver(ctx, rs):
         ctx.device.delete_real_server(rs)
         if len(rss) > 0:
             for rs_child in rss:
-                db_api.server_update(rs_child['id'],
+                db_api.server_update(ctx.conf, rs_child['id'],
                                      {'parent_id': rss[-1]['id']})
-            db_api.server_update(rss[-1]['id'],
+            db_api.server_update(ctx.conf, rss[-1]['id'],
                                      {'parent_id': '', 'deployed': 'True'})
             ctx.device.create_real_server(rss[-1])
 
