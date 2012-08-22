@@ -34,10 +34,10 @@ class TestBalancer(unittest.TestCase):
     def setUp(self):
         self.conf = mock.MagicMock()
         value = mock.MagicMock
-        self.dict_list = ({'id': 1, 'name': 'name', 'extra': {
+        self.dict_list = [{'id': 1, 'name': 'name', 'extra': {
             'stragearg': value, 'anotherarg': value}, },
             {'id': 2, 'name': 'name0', 'extra': {
-                'stragearg': value, 'anotherarg': value}, })
+                'stragearg': value, 'anotherarg': value}, }]
         self.dictionary = {'id': 1, 'name': 'name', 'extra': {
             'stragearg': value, 'anotherarg': value}, }
         self.tenant_id = 1
@@ -47,6 +47,12 @@ class TestBalancer(unittest.TestCase):
         self.lb_node_id = 1
         self.lb_body_0 = {'bubble': "bubble"}
         self.lb_body = {'algorithm': "bubble"}
+        self.dict_list_0 = {'nodes': {'id': 1, 'name': 'name',
+            'extra': {'stragearg': value, 'anotherarg': value}},
+            'healthMonitoring': {'id': 2, 'name': 'name0', 'extra': {
+                'stragearg': value, 'anotherarg': value}},
+            'virtualIps': {'id': 333, 'name': 'name0', 'extra': {
+                'stragearg': value, 'anotherarg': value}}}
 
     @mock.patch("balancer.db.api.unpack_extra")
     @mock.patch("balancer.db.api.loadbalancer_get_all_by_project")
@@ -104,6 +110,7 @@ class TestBalancer(unittest.TestCase):
         self.assertTrue(mock_api.called)
         self.assertEquals(res, {"id": 1})
 
+    @mock.patch("balancer.db.api.unpack_extra")
     @mock.patch("balancer.db.api.loadbalancer_update")
     @mock.patch("balancer.db.api.loadbalancer_create")
     @mock.patch("balancer.db.api.loadbalancer_pack_extra")
@@ -112,13 +119,15 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.drivers.get_device_driver")
     def test_create_lb_0(self, *mocks):
         """No exception"""
+        mocks[6].return_value = {'id': 2}
         mocks[2].return_value = {'id': 1}
         mocks[4].return_value = mock.MagicMock()
-        api.create_lb(self.conf, self.dict_list)
+        api.create_lb(self.conf, self.dict_list_0)
         for mok in mocks:
             self.assertTrue(mok.called, "Mock %s didn't call"
                     % mok._mock_name)
 
+    @mock.patch("balancer.db.api.unpack_extra")
     @mock.patch("balancer.db.api.loadbalancer_update")
     @mock.patch("balancer.db.api.loadbalancer_create")
     @mock.patch("balancer.db.api.loadbalancer_pack_extra")
@@ -127,10 +136,11 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.drivers.get_device_driver")
     def test_create_lb_1(self, *mocks):
         """Exception"""
+        mocks[6].return_value = {'id': 2}
         mocks[1].side_effect = exception.Invalid
         mocks[2].return_value = {'id': 1}
         mocks[4].return_value = mock.MagicMock()
-        api.create_lb(self.conf, self.dict_list)
+        api.create_lb(self.conf, self.dict_list_0)
         mocks[1].called_once_with(exception.Invalid)
 
     @mock.patch("balancer.core.commands.update_loadbalancer")

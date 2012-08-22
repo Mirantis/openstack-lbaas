@@ -420,13 +420,19 @@ class TestLoadbalancer(unittest.TestCase):
         self.balancer = mock.MagicMock(probes=self.call_list,
                rs=self.call_list, vips=self.call_list,
                sf=mock.MagicMock(_sticky=self.call_list))
+        self.dict_list = [{'id': 1, 'name': 'name', 'extra': {
+            'stragearg': value, 'anotherarg': value}, },
+            {'id': 2, 'name': 'name0', 'extra': {
+                'stragearg': value, 'anotherarg': value}, }]
         self.dictionary = {'id': 1, 'name': 'name', 'extra': {
             'stragearg': value, 'anotherarg': value}, }
 
     @mock.patch("balancer.db.api.virtualserver_pack_extra")
     @mock.patch("balancer.db.api.virtualserver_create")
     @mock.patch("balancer.core.commands.create_vip")
-    @mock.patch("balancer.db.api.serverfarm_pack_extra")
+    @mock.patch("balancer.core.commands.create_server_farm")
+    @mock.patch("balancer.db.api.predictor_create")
+    @mock.patch("balancer.db.api.serverfarm_create")
     @mock.patch("balancer.db.api.server_pack_extra")
     @mock.patch("balancer.db.api.server_create")
     @mock.patch("balancer.core.commands.create_rserver")
@@ -435,7 +441,6 @@ class TestLoadbalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.probe_create")
     @mock.patch("balancer.core.commands.create_probe")
     @mock.patch("balancer.core.commands.add_probe_to_server_farm")
-    @mock.patch("balancer.db.api.loadbalancer_update")
     @mock.patch("balancer.db.api.unpack_extra")
     def test_create_loadbalancer_0(self, *mocks):
         """All here"""
@@ -443,8 +448,8 @@ class TestLoadbalancer(unittest.TestCase):
             'nodes': [{'name': 'node0'}, {'name': 'node1'}],
             'healthMonitoring': [{'name': 'probe0'}, {"name": "probe1"}],
             'virtualIps': [{'name': "vip0"}, {'name': "vip1"}]}
-        cmd.create_loadbalancer(self.ctx, self.balancer, self.dictionary,
-                self.dictionary, self.dictionary)
+        cmd.create_loadbalancer(self.ctx, self.balancer, self.dict_list,
+                self.dict_list, self.dict_list)
         for mok in mocks:
             self.assertTrue(mok.called, "This mock didn't call %s"
                     % mok._mock_name)
@@ -452,8 +457,9 @@ class TestLoadbalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.virtualserver_pack_extra")
     @mock.patch("balancer.db.api.virtualserver_create")
     @mock.patch("balancer.core.commands.create_vip")
-    @mock.patch("balancer.db.api.serverfarm_pack_extra")
-    @mock.patch("balancer.db.api.server_pack_extra")
+    @mock.patch("balancer.core.commands.create_server_farm")
+    @mock.patch("balancer.db.api.predictor_create")
+    @mock.patch("balancer.db.api.serverfarm_create")
     @mock.patch("balancer.db.api.server_create")
     @mock.patch("balancer.core.commands.create_rserver")
     @mock.patch("balancer.core.commands.add_rserver_to_server_farm")
@@ -461,30 +467,27 @@ class TestLoadbalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.probe_create")
     @mock.patch("balancer.core.commands.create_probe")
     @mock.patch("balancer.core.commands.add_probe_to_server_farm")
-    @mock.patch("balancer.db.api.loadbalancer_update")
     @mock.patch("balancer.db.api.unpack_extra")
     def test_create_loadbalancer_1(self, *mocks):
         """Nodes not here"""
-        mocks[0].return_value = {'id': 1,
-                'healthMonitoring': [{'name': 'probe0'}, {"name": "probe1"}],
-                'virtualIps': [{'name': "vip0"}, {'name': "vip1"}]}
-        cmd.create_loadbalancer(self.ctx, self.balancer, self.dictionary,
-                self.dictionary, self.dictionary)
-        for mok in mocks[0:5]:
+        cmd.create_loadbalancer(self.ctx, self.balancer, [],
+                self.dict_list, self.dict_list)
+        for mok in mocks[0:4]:
             self.assertTrue(mok.called, "This mock didn't call %s"
                     % mok._mock_name)
-        for mok in mocks[6:10]:
+        for mok in mocks[5:7]:
             self.assertFalse(mok.called, "This mock called %s"
                     % mok._mock_name)
-        for mok in mocks[11:13]:
+        for mok in mocks[8:14]:
             self.assertTrue(mok.called, "This mock didn't call %s"
                     % mok._mock_name)
 
     @mock.patch("balancer.db.api.virtualserver_pack_extra")
     @mock.patch("balancer.db.api.virtualserver_create")
     @mock.patch("balancer.core.commands.create_vip")
-    @mock.patch("balancer.db.api.serverfarm_pack_extra")
-    @mock.patch("balancer.db.api.server_pack_extra")
+    @mock.patch("balancer.core.commands.create_server_farm")
+    @mock.patch("balancer.db.api.predictor_create")
+    @mock.patch("balancer.db.api.serverfarm_create")
     @mock.patch("balancer.db.api.server_create")
     @mock.patch("balancer.core.commands.create_rserver")
     @mock.patch("balancer.core.commands.add_rserver_to_server_farm")
@@ -492,28 +495,27 @@ class TestLoadbalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.probe_create")
     @mock.patch("balancer.core.commands.create_probe")
     @mock.patch("balancer.core.commands.add_probe_to_server_farm")
-    @mock.patch("balancer.db.api.loadbalancer_update")
     @mock.patch("balancer.db.api.unpack_extra")
     def test_create_loadbalancer_2(self, *mocks):
-        """Nodes not here"""
-        mocks[0].return_value = {'id': 1,
-                'nodes': [{'name': 'node0'}, {"name": "node1"}],
-                'virtualIps': [{'name': "vip0"}, {'name': "vip1"}]}
-        cmd.create_loadbalancer(self.ctx, self.balancer)
-        for mok in mocks[0:1]:
+        """probes not here"""
+        cmd.create_loadbalancer(self.ctx, self.balancer, self.dict_list,
+                [], self.dict_list)
+        for mok in mocks[0]:
             self.assertTrue(mok.called, "This mock didn't call %s"
                     % mok._mock_name)
-        for mok in mocks[2:5]:
+        for mok in mocks[1:4]:
             self.assertFalse(mok.called, "This mock called %s"
                     % mok._mock_name)
-        for mok in mocks[6:13]:
+        for mok in mocks[5:14]:
             self.assertTrue(mok.called, "This mock didn't call %s"
                     % mok._mock_name)
 
     @mock.patch("balancer.db.api.virtualserver_pack_extra")
     @mock.patch("balancer.db.api.virtualserver_create")
     @mock.patch("balancer.core.commands.create_vip")
-    @mock.patch("balancer.db.api.serverfarm_pack_extra")
+    @mock.patch("balancer.core.commands.create_server_farm")
+    @mock.patch("balancer.db.api.predictor_create")
+    @mock.patch("balancer.db.api.serverfarm_create")
     @mock.patch("balancer.db.api.server_pack_extra")
     @mock.patch("balancer.db.api.server_create")
     @mock.patch("balancer.core.commands.create_rserver")
@@ -522,18 +524,15 @@ class TestLoadbalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.probe_create")
     @mock.patch("balancer.core.commands.create_probe")
     @mock.patch("balancer.core.commands.add_probe_to_server_farm")
-    @mock.patch("balancer.db.api.loadbalancer_update")
     @mock.patch("balancer.db.api.unpack_extra")
     def test_create_loadbalancer_3(self, *mocks):
-        """Nodes not here"""
-        mocks[0].return_value = {'id': 1,
-                'nodes': [{'name': 'node0'}, {"name": "node1"}],
-                'healthMonitoring': [{'name': "probe0"}, {'name': "probe1"}]}
-        cmd.create_loadbalancer(self.ctx, self.balancer)
+        """vips not here"""
+        cmd.create_loadbalancer(self.ctx, self.balancer, self.dict_list,
+                self.dict_list, [])
         for mok in mocks[0:10]:
             self.assertTrue(mok.called, "This mock didn't call %s"
                     % mok._mock_name)
-        for mok in mocks[11:13]:
+        for mok in mocks[12:14]:
             self.assertFalse(mok.called, "This mock called %s"
                     % mok._mock_name)
 
