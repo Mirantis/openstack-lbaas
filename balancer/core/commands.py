@@ -272,7 +272,7 @@ def create_loadbalancer(ctx, balancer, nodes, probes, vips):
         vip_values['sf_id'] = sf['id']
         vip_ref = db_api.virtualserver_create(ctx.conf, vip_values)
         create_vip(ctx, vip_ref, sf)
-    db_api.loadbalancer_update(ctx.conf, lb['id'], {'deployed': True})
+
 
 def delete_loadbalancer(ctx, lb):
     sf = db_api.serverfarm_get_all_by_lb_id(ctx.conf, lb['id'])[0]

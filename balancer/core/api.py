@@ -102,8 +102,10 @@ def create_lb(conf, params):
             commands.create_loadbalancer(ctx, lb_ref, nodes, probes, vips)
     except (exception.Error, exception.Invalid):
         lb_ref.status = lb_status.ERROR
+        lb_ref.deployed = 'False'
     else:
         lb_ref.status = lb_status.ACTIVE
+        lb_ref.deployed = 'True'
     db_api.loadbalancer_update(conf, lb['id'], lb_ref)
     return lb_ref['id']
 

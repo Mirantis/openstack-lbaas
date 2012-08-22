@@ -408,6 +408,7 @@ class TestServerFarm(unittest.TestCase):
 
 class TestLoadbalancer(unittest.TestCase):
     def setUp(self):
+        value = mock.MagicMock()
         self.ctx = mock.MagicMock()
         self.conf = mock.MagicMock()
         self.rserver = mock.MagicMock()
@@ -419,6 +420,8 @@ class TestLoadbalancer(unittest.TestCase):
         self.balancer = mock.MagicMock(probes=self.call_list,
                rs=self.call_list, vips=self.call_list,
                sf=mock.MagicMock(_sticky=self.call_list))
+        self.dictionary = {'id': 1, 'name': 'name', 'extra': {
+            'stragearg': value, 'anotherarg': value}, }
 
     @mock.patch("balancer.db.api.virtualserver_pack_extra")
     @mock.patch("balancer.db.api.virtualserver_create")
@@ -440,7 +443,8 @@ class TestLoadbalancer(unittest.TestCase):
             'nodes': [{'name': 'node0'}, {'name': 'node1'}],
             'healthMonitoring': [{'name': 'probe0'}, {"name": "probe1"}],
             'virtualIps': [{'name': "vip0"}, {'name': "vip1"}]}
-        cmd.create_loadbalancer(self.ctx, self.balancer)
+        cmd.create_loadbalancer(self.ctx, self.balancer, self.dictionary,
+                self.dictionary, self.dictionary)
         for mok in mocks:
             self.assertTrue(mok.called, "This mock didn't call %s"
                     % mok._mock_name)
@@ -464,7 +468,8 @@ class TestLoadbalancer(unittest.TestCase):
         mocks[0].return_value = {'id': 1,
                 'healthMonitoring': [{'name': 'probe0'}, {"name": "probe1"}],
                 'virtualIps': [{'name': "vip0"}, {'name': "vip1"}]}
-        cmd.create_loadbalancer(self.ctx, self.balancer)
+        cmd.create_loadbalancer(self.ctx, self.balancer, self.dictionary,
+                self.dictionary, self.dictionary)
         for mok in mocks[0:5]:
             self.assertTrue(mok.called, "This mock didn't call %s"
                     % mok._mock_name)
