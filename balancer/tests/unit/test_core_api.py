@@ -4,6 +4,7 @@ import types
 import balancer.core.api as api
 from openstack.common import exception
 from balancer import exception as exc
+import balancer.db.models as models
 
 
 class TestDecorators(unittest.TestCase):
@@ -33,10 +34,10 @@ class TestBalancer(unittest.TestCase):
     def setUp(self):
         self.conf = mock.MagicMock()
         value = mock.MagicMock
-        self.dict_list = ({'id': 1, 'name': 'name', 'extra': {
+        self.dict_list = [{'id': 1, 'name': 'name', 'extra': {
             'stragearg': value, 'anotherarg': value}, },
             {'id': 2, 'name': 'name0', 'extra': {
-                'stragearg': value, 'anotherarg': value}, })
+                'stragearg': value, 'anotherarg': value}, }]
         self.dictionary = {'id': 1, 'name': 'name', 'extra': {
             'stragearg': value, 'anotherarg': value}, }
         self.tenant_id = 1
@@ -46,6 +47,12 @@ class TestBalancer(unittest.TestCase):
         self.lb_node_id = 1
         self.lb_body_0 = {'bubble': "bubble"}
         self.lb_body = {'algorithm': "bubble"}
+        self.dict_list_0 = {'nodes': {'id': 1, 'name': 'name',
+            'extra': {'stragearg': value, 'anotherarg': value}},
+            'healthMonitoring': {'id': 2, 'name': 'name0', 'extra': {
+                'stragearg': value, 'anotherarg': value}},
+            'virtualIps': {'id': 333, 'name': 'name0', 'extra': {
+                'stragearg': value, 'anotherarg': value}}}
 
     @mock.patch("balancer.db.api.unpack_extra")
     @mock.patch("balancer.db.api.loadbalancer_get_all_by_project")
@@ -73,69 +80,68 @@ class TestBalancer(unittest.TestCase):
         self.assertTrue(mock_api.called)
         self.assertEqual(resp, ['foo'])
 
+    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
     @mock.patch("balancer.db.api.unpack_extra")
     @mock.patch("balancer.db.api.loadbalancer_get")
-    def test_get_data(self, mock_api, mock_unpack):
-        mock_unpack.return_value = {'id': 1, "virtualIps": 1}
-        mock_api.return_value = [{"id": 1, "virtualIps": 1}]
-        resp = api.lb_get_data(self.conf, self.lb_id)
-        self.assertEqual(resp, {"id": 1})
-        self.assertTrue(mock_api.called)
-        self.assertTrue(mock_unpack.called)
-        mock_api.assert_called_once_with(self.conf, self.lb_id)
-        mock_unpack.assert_called_once_with([{"id": 1, "virtualIps": 1}])
+    @mock.patch("balancer.db.api.virtualserver_get_all_by_sf_id")
+    @mock.patch("balancer.db.api.server_get_all_by_sf_id")
+    @mock.patch("balancer.db.api.probe_get_all_by_sf_id")
+    @mock.patch("balancer.db.api.sticky_get_all_by_sf_id")
+    def test_lb_show_details(self, *mocks):
+        mocks[5].return_value = {"virtualIps": 1, "nodes": 2,
+                "healthMonitor": 3, "sessionPersistence": 4}
+        mocks[6].return_value = mock.MagicMock(spec=models.ServerFarm)
+        api.lb_show_details(self.conf, self.lb_id)
+        for mok in mocks:
+            self.assertTrue(mok.called, "This mock %s didn't call"
+                    % mok._mock_name)
 
-    @patch_balancer
+    @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.db.api.unpack_extra")
-    def test_lb_show_details(self, mock_api, mock_bal):
-        mock_bal.return_value.rs = ['node']
-        mock_bal.return_value.vips = ['vip']
-        mock_bal.return_value.probes = ['probe']
-        mock_api.side_effect = [{'nodes': [], 'healthMonitor': [],
-                                 'virtualIps': []}, 'node', 'vip', 'probe']
-        resp = api.lb_show_details(self.conf, self.lb_id)
-        mock_bal.assert_called_once_with(self.conf)
-        mock_api.assert_any_call(mock_bal.return_value.lb)
-        mock_api.assert_any_call('node')
-        mock_api.assert_any_call('vip')
-        mock_api.assert_any_call('probe')
-        self.assertTrue(mock_bal.called)
+    def test_lb_get_data_0(self, mock_api, mock_bal):
+        api.lb_get_data(self.conf, self.lb_id)
         self.assertTrue(mock_api.called)
-        self.assertEqual(resp, {'nodes': ['node'], 'virtualIps': ['vip'],
-                                'healthMonitor': ['probe']})
 
-    @patch_balancer
+    @mock.patch("balancer.db.api.loadbalancer_get")
+    @mock.patch("balancer.db.api.unpack_extra")
+    def test_lb_get_data_1(self, mock_api, mock_bal):
+        mock_api.return_value = {"id": 1, "virtualIps": "cranch"}
+        res = api.lb_get_data(self.conf, self.lb_id)
+        self.assertTrue(mock_api.called)
+        self.assertEquals(res, {"id": 1})
+
+    @mock.patch("balancer.db.api.unpack_extra")
+    @mock.patch("balancer.db.api.loadbalancer_update")
+    @mock.patch("balancer.db.api.loadbalancer_create")
+    @mock.patch("balancer.db.api.loadbalancer_pack_extra")
     @patch_scheduler
     @mock.patch("balancer.core.commands.create_loadbalancer")
     @mock.patch("balancer.drivers.get_device_driver")
-    def test_create_lb_0(self, mock_driver, mock_commands,
-            mock_sched, mock_bal):
+    def test_create_lb_0(self, *mocks):
         """No exception"""
-        mock_bal.return_value.getLB.return_value = {'id': 1}
-        mock_sched.return_value = {'id': 42}
-        resp = api.create_lb(self.conf, async=False)
-        self.assertEqual(resp, 1)
-        self.assertTrue(mock_driver.called)
-        self.assertTrue(mock_commands.called)
-        mock_bal.assert_called_once_with(self.conf)
-        mock_driver.assert_called_once_with(self.conf, 42)
-        with mock_driver.return_value.request_context() as ctx:
-            mock_commands.assert_called_once_with(ctx, mock_bal.return_value)
+        mocks[6].return_value = {'id': 2}
+        mocks[2].return_value = {'id': 1}
+        mocks[4].return_value = mock.MagicMock()
+        api.create_lb(self.conf, self.dict_list_0)
+        for mok in mocks:
+            self.assertTrue(mok.called, "Mock %s didn't call"
+                    % mok._mock_name)
 
-    @patch_balancer
+    @mock.patch("balancer.db.api.unpack_extra")
+    @mock.patch("balancer.db.api.loadbalancer_update")
+    @mock.patch("balancer.db.api.loadbalancer_create")
+    @mock.patch("balancer.db.api.loadbalancer_pack_extra")
     @patch_scheduler
-    @mock.patch("balancer.core.commands.create_loadbalancer", autospec=True)
+    @mock.patch("balancer.core.commands.create_loadbalancer")
     @mock.patch("balancer.drivers.get_device_driver")
-    def test_create_lb_1(self, mock_driver, mock_commands,
-            mock_sched, mock_bal):
+    def test_create_lb_1(self, *mocks):
         """Exception"""
-        mock_bal.return_value.lb.status = None
-        mock_sched.return_value = {'id': 42}
-        mock_commands.side_effect = exception.Invalid
-        api.create_lb(self.conf, async=False)
-        mock_driver.assert_called_once_with(self.conf, 42)
-        mock_bal.assert_called_once_with(self.conf)
-        self.assertTrue(mock_bal.return_value.lb.status == "ERROR")
+        mocks[6].return_value = {'id': 2}
+        mocks[1].side_effect = exception.Invalid
+        mocks[2].return_value = {'id': 1}
+        mocks[4].return_value = mock.MagicMock()
+        api.create_lb(self.conf, self.dict_list_0)
+        mocks[1].called_once_with(exception.Invalid)
 
     @mock.patch("balancer.core.commands.update_loadbalancer")
     @mock.patch("balancer.db.api.loadbalancer_update")
@@ -166,171 +172,116 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.drivers.get_device_driver")
     def test_update_lb_1(self, *mocks):
         """Exception"""
-        mocks[4].return_value = Exception
+        mocks[4].side_effect = Exception
         with self.assertRaises(Exception):
             api.update_lb(self.conf, self.lb_id, self.lb_body, async=False)
             mocks[3].assert_called_with(self.conf, self.lb_id,
                 {'status': "ERROR"})
 
-    @patch_balancer
+    @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.delete_loadbalancer")
-    def test_delete_lb(self, mock_command, mock_driver, mock_bal):
-        mock_bal.return_value.lb.__getitem__.return_value = 2
+    def test_delete_lb(self, mock_command, mock_driver, mock_api):
+        mock_api.return_value = mock.MagicMock()
         api.delete_lb(self.conf, self.lb_id)
+        self.assertTrue(mock_api.called)
         self.assertTrue(mock_command.called)
         self.assertTrue(mock_driver.called)
-        mock_bal.assert_called_once_with(self.conf)
-        mock_driver.assert_called_once_with(self.conf, 2)
-        with mock_driver.return_value.request_context() as ctx:
-            mock_command.assert_called_once_with(ctx, mock_bal.return_value)
 
-    @patch_balancer
     @mock.patch("balancer.db.api.unpack_extra")
+    @mock.patch("balancer.db.api.server_create")
+    @mock.patch("balancer.db.api.server_pack_extra")
+    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
+    @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.add_node_to_loadbalancer")
-    def test_lb_add_nodes(self, mock_command, mock_driver, mock_extra,
-                          mock_bal):
-        mock_extra.return_value = {'node': 'foo'}
-        mock_bal.return_value.lb.__getitem__.return_value = 2
-        mock_bal.return_value.rs.__getitem__.return_value = ['foo']
-        resp = api.lb_add_nodes(self.conf, self.lb_id, self.lb_nodes)
-        self.assertTrue(mock_command.called)
-        self.assertTrue(mock_command.call_count == 2)
-        self.assertTrue(mock_driver.called)
-        self.assertTrue(mock_driver.call_count == 2)
-        self.assertTrue(mock_extra.called)
-        self.assertTrue(mock_extra.call_count == 2)
-        self.assertEqual(resp, {'nodes': [{'node': 'foo'}, {'node': 'foo'}]})
-        mock_bal.assert_called_once_with(self.conf)
-        mock_driver.assert_called_with(self.conf, 2)
-        mock_extra.assert_called_with(['foo'])
-        with mock_driver.return_value.request_context() as ctx:
-            mock_command.assert_called_with(ctx, mock_bal.return_value,
-                                            ['foo'])
+    def test_lb_add_nodes(self, *mocks):
+        mocks[2].return_value = {'device_id': 1}
+        mocks[3].return_value = [{'id': 1}]
+        api.lb_add_nodes(self.conf, self.lb_id, self.lb_nodes)
+        for mok in mocks:
+            self.assertTrue(mok.called, "This mock didn't call %s"
+                    % mok._mock_name)
 
-    @patch_balancer
     @mock.patch("balancer.db.api.unpack_extra")
-    def test_lb_show_nodes(self, mock_api, mock_bal):
-        mock_bal.return_value.rs = self.dict_list
-        mock_api.return_value = {'node': 'foo'}
-        resp = api.lb_show_nodes(self.conf, 1)
-        self.assertTrue(mock_api.called)
-        self.assertTrue(mock_api.call_count == 2)
-        self.assertEqual(resp, {'nodes': [{'node': 'foo'}, {'node': 'foo'}]})
-        mock_bal.assert_called_once_with(self.conf)
-        mock_api.assert_any_call(self.dict_list[0])
-        mock_api.assert_any_call(self.dict_list[1])
+    @mock.patch("balancer.db.api.server_get_all_by_sf_id")
+    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
+    def test_lb_show_nodes(self, mock_serverfarm, mock_server, mock_unpack):
+        mock_serverfarm.return_value = self.dict_list
+        api.lb_show_nodes(self.conf, 1)
+        self.assertTrue(mock_serverfarm.called)
+        self.assertTrue(mock_server.called)
 
-    @patch_balancer
+    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
+    @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.remove_node_from_loadbalancer")
     @mock.patch("balancer.db.api.server_get")
     @mock.patch("balancer.db.api.server_destroy")
-    def test_lb_delete_node(self, mock_destroy, mock_get,
-                            mock_command, mock_driver, mock_bal):
-        mock_bal.return_value.lb.__getitem__.return_value = 2
-        mock_get.return_value = 'foo'
-        resp = api.lb_delete_node(self.conf, self.lb_id, self.lb_node_id)
-        self.assertEqual(resp, self.lb_node_id)
-        self.assertTrue(mock_destroy.called)
-        self.assertTrue(mock_get.called)
-        self.assertTrue(mock_command.called)
-        self.assertTrue(mock_driver.called)
-        self.assertTrue(mock_bal.called)
-        mock_bal.assert_called_once_with(self.conf)
-        mock_destroy.assert_called_once_with(self.conf, self.lb_node_id)
-        mock_get.assert_called_once_with(self.conf, self.lb_node_id)
-        mock_driver.assert_called_once_with(self.conf, 2)
-        with mock_driver.return_value.request_context() as ctx:
-            mock_command.assert_called_once_with(ctx, mock_bal.return_value,
-                                                 'foo')
+    def test_lb_delete_node(self, *mocks):
+        mocks[5].return_value = self.dict_list
+        api.lb_delete_node(self.conf, self.lb_id, self.lb_node_id)
+        for mock in mocks:
+            self.assertTrue(mock.called)
 
-    @patch_balancer
+    @mock.patch("balancer.db.api.serverfarm_get")
+    @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.db.api.server_update")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.activate_rserver")
     @mock.patch("balancer.db.api.server_get")
-    def test_lb_change_node_status_0(self, mock_get, mock_act, mock_driver,
-                                     mock_update, mock_bal):
+    def test_lb_change_node_status_0(self, *mocks):
         """Activate server called"""
         lb_node_status = "inservice"
-        mock_get.return_value = {'state': 'foo', 'name': 'foo',
-                                 'parent_id': 1, 'id': 1}
-        mock_bal.return_value.lb.__getitem__.return_value = 2
-        resp = api.lb_change_node_status(self.conf, self.lb_id,
-                                         self.lb_node_id, lb_node_status)
-        self.assertEqual(resp, {'state': 'inservice', 'name': 'foo',
-                                'parent_id': 1, 'id': 1})
-        self.assertTrue(mock_get.called)
-        self.assertTrue(mock_bal.called)
-        self.assertTrue(mock_driver.called)
-        self.assertTrue(mock_act.called)
-        self.assertTrue(mock_update.called)
-        mock_get.assert_called_once_with(self.conf, self.lb_node_id)
-        mock_bal.assert_called_once_with(self.conf)
-        mock_driver.assert_called_once_with(self.conf, 2)
-        mock_update.assert_called_once_with(self.conf,
-                                            mock_get.return_value['id'],
-                                            mock_get.return_value)
-        with mock_driver.return_value.request_context() as ctx:
-            mock_act.assert_called_once_with(ctx, mock_bal.return_value.sf,
-                                             mock_get.return_value)
+        api.lb_change_node_status(self.conf, self.lb_id, self.lb_node_id,
+                    lb_node_status)
+        for mock in mocks:
+            self.assertTrue(mock.called)
 
-    @patch_balancer
+    @mock.patch("balancer.db.api.serverfarm_get")
+    @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.db.api.server_update")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.suspend_rserver")
     @mock.patch("balancer.db.api.server_get")
-    def test_lb_change_node_status_1(self, mock_get, mock_suspend, mock_driver,
-                                     mock_update, mock_bal):
+    def test_lb_change_node_status_1(self, *mocks):
         """Suspend server called"""
         lb_node_status = ""
-        mock_get.return_value = {'state': 'foo', 'name': 'foo',
-                                 'parent_id': 1, 'id': 1}
-        mock_bal.return_value.lb.__getitem__.return_value = 2
-        resp = api.lb_change_node_status(self.conf, self.lb_id,
-                                         self.lb_node_id, lb_node_status)
-        self.assertEqual(resp, {'state': '', 'name': 'foo',
-                                'parent_id': 1, 'id': 1})
-        self.assertTrue(mock_get.called)
-        self.assertTrue(mock_update.called)
-        self.assertTrue(mock_bal.called)
-        self.assertTrue(mock_driver.called)
-        self.assertTrue(mock_suspend.called)
-        mock_get.assert_called_once_with(self.conf, self.lb_node_id)
-        mock_bal.assert_called_once_with(self.conf)
-        mock_driver.assert_called_once_with(self.conf, 2)
-        mock_update.assert_called_once_with(self.conf,
-                                            mock_get.return_value['id'],
-                                            mock_get.return_value)
-        with mock_driver.return_value.request_context() as ctx:
-            mock_suspend.assert_called_once_with(ctx, mock_bal.return_value.sf,
-                                             mock_get.return_value)
+        api.lb_change_node_status(self.conf, self.lb_id, self.lb_node_id,
+                    lb_node_status)
+        for mock in mocks:
+            self.assertTrue(mock.called)
 
-    @patch_balancer
+    @mock.patch("balancer.db.api.serverfarm_get")
+    @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.db.api.server_update")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.activate_rserver")
     @mock.patch("balancer.core.commands.suspend_rserver")
     @mock.patch("balancer.db.api.server_get")
-    def test_lb_change_node_status_2(self, mock_get, mock_commands1,
-                                     mock_commands2, mock_driver, mock_update,
-                                     mock_bal):
+    def test_lb_change_node_status_2(self, *mocks):
         """return ok"""
-        lb_node_status = 'foo'
-        mock_get.return_value = {'state': 'foo'}
-        resp = api.lb_change_node_status(self.conf, self.lb_id,
-                                         self.lb_node_id, lb_node_status)
-        self.assertEqual(resp, 'OK')
-        self.assertTrue(mock_get.called)
-        self.assertTrue(mock_bal.called)
-        self.assertFalse(mock_commands1.called)
-        self.assertFalse(mock_commands2.called)
-        self.assertFalse(mock_driver.called)
-        self.assertFalse(mock_update.called)
-        mock_bal.assert_called_once_with(self.conf)
-        mock_get.assert_called_once_with(self.conf, self.lb_node_id)
+        mocks[0].return_value = {'sf_id': 1, 'state': 'status'}
+        api.lb_change_node_status(self.conf, self.lb_id, self.lb_node_id,
+                'status')
+        self.assertFalse(mocks[1].called)
+        self.assertFalse(mocks[2].called)
+
+    @mock.patch("balancer.drivers.get_device_driver")
+    @mock.patch("balancer.db.api.server_create")
+    @mock.patch("balancer.db.api.server_update")
+    @mock.patch("balancer.db.api.server_get")
+    @mock.patch("balancer.db.api.server_destroy")
+    @mock.patch("balancer.db.api.loadbalancer_get")
+    @mock.patch("balancer.db.api.serverfarm_get")
+    @mock.patch("balancer.core.commands.delete_rserver_from_server_farm")
+    @mock.patch("balancer.core.commands.add_rserver_to_server_farm")
+    def test_lb_update_node_0(self, mock_com0, mock_com1, *mocks):
+        """"""
+        api.lb_update_node(self.conf, self.lb_id, self.lb_node_id,
+                self.lb_node)
+        self.assertTrue(mock_com0.called)
+        self.assertTrue(mock_com1.called)
 
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.db.api.server_update")
@@ -441,23 +392,33 @@ class TestBalancer(unittest.TestCase):
         with self.assertRaises(exc.ServerFarmNotFound):
             api.lb_add_probe(self.conf, self.lb_id, lb_probe)
 
-    @patch_balancer
+    @mock.patch("balancer.db.api.loadbalancer_get")
+    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
+    @mock.patch("balancer.db.api.probe_pack_extra")
+    @mock.patch("balancer.db.api.probe_create")
+    @mock.patch("balancer.drivers.get_device_driver")
+    @mock.patch("balancer.core.commands.add_probe_to_loadbalancer")
+    @mock.patch("balancer.db.api.unpack_extra")
+    def test_lb_add_probe_2(self, *mocks):
+        """lb_probe['type']!=None"""
+        lb_probe = {'type': 'Gvido'}
+        mocks[5].side_effect = IndexError
+        with self.assertRaises(exc.ServerFarmNotFound):
+            api.lb_add_probe(self.conf, self.lb_id, lb_probe)
+   #     for mok in mocks:
+   #         self.assertTrue(mok.called)
+
+    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
+    @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.db.api.probe_get")
     @mock.patch("balancer.db.api.probe_destroy")
-    def test_lb_delete_probe(self, mock_destroy, mock_get, mock_driver,
-                             mock_bal):
-        mock_bal.return_value.lb.__getitem__.return_value = 2
-        resp = api.lb_delete_probe(self.conf, self.lb_id, self.lb_id)
-        self.assertEqual(resp, self.lb_id)
-        self.assertTrue(mock_bal.called)
-        self.assertTrue(mock_destroy.called)
-        self.assertTrue(mock_driver.called)
-        self.assertTrue(mock_get.called)
-        mock_bal.assert_called_once_with(self.conf)
-        mock_destroy.assert_called_once_with(self.conf, self.lb_id)
-        mock_driver.assert_called_once_with(self.conf, 2)
-        mock_get.assert_called_once_with(self.conf, self.lb_id)
+    @mock.patch("balancer.core.commands.remove_probe_from_server_farm")
+    def test_lb_delete_probe(self, *mocks):
+        mocks[5].return_value = self.dict_list
+        api.lb_delete_probe(self.conf, self.lb_id, self.lb_id)
+        for mok in mocks:
+            self.assertTrue(mok.called)
 
     @mock.patch("balancer.db.api.unpack_extra", autospec=True)
     @mock.patch("balancer.core.commands.create_vip", autospec=True)
@@ -591,29 +552,24 @@ class TestBalancer(unittest.TestCase):
             self.assertFalse(db_api0.called)
             self.assertFalse(db_api1.called)
 
-    @patch_balancer
+    @mock.patch("balancer.db.api.unpack_extra")
+    @mock.patch("balancer.db.api.sticky_create")
+    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
+    @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.db.api.sticky_pack_extra")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.add_sticky_to_loadbalancer")
-    def test_lb_add_sticky0(self, mock_add, mock_driver, mock_extra, mock_bal):
+    def test_lb_add_sticky0(self, *mocks):
+        mocks[4].return_value = self.dict_list
         sticky = mock.MagicMock()
-        mock_extra.return_value = {'id': 1}
-        mock_bal.return_value.sf._sticky = []
-        mock_bal.return_value.lb.__getitem__.return_value = 2
-        resp = api.lb_add_sticky(self.conf, self.lb_id, sticky)
-        self.assertEqual(resp['id'], 1)
-        self.assertTrue(mock_add.called)
-        self.assertTrue(mock_driver.called)
-        self.assertTrue(mock_extra.called)
-        self.assertTrue(mock_bal.called)
-        mock_driver.assert_called_once_with(self.conf, 2)
-        mock_bal.assert_called_once_with(self.conf)
-        mock_extra.assert_called_once_with(sticky)
-        with mock_driver.return_value.request_context() as ctx:
-            mock_add.assert_called_once_with(ctx, mock_bal.return_value,
-                                             mock_extra.return_value)
+        api.lb_add_sticky(self.conf, self.lb_id, sticky)
+        for mok in mocks:
+            self.assertTrue(mok.called)
 
-    @patch_balancer
+    @mock.patch("balancer.db.api.unpack_extra")
+    @mock.patch("balancer.db.api.sticky_create")
+    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
+    @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.db.api.sticky_pack_extra")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.add_sticky_to_loadbalancer")
@@ -624,17 +580,17 @@ class TestBalancer(unittest.TestCase):
         for mock in mocks:
             self.assertFalse(mock.called)
 
-    @patch_balancer
+    @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.db.api.sticky_get")
     @mock.patch("balancer.db.api.sticky_destroy")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.remove_sticky_from_loadbalancer")
     def test_lb_delete_sticky(self, mock_command, mock_driver, mock_destroy,
                               mock_get, mock_bal):
-        mock_bal.return_value.lb.__getitem__.return_value = 2
+        mock_bal.return_value = {'id': 2, 'device_id': 2}
         resp = api.lb_delete_sticky(self.conf, self.lb_id, 1)
         self.assertEqual(resp, 1)
-        mock_bal.assert_called_once_with(self.conf)
+        mock_bal.assert_called_once_with(self.conf, self.lb_id)
         mock_get.assert_called_once_with(self.conf, 1)
         mock_destroy.assert_called_once_with(self.conf, 1)
         mock_driver.assert_called_once_with(self.conf, 2)

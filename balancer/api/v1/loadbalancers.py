@@ -52,14 +52,13 @@ class Controller(object):
     def create(self, req, body):
         logger.debug("Got create request. Request: %s", req)
         #here we need to decide which device should be used
-        params = body
+        params = body.copy()
+        logger.debug("Headers: %s", req.headers)
         # We need to create LB object and return its id
         tenant_id = req.headers.get('X-Tenant-Id', "")
-        lb_ref = db_api.loadbalancer_create(self.conf, {
-                                                'tenant_id': tenant_id})
-        params['lb'] = lb_ref
-        core_api.create_lb(self.conf, **params)
-        return {'loadbalancer': {'id': lb_ref['id']}}
+        params['tenant_id'] = tenant_id
+        lb_id = core_api.create_lb(self.conf, params)
+        return {'loadbalancer': {'id': lb_id}}
 
     @utils.http_success_code(204)
     def delete(self, req, id):
@@ -85,11 +84,11 @@ class Controller(object):
     def addNodes(self, req, id, body):
         logger.debug("Got addNode request. Request: %s", req)
 
-        return core_api.lb_add_nodes(self.conf, id, body['nodes'])
+        return {'nodes': core_api.lb_add_nodes(self.conf, id, body['nodes'])}
 
     def showNodes(self, req, id):
         logger.debug("Got showNodes request. Request: %s", req)
-        return core_api.lb_show_nodes(self.conf, id)
+        return {'nodes': core_api.lb_show_nodes(self.conf, id)}
 
     def showNode(self, req, lb_id, id):
         logger.debug("Got showNode request. Request: %s", req)

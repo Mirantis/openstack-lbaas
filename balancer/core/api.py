@@ -27,9 +27,7 @@ from balancer.core import commands
 from balancer.core import lb_status
 from balancer.core import scheduler
 from balancer import drivers
-from balancer.loadbalancers import vserver
 from balancer.db import api as db_api
-#from balancer import exception as exc
 
 
 logger = logging.getLogger(__name__)
@@ -72,53 +70,44 @@ def lb_get_data(conf, lb_id):
 
 
 def lb_show_details(conf, lb_id):
-    #store = Storage(conf)
-    #reader = store.getReader()
+    lb = db_api.loadbalancer_get(conf, lb_id)
+    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    vips = db_api.virtualserver_get_all_by_sf_id(conf, sf['id'])
+    rs = db_api.server_get_all_by_sf_id(conf, sf['id'])
+    probes = db_api.probe_get_all_by_sf_id(conf, sf['id'])
+    stickies = db_api.sticky_get_all_by_sf_id(conf, sf['id'])
 
-    lb = vserver.Balancer(conf)
-    lb.loadFromDB(lb_id)
-
-    obj = {'loadbalancer':  db_api.unpack_extra(lb.lb)}
-    lbobj = obj['loadbalancer']
-    lbobj['nodes'] = [db_api.unpack_extra(v) for v in lb.rs]
-    lbobj['virtualIps'] = [db_api.unpack_extra(v) for v in lb.vips]
-    lbobj['healthMonitor'] = [db_api.unpack_extra(v) for v in lb.probes]
-    logger.debug("Getting information about loadbalancer with id: %s" % lb_id)
-    #list = reader.getLoadvserver.BalancerById(id)
-    logger.debug("Got information: %s" % lbobj)
-    return lbobj
+    lb_ref = db_api.unpack_extra(lb)
+    lb_ref['nodes'] = [db_api.unpack_extra(rserver) for rserver in rs]
+    lb_ref['virtualIps'] = [db_api.unpack_extra(vip) for vip in vips]
+    lb_ref['healthMonitor'] = [db_api.unpack_extra(probe) for probe in probes]
+    lb_ref['sessionPersistence'] = [db_api.unpack_extra(sticky)\
+            for sticky in stickies]
+    return lb_ref
 
 
-@asynchronous
-def create_lb(conf, **params):
-    balancer_instance = vserver.Balancer(conf)
-
-    #Step 1. Parse parameters came from request
-    balancer_instance.parseParams(params)
-    device = scheduler.schedule_loadbalancer(conf, balancer_instance.lb)
-
-    lb = balancer_instance.getLB()
-    lb['device_id'] = device['id']
-
-    #Step 2. Save config in DB
-    balancer_instance.savetoDB()
-
-    #Step 3. Deploy config to device
+def create_lb(conf, params):
+    nodes = params.pop('nodes', [])
+    probes = params.pop('healthMonitoring', [])
+    vips = params.pop('virtualIps', [])
+    values = db_api.loadbalancer_pack_extra(params)
+    lb_ref = db_api.loadbalancer_create(conf, values)
+    device = scheduler.schedule_loadbalancer(conf, lb_ref)
     device_driver = drivers.get_device_driver(conf, device['id'])
+    lb = db_api.unpack_extra(lb_ref)
+    lb['device_id'] = device['id']
+    lb_ref = db_api.loadbalancer_pack_extra(lb)
     try:
         with device_driver.request_context() as ctx:
-            commands.create_loadbalancer(ctx, balancer_instance)
+            commands.create_loadbalancer(ctx, lb_ref, nodes, probes, vips)
     except (exception.Error, exception.Invalid):
-        balancer_instance.lb.status = lb_status.ERROR
+        lb_ref.status = lb_status.ERROR
+        lb_ref.deployed = 'False'
     else:
-        balancer_instance.lb.status = lb_status.ACTIVE
-    balancer_instance.update()
-
-    #balancer_instance.lb.status = \
-    #   balancer.loadbalancers.loadbalancer.LB_ACTIVE_STATUS
-    #balancer_instance.update()
-    #self._task.status = STATUS_DONE
-    return lb['id']
+        lb_ref.status = lb_status.ACTIVE
+        lb_ref.deployed = 'True'
+    db_api.loadbalancer_update(conf, lb['id'], lb_ref)
+    return lb_ref['id']
 
 
 @asynchronous
@@ -140,85 +129,50 @@ def update_lb(conf, lb_id, lb_body):
 
 
 def delete_lb(conf, lb_id):
-    balancer_instance = vserver.Balancer(conf)
-    balancer_instance.loadFromDB(lb_id)
-
-    #Step 1. Parse parameters came from request
-    #bal_deploy.parseParams(params)
-
-    #        #Step 2. Delete config in DB
-    #        balancer_instance.removeFromDB()
-
-    #Step 3. Destruct config at device
-    device_id = balancer_instance.lb['device_id']
-    device_driver = drivers.get_device_driver(conf, device_id)
+    lb = db_api.loadbalancer_get(conf, lb_id)
+    device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
-        commands.delete_loadbalancer(ctx, balancer_instance)
-
-    balancer_instance.removeFromDB()
+        commands.delete_loadbalancer(ctx, lb)
 
 
-def lb_add_nodes(conf, lb_id, lb_nodes):
-    node_list = []
-    balancer_instance = vserver.Balancer(conf)
-
-    for lb_node in lb_nodes:
-        logger.debug("Got new node description %s" % lb_node)
-        balancer_instance.loadFromDB(lb_id)
-        balancer_instance.removeFromDB()
-
-        rs = db_api.server_pack_extra(lb_node)
-        rs['sf_id'] = balancer_instance.sf['id']
-
-        balancer_instance.rs.append(rs)
-        balancer_instance.sf._rservers.append(rs)
-        balancer_instance.savetoDB()
-
-        rs = balancer_instance.rs[-1]
-        device_driver = drivers.get_device_driver(conf, balancer_instance.\
-                                                        lb['device_id'])
-
+def lb_add_nodes(conf, lb_id, nodes):
+    nodes_list = []
+    lb = db_api.loadbalancer_get(conf, lb_id)
+    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    for node in nodes:
+        values = db_api.server_pack_extra(node)
+        values['sf_id'] = sf['id']
+        rs_ref = db_api.server_create(conf, values)
+        device_driver = drivers.get_device_driver(conf, lb['device_id'])
         with device_driver.request_context() as ctx:
-            commands.add_node_to_loadbalancer(ctx, balancer_instance, rs)
-
-        node_list.append(db_api.unpack_extra(rs))
-
-    return {'nodes': node_list}
+            commands.add_node_to_loadbalancer(ctx, sf, rs_ref)
+        nodes_list.append(db_api.unpack_extra(rs_ref))
+    return nodes_list
 
 
 def lb_show_nodes(conf, lb_id):
-    balancer_instance = vserver.Balancer(conf)
-    nodes = {'nodes': []}
-    balancer_instance.loadFromDB(lb_id)
-    for rs in balancer_instance.rs:
-        rs_dict = db_api.unpack_extra(rs)
-        nodes['nodes'].append(rs_dict)
-    return nodes
+    node_list = []
+    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    node_list = map(db_api.unpack_extra,
+                    db_api.server_get_all_by_sf_id(conf, sf['id']))
+    return node_list
 
 
 def lb_delete_node(conf, lb_id, lb_node_id):
-    balancer_instance = vserver.Balancer(conf)
-    #Step 1: Load balancer from DB
-    balancer_instance.loadFromDB(lb_id)
-    #Step 3: Get RS object from DB
+    lb = db_api.loadbalancer_get(conf, lb_id)
+    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
     rs = db_api.server_get(conf, lb_node_id)
-    #Step 4: Delete RS from DB
     db_api.server_destroy(conf, lb_node_id)
-
-    #Step 5: Delete real server from device
-    device_driver = drivers.get_device_driver(conf,
-                        balancer_instance.lb['device_id'])
+    device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
-        commands.remove_node_from_loadbalancer(ctx, balancer_instance, rs)
+        commands.remove_node_from_loadbalancer(ctx, sf, rs)
     return lb_node_id
 
 
 def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
-    balancer_instance = vserver.Balancer(conf)
-    balancer_instance.loadFromDB(lb_id)
-
+    lb = db_api.loadbalancer_get(conf, lb_id)
     rs = db_api.server_get(conf, lb_node_id)
-    sf = balancer_instance.sf
+    sf = db_api.serverfarm_get(conf, rs['sf_id'])
     if rs['state'] == lb_node_status:
         return "OK"
 
@@ -227,8 +181,7 @@ def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
     if rs['parent_id'] != "":
         rs['name'] = rs['parent_id']
     logger.debug("Changing RServer status to: %s" % lb_node_status)
-    device_driver = drivers.get_device_driver(conf,
-                        balancer_instance.lb['device_id'])
+    device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
         if lb_node_status == "inservice":
             commands.activate_rserver(ctx, sf, rs)
@@ -296,23 +249,13 @@ def lb_add_probe(conf, lb_id, probe_dict):
 
 
 def lb_delete_probe(conf, lb_id, probe_id):
-    balancer_instance = vserver.Balancer(conf)
-
-    #Step 1: Load balancer from DB
-    balancer_instance.loadFromDB(lb_id)
-
-    #Step 2: Get reader and writer
-    #Step 3: Get RS object from DB
-    prb = db_api.probe_get(conf, probe_id)
-
-    #Step 4: Delete RS from DB
+    lb = db_api.loadbalancer_get(conf, lb_id)
+    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    probe = db_api.probe_get(conf, probe_id)
     db_api.probe_destroy(conf, probe_id)
-
-    #Step 5: Delete real server from device
-    device_driver = drivers.get_device_driver(conf,
-                        balancer_instance.lb['device_id'])
+    device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
-        commands.remove_probe_from_server_farm(ctx, balancer_instance, prb)
+        commands.remove_probe_from_server_farm(ctx, sf, probe)
     return probe_id
 
 
@@ -332,47 +275,27 @@ def lb_show_sticky(conf, lb_id):
     return dict
 
 
-def lb_add_sticky(conf, lb_id, sticky):
-    logger.debug("Got new sticky description %s" % sticky)
-    if sticky['persistenceType'] is None:
+def lb_add_sticky(conf, lb_id, st):
+    logger.debug("Got new sticky description %s" % st)
+    if st['persistenceType'] is None:
         return
-
-    balancer_instance = vserver.Balancer(conf)
-
-    balancer_instance.loadFromDB(lb_id)
-    balancer_instance.removeFromDB()
-
-    st = db_api.sticky_pack_extra(sticky)
-    st['sf_id'] = balancer_instance.sf['id']
-
-    balancer_instance.sf._sticky.append(st)
-    balancer_instance.savetoDB()
-
-    st = balancer_instance.sf._sticky[-1]
-
-    device_driver = drivers.get_device_driver(conf,
-                        balancer_instance.lb['device_id'])
+    lb = db_api.loadbalancer_get(conf, lb_id)
+    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    values = db_api.sticky_pack_extra(st)
+    values['sf_id'] = sf['id']
+    sticky_ref = db_api.sticky_create(conf, values)
+    device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
-        commands.add_sticky_to_loadbalancer(ctx, balancer_instance, st)
-    return st
+        commands.add_sticky_to_loadbalancer(ctx, lb, sticky_ref)
+    return db_api.unpack_extra(sticky_ref)
 
 
 def lb_delete_sticky(conf, lb_id, sticky_id):
-    balancer_instance = vserver.Balancer(conf)
-
-    #Step 1: Load balancer from DB
-    balancer_instance.loadFromDB(lb_id)
-
-    #Step 3: Get sticky object from DB
-    st = db_api.sticky_get(conf, sticky_id)
-
-    #Step 4: Delete real server from device
-    device_driver = drivers.get_device_driver(conf,
-                        balancer_instance.lb['device_id'])
+    lb = db_api.loadbalancer_get(conf, lb_id)
+    sticky = db_api.sticky_get(conf, sticky_id)
+    device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
-        commands.remove_sticky_from_loadbalancer(ctx, balancer_instance, st)
-
-    #Step 5: Delete sticky from DB
+        commands.remove_sticky_from_loadbalancer(ctx, lb, sticky)
     db_api.sticky_destroy(conf, sticky_id)
     return sticky_id
 

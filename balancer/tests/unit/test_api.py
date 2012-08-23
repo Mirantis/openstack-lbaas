@@ -45,16 +45,12 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertEqual(resp, {'loadbalancers': 'foo'})
 
     @mock.patch('balancer.core.api.create_lb', autospec=True)
-    @mock.patch('balancer.db.api.loadbalancer_create', autospec=True)
-    def test_create(self, mock_loadbalancer_create, mock_create_lb):
-        mock_loadbalancer_create.return_value = {'id': '1'}
-        mock_create_lb.return_value = {'id': '1'}
+    def test_create(self, mock_create_lb):
+        mock_create_lb.return_value = '1'
         self.req.headers = {'X-Tenant-Id': 'fake_tenant_id'}
         resp = self.controller.create(self.req, {})
-        self.assertTrue(mock_loadbalancer_create.called)
         self.assertTrue(mock_create_lb.called)
-        mock_create_lb.assert_called_once_with(self.conf, lb={'id': '1'})
-        mock_loadbalancer_create.assert_called_once_with(
+        mock_create_lb.assert_called_once_with(
                         self.conf,
                         {'tenant_id': self.req.headers.get('X-Tenant-Id', "")})
         self.assertEqual(resp, {'loadbalancer': {'id': '1'}})
@@ -99,7 +95,7 @@ class TestLoadBalancersController(unittest.TestCase):
         resp = self.controller.addNodes(self.req, 1, body)
         self.assertTrue(mock_lb_add_nodes.called)
         mock_lb_add_nodes.assert_called_once_with(self.conf, 1, 'foo')
-        self.assertEqual(resp, 'foo')
+        self.assertEqual(resp, {'nodes': 'foo'})
 
     @mock.patch('balancer.core.api.lb_show_nodes', autospec=True)
     def test_show_nodes(self, mock_lb_show_nodes):
@@ -107,7 +103,7 @@ class TestLoadBalancersController(unittest.TestCase):
         resp = self.controller.showNodes(self.req, 1)
         self.assertTrue(mock_lb_show_nodes.called)
         mock_lb_show_nodes.assert_called_once_with(self.conf, 1)
-        self.assertEqual(resp, 'foo')
+        self.assertEqual(resp, {'nodes': 'foo'})
 
     @mock.patch("balancer.db.api.server_get")
     @mock.patch("balancer.db.api.unpack_extra")
