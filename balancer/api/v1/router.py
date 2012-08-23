@@ -21,6 +21,7 @@ import routes
 
 from . import loadbalancers
 from . import devices
+from . import nodes
 #from . import tasks
 
 
@@ -39,41 +40,44 @@ class API(wsgi.Router):
         mapper = routes.Mapper()
 
         lb_resource = loadbalancers.create_resource(self.conf)
+        nd_resource = nodes.create_resource(self.conf)
 
         mapper.resource("loadbalancer", "loadbalancers", \
-        controller=lb_resource, collection={'detail': 'GET'})
+         member={'details' : 'GET'}, \
+         controller=lb_resource, collection={'detail': 'GET'})
 
-        mapper.connect("/loadbalancers/", controller=lb_resource, \
-        action="index")
+        mapper.resource('node', 'nodes', controller=nd_resource,\
+         parent_resource=dict(member_name='lb', collection_name='loadbalancers'))
+
         mapper.connect("/loadbalancers/find_for_VM/{vm_id}",
                        controller=lb_resource,
                        action="findLBforVM", conditions={'method': ["GET"]})
 
-        mapper.connect("/loadbalancers/{id}/details",
-                controller=lb_resource,
-                action="showDetails", conditions={'method': ["GET"]})
-
-        mapper.connect("/loadbalancers/{id}/nodes", controller=lb_resource,
-                action="addNodes", conditions={'method': ["POST"]})
-
-        mapper.connect("/loadbalancers/{id}/nodes", controller=lb_resource,
-                action="showNodes", conditions={'method': ["GET"]})
-
-        mapper.connect("/loadbalancers/{lb_id}/nodes/{id}", \
-                       controller=lb_resource, action="deleteNode", \
-                       conditions={'method': ["DELETE"]})
-
-        mapper.connect("/loadbalancers/{lb_id}/nodes/{id}",\
-                        controller=lb_resource, action="showNode",\
-                        conditions={'method': ["GET"]})
-
-        mapper.connect("/loadbalancers/{lb_id}/nodes/{id}", \
-                       controller=lb_resource, action="updateNode", \
-                       conditions={'method': ["PUT"]})
+        #mapper.connect("/loadbalancers/{id}/details",
+        #               controller=lb_resource,
+        #               action="showDetails", conditions={'method': ["GET"]})
 
         mapper.connect("/loadbalancers/{lb_id}/nodes/{id}/{status}", \
-                       controller=lb_resource, action="changeNodeStatus", \
+                       controller=nd_resource, action="changeNodeStatus", \
                        conditions={'method': ["PUT"]})
+
+        #mapper.connect("/loadbalancers/{id}/nodes", controller=lb_resource,
+        #        action="addNodes", conditions={'method': ["POST"]})
+
+        #mapper.connect("/loadbalancers/{id}/nodes", controller=lb_resource,
+        #        action="showNodes", conditions={'method': ["GET"]})
+
+        #mapper.connect("/loadbalancers/{lb_id}/nodes/{id}", \
+        #               controller=lb_resource, action="deleteNode", \
+        #               conditions={'method': ["DELETE"]})
+
+        #mapper.connect("/loadbalancers/{lb_id}/nodes/{id}",\
+        #                controller=lb_resource, action="showNode",\
+        #                conditions={'method': ["GET"]})
+
+        #mapper.connect("/loadbalancers/{lb_id}/nodes/{id}", \
+        #               controller=lb_resource, action="updateNode", \
+        #               conditions={'method': ["PUT"]})
 
         mapper.connect("/loadbalancers/{id}/healthMonitoring", \
                        controller=lb_resource, action="showMonitoring", \

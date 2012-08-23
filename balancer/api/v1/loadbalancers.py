@@ -70,7 +70,7 @@ class Controller(object):
         result = core_api.lb_get_data(self.conf, id)
         return {'loadbalancer': result}
 
-    def showDetails(self, req, id):
+    def details(self, req, id):
         logger.debug("Got loadbalancerr info request. Request: %s", req)
         result = core_api.lb_show_details(self.conf, id)
         return result
@@ -81,35 +81,35 @@ class Controller(object):
         core_api.update_lb(self.conf, id, body)
         return {'loadbalancer': {'id': id}}
 
-    def addNodes(self, req, id, body):
-        logger.debug("Got addNode request. Request: %s", req)
+    #def addNodes(self, req, id, body):
+    #    logger.debug("Got addNode request. Request: %s", req)
+    #
+    #    return core_api.lb_add_nodes(self.conf, id, body['nodes'])
 
-        return {'nodes': core_api.lb_add_nodes(self.conf, id, body['nodes'])}
+    #def showNodes(self, req, id):
+    #    logger.debug("Got showNodes request. Request: %s", req)
+    #    return core_api.lb_show_nodes(self.conf, id)
 
-    def showNodes(self, req, id):
-        logger.debug("Got showNodes request. Request: %s", req)
-        return {'nodes': core_api.lb_show_nodes(self.conf, id)}
-
-    def showNode(self, req, lb_id, id):
-        logger.debug("Got showNode request. Request: %s", req)
-        return {'node': db_api.unpack_extra(
-            db_api.server_get(self.conf, id, lb_id))}
+    #def showNode(self, req, lb_id, id):
+    #    logger.debug("Got showNode request. Request: %s", req)
+    #    return {'node': db_api.unpack_extra(
+    #        db_api.server_get(self.conf, id, lb_id))}
 
     @utils.http_success_code(204)
-    def deleteNode(self, req, lb_id, id):
-        logger.debug("Got deleteNode request. Request: %s", req)
-        core_api.lb_delete_node(self.conf, lb_id, id)
+    #def deleteNode(self, req, lb_id, id):
+    #    logger.debug("Got deleteNode request. Request: %s", req)
+    #    core_api.lb_delete_node(self.conf, lb_id, id)
 
-    def changeNodeStatus(self, req, lb_id, id, status, body):
-        logger.debug("Got changeNodeStatus request. Request: %s", req)
-        result = core_api.lb_change_node_status(self.conf, lb_id, id,
-                                                         status)
-        return {"node": result}
+    #def changeNodeStatus(self, req, lb_id, id, status, body):
+    #    logger.debug("Got changeNodeStatus request. Request: %s", req)
+    #    result = core_api.lb_change_node_status(self.conf, lb_id, id,
+    #                                                     status)
+    #    return {"node": result}
 
-    def updateNode(self, req, lb_id, id, body):
-        logger.debug("Got updateNode request. Request: %s", req)
-        result = core_api.lb_update_node(self.conf, lb_id, id, body)
-        return {"node": result}
+    #def updateNode(self, req, lb_id, id, body):
+    #    logger.debug("Got updateNode request. Request: %s", req)
+    #    result = core_api.lb_update_node(self.conf, lb_id, id, body)
+    #    return {"node": result}
 
     def showMonitoring(self, req, id):
         logger.debug("Got showMonitoring request. Request: %s", req)

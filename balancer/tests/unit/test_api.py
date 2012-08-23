@@ -4,6 +4,7 @@ import logging
 import balancer.exception as exception
 from openstack.common import wsgi
 from balancer.api.v1 import loadbalancers
+from balancer.api.v1 import nodes
 from balancer.api.v1 import devices
 from balancer.api.v1 import router
 
@@ -355,23 +356,23 @@ class TestRouter(unittest.TestCase):
             ("/loadbalancers/{id}", "GET", loadbalancers.Controller,
                 "show"),
             ("/loadbalancers/{id}/details", "GET", loadbalancers.Controller,
-                "showDetails"),
+                "details"),
             ("/loadbalancers/{id}", "DELETE", loadbalancers.Controller,
                 "delete"),
             ("/loadbalancers/{id}", "PUT", loadbalancers.Controller,
                 "update"),
-            ("/loadbalancers/{id}/nodes", "POST", loadbalancers.Controller,
-                "addNodes"),
-            ("/loadbalancers/{id}/nodes", "GET", loadbalancers.Controller,
-                "showNodes"),
+            ("/loadbalancers/{lb_id}/nodes", "POST", nodes.Controller,
+                "create"),
+            ("/loadbalancers/{lb_id}/nodes", "GET", nodes.Controller,
+                "index"),
             ("/loadbalancers/{lb_id}/nodes/{id}", "DELETE",
-                loadbalancers.Controller, "deleteNode"),
+                nodes.Controller, "delete"),
             ("/loadbalancers/{lb_id}/nodes/{id}", "GET",
-                loadbalancers.Controller, "showNode"),
+                nodes.Controller, "show"),
             ("/loadbalancers/{lb_id}/nodes/{id}", "PUT",
-                loadbalancers.Controller, "updateNode"),
+                nodes.Controller, "update"),
             ("/loadbalancers/{lb_id}/nodes/{id}/{status}", "PUT",
-                loadbalancers.Controller, "changeNodeStatus"),
+                nodes.Controller, "changeNodeStatus"),
             ("/loadbalancers/{id}/healthMonitoring", "GET",
                 loadbalancers.Controller, "showMonitoring"),
             ("/loadbalancers/{lb_id}/healthMonitoring/{id}",
@@ -416,6 +417,7 @@ class TestRouter(unittest.TestCase):
             self.assertTrue(isinstance(controller0.controller,
                 controller))
             self.assertEquals(action0, action)
+            LOG.debug('controller is %s with vars=%s', controller, vars(controller))
             mok = mock.mocksignature(getattr(controller, action))
             if method == "POST" or method == "PUT":
                 m['body'] = {}
