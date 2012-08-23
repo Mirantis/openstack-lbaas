@@ -50,8 +50,7 @@ class TestLoadBalancersController(unittest.TestCase):
         self.req.headers = {'X-Tenant-Id': 'fake_tenant_id'}
         resp = self.controller.create(self.req, {})
         self.assertTrue(mock_create_lb.called)
-        mock_create_lb.assert_called_once_with(self.conf, lb={'id': '1'})
-        mock_loadbalancer_create.assert_called_once_with(
+        mock_create_lb.assert_called_once_with(
                         self.conf,
                         {'tenant_id': self.req.headers.get('X-Tenant-Id', "")})
         self.assertEqual(resp, {'loadbalancer': {'id': '1'}})
