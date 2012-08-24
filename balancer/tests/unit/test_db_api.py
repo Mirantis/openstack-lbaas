@@ -745,17 +745,17 @@ class TestDBAPI(unittest.TestCase):
         values['id'] = predictor['id']
         self.assertEqual(predictor, values)
 
-    def test_predictor_get_all_by_sf_id(self):
-        values = get_fake_predictor('1')
-        predictor1 = db_api.predictor_create(self.conf, values)
-        values = get_fake_predictor('2')
-        predictor2 = db_api.predictor_create(self.conf, values)
-        predictors1 = db_api.predictor_get_all_by_sf_id(self.conf, '1')
-        predictors2 = db_api.predictor_get_all_by_sf_id(self.conf, '2')
-        self.assertEqual([dict(predictor1.iteritems())],
-                         [dict(pr.iteritems()) for pr in predictors1])
-        self.assertEqual([dict(predictor2.iteritems())],
-                         [dict(pr.iteritems()) for pr in predictors2])
+    def test_predictor_get_by_sf_id(self):
+        values1 = get_fake_predictor('1')
+        values2 = get_fake_predictor('2')
+        predictor1 = db_api.predictor_create(self.conf, values1)
+        predictor2 = db_api.predictor_create(self.conf, values2)
+        predictor_ref1 = db_api.predictor_get_by_sf_id(self.conf, '1')
+        predictor_ref2 = db_api.predictor_get_by_sf_id(self.conf, '2')
+        self.assertEqual(dict(predictor_ref1.iteritems()),
+                         dict(predictor1.iteritems()))
+        self.assertEqual(dict(predictor_ref2.iteritems()),
+                         dict(predictor2.iteritems()))
 
     def test_predictor_update(self):
         values = get_fake_predictor('1')

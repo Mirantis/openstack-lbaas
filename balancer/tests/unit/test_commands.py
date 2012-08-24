@@ -321,7 +321,7 @@ class TestServerFarm(unittest.TestCase):
         self.rserver = mock.MagicMock()
         self.probe = mock.MagicMock()
 
-    @mock.patch("balancer.db.api.predictor_get_all_by_sf_id")
+    @mock.patch("balancer.db.api.predictor_get_by_sf_id")
     @mock.patch("balancer.db.api.serverfarm_update")
     @mock.patch("balancer.core.commands.delete_server_farm")
     def test_create_server_farm_0(self, mock_f1, mock_f2, mock_f3):
@@ -335,7 +335,7 @@ class TestServerFarm(unittest.TestCase):
                 {'deployed': True})
         mock_f3.assert_called_once_with(self.ctx.conf, self.server_farm['id'])
 
-    @mock.patch("balancer.db.api.predictor_get_all_by_sf_id")
+    @mock.patch("balancer.db.api.predictor_get_by_sf_id")
     @mock.patch("balancer.db.api.serverfarm_update")
     @mock.patch("balancer.core.commands.delete_server_farm")
     def test_create_server_farm_1(self, mock_f1, mock_f2, mock_f3):

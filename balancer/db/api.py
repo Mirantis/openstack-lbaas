@@ -433,10 +433,14 @@ def predictor_get(conf, predictor_id, session=None):
     return predictor_ref
 
 
-def predictor_get_all_by_sf_id(conf, sf_id):
+def predictor_get_by_sf_id(conf, sf_id):
     session = get_session(conf)
-    query = session.query(models.Predictor).filter_by(sf_id=sf_id)
-    return query.all()
+    predictor_ref = session.query(models.Predictor).\
+                            filter_by(sf_id=sf_id).\
+                            first()
+    if not predictor_ref:
+        raise exception.PredictorNotFound(sf_id=sf_id)
+    return predictor_ref
 
 
 def predictor_create(conf, values):
