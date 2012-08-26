@@ -33,7 +33,7 @@ class AceDriver(BaseDriver):
         self.url = "https://%s:%s/bin/xml_agent" % (device_ref['ip'],
                                                     device_ref['port'])
         base64str = base64.encodestring('%s:%s' % \
-            (device_ref['login'], device_ref['password']))[:-1]
+            (device_ref['user'], device_ref['password']))[:-1]
         self.authheader = "Basic %s" % base64str
 
     def deployConfig(self, s):
@@ -47,10 +47,10 @@ class AceDriver(BaseDriver):
         except (Exception):
             return Exception
         logger.debug("data from ACE:\n" + s)
-        if (s.find('XML_CMD_SUCCESS') > 0):
+        if 'XML_CMD_SUCCESS' in s:
             return 'OK'
         else:
-            return Exception
+            return 'Error'
 
     def getConfig(self, s):
         request = urllib2.Request(self.url)
