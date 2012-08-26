@@ -1,5 +1,5 @@
 { 
-    "device_id": "f7e9d430bf4d4d8b8dea2b3b740abb78",
+    "device_id": "1648f080d866409091ed9faa1f4e4ccd",
     "name": "testLB00rs01",
     "protocol": "HTTP",
     "transport": "TCP", 
@@ -7,7 +7,7 @@
     
     "virtualIps": [
                     {
-                      "address": "200.1.1.209",
+                      "address": "100.1.1.209",
                       "mask": "255.255.255.255", 
                       "type": "PUBLIC",
                       "ipVersion": "IPv4", 
@@ -16,7 +16,7 @@
               "ICMPreply": "True"
                     },
                     {
-                      "address": "200.1.1.210",
+                      "address": "100.1.1.210",
                       "mask": "255.0.0.0",
                       "ipVersion": "IPv4",
                       "VLAN": "200",

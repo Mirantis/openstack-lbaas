@@ -450,7 +450,7 @@ class HaproxyConfigFile:
             if i.find(HaproxyBackend.type) == 0 and i.find('%s' %
                                           HaproxyBackend.name) >= 0:
                 new_config_file[i].append('\tserver %s %s:%s %s maxconn %s'
-                                              'inter %s rise %s fall %s' %
+                                              ' inter %s rise %s fall %s' %
                 (HaproxyRserver.name, HaproxyRserver.address,
                 HaproxyRserver.port, HaproxyRserver.check,
                 HaproxyRserver.maxconn, HaproxyRserver.inter,
