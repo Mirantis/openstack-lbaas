@@ -32,7 +32,7 @@ class TestDriver(AceDriver):
         self.w = ""
 
 dev = {'ip': '10.4.15.21', 'port': '10443', \
-       'login': 'admin', 'password': 'cisco123'}
+       'user': 'admin', 'password': 'cisco123'}
 
 conf = []
 driver = TestDriver(conf, dev)
