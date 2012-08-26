@@ -264,8 +264,8 @@ probe_vm['extra'] = {'description': 'Created by test. Probe type VM', \
                      'probeInterval': '600', 'maxCPUburstThresh': '97', \
                      'minCPUburstThresh': '97', 'maxMemBurstThresh': '97', \
                      'minMemBurstThresh': '97'}
-
-predictor = {'type': 'roudrobin'}
+predictor = []
+predictor[1] = {'type': 'roudrobin'}
 
 sf_host = {'type': 'Host', 'id': 'LB_test_sfarm01'}
 sf_host['extra'] = {'description': 'Created by test. Sfarm type Host', \

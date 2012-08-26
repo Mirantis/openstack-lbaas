@@ -1,21 +1,19 @@
-﻿# -*- coding: utf-8 -*-
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 # Copyright 2012 OpenStack LLC.
 # All Rights Reserved.
 #
-#    Licensed under the Apache License, Version 2.0 (the 'License'); you may
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
 #
 #         http://www.apache.org/licenses/LICENSE-2.0
 #
 #    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an 'AS IS' BASIS, WITHOUT
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
-#    under the License
-
+#    under the License.
 
 import logging
 from balancer.drivers.base_driver import BaseDriver
@@ -131,7 +129,7 @@ class HaproxyDriver(BaseDriver):
             For compatibility with drivers for other devices
         '''
         pass
-        
+
     def create_probe(self, probe):
         '''
             For compatibility with drivers for other devices
@@ -143,7 +141,7 @@ class HaproxyDriver(BaseDriver):
             For compatibility with drivers for other devices
         '''
         pass
-        
+
     def create_stickiness(self, sticky):
         '''
             For compatibility with drivers for other devices
@@ -155,7 +153,7 @@ class HaproxyDriver(BaseDriver):
             For compatibility with drivers for other devices
         '''
         pass
-        
+
     def add_real_server_to_server_farm(self, serverfarm, rserver):
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['id']
@@ -495,7 +493,7 @@ class HaproxyConfigFile:
                                          HaproxyBackend.name) >= 0:
                 for j in new_config_file[i]:
                     logger.debug('[HAPROXY] found %s' % new_config_file[i])
-                    if 'server' in j and HaproxyRserver.name in j):
+                    if 'server' in j and HaproxyRserver.name in j:
                         if type_of_operation == 'disable':
                             tmp_str = ('%s disabled' % j)
                         elif type_of_operation == 'enable':

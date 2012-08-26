@@ -149,7 +149,7 @@ class RemoteSocketOperation(object):
         self.user = device_ref['user']
         self.password = device_ref['password']
         self.backend_name = backend.name
-        self.rserver_name = rserver['name']
+        self.rserver_name = rserver['id']
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
