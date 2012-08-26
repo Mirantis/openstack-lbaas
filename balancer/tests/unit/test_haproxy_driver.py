@@ -27,13 +27,13 @@ device_fake = {'ip': '192.168.19.86',
     'remote_conf_dir': '/etc/haproxy',
     'remote_conf_file': 'haproxy.cfg'}}
 #
-rserver = {'name': 'test_real_server',
+rserver = {'id': 'test_real_server',
            'address': '123.123.123.123', 'port': '9090',
            'weight': '8',  'maxCon': '30000'}
 #
-server_farm = {'name': 'SFname',  'type': 'HashAddrPredictor'}
+server_farm = {'id': 'SFname',  'type': 'HashAddrPredictor'}
 #
-virtualserver = {'name': 'VirtualServer',
+virtualserver = {'id': 'VirtualServer',
                  'address': '115.115.115.115',
                  'port': '8080'}
 #
