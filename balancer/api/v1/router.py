@@ -22,6 +22,9 @@ import routes
 from . import loadbalancers
 from . import devices
 from . import nodes
+from . import virtualIps
+from . import healthMonitoring
+from . import sessionPersistence
 #from . import tasks
 
 
@@ -57,6 +60,11 @@ class API(wsgi.Router):
         #               controller=lb_resource,
         #               action="showDetails", conditions={'method': ["GET"]})
 
+        #mapper.connect("/loadbalancers/",
+        #               controller=lb_resource,
+        #               action="create",
+        #               conditions={'method': ["POST"]})
+
         mapper.connect("/loadbalancers/{lb_id}/nodes/{id}/{status}", \
                        controller=nd_resource, action="changeNodeStatus", \
                        conditions={'method': ["PUT"]})
@@ -79,59 +87,64 @@ class API(wsgi.Router):
         #               controller=lb_resource, action="updateNode", \
         #               conditions={'method': ["PUT"]})
 
-        mapper.connect("/loadbalancers/{id}/healthMonitoring", \
-                       controller=lb_resource, action="showMonitoring", \
+        hm_resource = healthMonitoring.create_resource(self.conf)
+
+        mapper.connect("/loadbalancers/{lb_id}/healthMonitoring", \
+                       controller=hm_resource, action="showMonitoring", \
                        conditions={'method': ["GET"]})
 
         mapper.connect(
                 "/loadbalancers/{lb_id}/healthMonitoring/{id}", \
-                       controller=lb_resource, action="showProbe", \
+                       controller=hm_resource, action="showProbe", \
                        conditions={'method': ["GET"]})
 
-        mapper.connect("/loadbalancers/{id}/healthMonitoring", \
-                       controller=lb_resource, \
+        mapper.connect("/loadbalancers/{lb_id}/healthMonitoring", \
+                       controller=hm_resource, \
                        action="addProbe", conditions={'method': ["POST"]})
 
         mapper.connect(
                 "/loadbalancers/{lb_id}/healthMonitoring/{id}", \
-                       controller=lb_resource, action="deleteProbe", \
+                       controller=hm_resource, action="deleteProbe", \
                        conditions={'method': ["DELETE"]})
 
-        mapper.connect("/loadbalancers/{id}/sessionPersistence", \
-                       controller=lb_resource, action="showStickiness", \
+        sp_resource = sessionPersistence.create_resource(self.conf)
+
+        mapper.connect("/loadbalancers/{lb_id}/sessionPersistence", \
+                       controller=sp_resource, action="showStickiness", \
                        conditions={'method': ["GET"]})
 
         mapper.connect(
                 "/loadbalancers/{lb_id}/sessionPersistence/{id}", \
-                       controller=lb_resource, action="showSticky", \
+                       controller=sp_resource, action="showSticky", \
                        conditions={'method': "GET"})
 
-        mapper.connect("/loadbalancers/{id}/sessionPersistence", \
-                       controller=lb_resource, \
+        mapper.connect("/loadbalancers/{lb_id}/sessionPersistence", \
+                       controller=sp_resource, \
                        action="addSticky", conditions={'method': ["POST"]})
 
         mapper.connect(
                 "/loadbalancers/{lb_id}/sessionPersistence/{id}", \
-                       controller=lb_resource, action="deleteSticky", \
+                       controller=sp_resource, action="deleteSticky", \
                        conditions={'method': ["DELETE"]})
 
-        mapper.connect("/loadbalancers/{id}/virtualIps",
-                        controller=lb_resource, action="showVIPs",
-                        conditions={'method': ["GET"]})
-        mapper.connect("/loadbalancers/{lb_id}/virtualIps",
-                       controller=lb_resource, action="addVIP",
-                       conditions={"method": ["POST"]})
-        mapper.connect("/loadbalancers/{lb_id}/virtualIps/{id}",
-                       controller=lb_resource, action="showVIP",
-                       conditions={"method": ["GET"]})
-        mapper.connect("/loadbalancers/{lb_id}/virtualIps/{id}",
-                       controller=lb_resource, action="deleteVIP",
-                       conditions={"method": ["DELETE"]})
+        vip_resource = virtualIps.create_resource(self.conf)
 
-        mapper.connect("/loadbalancers/",
-                       controller=lb_resource,
-                       action="create",
-                       conditions={'method': ["POST"]})
+        mapper.resource("virtualIp", "virtualIps",\
+         controller = vip_resource,\
+         parent_resource=dict(member_name='lb', collection_name='loadbalancers'))
+
+        #mapper.connect("/loadbalancers/{id}/virtualIps",
+        #                controller=lb_resource, action="showVIPs",
+        #                conditions={'method': ["GET"]})
+        #mapper.connect("/loadbalancers/{lb_id}/virtualIps",
+        #               controller=lb_resource, action="addVIP",
+        #               conditions={"method": ["POST"]})
+        #mapper.connect("/loadbalancers/{lb_id}/virtualIps/{id}",
+        #               controller=lb_resource, action="showVIP",
+        #               conditions={"method": ["GET"]})
+        #mapper.connect("/loadbalancers/{lb_id}/virtualIps/{id}",
+        #               controller=lb_resource, action="deleteVIP",
+        #               conditions={"method": ["DELETE"]})
 
         device_resource = devices.create_resource(self.conf)
 

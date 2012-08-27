@@ -5,6 +5,9 @@ import balancer.exception as exception
 from openstack.common import wsgi
 from balancer.api.v1 import loadbalancers
 from balancer.api.v1 import nodes
+from balancer.api.v1 import virtualIps
+from balancer.api.v1 import healthMonitoring
+from balancer.api.v1 import sessionPersistence
 from balancer.api.v1 import devices
 from balancer.api.v1 import router
 
@@ -373,32 +376,32 @@ class TestRouter(unittest.TestCase):
                 nodes.Controller, "update"),
             ("/loadbalancers/{lb_id}/nodes/{id}/{status}", "PUT",
                 nodes.Controller, "changeNodeStatus"),
-            ("/loadbalancers/{id}/healthMonitoring", "GET",
-                loadbalancers.Controller, "showMonitoring"),
+            ("/loadbalancers/{lb_id}/healthMonitoring", "GET",
+                healthMonitoring.Controller, "showMonitoring"),
             ("/loadbalancers/{lb_id}/healthMonitoring/{id}",
-                "GET", loadbalancers.Controller, "showProbe"),
-            ("/loadbalancers/{id}/healthMonitoring", "POST",
-                loadbalancers.Controller, "addProbe"),
+                "GET", healthMonitoring.Controller, "showProbe"),
+            ("/loadbalancers/{lb_id}/healthMonitoring", "POST",
+                healthMonitoring.Controller, "addProbe"),
             ("/loadbalancers/{lb_id}/healthMonitoring/{id}", "DELETE",
-                loadbalancers.Controller, "deleteProbe"),
-            ("/loadbalancers/{id}/sessionPersistence", "GET",
-                loadbalancers.Controller, "showStickiness"),
+                healthMonitoring.Controller, "deleteProbe"),
+            ("/loadbalancers/{lb_id}/sessionPersistence", "GET",
+                sessionPersistence.Controller, "showStickiness"),
             ("/loadbalancers/{lb_id}/sessionPersistence/{id}", "GET",
-                loadbalancers.Controller, "showSticky"),
-            ("/loadbalancers/{id}/sessionPersistence", "POST",
-                loadbalancers.Controller, "addSticky"),
+                sessionPersistence.Controller, "showSticky"),
+            ("/loadbalancers/{lb_id}/sessionPersistence", "POST",
+                sessionPersistence.Controller, "addSticky"),
             ("/loadbalancers/{lb_id}/sessionPersistence/{id}",
-                "DELETE", loadbalancers.Controller, "deleteSticky"),
+                "DELETE", sessionPersistence.Controller, "deleteSticky"),
 
             # Virtual IPs
-            ("/loadbalancers/{id}/virtualIps", "GET",
-                loadbalancers.Controller, "showVIPs"),
+            ("/loadbalancers/{lb_id}/virtualIps", "GET",
+                virtualIps.Controller, "index"),
             ("/loadbalancers/{lb_id}/virtualIps", "POST",
-                loadbalancers.Controller, "addVIP"),
+                virtualIps.Controller, "create"),
             ("/loadbalancers/{lb_id}/virtualIps/{id}", "GET",
-                loadbalancers.Controller, "showVIP"),
+                virtualIps.Controller, "show"),
             ("/loadbalancers/{lb_id}/virtualIps/{id}", "DELETE",
-                loadbalancers.Controller, "deleteVIP"),
+                virtualIps.Controller, "delete"),
 
             ("/loadbalancers", "POST", loadbalancers.Controller, "create"),
             ("/devices", "GET", devices.Controller, "index"),
@@ -417,7 +420,7 @@ class TestRouter(unittest.TestCase):
             self.assertTrue(isinstance(controller0.controller,
                 controller))
             self.assertEquals(action0, action)
-            LOG.debug('controller is %s with vars=%s', controller, vars(controller))
+            #LOG.debug('controller is %s with vars=%s', controller, vars(controller))
             mok = mock.mocksignature(getattr(controller, action))
             if method == "POST" or method == "PUT":
                 m['body'] = {}
