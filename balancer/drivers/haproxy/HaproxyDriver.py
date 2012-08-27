@@ -272,14 +272,15 @@ class HaproxyDriver(BaseDriver):
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['id']
 
-        if predictor['type'] == 'RoundRobin':
-            haproxy_serverfarm.balance = 'roundrobin'
-        elif predictor['type'] == 'LeastConnections':
-            haproxy_serverfarm.balance = 'leastconn'
-        elif predictor['type'] == 'HashAddrPredictor':
-            haproxy_serverfarm.balance = 'source'
-        elif predictor['type'] == 'HashURL':
-            haproxy_serverfarm.balance = 'uri'
+        for p in predictor:
+            if predictor.get('type') == 'RoundRobin':
+                haproxy_serverfarm.balance = 'roundrobin'
+            elif predictor.get('type') == 'LeastConnections':
+                haproxy_serverfarm.balance = 'leastconn'
+            elif predictor.get('type') == 'HashAddrPredictor':
+                haproxy_serverfarm.balance = 'source'
+            elif predictor.get('type') == 'HashURL':
+                haproxy_serverfarm.balance = 'uri'
 
         config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
                                                 self.configfilename))
