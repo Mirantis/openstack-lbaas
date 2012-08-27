@@ -44,8 +44,8 @@ class AceDriver(BaseDriver):
         try:
             message = urllib2.urlopen(request, d)
             s = message.read()
-        except (Exception):
-            return Exception
+        except Exception:
+            raise
         logger.debug("data from ACE:\n" + s)
         if 'XML_CMD_SUCCESS' in s:
             return 'OK'
@@ -60,8 +60,8 @@ class AceDriver(BaseDriver):
         try:
             message = urllib2.urlopen(request, data)
             s = message.read()
-        except (Exception):
-            return Exception
+        except Exception:
+            raise
         logger.debug("data from ACE:\n" + s)
         return s
 
