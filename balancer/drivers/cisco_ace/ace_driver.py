@@ -423,22 +423,23 @@ class AceDriver(BaseDriver):
             cmd += "\ndescription " + sf_extra['description']
         if sf_extra.get('failAction'):
             cmd += "\nfailaction " + sf_extra['failAction']
-        if predictor.get('type'):
-            pr = predictor['type'].lower()
-            if (pr == "leastbandwidth"):
-                pr = "least-bandwidth"
-                accessTime = predictor['extra'].get('accessTime')
-                if accessTime:
-                    pr += " assess-time " + accessTime
-                if sf_extra.get('accessTime'):
-                    pr += " samples " + predictor['extra']['sample']
-            elif (pr == "leastconnections"):
-                pr = "leastconns slowstart " + \
-                     predictor['extra']['slowStartDur']
-            elif (pr == "leastloaded"):
-                pr = "least-loaded probe " + \
-                     predictor['extra']['snmpProbe']
-            cmd += "\npredictor " + pr
+        for p in predictor:
+            if p.get('type'):
+                type = p['type'].lower()
+                if (type == "leastbandwidth"):
+                    type = "least-bandwidth"
+                    accessTime = p.get('extra').get('accessTime')
+                    if accessTime:
+                        type += " assess-time " + accessTime
+                    if sf_extra.get('accessTime'):
+                        type += " samples " + p.get('extra').get('sample')
+                elif (type == "leastconnections"):
+                    type = "leastconns slowstart " + \
+                           p.get('extra').get('slowStartDur')
+                elif (type == "leastloaded"):
+                    type = "least-loaded probe " + \
+                           p.get('extra').get('snmpProbe')
+            cmd += "\npredictor " + type
         if (sf_type == "host"):
             if sf_extra.get('failOnAll'):
                 cmd += "\nfail-on-all"

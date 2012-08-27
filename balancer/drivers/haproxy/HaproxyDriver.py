@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 # Copyright 2012 OpenStack LLC.
@@ -120,15 +120,51 @@ class HaproxyDriver(BaseDriver):
                     self.new_lines)
         remote.put_config()
 
+    def create_real_server(self, rserver):
+        '''
+            For compatibility with drivers for other devices
+        '''
+        pass
+
+    def delete_real_server(self, rserver):
+        '''
+            For compatibility with drivers for other devices
+        '''
+        pass
+        
+    def create_probe(self, probe):
+        '''
+            For compatibility with drivers for other devices
+        '''
+        pass
+
+    def delete_probe(self, probe):
+        '''
+            For compatibility with drivers for other devices
+        '''
+        pass
+        
+    def create_stickiness(self, sticky):
+        '''
+            For compatibility with drivers for other devices
+        '''
+        pass
+
+    def delete_stickiness(self, sticky):
+        '''
+            For compatibility with drivers for other devices
+        '''
+        pass
+        
     def add_real_server_to_server_farm(self, serverfarm, rserver):
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['id']
         haproxy_rserver = HaproxyRserver()
         haproxy_rserver.name = rserver['id']
-        haproxy_rserver.weight = rserver['weight']
+        haproxy_rserver.weight = rserver.get('weight') or 1
         haproxy_rserver.address = rserver['address']
-        haproxy_rserver.port = rserver['port']
-        haproxy_rserver.maxconn = rserver['maxCon']
+        haproxy_rserver.port = rserver.get('port') or 0
+        haproxy_rserver.maxconn = rserver.get('maxCon') or 10000
         #Modify remote config file, check and restart remote haproxy
         config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
                                         self.configfilename))
@@ -167,7 +203,7 @@ class HaproxyDriver(BaseDriver):
         haproxy_virtualserver = HaproxyFronted()
         haproxy_virtualserver.name = virtualserver['id']
         haproxy_virtualserver.bind_address = virtualserver['address']
-        haproxy_virtualserver.bind_port = virtualserver['port']
+        haproxy_virtualserver.bind_port = virtualserver.get('port') or 0
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['id']
         logger.debug('[HAPROXY] create VIP %s' % haproxy_serverfarm.name)
@@ -187,7 +223,7 @@ class HaproxyDriver(BaseDriver):
 
     def delete_virtual_ip(self, virtualserver):
         logger.debug('[HAPROXY] delete VIP')
-        if not bool(virtualserver['name']):
+        if not bool(virtualserver['id']):
             logger.error('[HAPROXY] Virtualserver name is empty')
             return 'VIRTUALSERVER NAME ERROR'
         haproxy_virtualserver = HaproxyFronted()
@@ -459,8 +495,7 @@ class HaproxyConfigFile:
                                          HaproxyBackend.name) >= 0:
                 for j in new_config_file[i]:
                     logger.debug('[HAPROXY] found %s' % new_config_file[i])
-                    if (j.find('server') >= 0 and
-                                           j.find(HaproxyRserver.name) >= 0):
+                    if 'server' in j and HaproxyRserver.name in j):
                         if type_of_operation == 'disable':
                             tmp_str = ('%s disabled' % j)
                         elif type_of_operation == 'enable':
