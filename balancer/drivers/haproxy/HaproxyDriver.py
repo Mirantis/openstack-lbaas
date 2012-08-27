@@ -68,7 +68,7 @@ class HaproxyDriver(BaseDriver):
 
     def probe_sf(self, serverfarm, probe, type_of_operation):
         haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['name']
+        haproxy_serverfarm.name = serverfarm['id']
         self.del_lines = ['option httpchk', 'option ssl-hello-chk',
                                                         'http-check expect']
         config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
@@ -87,7 +87,7 @@ class HaproxyDriver(BaseDriver):
                 return
             if pr_type == "http":
                 haproxy_serverfarm = HaproxyBackend()
-                haproxy_serverfarm.name = serverfarm['name']
+                haproxy_serverfarm.name = serverfarm['id']
                 self.option_httpchk = "option httpchk"
                 requestMethodType = probe.get('requestMethodType', '')
                 requestHTTPurl = probe.get('requestHTTPurl', '')
@@ -122,9 +122,9 @@ class HaproxyDriver(BaseDriver):
 
     def add_real_server_to_server_farm(self, serverfarm, rserver):
         haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['name']
+        haproxy_serverfarm.name = serverfarm['id']
         haproxy_rserver = HaproxyRserver()
-        haproxy_rserver.name = rserver['name']
+        haproxy_rserver.name = rserver['id']
         haproxy_rserver.weight = rserver['weight']
         haproxy_rserver.address = rserver['address']
         haproxy_rserver.port = rserver['port']
@@ -144,9 +144,9 @@ class HaproxyDriver(BaseDriver):
 
     def delete_real_server_from_server_farm(self, serverfarm, rserver):
         haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['name']
+        haproxy_serverfarm.name = serverfarm['id']
         haproxy_rserver = HaproxyRserver()
-        haproxy_rserver.name = rserver['name']
+        haproxy_rserver.name = rserver['id']
         #Modify remote config file, check and restart remote haproxy
         config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
                                                 self.configfilename))
@@ -161,15 +161,15 @@ class HaproxyDriver(BaseDriver):
         remote.put_config()
 
     def create_virtual_ip(self, virtualserver, serverfarm):
-        if not bool(virtualserver['name']):
+        if not bool(virtualserver['id']):
             logger.error('[HAPROXY] Virtualserver name is empty')
             return 'VIRTUALSERVER NAME ERROR'
         haproxy_virtualserver = HaproxyFronted()
-        haproxy_virtualserver.name = virtualserver['name']
+        haproxy_virtualserver.name = virtualserver['id']
         haproxy_virtualserver.bind_address = virtualserver['address']
         haproxy_virtualserver.bind_port = virtualserver['port']
         haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['name']
+        haproxy_serverfarm.name = serverfarm['id']
         logger.debug('[HAPROXY] create VIP %s' % haproxy_serverfarm.name)
         #Add new IP address
         remote_interface = RemoteInterface(self.device_ref,
@@ -191,7 +191,7 @@ class HaproxyDriver(BaseDriver):
             logger.error('[HAPROXY] Virtualserver name is empty')
             return 'VIRTUALSERVER NAME ERROR'
         haproxy_virtualserver = HaproxyFronted()
-        haproxy_virtualserver.name = virtualserver['name']
+        haproxy_virtualserver.name = virtualserver['id']
         haproxy_virtualserver.bind_address = virtualserver['address']
         config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
                                         self.configfilename))
@@ -212,9 +212,9 @@ class HaproxyDriver(BaseDriver):
 
     def get_statistics(self, serverfarm, rserver):
         haproxy_rserver = HaproxyRserver()
-        haproxy_rserver.name = rserver['name']
+        haproxy_rserver.name = rserver['id']
         haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['name']
+        haproxy_serverfarm.name = serverfarm['id']
         remote_socket = RemoteSocketOperation(self.device_ref,
                                         haproxy_serverfarm, haproxy_rserver,
                                         self.interface, self.haproxy_socket)
@@ -244,9 +244,9 @@ class HaproxyDriver(BaseDriver):
     def operationWithRServer(self, serverfarm, rserver,
                              type_of_operation):
         haproxy_rserver = HaproxyRserver()
-        haproxy_rserver.name = rserver['name']
+        haproxy_rserver.name = rserver['id']
         haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['name']
+        haproxy_serverfarm.name = serverfarm['id']
         config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
                                         self.configfilename))
         remote_config = RemoteConfig(self.device_ref, self.localpath,
@@ -266,11 +266,11 @@ class HaproxyDriver(BaseDriver):
         remote_config.put_config()
 
     def create_server_farm(self, serverfarm, predictor):
-        if not bool(serverfarm['name']):
+        if not bool(serverfarm['id']):
             logger.error('[HAPROXY] Serverfarm name is empty')
             return 'SERVERFARM FARM NAME ERROR'
         haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['name']
+        haproxy_serverfarm.name = serverfarm['id']
 
         if predictor['type'] == 'RoundRobin':
             haproxy_serverfarm.balance = 'roundrobin'
@@ -290,11 +290,11 @@ class HaproxyDriver(BaseDriver):
         remote.put_config()
 
     def delete_server_farm(self, serverfarm):
-        if not bool(serverfarm['name']):
+        if not bool(serverfarm['id']):
             logger.error('[HAPROXY] Serverfarm name is empty')
             return 'SERVER FARM NAME ERROR'
         haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['name']
+        haproxy_serverfarm.name = serverfarm['id']
         config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
                                                 self.configfilename))
         remote = RemoteConfig(self.device_ref, self.localpath,
