@@ -113,7 +113,7 @@ def create_rserver(ctx, rs):
         ctx.device.delete_real_server(rs)
         rs['deployed'] = 'False'
         db_api.server_update(ctx.conf, rs['id'], rs)
-        raise Exception
+        raise
 
 
 @ignore_exceptions
@@ -162,7 +162,7 @@ def create_server_farm(ctx, sf):
         yield
     except Exception:
         delete_server_farm(ctx, sf)
-        raise Exception
+        raise
 
 
 @with_rollback
@@ -175,7 +175,7 @@ def add_rserver_to_server_farm(ctx, server_farm, rserver):
         yield
     except Exception:
         ctx.device.delete_real_server_from_server_farm(server_farm, rserver)
-        raise Exception
+        raise
 
 
 @ignore_exceptions
@@ -198,7 +198,7 @@ def create_probe(ctx, probe):
         yield
     except Exception:
         delete_probe(ctx, probe)
-        raise Exception
+        raise
 
 
 @with_rollback
@@ -208,7 +208,7 @@ def add_probe_to_server_farm(ctx, server_farm, probe):
         yield
     except Exception:
         ctx.device.delete_probe_from_server_farm(server_farm, probe)
-        raise Exception
+        raise
 
 
 @ignore_exceptions
@@ -239,7 +239,7 @@ def create_vip(ctx, vip, server_farm):
         yield
     except Exception:
         delete_vip(ctx, vip)
-        raise Exception
+        raise
 
 
 def create_loadbalancer(ctx, balancer, nodes, probes, vips):

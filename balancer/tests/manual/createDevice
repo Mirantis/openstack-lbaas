@@ -1,15 +1,15 @@
 {
- "name": "Server1",
- "type": "HAPROXY",
- "version": "1.0",
+ "name": "ACE30",
+ "type": "ACE",
+ "version": "A521",
  "supports_ipv6": 0,
  "requires_vip_ip": 1,
  "has_acl": 1,
  "supports_vlan": 1,
- "ip": "192.168.19.86",
- "port": "22",
- "user": "user",
- "password": "swordfish",
- "vip_vlan": "75",
- "capabilities": {"algorithms":"RoundRobin"}
+ "ip": "10.4.15.30",
+ "port": "10443",
+ "user": "admin",
+ "password": "cisco123",
+ "vip_vlan": "75"
+ 
 }
