@@ -13,7 +13,7 @@
                       "ipVersion": "IPv4", 
                       "VLAN": "200",
                       "port": "80",
-		      "ICMPreply": "True"
+              "ICMPreply": "True"
                     },
                     {
                       "address": "200.1.1.210",
@@ -21,7 +21,7 @@
                       "ipVersion": "IPv4",
                       "VLAN": "200",
                       "port": "443",
-		      "ICMPreply": "True"
+              "ICMPreply": "True"
                     }
                   ],
     "nodes":      [
@@ -36,8 +36,8 @@
                        "rateConnection": "1000", 
                        "status": "INSERVICE",
                        "condition": "ENABLED",
-		       "vm_instance": "RServer001",
-		       "vm_id": "1234-1234-1234-1234"
+               "vm_instance": "RServer001",
+               "vm_id": "1234-1234-1234-1234"
                     },
                     {
                        "address": "10.1.1.21",
@@ -51,7 +51,7 @@
                        "status": "INSERVICE",
                        "condition": "ENABLED",
                        "vm_instance": "RServer003",
-		       "vm_id": "1235-1235-1235-1235"
+               "vm_id": "1235-1235-1235-1235"
                     },
                     {
                        "address": "10.1.1.26",
@@ -65,7 +65,7 @@
                        "status": "INSERVICE",
                        "condition": "ENABLED",
                        "vm_instance": "RServer003",
-		       "vm_id": "1236-1236-1236-1236"
+               "vm_id": "1236-1236-1236-1236"
                     },
                     {
                        "address": "10.1.1.27",
@@ -79,7 +79,7 @@
                        "status": "INSERVICE",
                        "condition": "ENABLED",
                        "vm_instance": "RServer004",
-		       "vm_id": "1237-1237-1237-1237"
+               "vm_id": "1237-1237-1237-1237"
                     },
  
                     {
@@ -94,8 +94,8 @@
                        "rateConnection": "1000", 
                        "status": "INSERVICE",
                        "condition": "ENABLED",
-		       "vm_instance": "RServer002",
- 		       "vm_id": "1238-1238-1238-1238"
+               "vm_instance": "RServer002",
+                "vm_id": "1238-1238-1238-1238"
                     }
                   ], 
     "healthMonitor": [
