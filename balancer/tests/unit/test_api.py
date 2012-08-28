@@ -5,9 +5,9 @@ import balancer.exception as exception
 from openstack.common import wsgi
 from balancer.api.v1 import loadbalancers
 from balancer.api.v1 import nodes
-from balancer.api.v1 import virtualIps
-from balancer.api.v1 import healthMonitoring
-from balancer.api.v1 import sessionPersistence
+from balancer.api.v1 import vips
+from balancer.api.v1 import probes
+from balancer.api.v1 import stickies
 from balancer.api.v1 import devices
 from balancer.api.v1 import router
 
@@ -77,9 +77,9 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertEqual(resp, {'loadbalancer': 'foo'})
 
     @mock.patch('balancer.core.api.lb_show_details', autospec=True)
-    def test_show_details(self, mock_lb_show_details):
+    def test_details(self, mock_lb_show_details):
         mock_lb_show_details.return_value = 'foo'
-        resp = self.controller.showDetails(self.req, 1)
+        resp = self.controller.details(self.req, 1)
         self.assertTrue(mock_lb_show_details.called)
         mock_lb_show_details.assert_called_once_with(self.conf, 1)
         self.assertEqual('foo', resp)
@@ -92,29 +92,41 @@ class TestLoadBalancersController(unittest.TestCase):
         mock_update_lb.assert_called_once_with(self.conf, 1, {})
         self.assertEquals(resp, {"loadbalancer": {"id": 1}})
 
+class TestNodesController(unittest.TestCase):
+    def setUp(self):
+        super(TestNodesController, self).setUp()
+        self.conf = mock.Mock()
+        self.controller = nodes.Controller(self.conf)
+        self.req = mock.Mock()
+
+    def code_assert(self, code, func):
+        self.assertTrue(hasattr(func, "wsgi_code"),
+                "has not redifined HTTP status code")
+        self.assertTrue(func.wsgi_code == code,
+                "incorrect HTTP status code")
+
     @mock.patch('balancer.core.api.lb_add_nodes', autospec=True)
-    def test_add_nodes(self, mock_lb_add_nodes):
+    def test_create(self, mock_lb_add_nodes):
         mock_lb_add_nodes.return_value = 'foo'
         body = {'nodes': 'foo'}
-        resp = self.controller.addNodes(self.req, 1, body)
+        resp = self.controller.create(self.req, 1, body)
         self.assertTrue(mock_lb_add_nodes.called)
         mock_lb_add_nodes.assert_called_once_with(self.conf, 1, 'foo')
         self.assertEqual(resp, {'nodes': 'foo'})
 
     @mock.patch('balancer.core.api.lb_show_nodes', autospec=True)
-    def test_show_nodes(self, mock_lb_show_nodes):
+    def test_index(self, mock_lb_show_nodes):
         mock_lb_show_nodes.return_value = 'foo'
-        resp = self.controller.showNodes(self.req, 1)
+        resp = self.controller.index(self.req, 1)
         self.assertTrue(mock_lb_show_nodes.called)
         mock_lb_show_nodes.assert_called_once_with(self.conf, 1)
         self.assertEqual(resp, {'nodes': 'foo'})
 
     @mock.patch("balancer.db.api.server_get")
     @mock.patch("balancer.db.api.unpack_extra")
-    def test_show_node(self, mock_unpack, mock_server_get):
-        mock_server_get.return_value = ['foo']
-        mock_unpack.return_value = 'foo'
-        resp = self.controller.showNode(self.req, '123', '123')
+    def test_show(self, mock_server_get, mock_unpack):
+        mock_server_get.return_value = 'foo'
+        resp = self.controller.show(self.req, '123', '123')
         self.assertTrue(mock_server_get.called)
         self.assertTrue(mock_unpack.called)
         mock_server_get.assert_called_once_with(self.conf, '123', '123')
@@ -122,12 +134,12 @@ class TestLoadBalancersController(unittest.TestCase):
         self.assertEqual(resp, {'node': 'foo'})
 
     @mock.patch('balancer.core.api.lb_delete_node', autospec=True)
-    def test_delete_node(self, mock_lb_delete_node):
-        resp = self.controller.deleteNode(self.req, 1, 1)
+    def test_delete(self, mock_lb_delete_node):
+        resp = self.controller.delete(self.req, 1, 1)
         self.assertTrue(mock_lb_delete_node.called)
         mock_lb_delete_node.assert_called_once_with(self.conf, 1, 1)
-        self.code_assert(204, self.controller.deleteNode)
         self.assertEqual(resp, None)
+        self.code_assert(204, self.controller.delete)
 
     @mock.patch('balancer.core.api.lb_change_node_status', autospec=True)
     def test_change_node_status(self, mock_lb_change_node_status):
@@ -145,18 +157,99 @@ class TestLoadBalancersController(unittest.TestCase):
                                          'status': 'Foostatus'}})
 
     @mock.patch('balancer.core.api.lb_update_node', autospec=True)
-    def test_update_node(self, mock_lb_update_node):
+    def test_update(self, mock_lb_update_node):
         req_kwargs = {'lb_id': '1',
                       'id': '1',
                       'body': {'node': 'node'}}
         mock_lb_update_node.return_value = {'nodeID': '1'}
-        resp = self.controller.updateNode(self.req, **req_kwargs)
-        self.assertTrue(mock_lb_update_node.called)
         mock_lb_update_node.assert_called_once_with(self.conf, '1', '1',
                                                     {'node': 'node'})
-        self.assertFalse(hasattr(self.controller.updateNode, "wsgi_code"),
+        resp = self.controller.update(self.req, **req_kwargs)
+        self.assertTrue(mock_lb_update_node.called)
+        self.assertFalse(hasattr(self.controller.update, "wsgi_code"),
             "has not redifined HTTP status code")
         self.assertEqual(resp, {"node": {'nodeID': '1'}})
+
+
+class TestVIPsController(unittest.TestCase):
+    def setUp(self):
+        super(TestVIPsController, self).setUp()
+        self.conf = mock.Mock()
+        self.controller = vips.Controller(self.conf)
+        self.req = mock.Mock()
+
+    def code_assert(self, code, func):
+        self.assertTrue(hasattr(func, "wsgi_code"),
+                "has not redifined HTTP status code")
+        self.assertTrue(func.wsgi_code == code,
+                "incorrect HTTP status code")
+
+    @mock.patch('balancer.db.api.unpack_extra', autospec=True)
+    @mock.patch('balancer.db.api.virtualserver_get_all_by_lb_id',
+                                                            autospec=True)
+    def test_index0(self, mock_get, mock_unpack):
+        """VIPs should be found"""
+        mock_get.return_value = ['foo']
+        mock_unpack.return_value = 'foo1'
+        resp = self.controller.index(self.req, '1')
+        self.assertTrue(mock_get.called)
+        self.assertTrue(mock_unpack.called)
+        mock_get.assert_called_once_with(self.conf, '1')
+        mock_unpack.assert_called_once_with('foo')
+        self.assertEqual(resp, {'virtualIps': ['foo1']})
+
+    @mock.patch('balancer.db.api.virtualserver_get_all_by_lb_id',
+                                                           autospec=True)
+    def test_index1(self, mock_get):
+        """Should raise exception"""
+        mock_get.side_effect = exception.VirtualServerNotFound()
+        with self.assertRaises(exception.VirtualServerNotFound):
+            resp = self.controller.index(self.req, '1')
+            self.assertEqual(resp, None)
+
+    @mock.patch('balancer.core.api.lb_add_vip', autospec=True)
+    def test_create(self, mock_lb_add_vip):
+        mock_lb_add_vip.return_value = 'fakevip'
+        resp = self.controller.create(self.req, 'fakelbid',
+                                      {'virtualIp': 'fakebody'})
+        self.assertTrue(mock_lb_add_vip.called)
+        mock_lb_add_vip.assert_called_once_with(self.conf, 'fakelbid',
+                                                'fakebody')
+        self.assertEqual(resp, {'virtualIp': 'fakevip'})
+
+    @mock.patch('balancer.db.api.unpack_extra', autospec=True)
+    @mock.patch('balancer.db.api.virtualserver_get', autospec=True)
+    def test_show(self, mock_virtualserver_get, mock_unpack_extra):
+        mock_virtualserver_get.return_value = 'fakevip'
+        mock_unpack_extra.return_value = 'packedfakevip'
+        resp = self.controller.show(self.req, 'fakelbid', 'fakeid')
+        self.assertTrue(mock_virtualserver_get.called)
+        self.assertTrue(mock_unpack_extra.called)
+        mock_virtualserver_get.assert_called_once_with(self.conf, 'fakeid')
+        mock_unpack_extra.assert_called_once_with('fakevip')
+        self.assertEqual(resp, {'virtualIp': 'packedfakevip'})
+
+    @mock.patch('balancer.core.api.lb_delete_vip', autospec=True)
+    def test_delete(self, mock_lb_delete_vip):
+        resp = self.controller.delete(self.conf, 'fakelbid', 'fakeid')
+        self.assertTrue(mock_lb_delete_vip.called)
+        mock_lb_delete_vip.assert_called_once_with(self.conf, 'fakelbid',
+                                                   'fakeid')
+        self.code_assert(204, self.controller.delete)
+
+
+class TestProbesController(unittest.TestCase):
+    def setUp(self):
+        super(TestProbesController, self).setUp()
+        self.conf = mock.Mock()
+        self.controller = probes.Controller(self.conf)
+        self.req = mock.Mock()
+
+    def code_assert(self, code, func):
+        self.assertTrue(hasattr(func, "wsgi_code"),
+                "has not redifined HTTP status code")
+        self.assertTrue(func.wsgi_code == code,
+                "incorrect HTTP status code")
 
     @mock.patch('balancer.core.api.lb_show_probes', autospec=True)
     def test_show_monitoring(self, mock_lb_show_probes):
@@ -195,6 +288,19 @@ class TestLoadBalancersController(unittest.TestCase):
         mock_lb_delete_probe.assert_called_once_with(self.conf, 1, 1)
         self.code_assert(204, self.controller.deleteProbe)
         self.assertEqual(resp, None)
+
+class TestStickiesController(unittest.TestCase):
+    def setUp(self):
+        super(TestStickiesController, self).setUp()
+        self.conf = mock.Mock()
+        self.controller = stickies.Controller(self.conf)
+        self.req = mock.Mock()
+
+    def code_assert(self, code, func):
+        self.assertTrue(hasattr(func, "wsgi_code"),
+                "has not redifined HTTP status code")
+        self.assertTrue(func.wsgi_code == code,
+                "incorrect HTTP status code")
 
     @mock.patch('balancer.core.api.lb_show_sticky', autospec=True)
     def test_show_stickiness(self, mock_lb_show_sticky):
@@ -235,60 +341,6 @@ class TestLoadBalancersController(unittest.TestCase):
         mock_lb_delete_sticky.assert_called_once_with(self.conf, 1, 1)
         self.code_assert(204, self.controller.deleteSticky)
         self.assertEqual(resp, None)
-
-    @mock.patch('balancer.db.api.unpack_extra', autospec=True)
-    @mock.patch('balancer.db.api.virtualserver_get_all_by_lb_id',
-                                                            autospec=True)
-    def test_show_vips0(self, mock_get, mock_unpack):
-        """VIPs should be found"""
-        mock_get.return_value = ['foo']
-        mock_unpack.return_value = 'foo1'
-        resp = self.controller.showVIPs(self.req, '1')
-        self.assertTrue(mock_get.called)
-        self.assertTrue(mock_unpack.called)
-        mock_get.assert_called_once_with(self.conf, '1')
-        mock_unpack.assert_called_once_with('foo')
-        self.assertEqual(resp, {'virtualIps': ['foo1']})
-
-    @mock.patch('balancer.db.api.virtualserver_get_all_by_lb_id',
-                                                           autospec=True)
-    def test_show_vips1(self, mock_get):
-        """Should raise exception"""
-        mock_get.side_effect = exception.VirtualServerNotFound()
-        with self.assertRaises(exception.VirtualServerNotFound):
-            resp = self.controller.showVIPs(self.req, '1')
-            self.assertEqual(resp, None)
-
-    @mock.patch('balancer.core.api.lb_add_vip', autospec=True)
-    def test_add_vip(self, mock_lb_add_vip):
-        mock_lb_add_vip.return_value = 'fakevip'
-        resp = self.controller.addVIP(self.req, 'fakelbid',
-                                      {'virtualIp': 'fakebody'})
-        self.assertTrue(mock_lb_add_vip.called)
-        mock_lb_add_vip.assert_called_once_with(self.conf, 'fakelbid',
-                                                'fakebody')
-        self.assertEqual(resp, {'virtualIp': 'fakevip'})
-
-    @mock.patch('balancer.db.api.unpack_extra', autospec=True)
-    @mock.patch('balancer.db.api.virtualserver_get', autospec=True)
-    def test_show_vip(self, mock_virtualserver_get, mock_unpack_extra):
-        mock_virtualserver_get.return_value = 'fakevip'
-        mock_unpack_extra.return_value = 'packedfakevip'
-        resp = self.controller.showVIP(self.req, 'fakelbid', 'fakeid')
-        self.assertTrue(mock_virtualserver_get.called)
-        self.assertTrue(mock_unpack_extra.called)
-        mock_virtualserver_get.assert_called_once_with(self.conf, 'fakeid')
-        mock_unpack_extra.assert_called_once_with('fakevip')
-        self.assertEqual(resp, {'virtualIp': 'packedfakevip'})
-
-    @mock.patch('balancer.core.api.lb_delete_vip', autospec=True)
-    def test_delete_vip(self, mock_lb_delete_vip):
-        resp = self.controller.deleteVIP(self.conf, 'fakelbid', 'fakeid')
-        self.assertTrue(mock_lb_delete_vip.called)
-        mock_lb_delete_vip.assert_called_once_with(self.conf, 'fakelbid',
-                                                   'fakeid')
-        self.code_assert(204, self.controller.deleteVIP)
-
 
 class TestDeviceController(unittest.TestCase):
     def setUp(self):
@@ -377,31 +429,31 @@ class TestRouter(unittest.TestCase):
             ("/loadbalancers/{lb_id}/nodes/{id}/{status}", "PUT",
                 nodes.Controller, "changeNodeStatus"),
             ("/loadbalancers/{lb_id}/healthMonitoring", "GET",
-                healthMonitoring.Controller, "showMonitoring"),
+                probes.Controller, "showMonitoring"),
             ("/loadbalancers/{lb_id}/healthMonitoring/{id}",
-                "GET", healthMonitoring.Controller, "showProbe"),
+                "GET", probes.Controller, "showProbe"),
             ("/loadbalancers/{lb_id}/healthMonitoring", "POST",
-                healthMonitoring.Controller, "addProbe"),
+                probes.Controller, "addProbe"),
             ("/loadbalancers/{lb_id}/healthMonitoring/{id}", "DELETE",
-                healthMonitoring.Controller, "deleteProbe"),
+                probes.Controller, "deleteProbe"),
             ("/loadbalancers/{lb_id}/sessionPersistence", "GET",
-                sessionPersistence.Controller, "showStickiness"),
+                stickies.Controller, "showStickiness"),
             ("/loadbalancers/{lb_id}/sessionPersistence/{id}", "GET",
-                sessionPersistence.Controller, "showSticky"),
+                stickies.Controller, "showSticky"),
             ("/loadbalancers/{lb_id}/sessionPersistence", "POST",
-                sessionPersistence.Controller, "addSticky"),
+                stickies.Controller, "addSticky"),
             ("/loadbalancers/{lb_id}/sessionPersistence/{id}",
-                "DELETE", sessionPersistence.Controller, "deleteSticky"),
+                "DELETE", stickies.Controller, "deleteSticky"),
 
             # Virtual IPs
             ("/loadbalancers/{lb_id}/virtualIps", "GET",
-                virtualIps.Controller, "index"),
+                vips.Controller, "index"),
             ("/loadbalancers/{lb_id}/virtualIps", "POST",
-                virtualIps.Controller, "create"),
+                vips.Controller, "create"),
             ("/loadbalancers/{lb_id}/virtualIps/{id}", "GET",
-                virtualIps.Controller, "show"),
+                vips.Controller, "show"),
             ("/loadbalancers/{lb_id}/virtualIps/{id}", "DELETE",
-                virtualIps.Controller, "delete"),
+                vips.Controller, "delete"),
 
             ("/loadbalancers", "POST", loadbalancers.Controller, "create"),
             ("/devices", "GET", devices.Controller, "index"),

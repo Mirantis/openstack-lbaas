@@ -111,72 +111,72 @@ class Controller(object):
     #    result = core_api.lb_update_node(self.conf, lb_id, id, body)
     #    return {"node": result}
 
-    #def showMonitoring(self, req, id):
-    #    logger.debug("Got showMonitoring request. Request: %s", req)
-    #    result = core_api.lb_show_probes(self.conf, id)
-    #    return result
+    def showMonitoring(self, req, id):
+        logger.debug("Got showMonitoring request. Request: %s", req)
+        result = core_api.lb_show_probes(self.conf, id)
+        return result
 
-    #def showProbe(self, req, lb_id, id):
-    #    logger.debug("Got showProbe request. Request: %s", req)
-    #    probe = db_api.probe_get(self.conf, id)
-    #    return {"healthMonitoring": db_api.unpack_extra(probe)}
+    def showProbe(self, req, lb_id, id):
+        logger.debug("Got showProbe request. Request: %s", req)
+        probe = db_api.probe_get(self.conf, id)
+        return {"healthMonitoring": db_api.unpack_extra(probe)}
 
-    #def addProbe(self, req, id, body):
-    #    logger.debug("Got addProbe request. Request: %s", req)
-    #    probe = core_api.lb_add_probe(self.conf, id,
-    #                                  body['healthMonitoring'])
-    #    logger.debug("Return probe: %r", probe)
-    #    return {'healthMonitoring': probe}
+    def addProbe(self, req, id, body):
+        logger.debug("Got addProbe request. Request: %s", req)
+        probe = core_api.lb_add_probe(self.conf, id,
+                                      body['healthMonitoring'])
+        logger.debug("Return probe: %r", probe)
+        return {'healthMonitoring': probe}
 
-    #@utils.http_success_code(204)
-    #def deleteProbe(self, req, lb_id, id):
-    #    logger.debug("Got deleteProbe request. Request: %s", req)
-    #    core_api.lb_delete_probe(self.conf, lb_id, id)
+    @utils.http_success_code(204)
+    def deleteProbe(self, req, lb_id, id):
+        logger.debug("Got deleteProbe request. Request: %s", req)
+        core_api.lb_delete_probe(self.conf, lb_id, id)
 
-    #def showStickiness(self, req, id):
-    #    logger.debug("Got showStickiness request. Request: %s", req)
-    #    result = core_api.lb_show_sticky(self.conf, id)
-    #    return result
+    def showStickiness(self, req, id):
+        logger.debug("Got showStickiness request. Request: %s", req)
+        result = core_api.lb_show_sticky(self.conf, id)
+        return result
 
-    #def showSticky(self, req, lb_id, id):
-    #    logger.debug("Got showStickiness request. Request: %s", req)
-    #    sticky = db_api.sticky_get(self.conf, id)
-    #    return {"sessionPersistence": db_api.unpack_extra(sticky)}
+    def showSticky(self, req, lb_id, id):
+        logger.debug("Got showStickiness request. Request: %s", req)
+        sticky = db_api.sticky_get(self.conf, id)
+        return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
-    #def addSticky(self, req, id, body):
-    #    logger.debug("Got addSticky request. Request: %s", req)
-    #    sticky = core_api.lb_add_sticky(self.conf, id, body)
-    #    return {"sessionPersistence": db_api.unpack_extra(sticky)}
+    def addSticky(self, req, id, body):
+        logger.debug("Got addSticky request. Request: %s", req)
+        sticky = core_api.lb_add_sticky(self.conf, id, body)
+        return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
-    #@utils.http_success_code(204)
-    #def deleteSticky(self, req, lb_id, id):
-    #    logger.debug("Got deleteSticky request. Request: %s", req)
-    #    core_api.lb_delete_sticky(self.conf, lb_id, id)
+    @utils.http_success_code(204)
+    def deleteSticky(self, req, lb_id, id):
+        logger.debug("Got deleteSticky request. Request: %s", req)
+        core_api.lb_delete_sticky(self.conf, lb_id, id)
 
-    #@utils.http_success_code(200)
-    #def showVIPs(self, req, id):
-    #    logger.debug("Got showVIPs request. Request: %s", req)
-    #    vips = map(db_api.unpack_extra,
-    #               db_api.virtualserver_get_all_by_lb_id(self.conf, id))
-    #    return {"virtualIps": vips}
+    @utils.http_success_code(200)
+    def showVIPs(self, req, id):
+        logger.debug("Got showVIPs request. Request: %s", req)
+        vips = map(db_api.unpack_extra,
+                   db_api.virtualserver_get_all_by_lb_id(self.conf, id))
+        return {"virtualIps": vips}
 
-    #def addVIP(self, req, lb_id, body):
-    #    logger.debug("Called addVIP(), req: %r, lb_id: %s, body: %r",
-    #                 req, lb_id, body)
-    #    vip = core_api.lb_add_vip(self.conf, lb_id, body['virtualIp'])
-    #    return {'virtualIp': vip}
+    def addVIP(self, req, lb_id, body):
+        logger.debug("Called addVIP(), req: %r, lb_id: %s, body: %r",
+                     req, lb_id, body)
+        vip = core_api.lb_add_vip(self.conf, lb_id, body['virtualIp'])
+        return {'virtualIp': vip}
 
-    #def showVIP(self, req, lb_id, id):
-    #    logger.debug("Called showVIP(), req: %r, lb_id: %s, id: %s",
-    #                 req, lb_id, id)
-    #    vip_ref = db_api.virtualserver_get(self.conf, id)
-    #    return {'virtualIp': db_api.unpack_extra(vip_ref)}
+    def showVIP(self, req, lb_id, id):
+        logger.debug("Called showVIP(), req: %r, lb_id: %s, id: %s",
+                     req, lb_id, id)
+        vip_ref = db_api.virtualserver_get(self.conf, id)
+        return {'virtualIp': db_api.unpack_extra(vip_ref)}
 
-    #@utils.http_success_code(204)
-    #def deleteVIP(self, req, lb_id, id):
-    #    logger.debug("Called deleteVIP(), req: %r, lb_id: %s, id: %s",
-    #                 req, lb_id, id)
-    #    core_api.lb_delete_vip(self.conf, lb_id, id)
+    @utils.http_success_code(204)
+    def deleteVIP(self, req, lb_id, id):
+        logger.debug("Called deleteVIP(), req: %r, lb_id: %s, id: %s",
+                     req, lb_id, id)
+        core_api.lb_delete_vip(self.conf, lb_id, id)
 
 
 def create_resource(conf):

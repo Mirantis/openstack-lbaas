@@ -23,42 +23,42 @@ from balancer.api import utils
 from balancer.core import api as core_api
 from balancer.db import api as db_api
 
-logger = logging.getLogger('balancer.api.v1.nodes')
+LOG = logging.getLogger('balancer.api.v1.nodes')
 
 class Controller(object):
 
     def __init__(self, conf):
-        logger.debug("Creating nodes controller with config:"
+        LOG.debug("Creating nodes controller with config:"
                                                 "nodes.py %s", conf)
         self.conf = conf
 
     @utils.http_success_code(202)
     def create(self, req, lb_id, body):
-        logger.debug("Got addNode request. Request: %s", req)
+        LOG.debug("Got addNode request. Request: %s", req)
         return core_api.lb_add_nodes(self.conf, id, body['nodes'])
 
     def index(self, req, lb_id):
-        logger.debug("Got showNodes request. Request: %s", req)
+        LOG.debug("Got showNodes request. Request: %s", req)
         return core_api.lb_show_nodes(self.conf, id)
 
     def show(self, req, lb_id, id):
-        logger.debug("Got showNode request. Request: %s", req)
+        LOG.debug("Got showNode request. Request: %s", req)
         return {'node': db_api.unpack_extra(
             db_api.server_get(self.conf, id, lb_id))}
 
     @utils.http_success_code(204)
     def delete(self, req, lb_id, id):
-        logger.debug("Got deleteNode request. Request: %s", req)
+        LOG.debug("Got deleteNode request. Request: %s", req)
         core_api.lb_delete_node(self.conf, lb_id, id)
 
     def changeNodeStatus(self, req, lb_id, id, status, body):
-        logger.debug("Got changeNodeStatus request. Request: %s", req)
+        LOG.debug("Got changeNodeStatus request. Request: %s", req)
         result = core_api.lb_change_node_status(self.conf, lb_id, id,
                                                          status)
         return {"node": result}
 
     def update(self, req, lb_id, id, body):
-        logger.debug("Got updateNode request. Request: %s", req)
+        LOG.debug("Got updateNode request. Request: %s", req)
         result = core_api.lb_update_node(self.conf, lb_id, id, body)
         return {"node": result}
 

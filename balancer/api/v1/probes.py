@@ -23,40 +23,40 @@ from balancer.api import utils
 from balancer.core import api as core_api
 from balancer.db import api as db_api
 
-logger = logging.getLogger('balancer.api.v1.sessionPersistence')
-
+LOG = logging.getLogger('balancer.api.v1.probes')
 
 class Controller(object):
 
     def __init__(self, conf):
-        logger.debug("Creating sessionPersistence controller with config:"
-                                                "sessionPersistence.py %s", conf)
+        LOG.debug("Creating probes controller with config:"
+                                                "probes.py %s", conf)
         self.conf = conf
 
     @utils.http_success_code(204)
-
-    def showStickiness(self, req, lb_id):
-        logger.debug("Got showStickiness request. Request: %s", req)
-        result = core_api.lb_show_sticky(self.conf, id)
+    def showMonitoring(self, req, lb_id):
+        LOG.debug("Got showMonitoring request. Request: %s", req)
+        result = core_api.lb_show_probes(self.conf, id)
         return result
 
-    def showSticky(self, req, lb_id, id):
-        logger.debug("Got showStickiness request. Request: %s", req)
-        sticky = db_api.sticky_get(self.conf, id)
-        return {"sessionPersistence": db_api.unpack_extra(sticky)}
+    def showProbe(self, req, lb_id, id):
+        LOG.debug("Got showProbe request. Request: %s", req)
+        probe = db_api.probe_get(self.conf, id)
+        return {"healthMonitoring": db_api.unpack_extra(probe)}
 
-    def addSticky(self, req, lb_id, body):
-        logger.debug("Got addSticky request. Request: %s", req)
-        sticky = core_api.lb_add_sticky(self.conf, id, body)
-        return {"sessionPersistence": db_api.unpack_extra(sticky)}
+    def addProbe(self, req, lb_id, body):
+        LOG.debug("Got addProbe request. Request: %s", req)
+        probe = core_api.lb_add_probe(self.conf, lb_id,
+                                      body['healthMonitoring'])
+        LOG.debug("Return probe: %r", probe)
+        return {'healthMonitoring': probe}
 
     @utils.http_success_code(204)
-    def deleteSticky(self, req, lb_id, id):
-        logger.debug("Got deleteSticky request. Request: %s", req)
-        core_api.lb_delete_sticky(self.conf, lb_id, id)
+    def deleteProbe(self, req, lb_id, id):
+        LOG.debug("Got deleteProbe request. Request: %s", req)
+        core_api.lb_delete_probe(self.conf, lb_id, id)
 
 def create_resource(conf):
-    """Session persistence resource factory method"""
+    """Health monitoring resource factory method"""
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = wsgi.JSONResponseSerializer()
     return wsgi.Resource(Controller(conf), deserializer, serializer)

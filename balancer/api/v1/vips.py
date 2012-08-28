@@ -23,42 +23,42 @@ from balancer.api import utils
 from balancer.core import api as core_api
 from balancer.db import api as db_api
 
-logger = logging.getLogger('balancer.api.v1.virtualIps')
+LOG = logging.getLogger('balancer.api.v1.vips')
 
 class Controller(object):
 
     def __init__(self, conf):
-        logger.debug("Creating virtualIps controller with config:"
-                                                "virtualIps.py %s", conf)
+        LOG.debug("Creating virtualIps controller with config:"
+                                                "vips.py %s", conf)
         self.conf = conf
 
     @utils.http_success_code(200)
     def index(self, req, lb_id):
-        logger.debug("Got index request. Request: %s", req)
+        LOG.debug("Got index request. Request: %s", req)
         vips = map(db_api.unpack_extra,
                    db_api.virtualserver_get_all_by_lb_id(self.conf, id))
         return {"virtualIps": vips}
 
     def create(self, req, lb_id, body):
-        logger.debug("Called create(), req: %r, lb_id: %s, body: %r",
+        LOG.debug("Called create(), req: %r, lb_id: %s, body: %r",
                      req, lb_id, body)
         vip = core_api.lb_add_vip(self.conf, lb_id, body['virtualIp'])
         return {'virtualIp': vip}
 
     def show(self, req, lb_id, id):
-        logger.debug("Called show(), req: %r, lb_id: %s, id: %s",
+        LOG.debug("Called show(), req: %r, lb_id: %s, id: %s",
                      req, lb_id, id)
         vip_ref = db_api.virtualserver_get(self.conf, id)
         return {'virtualIp': db_api.unpack_extra(vip_ref)}
 
     @utils.http_success_code(204)
     def delete(self, req, lb_id, id):
-        logger.debug("Called delete(), req: %r, lb_id: %s, id: %s",
+        LOG.debug("Called delete(), req: %r, lb_id: %s, id: %s",
                      req, lb_id, id)
         core_api.lb_delete_vip(self.conf, lb_id, id)
 
 def create_resource(conf):
-    """Loadbalancers resource factory method"""
+    """Virtual IPs resource factory method"""
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = wsgi.JSONResponseSerializer()
     return wsgi.Resource(Controller(conf), deserializer, serializer)
