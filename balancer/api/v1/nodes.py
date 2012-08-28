@@ -23,7 +23,7 @@ from balancer.api import utils
 from balancer.core import api as core_api
 from balancer.db import api as db_api
 
-LOG = logging.getLogger('balancer.api.v1.nodes')
+LOG = logging.getLogger(__name__)
 
 class Controller(object):
 
