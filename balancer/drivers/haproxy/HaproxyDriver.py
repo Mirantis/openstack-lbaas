@@ -126,41 +126,25 @@ class HaproxyDriver(BaseDriver):
                     self.del_lines)
             config_file.add_lines_to_backend_block(haproxy_serverfarm,
                     self.new_lines)
-
+    '''
+        For compatibility with drivers for other devices
+    '''
     def create_real_server(self, rserver):
-        '''
-            For compatibility with drivers for other devices
-        '''
         pass
 
     def delete_real_server(self, rserver):
-        '''
-            For compatibility with drivers for other devices
-        '''
         pass
 
     def create_probe(self, probe):
-        '''
-            For compatibility with drivers for other devices
-        '''
         pass
 
     def delete_probe(self, probe):
-        '''
-            For compatibility with drivers for other devices
-        '''
         pass
 
     def create_stickiness(self, sticky):
-        '''
-            For compatibility with drivers for other devices
-        '''
         pass
 
     def delete_stickiness(self, sticky):
-        '''
-            For compatibility with drivers for other devices
-        '''
         pass
 
     def add_real_server_to_server_farm(self, serverfarm, rserver):
@@ -213,14 +197,6 @@ class HaproxyDriver(BaseDriver):
         config_file = self._get_config()
         config_file.add_frontend(haproxy_virtualserver, haproxy_serverfarm)
 
-        """
-        Do we need validation per 1 action?
-        """
-        """
-        remote.put_config()
-        remote.validate_config()
-        """
-
     def delete_virtual_ip(self, virtualserver):
         logger.debug('[HAPROXY] delete VIP')
         if not bool(virtualserver['id']):
@@ -233,9 +209,9 @@ class HaproxyDriver(BaseDriver):
         #Check ip for using in the another frontend
         if not config_file.find_string_in_the_block('frontend',
             haproxy_virtualserver.bind_address):
-            logger.debug('[HAPROXY] ip %s does not using in the other '
-                                 'frontend, delete it from remote interface' %
-                                  haproxy_virtualserver.bind_address)
+            logger.debug('[HAPROXY] ip %s is not used in any '
+                         'frontend, deleting it from remote interface' %
+                         haproxy_virtualserver.bind_address)
             remote_interface = RemoteInterface(self.device_ref,
                                                haproxy_virtualserver)
             remote_interface.del_ip()
@@ -318,18 +294,24 @@ class HaproxyDriver(BaseDriver):
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['id']
 
+        config_file = self._get_config()
+        config_file.delete_block(haproxy_serverfarm)
+
     """
-       Putting config back
+       Putting config back on device
     """
     def finalize_config(self):
         if not self.config_was_deployed:
+            logger.debug("[HAPROXY] Deploying configuration")
             remote = RemoteConfig(self.device_ref, self.localpath,
                                   self.remotepath, self.configfilename)
             remote.put_config()
-            self.config_was_deployed = True
-            logger.debug("DEPLOYING CONFIG")
-        else:
-            logger.debug("NOT DEPLOYING CONFIG")
+            if remote.validate_config():
+                self.config_was_deployed = True
+            else:
+                logger.error('[HAPROXY] Configurations has failed validation')
+                return False
+        return True
 
 
 class HaproxyConfigBlock:

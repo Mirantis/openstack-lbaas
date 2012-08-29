@@ -1,0 +1,15 @@
+{
+ "name": "HP001",
+ "type": "HAProxy",
+ "version": "1",
+ "supports_ipv6": 0,
+ "requires_vip_ip": 1,
+ "has_acl": 1,
+ "supports_vlan": 1,
+ "ip": "192.168.19.235",
+ "port": "22",
+ "user": "eugene",
+ "password": "test",
+ "vip_vlan": "75",
+ "capabilities": {"algorithms":"RoundRobin"}
+}

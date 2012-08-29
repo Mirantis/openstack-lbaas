@@ -1,0 +1,428 @@
+diff --git a/balancer/core/commands.py b/balancer/core/commands.py
+old mode 100644
+new mode 100755
+index b6931f3..ef9849f
+--- a/balancer/core/commands.py
++++ b/balancer/core/commands.py
+@@ -97,6 +97,11 @@ def ignore_exceptions(func):
+     return __inner
+ 
+ 
++
++def finalize_configration(ctx):
++    ctx.device.finalize_config()
++
++
+ @with_rollback
+ def create_rserver(ctx, rs):
+     try:
+@@ -106,11 +111,13 @@ def create_rserver(ctx, rs):
+         LOG.debug("RServer parent_id: %s", rs['parent_id'])
+         if not rs['parent_id']:
+             ctx.device.create_real_server(rs)
++            ctx.device.finalize_config()
+             rs['deployed'] = 'True'
+             db_api.server_update(ctx.conf, rs['id'], rs)
+         yield
+     except Exception:
+         ctx.device.delete_real_server(rs)
++        ctx.device.finalize_config()
+         rs['deployed'] = 'False'
+         db_api.server_update(ctx.conf, rs['id'], rs)
+         raise
+@@ -131,10 +138,11 @@ def delete_rserver(ctx, rs):
+             db_api.server_update(ctx.conf, rss[-1]['id'],
+                                      {'parent_id': '', 'deployed': 'True'})
+             ctx.device.create_real_server(rss[-1])
+-
++            ctx.device.finalize_config()
+ 
+ def create_sticky(ctx, sticky):
+     ctx.device.create_stickiness(sticky)
++    ctx.device.finalize_config()
+     sticky['deployed'] = 'True'
+     db_api.sticky_update(ctx.conf, sticky['id'], sticky)
+ 
+@@ -142,6 +150,7 @@ def create_sticky(ctx, sticky):
+ @ignore_exceptions
+ def delete_sticky(ctx, sticky):
+     ctx.device.delete_stickiness(sticky)
++    ctx.device.finalize_config()
+     sticky['deployed'] = 'False'
+     db_api.sticky_update(ctx.conf, sticky['id'], sticky)
+ 
+@@ -149,6 +158,7 @@ def delete_sticky(ctx, sticky):
+ @ignore_exceptions
+ def delete_server_farm(ctx, sf):
+     ctx.device.delete_server_farm(sf)
++    ctx.device.finalize_config()
+     sf['deployed'] = 'False'
+     db_api.serverfarm_update(ctx.conf, sf['id'], sf)
+ 
+@@ -158,10 +168,12 @@ def create_server_farm(ctx, sf):
+     try:
+         pr = db_api.predictor_get_all_by_sf_id(ctx.conf, sf['id'])
+         ctx.device.create_server_farm(sf, pr)
++        ctx.device.finalize_config()
+         db_api.serverfarm_update(ctx.conf, sf['id'], {'deployed': True})
+         yield
+     except Exception:
+         delete_server_farm(ctx, sf)
++        ctx.device.finalize_config()
+         raise
+ 
+ 
+@@ -172,20 +184,23 @@ def add_rserver_to_server_farm(ctx, server_farm, rserver):
+             #Nasty hack. We need to think how todo this more elegant
+             rserver['name'] = rserver['parent_id']
+         ctx.device.add_real_server_to_server_farm(server_farm, rserver)
++        ctx.device.finalize_config()
+         yield
+     except Exception:
+         ctx.device.delete_real_server_from_server_farm(server_farm, rserver)
++        ctx.device.finalize_config()
+         raise
+ 
+ 
+ @ignore_exceptions
+ def delete_rserver_from_server_farm(ctx, server_farm, rserver):
+     ctx.device.delete_real_server_from_server_farm(server_farm, rserver)
+-
++    ctx.device.finalize_config()
+ 
+ @ignore_exceptions
+ def delete_probe(ctx, probe):
+     ctx.device.delete_probe(probe)
++    ctx.device.finalize_config()
+     probe['deployed'] = 'False'
+     db_api.probe_update(ctx.conf, probe['id'], probe)
+ 
+@@ -194,6 +209,7 @@ def delete_probe(ctx, probe):
+ def create_probe(ctx, probe):
+     try:
+         ctx.device.create_probe(probe)
++        ctx.device.finalize_config()
+         db_api.probe_update(ctx.conf, probe['id'], {'deployed': True})
+         yield
+     except Exception:
+@@ -205,36 +221,39 @@ def create_probe(ctx, probe):
+ def add_probe_to_server_farm(ctx, server_farm, probe):
+     try:
+         ctx.device.add_probe_to_server_farm(server_farm, probe)
++        ctx.device.finalize_config()
+         yield
+     except Exception:
+         ctx.device.delete_probe_from_server_farm(server_farm, probe)
+         raise
+-
++    
+ 
+ @ignore_exceptions
+ def remove_probe_from_server_farm(ctx, server_farm, probe):
+     ctx.device.delete_probe_from_server_farm(server_farm, probe)
+-
++    ctx.device.finalize_config()
+ 
+ def activate_rserver(ctx, server_farm, rserver):
+     ctx.device.activate_real_server(server_farm, rserver)
+-
++    ctx.device.finalize_config()
+ 
+ def suspend_rserver(ctx, server_farm, rserver):
+     ctx.device.suspend_real_server(server_farm, rserver)
+-
++    ctx.device.finalize_config()
+ 
+ @ignore_exceptions
+ def delete_vip(ctx, vip):
+     ctx.device.delete_virtual_ip(vip)
++    ctx.device.finalize_config()
+     vip['deployed'] = 'False'
+     db_api.virtualserver_update(ctx.conf, vip['id'], vip)
+-
++    
+ 
+ @with_rollback
+ def create_vip(ctx, vip, server_farm):
+     try:
+         ctx.device.create_virtual_ip(vip, server_farm)
++        ctx.device.finalize_config()
+         db_api.virtualserver_update(ctx.conf, vip['id'], {'deployed': True})
+         yield
+     except Exception:
+@@ -273,6 +292,7 @@ def create_loadbalancer(ctx, balancer, nodes, probes, vips):
+         vip_ref = db_api.virtualserver_create(ctx.conf, vip_values)
+         create_vip(ctx, vip_ref, sf)
+ 
++    ctx.device.finalize_config()
+ 
+ def delete_loadbalancer(ctx, lb):
+     sf = db_api.serverfarm_get_all_by_lb_id(ctx.conf, lb['id'])[0]
+@@ -291,6 +311,8 @@ def delete_loadbalancer(ctx, lb):
+     for sticky in stickies:
+         delete_sticky(ctx, sticky)
+     delete_server_farm(ctx, sf)
++    finalize_configration(ctx)
++
+     db_api.predictor_destroy_by_sf_id(ctx.conf, sf['id'])
+     db_api.server_destroy_by_sf_id(ctx.conf, sf['id'])
+     db_api.probe_destroy_by_sf_id(ctx.conf, sf['id'])
+@@ -298,38 +320,39 @@ def delete_loadbalancer(ctx, lb):
+     db_api.sticky_destroy_by_sf_id(ctx.conf, sf['id'])
+     db_api.serverfarm_destroy(ctx.conf, sf['id'])
+     db_api.loadbalancer_destroy(ctx.conf, lb['id'])
+-
++    
+ 
+ def update_loadbalancer(ctx, old_bal_ref,  new_bal_ref):
+     if old_bal_ref['algorithm'] != new_bal_ref['algorithm']:
+         sf_ref = db_api.serverfarm_get_all_by_lb_id(ctx.conf,
+                                                     new_bal_ref['id'])[0]
+         create_server_farm(ctx, sf_ref)
+-
++    finalize_configration(ctx)
+ 
+ def add_node_to_loadbalancer(ctx, sf, rserver):
+     create_rserver(ctx, rserver)
+     add_rserver_to_server_farm(ctx, sf, rserver)
+-
++    finalize_configration(ctx)
+ 
+ def remove_node_from_loadbalancer(ctx, sf, rserver):
+     delete_rserver_from_server_farm(ctx, sf, rserver)
+     delete_rserver(ctx, rserver)
+-
++    finalize_configration(ctx)
+ 
+ def add_probe_to_loadbalancer(ctx, sf_ref, probe_ref):
+     create_probe(ctx, probe_ref)
+     add_probe_to_server_farm(ctx, sf_ref, probe_ref)
+-
++    finalize_configration(ctx)
+ 
+ def makeDeleteProbeFromLBChain(ctx, balancer, probe):
+     remove_probe_from_server_farm(ctx, balancer.sf, probe)
+     delete_probe(ctx, probe)
+-
++    finalize_configration(ctx)
+ 
+ def add_sticky_to_loadbalancer(ctx, balancer, sticky):
+     create_sticky(ctx, sticky)
+-
++    finalize_configration(ctx)
+ 
+ def remove_sticky_from_loadbalancer(ctx, balancer, sticky):
+     delete_sticky(ctx, sticky)
++    finalize_configration(ctx)
+\ No newline at end of file
+diff --git a/balancer/drivers/cisco_ace/ace_driver.py b/balancer/drivers/cisco_ace/ace_driver.py
+old mode 100644
+new mode 100755
+index 48c8bf3..41d0bcc
+--- a/balancer/drivers/cisco_ace/ace_driver.py
++++ b/balancer/drivers/cisco_ace/ace_driver.py
+@@ -732,3 +732,7 @@ class AceDriver(BaseDriver):
+         cmd = "no access-list vip-acl extended permit ip any host " + \
+               vip['address']
+         self.deployConfig(cmd)
++
++
++    def finalize_config(self):
++        pass
+\ No newline at end of file
+diff --git a/balancer/drivers/haproxy/HaproxyDriver.py b/balancer/drivers/haproxy/HaproxyDriver.py
+old mode 100644
+new mode 100755
+index 98450ef..9a99e11
+--- a/balancer/drivers/haproxy/HaproxyDriver.py
++++ b/balancer/drivers/haproxy/HaproxyDriver.py
+@@ -54,6 +54,16 @@ class HaproxyDriver(BaseDriver):
+             self.haproxy_socket = '/tmp/haproxy.sock'
+         else:
+             self.haproxy_socket = device_extra['socket']
++        self.config_file = None
++
++    def _get_config(self):
++        if self.config_file == None:
++            self.config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
++                                            self.configfilename))
++            remote = RemoteConfig(self.device_ref, self.localpath,
++                                  self.remotepath, self.configfilename)
++            remote.get_config()
++        return self.config_file
+ 
+     def add_probe_to_server_farm(self, serverfarm, probe):
+         '''
+@@ -69,11 +79,8 @@ class HaproxyDriver(BaseDriver):
+         haproxy_serverfarm.name = serverfarm['id']
+         self.del_lines = ['option httpchk', 'option ssl-hello-chk',
+                                                         'http-check expect']
+-        config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
+-                                        self.configfilename))
+-        remote = RemoteConfig(self.device_ref, self.localpath,
+-                              self.remotepath, self.configfilename)
+-        remote.get_config()
++        config_file = _get_config()
++
+         if type_of_operation == 'del':
+             config_file.del_lines_from_backend_block(haproxy_serverfarm,
+                                                                 self.del_lines)
+@@ -116,7 +123,7 @@ class HaproxyDriver(BaseDriver):
+                     self.del_lines)
+             config_file.add_lines_to_backend_block(haproxy_serverfarm,
+                     self.new_lines)
+-        remote.put_config()
++        
+ 
+     def create_real_server(self, rserver):
+         '''
+@@ -164,17 +171,14 @@ class HaproxyDriver(BaseDriver):
+         haproxy_rserver.port = rserver.get('port') or 0
+         haproxy_rserver.maxconn = rserver.get('maxCon') or 10000
+         #Modify remote config file, check and restart remote haproxy
+-        config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
+-                                        self.configfilename))
+-        remote = RemoteConfig(self.device_ref, self.localpath,
+-                              self.remotepath, self.configfilename)
+         logger.debug('[HAPROXY] Creating rserver %s in the'
+                      'backend block %s' %
+                      (haproxy_rserver.name, haproxy_serverfarm.name))
+-        remote.get_config()
++
++        config_file = _get_config()
+         config_file.add_rserver_to_backend_block(haproxy_serverfarm,
+                                              haproxy_rserver)
+-        remote.put_config()
++        
+ 
+     def delete_real_server_from_server_farm(self, serverfarm, rserver):
+         haproxy_serverfarm = HaproxyBackend()
+@@ -182,17 +186,13 @@ class HaproxyDriver(BaseDriver):
+         haproxy_rserver = HaproxyRserver()
+         haproxy_rserver.name = rserver['id']
+         #Modify remote config file, check and restart remote haproxy
+-        config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
+-                                                self.configfilename))
+-        remote = RemoteConfig(self.device_ref, self.localpath,
+-                              self.remotepath, self.configfilename)
+         logger.debug('[HAPROXY] Deleting rserver %s in the'
+                      'backend block %s' %
+                      (haproxy_rserver.name, haproxy_serverfarm.name))
+-        remote.get_config()
++        config_file = _get_config()
+         config_file.del_rserver_from_backend_block(haproxy_serverfarm,
+                                                haproxy_rserver)
+-        remote.put_config()
++
+ 
+     def create_virtual_ip(self, virtualserver, serverfarm):
+         if not bool(virtualserver['id']):
+@@ -210,14 +210,16 @@ class HaproxyDriver(BaseDriver):
+                                            haproxy_virtualserver)
+         remote_interface.add_ip()
+         #Modify remote config file, check and restart remote haproxy
+-        config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
+-                                        self.configfilename))
+-        remote = RemoteConfig(self.device_ref, self.localpath,
+-                              self.remotepath, self.configfilename)
+-        remote.get_config()
++        config_file = _get_config()
+         config_file.add_frontend(haproxy_virtualserver, haproxy_serverfarm)
++
++        """
++        Do we need validation per 1 action?
++        """
++        """
+         remote.put_config()
+         remote.validate_config()
++        """
+ 
+     def delete_virtual_ip(self, virtualserver):
+         logger.debug('[HAPROXY] delete VIP')
+@@ -227,10 +229,7 @@ class HaproxyDriver(BaseDriver):
+         haproxy_virtualserver = HaproxyFronted()
+         haproxy_virtualserver.name = virtualserver['id']
+         haproxy_virtualserver.bind_address = virtualserver['address']
+-        config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
+-                                        self.configfilename))
+-        remote = RemoteConfig(self.device_ref, self.localpath,
+-                              self.remotepath, self.configfilename)
++        config_file = _get_config()
+         #Check ip for using in the another frontend
+         if not config_file.find_string_in_the_block('frontend',
+             haproxy_virtualserver.bind_address):
+@@ -240,9 +239,8 @@ class HaproxyDriver(BaseDriver):
+             remote_interface = RemoteInterface(self.device_ref,
+                                                haproxy_virtualserver)
+             remote_interface.del_ip()
+-        remote.get_config()
+         config_file.delete_block(haproxy_virtualserver)
+-        remote.put_config()
++
+ 
+     def get_statistics(self, serverfarm, rserver):
+         haproxy_rserver = HaproxyRserver()
+@@ -281,14 +279,11 @@ class HaproxyDriver(BaseDriver):
+         haproxy_rserver.name = rserver['id']
+         haproxy_serverfarm = HaproxyBackend()
+         haproxy_serverfarm.name = serverfarm['id']
+-        config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
+-                                        self.configfilename))
+-        remote_config = RemoteConfig(self.device_ref, self.localpath,
+-                                     self.remotepath, self.configfilename)
++        config_file = _get_config()
++
+         remote_socket = RemoteSocketOperation(self.device_ref,
+                                         haproxy_serverfarm, haproxy_rserver,
+                                         self.interface, self.haproxy_socket)
+-        remote_config.get_config()
+         if type_of_operation == 'suspend':
+             config_file.enable_disable_reserver_in_backend_block(
+                              haproxy_serverfarm, haproxy_rserver, 'disable')
+@@ -297,7 +292,7 @@ class HaproxyDriver(BaseDriver):
+             config_file.enable_disable_reserver_in_backend_block(
+                              haproxy_serverfarm, haproxy_rserver, 'enable')
+             remote_socket.activate_server()
+-        remote_config.put_config()
++        
+ 
+     def create_server_farm(self, serverfarm, predictor):
+         if not bool(serverfarm['id']):
+@@ -316,13 +311,10 @@ class HaproxyDriver(BaseDriver):
+             elif p.get('type') == 'HashURL':
+                 haproxy_serverfarm.balance = 'uri'
+ 
+-        config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
+-                                                self.configfilename))
+-        remote = RemoteConfig(self.device_ref, self.localpath,
+-                              self.remotepath, self.configfilename)
+-        remote.get_config()
++        config_file = _get_config()
++        
+         config_file.add_backend(haproxy_serverfarm)
+-        remote.put_config()
++        
+ 
+     def delete_server_farm(self, serverfarm):
+         if not bool(serverfarm['id']):
+@@ -330,12 +322,16 @@ class HaproxyDriver(BaseDriver):
+             return 'SERVER FARM NAME ERROR'
+         haproxy_serverfarm = HaproxyBackend()
+         haproxy_serverfarm.name = serverfarm['id']
+-        config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
+-                                                self.configfilename))
++        
++
++    """
++       Putting config back
++    """
++    def finalize_config(self):
++        
+         remote = RemoteConfig(self.device_ref, self.localpath,
+                               self.remotepath, self.configfilename)
+-        remote.get_config()
+-        config_file.delete_block(haproxy_serverfarm)
++        
+         remote.put_config()
+ 
+ 

@@ -120,6 +120,7 @@ class BaseDriver(object):
     def finalize_config(self):
         pass
 
+
 def is_sequence(arg):
     return (not hasattr(arg, "strip") and
             hasattr(arg, "__getitem__") or
