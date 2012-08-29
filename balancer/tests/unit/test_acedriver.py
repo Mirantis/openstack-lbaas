@@ -266,7 +266,20 @@ probe_vm['extra'] = {'description': 'Created by test. Probe type VM', \
                      'minMemBurstThresh': '97'}
 
 a = {'type': 'roudrobin'}
+a['extra'] = {}
 predictor = [a, ]
+
+a = {'type': 'leastbandwidth'}
+a['extra'] = {'accessTime': '10'}
+predictor_bandwidth = [a, ]
+
+a = {'type': 'leastconnections'}
+a['extra'] = {'slowStartDur': '10'}
+predictor_connections = [a, ]
+
+a = {'type': 'leastloaded'}
+a['extra'] = {'snmpProbe': 'unitTest-snmpProbe'}
+predictor_loaded = [a, ]
 
 sf_host = {'type': 'Host', 'id': 'LB_test_sfarm01'}
 sf_host['extra'] = {'description': 'Created by test. Sfarm type Host', \
@@ -274,7 +287,8 @@ sf_host['extra'] = {'description': 'Created by test. Sfarm type Host', \
                     'inbandHealthCheck': 'Remove', \
                     'connFailureThreshCount': '5', 'resetTimeout': '200', \
                     'resumeService': '40', 'transparent': 'True', \
-                    'dynamicWorkloadScale': 'Local', \
+                    'dynamicWorkloadScale': 'burst', \
+                    'VMprobe': 'AAA-utit-test',
                     'partialThreshPercentage': '11', 'backInservice': '22'}
 
 sf_redirect = {'type': 'Redirect', 'id': 'LB_test_sfarm02'}
@@ -382,16 +396,16 @@ vip_test['extra'] = {'proto': 'TCP', 'appProto': 'RTSP', \
 
 class Ace_DriverTestCase(unittest.TestCase):
     def test_01a_createRServer_typeHost(self):
-        print driver.create_real_server(rs_host)
+        driver.create_real_server(rs_host)
 
     def test_01b_createRServer_typeRedirect(self):
-        print driver.create_real_server(rs_redirect)
+        driver.create_real_server(rs_redirect)
 
     def test_01c_createRServer_typeHost(self):
-        print driver.create_real_server(rs_test3)
+        driver.create_real_server(rs_test3)
 
     def test_01d_createRServer_typeRedirect(self):
-        print driver.create_real_server(rs_test4)
+        driver.create_real_server(rs_test4)
 
     def test_02a_createDNSProbe(self):
         driver.create_probe(probe_dns)
@@ -458,6 +472,15 @@ class Ace_DriverTestCase(unittest.TestCase):
 
     def test_03b_createServerFarm_typeRedirect(self):
         driver.create_server_farm(sf_redirect, predictor)
+
+    def test_03c_createServerFarm_with_predictor_leastbandwidth(self):
+        driver.create_server_farm(sf_host, predictor_bandwidth)
+
+    def test_03d_createServerFarm_with_predictor_leastconnections(self):
+        driver.create_server_farm(sf_redirect, predictor_connections)
+
+    def test_03e_createServerFarm_with_predictor_leastloaded(self):
+        driver.create_server_farm(sf_redirect, predictor_loaded)
 
     def test_04_addRServerToSF(self):
         driver.add_real_server_to_server_farm(sf_host,  rs_host)

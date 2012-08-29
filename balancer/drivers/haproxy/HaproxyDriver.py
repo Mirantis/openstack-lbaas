@@ -33,22 +33,22 @@ class HaproxyDriver(BaseDriver):
                 (device_extra['local_conf_dir'] == "None")):
             self.localpath = '/tmp/'
         else:
-            self.localpath = device_extra['localpath']
+            self.localpath = device_extra.get('localpath')
         if ((device_extra.get('remote_conf_dir') is None) or
                 (device_extra['remote_conf_dir'] == "None")):
             self.remotepath = '/etc/haproxy/'
         else:
-            self.remotepath = device_extra['remote_conf_dir']
+            self.remotepath = device_extra.get('remote_conf_dir')
         if ((device_extra.get('remote_conf_file') is None) or
                 (device_extra['remote_conf_file'] == "None")):
             self.configfilename = 'haproxy.cfg'
         else:
-            self.configfilename = device_extra['remote_conf_file']
+            self.configfilename = device_extra.get('remote_conf_file')
         if ((device_extra.get('interface') is None) or
                 (device_extra['interface'] == "None")):
             self.interface = 'eth0'
         else:
-            self.interface = device_ref['interface']
+            self.interface = device_extra.get('interface')
         if ((device_extra.get('socket') is None) or
                 (device_extra['socket'] == "None")):
             self.haproxy_socket = '/tmp/haproxy.sock'
@@ -272,8 +272,7 @@ class HaproxyDriver(BaseDriver):
     def activate_real_server(self, serverfarm, rserver):
         self.operationWithRServer(serverfarm, rserver, 'activate')
 
-    def operationWithRServer(self, serverfarm, rserver,
-                             type_of_operation):
+    def operationWithRServer(self, serverfarm, rserver, type_of_operation):
         haproxy_rserver = HaproxyRserver()
         haproxy_rserver.name = rserver['id']
         haproxy_serverfarm = HaproxyBackend()
@@ -300,13 +299,13 @@ class HaproxyDriver(BaseDriver):
         haproxy_serverfarm.name = serverfarm['id']
 
         for p in predictor:
-            if p.get('type') == 'RoundRobin':
+            if p.get('type').lower() == 'roundrobin':
                 haproxy_serverfarm.balance = 'roundrobin'
-            elif p.get('type') == 'LeastConnections':
+            elif p.get('type').lower() == 'leastconnections':
                 haproxy_serverfarm.balance = 'leastconn'
-            elif p.get('type') == 'HashAddrPredictor':
+            elif p.get('type').lower() == 'hashaddr':
                 haproxy_serverfarm.balance = 'source'
-            elif p.get('type') == 'HashURL':
+            elif p.get('type').lower() == 'hashurl':
                 haproxy_serverfarm.balance = 'uri'
 
         config_file = self._get_config()
