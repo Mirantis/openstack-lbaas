@@ -25,6 +25,7 @@ from balancer.db import api as db_api
 
 LOG = logging.getLogger(__name__)
 
+
 class Controller(object):
 
     def __init__(self, conf):
@@ -62,9 +63,9 @@ class Controller(object):
         result = core_api.lb_update_node(self.conf, lb_id, id, body)
         return {"node": result}
 
+
 def create_resource(conf):
     """Nodes resource factory method"""
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = wsgi.JSONResponseSerializer()
     return wsgi.Resource(Controller(conf), deserializer, serializer)
-

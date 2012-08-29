@@ -92,6 +92,7 @@ class TestLoadBalancersController(unittest.TestCase):
         mock_update_lb.assert_called_once_with(self.conf, 1, {})
         self.assertEquals(resp, {"loadbalancer": {"id": 1}})
 
+
 class TestNodesController(unittest.TestCase):
     def setUp(self):
         super(TestNodesController, self).setUp()
@@ -169,6 +170,7 @@ class TestNodesController(unittest.TestCase):
         self.assertFalse(hasattr(self.controller.update, "wsgi_code"),
             "has not redifined HTTP status code")
         self.assertEqual(resp, {"node": {'nodeID': '1'}})
+
 
 
 class TestVIPsController(unittest.TestCase):
@@ -252,19 +254,19 @@ class TestProbesController(unittest.TestCase):
                 "incorrect HTTP status code")
 
     @mock.patch('balancer.core.api.lb_show_probes', autospec=True)
-    def test_show_monitoring(self, mock_lb_show_probes):
+    def test_index(self, mock_lb_show_probes):
         mock_lb_show_probes.return_value = 'foo'
-        resp = self.controller.showMonitoring(self.req, 1)
+        resp = self.controller.index(self.req, 1)
         self.assertTrue(mock_lb_show_probes.called)
         mock_lb_show_probes.assert_called_once_with(self.conf, 1)
         self.assertEqual(resp, 'foo')
 
     @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.db.api.probe_get', autospec=True)
-    def test_show_probe_by_id(self, mock_lb_show_probe_by_id, mock_extra):
+    def test_show(self, mock_lb_show_probe_by_id):
         mock_lb_show_probe_by_id.return_value = ['foo']
         mock_extra.return_value = 'foo'
-        resp = self.controller.showProbe(self.req, 1, 1)
+        resp = self.controller.show(self.req, 1, 1)
         self.assertTrue(mock_lb_show_probe_by_id.called)
         self.assertTrue(mock_extra.called)
         mock_lb_show_probe_by_id.assert_called_once_with(self.conf, 1)
@@ -272,22 +274,23 @@ class TestProbesController(unittest.TestCase):
         self.assertEqual(resp, {'healthMonitoring': 'foo'})
 
     @mock.patch('balancer.core.api.lb_add_probe', autospec=True)
-    def test_add_probe(self, mock_lb_add_probe):
+    def test_create(self, mock_lb_add_probe):
         mock_lb_add_probe.return_value = {'id': '2'}
         body = {'healthMonitoring': {'probe': 'foo'}}
-        resp = self.controller.addProbe(self.req, '1', body)
+        resp = self.controller.create(self.req, '1', body)
         self.assertTrue(mock_lb_add_probe.called)
         mock_lb_add_probe.assert_called_once_with(self.conf, '1',
                                                   {'probe': 'foo'})
         self.assertEqual(resp, {'healthMonitoring': {'id': '2'}})
 
     @mock.patch('balancer.core.api.lb_delete_probe', autospec=True)
-    def test_delete_probe(self, mock_lb_delete_probe):
-        resp = self.controller.deleteProbe(self.req, 1, 1)
+    def test_delete(self, mock_lb_delete_probe):
+        resp = self.controller.delete(self.req, 1, 1)
         self.assertTrue(mock_lb_delete_probe.called)
         mock_lb_delete_probe.assert_called_once_with(self.conf, 1, 1)
-        self.code_assert(204, self.controller.deleteProbe)
         self.assertEqual(resp, None)
+        self.code_assert(204, self.controller.delete)
+
 
 class TestStickiesController(unittest.TestCase):
     def setUp(self):
@@ -303,18 +306,18 @@ class TestStickiesController(unittest.TestCase):
                 "incorrect HTTP status code")
 
     @mock.patch('balancer.core.api.lb_show_sticky', autospec=True)
-    def test_show_stickiness(self, mock_lb_show_sticky):
+    def test_index(self, mock_lb_show_sticky):
         mock_lb_show_sticky.return_value = 'foo'
-        resp = self.controller.showStickiness(self.req, 1)
+        resp = self.controller.index(self.req, 1)
         self.assertTrue(mock_lb_show_sticky.called)
         mock_lb_show_sticky.assert_called_once_with(self.conf, 1)
         self.assertEqual(resp, 'foo')
 
     @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.db.api.sticky_get', autospec=True)
-    def test_show_sticky(self, mock_func, mock_extra):
+    def test_show(self, mock_func):
         mock_extra.return_value = 'foo'
-        resp = self.controller.showSticky(self.req, 1, 1)
+        resp = self.controller.show(self.req, 1, 1)
         self.assertTrue(mock_func.called)
         self.assertTrue(mock_extra.called)
         mock_func.assert_called_once_with(self.conf, 1)
@@ -323,10 +326,10 @@ class TestStickiesController(unittest.TestCase):
 
     @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.core.api.lb_add_sticky', autospec=True)
-    def test_add_sticky(self, mock_lb_add_sticky, mock_unpack):
+    def test_create(self, mock_lb_add_sticky, mock_unpack):
         mock_unpack.return_value = '1'
         mock_lb_add_sticky.return_value = ['1']
-        resp = self.controller.addSticky(self.req, 1,
+        resp = self.controller.create(self.req, 1,
                 {'sessionPersistence': 'foo'})
         self.assertTrue(mock_lb_add_sticky.called)
         mock_lb_add_sticky.assert_called_once_with(self.conf, 1,
@@ -335,12 +338,13 @@ class TestStickiesController(unittest.TestCase):
         self.assertEqual(resp, {"sessionPersistence": "1"})
 
     @mock.patch('balancer.core.api.lb_delete_sticky', autospec=True)
-    def test_delete_sticky(self, mock_lb_delete_sticky):
-        resp = self.controller.deleteSticky(self.req, 1, 1)
+    def test_delete(self, mock_lb_delete_sticky):
+        resp = self.controller.delete(self.req, 1, 1)
         self.assertTrue(mock_lb_delete_sticky.called)
         mock_lb_delete_sticky.assert_called_once_with(self.conf, 1, 1)
-        self.code_assert(204, self.controller.deleteSticky)
         self.assertEqual(resp, None)
+        self.code_assert(204, self.controller.delete)
+
 
 class TestDeviceController(unittest.TestCase):
     def setUp(self):
@@ -429,21 +433,21 @@ class TestRouter(unittest.TestCase):
             ("/loadbalancers/{lb_id}/nodes/{id}/{status}", "PUT",
                 nodes.Controller, "changeNodeStatus"),
             ("/loadbalancers/{lb_id}/healthMonitoring", "GET",
-                probes.Controller, "showMonitoring"),
+                probes.Controller, "index"),
             ("/loadbalancers/{lb_id}/healthMonitoring/{id}",
-                "GET", probes.Controller, "showProbe"),
+                "GET", probes.Controller, "show"),
             ("/loadbalancers/{lb_id}/healthMonitoring", "POST",
-                probes.Controller, "addProbe"),
+                probes.Controller, "create"),
             ("/loadbalancers/{lb_id}/healthMonitoring/{id}", "DELETE",
-                probes.Controller, "deleteProbe"),
+                probes.Controller, "delete"),
             ("/loadbalancers/{lb_id}/sessionPersistence", "GET",
-                stickies.Controller, "showStickiness"),
+                stickies.Controller, "index"),
             ("/loadbalancers/{lb_id}/sessionPersistence/{id}", "GET",
-                stickies.Controller, "showSticky"),
+                stickies.Controller, "show"),
             ("/loadbalancers/{lb_id}/sessionPersistence", "POST",
-                stickies.Controller, "addSticky"),
+                stickies.Controller, "create"),
             ("/loadbalancers/{lb_id}/sessionPersistence/{id}",
-                "DELETE", stickies.Controller, "deleteSticky"),
+                "DELETE", stickies.Controller, "delete"),
 
             # Virtual IPs
             ("/loadbalancers/{lb_id}/virtualIps", "GET",
@@ -472,7 +476,6 @@ class TestRouter(unittest.TestCase):
             self.assertTrue(isinstance(controller0.controller,
                 controller))
             self.assertEquals(action0, action)
-            #LOG.debug('controller is %s with vars=%s', controller, vars(controller))
             mok = mock.mocksignature(getattr(controller, action))
             if method == "POST" or method == "PUT":
                 m['body'] = {}

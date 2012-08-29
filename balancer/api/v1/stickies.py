@@ -34,26 +34,26 @@ class Controller(object):
         self.conf = conf
 
     @utils.http_success_code(204)
-
-    def showStickiness(self, req, lb_id):
+    def index(self, req, lb_id):
         LOG.debug("Got showStickiness request. Request: %s", req)
         result = core_api.lb_show_sticky(self.conf, id)
         return result
 
-    def showSticky(self, req, lb_id, id):
+    def show(self, req, lb_id, id):
         LOG.debug("Got showStickiness request. Request: %s", req)
         sticky = db_api.sticky_get(self.conf, id)
         return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
-    def addSticky(self, req, lb_id, body):
+    def create(self, req, lb_id, body):
         LOG.debug("Got addSticky request. Request: %s", req)
         sticky = core_api.lb_add_sticky(self.conf, id, body)
         return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
     @utils.http_success_code(204)
-    def deleteSticky(self, req, lb_id, id):
+    def delete(self, req, lb_id, id):
         LOG.debug("Got deleteSticky request. Request: %s", req)
         core_api.lb_delete_sticky(self.conf, lb_id, id)
+
 
 def create_resource(conf):
     """Session persistence resource factory method"""

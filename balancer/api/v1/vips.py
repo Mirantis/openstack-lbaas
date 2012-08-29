@@ -25,6 +25,7 @@ from balancer.db import api as db_api
 
 LOG = logging.getLogger(__name__)
 
+
 class Controller(object):
 
     def __init__(self, conf):
@@ -57,9 +58,9 @@ class Controller(object):
                      req, lb_id, id)
         core_api.lb_delete_vip(self.conf, lb_id, id)
 
+
 def create_resource(conf):
     """Virtual IPs resource factory method"""
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = wsgi.JSONResponseSerializer()
     return wsgi.Resource(Controller(conf), deserializer, serializer)
-

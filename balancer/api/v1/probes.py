@@ -25,6 +25,7 @@ from balancer.db import api as db_api
 
 LOG = logging.getLogger(__name__)
 
+
 class Controller(object):
 
     def __init__(self, conf):
@@ -33,17 +34,17 @@ class Controller(object):
         self.conf = conf
 
     @utils.http_success_code(204)
-    def showMonitoring(self, req, lb_id):
+    def index(self, req, lb_id):
         LOG.debug("Got showMonitoring request. Request: %s", req)
         result = core_api.lb_show_probes(self.conf, id)
         return result
 
-    def showProbe(self, req, lb_id, id):
+    def show(self, req, lb_id, id):
         LOG.debug("Got showProbe request. Request: %s", req)
         probe = db_api.probe_get(self.conf, id)
         return {"healthMonitoring": db_api.unpack_extra(probe)}
 
-    def addProbe(self, req, lb_id, body):
+    def create(self, req, lb_id, body):
         LOG.debug("Got addProbe request. Request: %s", req)
         probe = core_api.lb_add_probe(self.conf, lb_id,
                                       body['healthMonitoring'])
@@ -51,9 +52,10 @@ class Controller(object):
         return {'healthMonitoring': probe}
 
     @utils.http_success_code(204)
-    def deleteProbe(self, req, lb_id, id):
+    def delete(self, req, lb_id, id):
         LOG.debug("Got deleteProbe request. Request: %s", req)
         core_api.lb_delete_probe(self.conf, lb_id, id)
+
 
 def create_resource(conf):
     """Health monitoring resource factory method"""
