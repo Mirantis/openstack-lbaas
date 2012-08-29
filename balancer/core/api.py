@@ -100,6 +100,7 @@ def create_lb(conf, params):
     try:
         with device_driver.request_context() as ctx:
             commands.create_loadbalancer(ctx, lb_ref, nodes, probes, vips)
+
     except (exception.Error, exception.Invalid):
         lb_ref.status = lb_status.ERROR
         lb_ref.deployed = 'False'
@@ -356,8 +357,7 @@ def device_show_algorithms(conf):
     algorithms = []
     for device in devices:
         device_driver = drivers.get_device_driver(conf, device['id'])
-        with device_driver.request_context() as ctx:
-            capabilities = device_driver.get_capabilities()
+        capabilities = device_driver.get_capabilities()
         if capabilities is not None:
             algorithms += [a for a in capabilities.get('algorithms', [])
                     if a not in algorithms]
@@ -369,8 +369,7 @@ def device_show_protocols(conf):
     protocols = []
     for device in devices:
         device_driver = drivers.get_device_driver(conf, device['id'])
-        with device_driver.request_context() as ctx:
-            capabilities = device_driver.get_capabilities()
+        capabilities = device_driver.get_capabilities()
         if capabilities is not None:
             protocols += [a for a in capabilities.get('protocols', [])
                     if a not in protocols]
