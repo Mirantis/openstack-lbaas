@@ -33,7 +33,6 @@ class Controller(object):
                                                 "stickies.py %s", conf)
         self.conf = conf
 
-    @utils.http_success_code(204)
     def index(self, req, lb_id):
         LOG.debug("Got showStickiness request. Request: %s", req)
         result = core_api.lb_show_sticky(self.conf, lb_id)

@@ -33,7 +33,6 @@ class Controller(object):
                                                 "nodes.py %s", conf)
         self.conf = conf
 
-    @utils.http_success_code(202)
     def create(self, req, lb_id, body):
         LOG.debug("Got addNode request. Request: %s", req)
         return core_api.lb_add_nodes(self.conf, lb_id, body['nodes'])

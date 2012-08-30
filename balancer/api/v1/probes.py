@@ -33,7 +33,6 @@ class Controller(object):
                                                 "probes.py %s", conf)
         self.conf = conf
 
-    @utils.http_success_code(204)
     def index(self, req, lb_id):
         LOG.debug("Got showMonitoring request. Request: %s", req)
         result = core_api.lb_show_probes(self.conf, lb_id)
