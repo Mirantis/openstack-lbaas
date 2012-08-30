@@ -20,7 +20,6 @@ import logging
 import types
 
 import balancer.db.api as db_api
-import traceback
 
 LOG = logging.getLogger(__name__)
 
@@ -292,7 +291,6 @@ def delete_loadbalancer(ctx, lb):
     for sticky in stickies:
         delete_sticky(ctx, sticky)
     delete_server_farm(ctx, sf)
-
     db_api.predictor_destroy_by_sf_id(ctx.conf, sf['id'])
     db_api.server_destroy_by_sf_id(ctx.conf, sf['id'])
     db_api.probe_destroy_by_sf_id(ctx.conf, sf['id'])
