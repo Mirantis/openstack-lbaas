@@ -48,11 +48,6 @@ class RollbackContextManager(object):
         if not good:
             LOG.error("Rollback because of: %s", exc_value,
                     exc_info=(exc_value, exc_type, exc_tb))
-        else:
-            if self.context.device != None:
-                LOG.debug("Finalizing device configuration")
-                self.context.device.finalize_config()
-
         rollback_stack = self.context.rollback_stack
         while rollback_stack:
             rollback_stack.pop()(good)

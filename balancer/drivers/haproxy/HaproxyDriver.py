@@ -16,7 +16,8 @@
 #    under the License.
 
 import logging
-from balancer.drivers.base_driver import BaseDriver
+
+from balancer.drivers import base_driver
 from balancer.drivers.haproxy.RemoteControl import RemoteConfig, RemoteService
 from balancer.drivers.haproxy.RemoteControl import RemoteInterface
 from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation
@@ -25,7 +26,7 @@ from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation
 logger = logging.getLogger(__name__)
 
 
-class HaproxyDriver(BaseDriver):
+class HaproxyDriver(base_driver.BaseDriver):
     def __init__(self, conf, device_ref):
         super(HaproxyDriver, self).__init__(conf, device_ref)
         device_extra = self.device_ref.get('extra') or {}
@@ -56,6 +57,11 @@ class HaproxyDriver(BaseDriver):
             self.haproxy_socket = device_extra['socket']
         self.config_file = None
         self.config_was_deployed = True
+
+    def request_context(self):
+        mgr = super(self, HaproxyDriver).request_context()
+        mgr.context.add_rollback(self.finalize_config)
+        return mgr
 
     def _get_config(self):
         if self.config_file == None:
@@ -293,8 +299,8 @@ class HaproxyDriver(BaseDriver):
     """
        Putting config back on device
     """
-    def finalize_config(self):
-        if not self.config_was_deployed:
+    def finalize_config(self, good):
+        if good and not self.config_was_deployed:
             logger.debug("[HAPROXY] Deploying configuration")
             remote = RemoteConfig(self.device_ref, self.localpath,
                                   self.remotepath, self.configfilename)
