@@ -69,8 +69,7 @@ def filter_capabilities(conf, lb_ref, dev_ref):
                                       default=['algorithm']))
         device_filter_capabilities = conf.device_filter_capabilities
     device_driver = drivers.get_device_driver(conf, dev_ref['id'])
-    with device_driver.request_context() as ctx:
-        capabilities = device_driver.get_capabilities()
+    capabilities = device_driver.get_capabilities()
     if capabilities is None:
         capabilities = {}
     for opt in device_filter_capabilities:
