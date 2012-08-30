@@ -45,41 +45,41 @@ class API(wsgi.Router):
         lb_resource = loadbalancers.create_resource(self.conf)
         nd_resource = nodes.create_resource(self.conf)
 
-        mapper.resource("loadbalancer", "loadbalancers", \
-         member={'details': 'GET'}, \
+        mapper.resource("loadbalancer", "loadbalancers",
+         member={'details': 'GET'},
          controller=lb_resource, collection={'detail': 'GET'})
 
-        mapper.resource('node', 'nodes', controller=nd_resource,\
-         parent_resource={'member_name': 'lb',\
+        mapper.resource('node', 'nodes', controller=nd_resource,
+         parent_resource={'member_name': 'lb',
          'collection_name': 'loadbalancers'})
 
         mapper.connect("/loadbalancers/find_for_VM/{vm_id}",
                        controller=lb_resource,
                        action="findLBforVM", conditions={'method': ["GET"]})
 
-        mapper.connect("/loadbalancers/{lb_id}/nodes/{id}/{status}", \
-                       controller=nd_resource, action="changeNodeStatus", \
+        mapper.connect("/loadbalancers/{lb_id}/nodes/{id}/{status}",
+                       controller=nd_resource, action="changeNodeStatus",
                        conditions={'method': ["PUT"]})
 
         pb_resource = probes.create_resource(self.conf)
 
-        mapper.resource('', 'healthMonitoring', \
-         controller=pb_resource, \
-         parent_resource={'member_name': 'lb',\
+        mapper.resource('', 'healthMonitoring',
+         controller=pb_resource,
+         parent_resource={'member_name': 'lb',
          'collection_name': 'loadbalancers'})
 
         st_resource = stickies.create_resource(self.conf)
 
-        mapper.resource('', 'sessionPersistence', \
-         controller=st_resource, \
-         parent_resource={'member_name': 'lb',\
+        mapper.resource('', 'sessionPersistence',
+         controller=st_resource,
+         parent_resource={'member_name': 'lb',
          'collection_name': 'loadbalancers'})
 
         vip_resource = vips.create_resource(self.conf)
 
-        mapper.resource("virtualIp", "virtualIps",\
-         controller=vip_resource,\
-         parent_resource={'member_name': 'lb',\
+        mapper.resource("virtualIp", "virtualIps",
+         controller=vip_resource,
+         parent_resource={'member_name': 'lb',
          'collection_name': 'loadbalancers'})
 
         device_resource = devices.create_resource(self.conf)
