@@ -17,7 +17,7 @@
 
 import logging
 from balancer.drivers.base_driver import BaseDriver
-from balancer.drivers.haproxy.RemoteControl import RemoteConfig
+from balancer.drivers.haproxy.RemoteControl import RemoteConfig, RemoteService
 from balancer.drivers.haproxy.RemoteControl import RemoteInterface
 from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation
 
@@ -300,7 +300,12 @@ class HaproxyDriver(BaseDriver):
                                   self.remotepath, self.configfilename)
             remote.put_config()
             if remote.validate_config():
-                self.config_was_deployed = True
+                service = RemoteService(self.device_ref)
+                if service.restart():
+                    self.config_was_deployed = True
+                else:
+                    logger.error("[HAPROXY] failed to restart haproxy")
+                    self.config_was_deployed = False
             else:
                 logger.error('[HAPROXY] Configurations has failed validation')
                 return False

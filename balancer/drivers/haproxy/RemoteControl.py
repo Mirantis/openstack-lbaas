@@ -43,27 +43,20 @@ class RemoteConfig(object):
         return True
 
     def validate_config(self):
-        '''
-            Validate config and restart haproxy
-        '''
         self.ssh.connect(self.host, username=self.user, password=self.password)
         stdout = self.ssh.exec_command('haproxy -c -f %s/%s' %
-                                       (self.remotepath, self.configfilename))[1]
+                                       (self.remotepath,
+                                        self.configfilename))[1]
         ssh_out = stdout.read()
+        self.ssh.close()
         logger.debug('[HAPROXY] ssh_out - %s - %s' % (ssh_out,
                          ssh_out.find('Configuration file is valid')))
         if 'Configuration file is valid' in ssh_out:
-            logger.debug('[HAPROXY] remote configuration is valid, '
-                          'restarting haproxy')
-            stdout = self.ssh.exec_command('sudo service haproxy restart')[1]
-            ssh_out = stdout.read()
-            logger.debug('[HAPROXY] ssh_out - %s' % (ssh_out,))
+            logger.debug('[HAPROXY] remote configuration is valid')
             return True
         else:
             logger.error('[HAPROXY] remote configuration is not valid')
             return False
-        self.ssh.close()
-
 
 class RemoteService(object):
     '''
@@ -78,21 +71,36 @@ class RemoteService(object):
 
     def start(self):
         self.ssh.connect(self.host, username=self.user, password=self.password)
-        self.ssh.exec_command('sudo service haproxy start')
+
+        logger.debug('[HAPROXY] starting service haproxy')
+        stdout = self.ssh.exec_command('sudo service haproxy start')[1]
+        status = stdout.channel.recv_exit_status()
+        logger.debug('[HAPROXY] haproxy start result - {0}'.format(status))
+
         self.ssh.close()
-        return True
+        return status == 0
 
     def stop(self):
         self.ssh.connect(self.host, username=self.user, password=self.password)
-        self.ssh.exec_command('sudo service haproxy stop')
+
+        logger.debug('[HAPROXY] stopping service haproxy')
+        stdout = self.ssh.exec_command('sudo service haproxy stop')[1]
+        status = stdout.channel.recv_exit_status()
+        logger.debug('[HAPROXY] haproxy stop result - {0}'.format(status))
+
         self.ssh.close()
-        return True
+        return status == 0
 
     def restart(self):
         self.ssh.connect(self.host, username=self.user, password=self.password)
-        self.ssh.exec_command('sudo service haproxy restart')
+
+        logger.debug('[HAPROXY] restarting haproxy')
+        stdout = self.ssh.exec_command('sudo service haproxy restart')[1]
+        status = stdout.channel.recv_exit_status()
+        logger.debug('[HAPROXY] haproxy restart result - {0}'.format(status))
+
         self.ssh.close()
-        return True
+        return status == 0
 
 
 class RemoteInterface(object):
