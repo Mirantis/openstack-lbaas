@@ -34,8 +34,8 @@ class RemoteConfig(object):
         self.ssh.connect(self.host, username=self.user, password=self.password)
         sftp = self.ssh.open_sftp()
         sftp.put('%s/%s' % (self.localpath, self.configfilename),
-                 '/tmp/%s' % self.configfilename)
-        self.ssh.exec_command('sudo mv /tmp/%s %s' %
+                 '/tmp/%s.remote' % self.configfilename)
+        self.ssh.exec_command('sudo mv /tmp/%s.remote %s' %
                                (self.configfilename, self.remotepath))
         sftp.close()
         self.ssh.close()
