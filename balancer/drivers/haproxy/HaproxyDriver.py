@@ -155,9 +155,9 @@ class HaproxyDriver(BaseDriver):
         haproxy_rserver.weight = rserver.get('weight') or 1
         haproxy_rserver.address = rserver['address']
         haproxy_rserver.port = rserver.get('port') or 0
-        haproxy_rserver.maxconn = rserver.get('maxCon') or 10000
+        haproxy_rserver.maxconn = rserver['extra'].get('maxCon') or 10000
         #Modify remote config file, check and restart remote haproxy
-        logger.debug('[HAPROXY] Creating rserver %s in the'
+        logger.debug('[HAPROXY] Creating rserver %s in the '
                      'backend block %s' %
                      (haproxy_rserver.name, haproxy_serverfarm.name))
 
@@ -171,7 +171,7 @@ class HaproxyDriver(BaseDriver):
         haproxy_rserver = HaproxyRserver()
         haproxy_rserver.name = rserver['id']
         #Modify remote config file, check and restart remote haproxy
-        logger.debug('[HAPROXY] Deleting rserver %s in the'
+        logger.debug('[HAPROXY] Deleting rserver %s in the '
                      'backend block %s' %
                      (haproxy_rserver.name, haproxy_serverfarm.name))
         config_file = self._get_config()
@@ -589,7 +589,7 @@ class HaproxyConfigFile:
 
     def _write_config_file(self, config_file):
         haproxy_config_file = open(self.haproxy_config_file_path, 'w+')
-        logging.debug('[HAPROXY] writing configuration to %s' %
+        logger.debug('[HAPROXY] writing configuration to %s' %
                                             self.haproxy_config_file_path)
         haproxy_config_file.write('global\n')
         for v in config_file['global']:
