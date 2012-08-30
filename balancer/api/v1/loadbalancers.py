@@ -25,15 +25,15 @@ from balancer.db import api as db_api
 
 LOG = logging.getLogger(__name__)
 
-class Controller(object):
 
+class Controller(object):
     def __init__(self, conf):
-        logger.debug("Creating loadbalancers controller with config:"
+        LOG.debug("Creating loadbalancers controller with config:"
                                                 "loadbalancers.py %s", conf)
         self.conf = conf
 
     def findLBforVM(self, req, vm_id):
-        logger.debug("Got index request. Request: %s", req)
+        LOG.debug("Got index request. Request: %s", req)
         tenant_id = req.headers.get('X-Tenant-Id', "")
         params = {}
         params['vm_id'] = vm_id
@@ -42,17 +42,17 @@ class Controller(object):
         return {'loadbalancers': result}
 
     def index(self, req):
-        logger.debug("Got index request. Request: %s", req)
+        LOG.debug("Got index request. Request: %s", req)
         tenant_id = req.headers.get('X-Tenant-Id', "")
         result = core_api.lb_get_index(self.conf, tenant_id)
         return {'loadbalancers': result}
 
     @utils.http_success_code(202)
     def create(self, req, body):
-        logger.debug("Got create request. Request: %s", req)
+        LOG.debug("Got create request. Request: %s", req)
         #here we need to decide which device should be used
         params = body.copy()
-        logger.debug("Headers: %s", req.headers)
+        LOG.debug("Headers: %s", req.headers)
         # We need to create LB object and return its id
         tenant_id = req.headers.get('X-Tenant-Id', "")
         params['tenant_id'] = tenant_id
@@ -61,22 +61,22 @@ class Controller(object):
 
     @utils.http_success_code(204)
     def delete(self, req, id):
-        logger.debug("Got delete request. Request: %s", req)
+        LOG.debug("Got delete request. Request: %s", req)
         core_api.delete_lb(self.conf, id)
 
     def show(self, req, id):
-        logger.debug("Got loadbalancerr info request. Request: %s", req)
+        LOG.debug("Got loadbalancerr info request. Request: %s", req)
         result = core_api.lb_get_data(self.conf, id)
         return {'loadbalancer': result}
 
     def details(self, req, id):
-        logger.debug("Got loadbalancerr info request. Request: %s", req)
+        LOG.debug("Got loadbalancerr info request. Request: %s", req)
         result = core_api.lb_show_details(self.conf, id)
         return result
 
     @utils.http_success_code(202)
     def update(self, req, id, body):
-        logger.debug("Got update request. Request: %s", req)
+        LOG.debug("Got update request. Request: %s", req)
         core_api.update_lb(self.conf, id, body)
         return {'loadbalancer': {'id': id}}
 

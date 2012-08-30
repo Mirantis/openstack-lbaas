@@ -23,11 +23,10 @@ from balancer.api import utils
 from balancer.core import api as core_api
 from balancer.db import api as db_api
 
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger('balancer.api.v1.vips')
 
 
 class Controller(object):
-
     def __init__(self, conf):
         LOG.debug("Creating virtualIps controller with config:"
                                                 "vips.py %s", conf)

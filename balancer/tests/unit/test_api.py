@@ -55,8 +55,8 @@ class TestLoadBalancersController(unittest.TestCase):
         resp = self.controller.create(self.req, {})
         self.assertTrue(mock_create_lb.called)
         mock_create_lb.assert_called_once_with(
-                        self.conf,
-                        {'tenant_id': self.req.headers.get('X-Tenant-Id', "")})
+                    self.conf,
+                    {'tenant_id': self.req.headers.get('X-Tenant-Id', "")})
         self.assertEqual(resp, {'loadbalancer': {'id': '1'}})
         self.code_assert(202, self.controller.create)
 
@@ -125,8 +125,9 @@ class TestNodesController(unittest.TestCase):
 
     @mock.patch("balancer.db.api.server_get")
     @mock.patch("balancer.db.api.unpack_extra")
-    def test_show(self, mock_server_get, mock_unpack):
-        mock_server_get.return_value = 'foo'
+    def test_show(self, mock_unpack, mock_server_get):
+        mock_server_get.return_value = ['foo']
+        mock_unpack.return_value = 'foo'
         resp = self.controller.show(self.req, '123', '123')
         self.assertTrue(mock_server_get.called)
         self.assertTrue(mock_unpack.called)
@@ -163,14 +164,13 @@ class TestNodesController(unittest.TestCase):
                       'id': '1',
                       'body': {'node': 'node'}}
         mock_lb_update_node.return_value = {'nodeID': '1'}
-        mock_lb_update_node.assert_called_once_with(self.conf, '1', '1',
-                                                    {'node': 'node'})
         resp = self.controller.update(self.req, **req_kwargs)
         self.assertTrue(mock_lb_update_node.called)
+        mock_lb_update_node.assert_called_once_with(self.conf, '1', '1',
+                                                    {'node': 'node'})
         self.assertFalse(hasattr(self.controller.update, "wsgi_code"),
             "has not redifined HTTP status code")
         self.assertEqual(resp, {"node": {'nodeID': '1'}})
-
 
 
 class TestVIPsController(unittest.TestCase):
@@ -263,7 +263,7 @@ class TestProbesController(unittest.TestCase):
 
     @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.db.api.probe_get', autospec=True)
-    def test_show(self, mock_lb_show_probe_by_id):
+    def test_show(self, mock_lb_show_probe_by_id, mock_extra):
         mock_lb_show_probe_by_id.return_value = ['foo']
         mock_extra.return_value = 'foo'
         resp = self.controller.show(self.req, 1, 1)
@@ -315,7 +315,7 @@ class TestStickiesController(unittest.TestCase):
 
     @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.db.api.sticky_get', autospec=True)
-    def test_show(self, mock_func):
+    def test_show(self, mock_func, mock_extra):
         mock_extra.return_value = 'foo'
         resp = self.controller.show(self.req, 1, 1)
         self.assertTrue(mock_func.called)
@@ -382,11 +382,11 @@ class TestDeviceController(unittest.TestCase):
         "incorrect HTTP status code")
         self.assertEqual(None, resp)
 
-    @unittest.skip('need to implement Controller.info')
-    @mock.patch('balancer.core.api.info', autospec=True)
+    @unittest.skip('need to implement Controller.device_info')
+    @mock.patch('balancer.core.api.device_info', autospec=True)
     def test_info(self, mock_device_info):
         mock_device_info.return_value = 'foo'
-        resp = self.controller.info(self.req)
+        resp = self.controller.device_info(self.req)
         self.assertTrue(mock_device_info.called)
         mock_device_info.assert_called_once_with()
         self.assertEqual({'devices': 'foo'}, resp)

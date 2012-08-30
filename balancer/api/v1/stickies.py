@@ -45,7 +45,7 @@ class Controller(object):
 
     def create(self, req, lb_id, body):
         LOG.debug("Got addSticky request. Request: %s", req)
-        sticky = core_api.lb_add_sticky(self.conf, id, body)
+        sticky = core_api.lb_add_sticky(self.conf, lb_id, body)
         return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
     @utils.http_success_code(204)
