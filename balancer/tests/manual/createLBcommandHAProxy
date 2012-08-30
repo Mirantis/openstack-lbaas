@@ -1,0 +1,78 @@
+{
+    "device_id": "a854586622ea4282a705e7b1ee833409",
+    "name": "testLB001",
+    "protocol": "HTTP",
+    "transport": "TCP",
+    "algorithm": "RoundRobin",
+    "virtualIps": [
+        {
+            "address": "0.0.0.0",
+            "mask": "255.255.255.255",
+            "type": "PUBLIC",
+            "ipVersion": "IPv4",
+            "port": "80",
+            "ICMPreply": "True"
+        }
+    ],
+    "nodes": [
+        {
+            "address": "127.0.0.1",
+            "type": "host",
+            "port": "8001",
+            "weight": "1",
+            "minCon": "100",
+            "maxCon": "1000",
+            "rateBandwidth": "12",
+            "rateConnection": "1000",
+            "status": "INSERVICE",
+            "condition": "ENABLED",
+            "vm_instance": "RServer001",
+            "vm_id": "0001-0001-0001-0001"
+        },
+        {
+            "address": "127.0.0.1",
+            "type": "host",
+            "port": "8002",
+            "weight": "1",
+            "minCon": "300",
+            "maxCon": "400",
+            "rateBandwidth": "12",
+            "rateConnection": "1000",
+            "status": "INSERVICE",
+            "condition": "ENABLED",
+            "vm_instance": "RServer002",
+            "vm_id": "0002-0002-0002-0002"
+        },
+        {
+            "address": "127.0.0.1",
+            "type": "host",
+            "port": "8003",
+            "weight": "1",
+            "minCon": "300",
+            "maxCon": "400",
+            "rateBandwidth": "12",
+            "rateConnection": "1000",
+            "status": "INSERVICE",
+            "condition": "ENABLED",
+            "vm_instance": "RServer003",
+            "vm_id": "0003-0003-0003-0003"
+        }
+    ],
+    "healthMonitor": [
+        {
+            "type": "ICMP",
+            "delay": "15",
+            "attemptsBeforeDeactivation": "6",
+            "timeout": "20"
+        },
+        {
+            "type": "HTTP",
+            "delay": "30",
+            "attemptsBeforeDeactivation": "5",
+            "timeout": "30",
+            "method": "GET",
+            "path": "/",
+            "expected": "200-204"
+        }
+    ]
+}

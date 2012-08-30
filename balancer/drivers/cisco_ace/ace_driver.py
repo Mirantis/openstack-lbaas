@@ -15,7 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import md5
+import hashlib
 import urllib2
 import base64
 import logging
@@ -86,7 +86,7 @@ class AceDriver(BaseDriver):
         if vip_extra.get('allVLANs'):
             cmd += "global"
         else:
-            cmd += "int-" + str(md5.new(vip_extra['VLAN']).hexdigest())
+            cmd += "int-" + str(hashlib.md5(vip_extra['VLAN']).hexdigest())
         cmd += "\nclass " + vip['id'] + \
                "\nnat dynamic " + str(nat_pool['id']) + \
                " vlan " + str(nat_pool['vlan'])
@@ -98,7 +98,7 @@ class AceDriver(BaseDriver):
         if vip_extra.get('allVLANs'):
             cmd += "global"
         else:
-            cmd += "int-" + str(md5.new(vip_extra['VLAN']).hexdigest())
+            cmd += "int-" + str(hashlib.md5(vip_extra['VLAN']).hexdigest())
         cmd += "\nclass " + vip['id'] + \
                "\nno nat dynamic " + nat_pool['number'] + \
                " vlan " + nat_pool['vlan']
@@ -430,7 +430,7 @@ class AceDriver(BaseDriver):
                     type = "least-bandwidth"
                     accessTime = p.get('extra').get('accessTime')
                     if accessTime:
-                        type += " assess-time " + accessTime
+                        type += " assess-time " + str(accessTime)
                     if sf_extra.get('accessTime'):
                         type += " samples " + p.get('extra').get('sample')
                 elif (type == "leastconnections"):
@@ -631,7 +631,7 @@ class AceDriver(BaseDriver):
         if vip_extra.get('allVLANs'):
             pmap = "global"
         else:
-            pmap = "int-" + str(md5.new(vip_extra['VLAN']).hexdigest())
+            pmap = "int-" + str(hashlib.md5(vip_extra['VLAN']).hexdigest())
         cmd = "access-list vip-acl extended permit ip any host " + \
               vip['address']
         self.deployConfig(cmd)
@@ -704,7 +704,7 @@ class AceDriver(BaseDriver):
         if vip_extra.get('allVLANs'):
             pmap = "global"
         else:
-            pmap = "int-" + str(md5.new(vip_extra['VLAN']).hexdigest())
+            pmap = "int-" + str(hashlib.md5(vip_extra['VLAN']).hexdigest())
         cmd = "policy-map multi-match " + pmap + "\nno class " + vip['id']
         self.deployConfig(cmd)
         cmd = "no class-map match-all " + vip['id'] + "\n"
