@@ -36,11 +36,11 @@ class Controller(object):
     @utils.http_success_code(202)
     def create(self, req, lb_id, body):
         LOG.debug("Got addNode request. Request: %s", req)
-        return core_api.lb_add_nodes(self.conf, id, body['nodes'])
+        return core_api.lb_add_nodes(self.conf, lb_id, body['nodes'])
 
     def index(self, req, lb_id):
         LOG.debug("Got showNodes request. Request: %s", req)
-        return core_api.lb_show_nodes(self.conf, id)
+        return core_api.lb_show_nodes(self.conf, lb_id)
 
     def show(self, req, lb_id, id):
         LOG.debug("Got showNode request. Request: %s", req)

@@ -36,7 +36,7 @@ class Controller(object):
     @utils.http_success_code(204)
     def index(self, req, lb_id):
         LOG.debug("Got showMonitoring request. Request: %s", req)
-        result = core_api.lb_show_probes(self.conf, id)
+        result = core_api.lb_show_probes(self.conf, lb_id)
         return result
 
     def show(self, req, lb_id, id):

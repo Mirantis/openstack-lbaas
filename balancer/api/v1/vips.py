@@ -37,7 +37,7 @@ class Controller(object):
     def index(self, req, lb_id):
         LOG.debug("Got index request. Request: %s", req)
         vips = map(db_api.unpack_extra,
-                   db_api.virtualserver_get_all_by_lb_id(self.conf, id))
+                   db_api.virtualserver_get_all_by_lb_id(self.conf, lb_id))
         return {"virtualIps": vips}
 
     def create(self, req, lb_id, body):
