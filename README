@@ -1,9 +1,13 @@
 This is the OpenStack LBaaS project. 
+* Project overview: https://docs.google.com/document/pub?id=1DRgQhZJ73EyzQ2KvzVQd7Li9YEL7fXWBp8reMdAEhiM
+* Screencast: http://www.youtube.com/watch?v=NgAL-kfdbtE
+* API draft: https://docs.google.com/document/pub?id=11WWy7MQN1RIK7XdvQtUwkC_EIrykEDproFy9Pekm3wI
+* Roadmap: https://docs.google.com/document/pub?id=1yJZXI0WfpAZKhHaLQu7LaxGLrs4REmn0a5bYVbvsCTQ
 
-Quick start with LBaaS DevBox
+Getting started with LBaaS DevBox
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 LBaaS DevBox is Linux-based VM with pre-installed services to simplify development and testing.
-DevBox can be downloaded from https://docs.google.com/open?id=0B1mJ0eQoi7tEZmlYWHVyUjA3dlk
+It can be downloaded from https://docs.google.com/open?id=0B1mJ0eQoi7tEZmlYWHVyUjA3dlk
 
 DevBox contents:
  * Ubuntu 12.04 Server 64-bit
@@ -18,9 +22,11 @@ There are 2 users:
 
 Get LBaaS sources
 ~~~~~~~~~~~~~~~~~
+Log in as "developer". Then check-out new sources:
+# rm -rf openstack-lbaas
 # git clone https://github.com/Mirantis/openstack-lbaas.git
 
-Sources layout
+Source code layout:
  * balancer - LBaaS core  
     * api - API layer
     * common - common code and utils
@@ -72,15 +78,15 @@ a) Create file createDeviceHAProxy with the following content:
  "capabilities": {"algorithms":"RoundRobin"}
 }
  
-Note, ip should be changed to the real one!
+Note, ip needs to be changed to the real one! Figure out it youself based on the output of ifconfig.
 
 b) Execute script:
  # ./CreateDev.sh HAProxy
 
-c) If all right, the information about new device will be returned.
- {"device": {"name": "HAP-001", "has_acl": 1, "ip": "192.168.19.245", "requires_vip_ip": 1, "capabilities": {"algorithms": "RoundRobin"}, "id": "c1dfe0c69bff49d296fc0d613417efcf", "version": "1", "user": "user", "supports_ipv6": 0, "password": "swordfish", "type": "HAPROXY", "port": "22", "supports_vlan": 1}}
+c) If all is right, the information about newly created device will be returned:
+{"device": {"name": "HAP-001", "has_acl": 1, "ip": "192.168.19.245", "requires_vip_ip": 1, "capabilities": {"algorithms": "RoundRobin"}, "id": "c1dfe0c69bff49d296fc0d613417efcf", "version": "1", "user": "user", "supports_ipv6": 0, "password": "swordfish", "type": "HAPROXY", "port": "22", "supports_vlan": 1}}
 
-Write out value for device/id, it will be used for creating load balancer
+Write out value for device/id, it will be used later for creating load balancer
 
 3, Check that device is added in DB
  # ./listDev.sh
@@ -170,4 +176,4 @@ Write out value for device/id, it will be used for creating load balancer
 
 5. Check the load balancer
  # curl http://localhost:99/
-HAProxy should return 3 different results in cycle.
+HAProxy should return different results upon page reload. There are 3 different pages / servers in the server farm.
