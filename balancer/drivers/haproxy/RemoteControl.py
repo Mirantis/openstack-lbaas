@@ -58,6 +58,7 @@ class RemoteConfig(object):
             logger.error('[HAPROXY] remote configuration is not valid')
             return False
 
+
 class RemoteService(object):
     '''
     Operations with haproxy daemon
