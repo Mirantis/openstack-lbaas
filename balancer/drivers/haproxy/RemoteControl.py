@@ -47,15 +47,17 @@ class RemoteConfig(object):
             Validate config and restart haproxy
         '''
         self.ssh.connect(self.host, username=self.user, password=self.password)
-        stdin, stdout, stderr = self.ssh.exec_command('haproxy -c -f %s/%s' %
-                               (self.remotepath, self.configfilename))
+        stdout = self.ssh.exec_command('haproxy -c -f %s/%s' %
+                                       (self.remotepath, self.configfilename))[1]
         ssh_out = stdout.read()
         logger.debug('[HAPROXY] ssh_out - %s - %s' % (ssh_out,
                          ssh_out.find('Configuration file is valid')))
         if 'Configuration file is valid' in ssh_out:
             logger.debug('[HAPROXY] remote configuration is valid, '
                           'restarting haproxy')
-            self.ssh.exec_command('sudo service haproxy restart')
+            stdout = self.ssh.exec_command('sudo service haproxy restart')[1]
+            ssh_out = stdout.read()
+            logger.debug('[HAPROXY] ssh_out - %s' % (ssh_out,))
             return True
         else:
             logger.error('[HAPROXY] remote configuration is not valid')
