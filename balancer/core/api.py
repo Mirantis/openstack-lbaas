@@ -88,7 +88,7 @@ def lb_show_details(conf, lb_id):
 
 def create_lb(conf, params):
     nodes = params.pop('nodes', [])
-    probes = params.pop('healthMonitoring', [])
+    probes = params.pop('healthMonitor', [])
     vips = params.pop('virtualIps', [])
     values = db_api.loadbalancer_pack_extra(params)
     lb_ref = db_api.loadbalancer_create(conf, values)

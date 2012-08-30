@@ -70,62 +70,55 @@ class HaproxyDriver(BaseDriver):
 
     def add_probe_to_server_farm(self, serverfarm, probe):
         '''
-            Haproxy support only tcp (connect), http and https (limited) probes
+            Haproxy supports only tcp (connect),
+            http and https (limited) probes
         '''
-        self.probe_sf(serverfarm, probe, 'add')
+        probe_type = probe['type'].lower()
+        if probe_type not in ('http', 'https', 'tcp', 'connect'):
+            logger.debug('[HAPROXY] unsupported probe type %s, exit',
+                         probe_type)
+            return
+
+        backend = HaproxyBackend()
+        backend.name = serverfarm['id']
+
+        new_lines = []
+        if probe_type == 'http':
+            option = 'option httpchk'
+            method = probe.get('method')
+            option = option + ' ' + (method if method else 'GET')
+
+            HTTPurl = probe.get('path', '')
+            option = option + ' ' + (HTTPurl if HTTPurl else '/')
+
+            new_lines.append(option)
+
+            # TODO: add handling of 'expected' field
+            # from probe ('http-check expect ...')
+        elif probe_type == 'tcp' or probe_type == 'connect':
+            new_lines.append('option httpchk')
+        elif probe_type == 'https':
+            new_lines.append('option ssl-hello-chk')
+
+        if new_lines:
+            config_file = self._get_config()
+            config_file.add_lines_to_backend_block(backend, new_lines)
 
     def delete_probe_from_server_farm(self, serverfarm, probe):
-        self.probe_sf(serverfarm, probe, 'del')
+        backend = HaproxyBackend()
+        backend.name = serverfarm['id']
 
-    def probe_sf(self, serverfarm, probe, type_of_operation):
-        haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['id']
-        self.del_lines = ['option httpchk', 'option ssl-hello-chk',
-                                                        'http-check expect']
-        config_file = self._get_config()
+        probe_type = probe['type'].lower()
+        del_lines = []
+        if probe_type in ('http', 'tcp', 'connect'):
+            del_lines = ['option httpchk', 'http-check expect']
+        elif probe_type == 'https':
+            del_lines = ['option ssl-hello-chk', ]
 
-        if type_of_operation == 'del':
-            config_file.del_lines_from_backend_block(haproxy_serverfarm,
-                                                                self.del_lines)
-        elif type_of_operation == 'add':
-            pr_type = probe['type'].lower()
-            if pr_type not in ('http', 'https', 'tcp'):
-                logger.debug('[HAPROXY] unsupported probe type %s, exit',
-                                                                    pr_type)
-                return
-            if pr_type == "http":
-                haproxy_serverfarm = HaproxyBackend()
-                haproxy_serverfarm.name = serverfarm['id']
-                self.option_httpchk = "option httpchk"
-                requestMethodType = probe.get('requestMethodType', '')
-                requestHTTPurl = probe.get('requestHTTPurl', '')
-                expectRegExp = probe.get('expectRegExp', '')
-                minExpectStatus = probe.get('minExpectStatus',  '')
-                if requestMethodType != "":
-                    self.option_httpchk = "%s %s " % (self.option_httpchk,
-                                                            requestMethodType)
-                else:
-                    self.option_httpchk = "%s GET" % self.option_httpchk
-                if requestHTTPurl != "":
-                    self.option_httpchk = "%s %s" % (self.option_httpchk,
-                                                                requestHTTPurl)
-                else:
-                    self.option_httpchk = "%s /" % self.option_httpchk
-                if expectRegExp != "":
-                    self.http_check = "http-check expect rstring %s" % (
-                                                                expectRegExp,)
-                elif minExpectStatus != "":
-                    self.http_check = "http-check expect status %s" % (
-                                                            minExpectStatus,)
-                self.new_lines = [self.option_httpchk, self.http_check]
-            elif pr_type == "tcp":
-                self.new_lines = ["option httpchk"]
-            elif pr_type == "https":
-                self.new_lines = ["option ssl-hello-chk"]
-            config_file.del_lines_from_backend_block(haproxy_serverfarm,
-                    self.del_lines)
-            config_file.add_lines_to_backend_block(haproxy_serverfarm,
-                    self.new_lines)
+        if del_lines:
+            config_file = self._get_config()
+            config_file.del_lines_from_backend_block(backend, del_lines)
+
     '''
         For compatibility with drivers for other devices
     '''
