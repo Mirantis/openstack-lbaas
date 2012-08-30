@@ -23,39 +23,39 @@ from balancer.api import utils
 from balancer.core import api as core_api
 import balancer.db.api as db_api
 
-logger = logging.getLogger('balancer.api.v1.devices')
+LOG = logging.getLogger(__name__)
 
 
 class Controller(object):
     def __init__(self, conf):
-        logger.debug("Creating device controller with config: %s", conf)
+        LOG.debug("Creating device controller with config: %s", conf)
         self.conf = conf
 
-    def index(self,  req):
+    def index(self, req):
         try:
-            logger.debug("Got index request. Request: %s", req)
+            LOG.debug("Got index request. Request: %s", req)
             result = core_api.device_get_index(self.conf)
-            logger.debug("Obtained response: %s" % result)
+            LOG.debug("Obtained response: %s" % result)
             return {'devices': result}
         except exception.NotFound:
             msg = "Element not found"
-            logger.debug(msg)
+            LOG.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
             msg = _("Unauthorized access")
-            logger.debug(msg)
+            LOG.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
     def create(self, req, body):
-        logger.debug("Got create request. Request: %s", req)
+        LOG.debug("Got create request. Request: %s", req)
         params = body
-        logger.debug("Request params: %s" % params)
+        LOG.debug("Request params: %s" % params)
         self._validate_params(params)
         device = core_api.device_create(self.conf, **params)
         return {"device": db_api.unpack_extra(device)}
 
     def show(self, req, id):
-        logger.debug("Got device data request. Request: %s" % req)
+        LOG.debug("Got device data request. Request: %s" % req)
         device_ref = db_api.device_get(self.conf, id)
         return {'device': db_api.unpack_extra(device_ref)}
 
@@ -78,16 +78,16 @@ class Controller(object):
                 return {'device_command_status': 'not available'}
         except exception.NotFound:
             msg = "Device with id %s not found" % args['id']
-            logger.debug(msg)
+            LOG.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
             msg = _("Unauthorized access")
-            logger.debug(msg)
+            LOG.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
         finally:
             pass
 
-    def device_info(self, req, **args):
+    def info(self, req, **args):
         try:
             args['query_params'] = req.GET
             if worker.type == SYNCHRONOUS_WORKER:
@@ -95,30 +95,30 @@ class Controller(object):
                 return {'devices': result}
         except exception.NotFound:
             msg = "Element not found"
-            logger.debug(msg)
+            LOG.debug(msg)
             raise webob.exc.HTTPNotFound(msg)
         except exception.NotAuthorized:
             msg = _("Unauthorized access")
-            logger.debug(msg)
+            LOG.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
         return {'devices': list}
 
     @utils.http_success_code(204)
     def delete(self, req, id):
-        logger.debug("Got delete request. Request: %s", req)
+        LOG.debug("Got delete request. Request: %s", req)
         core_api.device_delete(self.conf, id)
 
     def show_algorithms(self, req):
-        logger.debug("Got algorithms request. Request: %s", req)
+        LOG.debug("Got algorithms request. Request: %s", req)
         algorithms = core_api.device_show_algorithms(self.conf)
         return {'algorithms': algorithms}
 
     def show_protocols(self, req):
-        logger.debug("Got protocols request. Request: %s", req)
+        LOG.debug("Got protocols request. Request: %s", req)
         protocols = core_api.device_show_protocols(self.conf)
         return {'protocols': protocols}
 
-    def _validate_params(self,  params):
+    def _validate_params(self, params):
         pass
 
 

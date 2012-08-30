@@ -382,11 +382,11 @@ class TestDeviceController(unittest.TestCase):
         "incorrect HTTP status code")
         self.assertEqual(None, resp)
 
-    @unittest.skip('need to implement Controller.device_info')
-    @mock.patch('balancer.core.api.device_info', autospec=True)
+    @unittest.skip('need to implement Controller.info')
+    @mock.patch('balancer.core.api.info', autospec=True)
     def test_info(self, mock_device_info):
         mock_device_info.return_value = 'foo'
-        resp = self.controller.device_info(self.req)
+        resp = self.controller.info(self.req)
         self.assertTrue(mock_device_info.called)
         mock_device_info.assert_called_once_with()
         self.assertEqual({'devices': 'foo'}, resp)
@@ -462,7 +462,7 @@ class TestRouter(unittest.TestCase):
             ("/loadbalancers", "POST", loadbalancers.Controller, "create"),
             ("/devices", "GET", devices.Controller, "index"),
             ("/devices/{id}", "GET", devices.Controller, "show"),
-            ("/devices/{id}/info", "GET", devices.Controller, "device_info"),
+            ("/devices/{id}/info", "GET", devices.Controller, "info"),
             ("/devices", "POST", devices.Controller, "create"),
             ("/devices/{id}", "DELETE", devices.Controller, "delete"),
         )

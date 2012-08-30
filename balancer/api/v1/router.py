@@ -85,25 +85,12 @@ class API(wsgi.Router):
         device_resource = devices.create_resource(self.conf)
 
         mapper.resource("device", "devices", controller=device_resource,
+                        member={'info': 'GET'},
                         collection={'detail': 'GET'})
 
-        mapper.connect("/devices/", controller=device_resource,
-                action="index")
-
-        mapper.connect("/devices/{id}", controller=device_resource,
-                       action="show")
-#                       conditions=dict(method=["GET"]))
         # NOTE(yorik-sar): broken
         #mapper.connect("/devices/{id}/status", controller=device_resource,
         #               action="device_status")
-        mapper.connect("/devices/{id}/info",
-                controller=device_resource,
-                       action="device_info")
-
-        mapper.connect("/devices/",
-                       controller=device_resource,
-                       action="create",
-                       conditions={'method': ["POST"]})
 
         mapper.connect("/algorithms",
                        controller=device_resource,
