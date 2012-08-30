@@ -59,7 +59,7 @@ class HaproxyDriver(base_driver.BaseDriver):
         self.config_was_deployed = True
 
     def request_context(self):
-        mgr = super(self, HaproxyDriver).request_context()
+        mgr = super(HaproxyDriver, self).request_context()
         mgr.context.add_rollback(self.finalize_config)
         return mgr
 
