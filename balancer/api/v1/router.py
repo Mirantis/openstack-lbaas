@@ -51,8 +51,7 @@ class API(wsgi.Router):
                 formatted=False)
         lb_collection.member.link('details')
 
-        mapper.connect("/loadbalancers/find_for_VM/{vm_id}",
-                       controller=lb_resource,
+        lb_collection.connect("/find_for_VM/{vm_id}",
                        action="findLBforVM", conditions={'method': ["GET"]})
 
         nd_resource = nodes.create_resource(self.conf)
