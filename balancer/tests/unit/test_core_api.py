@@ -199,7 +199,7 @@ class TestBalancer(unittest.TestCase):
     def test_lb_add_nodes(self, *mocks):
         mocks[2].return_value = {'device_id': 1}
         mocks[3].return_value = [{'id': 1}]
-        api.lb_add_nodes(self.conf, self.lb_id, self.lb_nodes)
+        api.lb_add_nodes(self.conf, 'fake_tenant', self.lb_id, self.lb_nodes)
         for mok in mocks:
             self.assertTrue(mok.called, "This mock didn't call %s"
                     % mok._mock_name)
@@ -209,7 +209,7 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
     def test_lb_show_nodes(self, mock_serverfarm, mock_server, mock_unpack):
         mock_serverfarm.return_value = self.dict_list
-        api.lb_show_nodes(self.conf, 1)
+        api.lb_show_nodes(self.conf, 'fake_tenant', 1)
         self.assertTrue(mock_serverfarm.called)
         self.assertTrue(mock_server.called)
 
@@ -221,7 +221,8 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.server_destroy")
     def test_lb_delete_node(self, *mocks):
         mocks[5].return_value = self.dict_list
-        api.lb_delete_node(self.conf, self.lb_id, self.lb_node_id)
+        api.lb_delete_node(self.conf,
+                'fake_tenant', self.lb_id, self.lb_node_id)
         for mock in mocks:
             self.assertTrue(mock.called)
 
@@ -234,8 +235,8 @@ class TestBalancer(unittest.TestCase):
     def test_lb_change_node_status_0(self, *mocks):
         """Activate server called"""
         lb_node_status = "inservice"
-        api.lb_change_node_status(self.conf, self.lb_id, self.lb_node_id,
-                    lb_node_status)
+        api.lb_change_node_status(self.conf,
+                'fake_tenant', self.lb_id, self.lb_node_id, lb_node_status)
         for mock in mocks:
             self.assertTrue(mock.called)
 
@@ -248,8 +249,8 @@ class TestBalancer(unittest.TestCase):
     def test_lb_change_node_status_1(self, *mocks):
         """Suspend server called"""
         lb_node_status = ""
-        api.lb_change_node_status(self.conf, self.lb_id, self.lb_node_id,
-                    lb_node_status)
+        api.lb_change_node_status(self.conf,
+                'fake_tenant', self.lb_id, self.lb_node_id, lb_node_status)
         for mock in mocks:
             self.assertTrue(mock.called)
 
@@ -263,8 +264,8 @@ class TestBalancer(unittest.TestCase):
     def test_lb_change_node_status_2(self, *mocks):
         """return ok"""
         mocks[0].return_value = {'sf_id': 1, 'state': 'status'}
-        api.lb_change_node_status(self.conf, self.lb_id, self.lb_node_id,
-                'status')
+        api.lb_change_node_status(self.conf,
+                'fake_tenant', self.lb_id, self.lb_node_id, 'status')
         self.assertFalse(mocks[1].called)
         self.assertFalse(mocks[2].called)
 
@@ -279,8 +280,8 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.core.commands.add_rserver_to_server_farm")
     def test_lb_update_node_0(self, mock_com0, mock_com1, *mocks):
         """"""
-        api.lb_update_node(self.conf, self.lb_id, self.lb_node_id,
-                self.lb_node)
+        api.lb_update_node(self.conf,
+                'fake_tenant', self.lb_id, self.lb_node_id, self.lb_node)
         self.assertTrue(mock_com0.called)
         self.assertTrue(mock_com1.called)
 
@@ -298,14 +299,15 @@ class TestBalancer(unittest.TestCase):
         """"""
         mock_extra.return_value = self.dictionary
         mock_lb.return_value.__getitem__.return_value = 2
-        resp = api.lb_update_node(self.conf, self.lb_id, self.lb_node_id,
-                                  self.lb_node)
+        resp = api.lb_update_node(self.conf,
+                'fake_tenant', self.lb_id, self.lb_node_id, self.lb_node)
         self.assertEqual(resp, self.dictionary)
         mock_update.assert_called_once_with(self.conf,
                                             mock_get.return_value['id'],
                                             mock_get.return_value)
         mock_extra.assert_called_once_with(mock_update.return_value)
-        mock_get.assert_called_once_with(self.conf, self.lb_node_id)
+        mock_get.assert_called_once_with(self.conf,
+                self.lb_node_id, tenant_id='fake_tenant')
         mock_sf.assert_called_once_with(self.conf,
                                         mock_get.return_value['sf_id'])
         mock_lb.assert_called_once_with(self.conf, self.lb_id)

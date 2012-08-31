@@ -136,9 +136,9 @@ def delete_lb(conf, tenant_id, lb_id):
         commands.delete_loadbalancer(ctx, lb)
 
 
-def lb_add_nodes(conf, lb_id, nodes):
+def lb_add_nodes(conf, tenant_id, lb_id, nodes):
     nodes_list = []
-    lb = db_api.loadbalancer_get(conf, lb_id)
+    lb = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
     for node in nodes:
         values = db_api.server_pack_extra(node)
@@ -151,16 +151,17 @@ def lb_add_nodes(conf, lb_id, nodes):
     return nodes_list
 
 
-def lb_show_nodes(conf, lb_id):
+def lb_show_nodes(conf, tenant_id, lb_id):
     node_list = []
-    sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+    sf = db_api.serverfarm_get_all_by_lb_id(conf,
+            lb_id, tenant_id=tenant_id)[0]
     node_list = map(db_api.unpack_extra,
                     db_api.server_get_all_by_sf_id(conf, sf['id']))
     return node_list
 
 
-def lb_delete_node(conf, lb_id, lb_node_id):
-    lb = db_api.loadbalancer_get(conf, lb_id)
+def lb_delete_node(conf, tenant_id, lb_id, lb_node_id):
+    lb = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
     rs = db_api.server_get(conf, lb_node_id)
     db_api.server_destroy(conf, lb_node_id)
@@ -170,8 +171,8 @@ def lb_delete_node(conf, lb_id, lb_node_id):
     return lb_node_id
 
 
-def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
-    lb = db_api.loadbalancer_get(conf, lb_id)
+def lb_change_node_status(conf, tenant_id, lb_id, lb_node_id, lb_node_status):
+    lb = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     rs = db_api.server_get(conf, lb_node_id)
     sf = db_api.serverfarm_get(conf, rs['sf_id'])
     if rs['state'] == lb_node_status:
@@ -194,8 +195,8 @@ def lb_change_node_status(conf, lb_id, lb_node_id, lb_node_status):
     return db_api.unpack_extra(rs)
 
 
-def lb_update_node(conf, lb_id, lb_node_id, lb_node):
-    rs = db_api.server_get(conf, lb_node_id)
+def lb_update_node(conf, tenant_id, lb_id, lb_node_id, lb_node):
+    rs = db_api.server_get(conf, lb_node_id, tenant_id=tenant_id)
 
     lb = db_api.loadbalancer_get(conf, lb_id)
     device_driver = drivers.get_device_driver(conf, lb['device_id'])

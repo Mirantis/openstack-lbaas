@@ -106,17 +106,18 @@ class TestNodesController(unittest.TestCase):
     def test_create(self, mock_lb_add_nodes):
         mock_lb_add_nodes.return_value = 'foo'
         body = {'nodes': 'foo'}
-        resp = self.controller.create(self.req, 1, body)
+        resp = self.controller.create(self.req, 'fake_tenant', 1, body)
         self.assertTrue(mock_lb_add_nodes.called)
-        mock_lb_add_nodes.assert_called_once_with(self.conf, 1, 'foo')
+        mock_lb_add_nodes.assert_called_once_with(self.conf,
+                'fake_tenant', 1, 'foo')
         self.assertEqual(resp, {'nodes': 'foo'})
 
     @mock.patch('balancer.core.api.lb_show_nodes', autospec=True)
     def test_index(self, mock_lb_show_nodes):
         mock_lb_show_nodes.return_value = 'foo'
-        resp = self.controller.index(self.req, 1)
+        resp = self.controller.index(self.req, 'fake_tenant', 1)
         self.assertTrue(mock_lb_show_nodes.called)
-        mock_lb_show_nodes.assert_called_once_with(self.conf, 1)
+        mock_lb_show_nodes.assert_called_once_with(self.conf, 'fake_tenant', 1)
         self.assertEqual(resp, {'nodes': 'foo'})
 
     @mock.patch("balancer.db.api.server_get")
@@ -124,18 +125,20 @@ class TestNodesController(unittest.TestCase):
     def test_show(self, mock_unpack, mock_server_get):
         mock_server_get.return_value = ['foo']
         mock_unpack.return_value = 'foo'
-        resp = self.controller.show(self.req, '123', '123')
+        resp = self.controller.show(self.req, 'fake_tenant', '123', '123')
         self.assertTrue(mock_server_get.called)
         self.assertTrue(mock_unpack.called)
-        mock_server_get.assert_called_once_with(self.conf, '123', '123')
+        mock_server_get.assert_called_once_with(self.conf,
+                '123', '123', tenant_id='fake_tenant')
         mock_unpack.assert_called_once_with(['foo'])
         self.assertEqual(resp, {'node': 'foo'})
 
     @mock.patch('balancer.core.api.lb_delete_node', autospec=True)
     def test_delete(self, mock_lb_delete_node):
-        resp = self.controller.delete(self.req, 1, 1)
+        resp = self.controller.delete(self.req, 'fake_tenant', 1, 1)
         self.assertTrue(mock_lb_delete_node.called)
-        mock_lb_delete_node.assert_called_once_with(self.conf, 1, 1)
+        mock_lb_delete_node.assert_called_once_with(self.conf,
+                'fake_tenant', 1, 1)
         self.assertEqual(resp, None)
         self.code_assert(204, self.controller.delete)
 
@@ -143,11 +146,11 @@ class TestNodesController(unittest.TestCase):
     def test_change_node_status(self, mock_lb_change_node_status):
         mock_lb_change_node_status.return_value = {'nodeID': '1',
                                                    'status': 'Foostatus'}
-        resp = self.controller.changeNodeStatus(self.req, 1, 1, 'Foostatus',
-                {})
+        resp = self.controller.changeNodeStatus(self.req,
+                'fake_tenant', 1, 1, 'Foostatus', {})
         self.assertTrue(mock_lb_change_node_status.called)
-        mock_lb_change_node_status.assert_called_once_with(self.conf, 1, 1,
-                                                           'Foostatus')
+        mock_lb_change_node_status.assert_called_once_with(self.conf,
+                'fake_tenant', 1, 1, 'Foostatus')
         self.assertFalse(hasattr(
             self.controller.changeNodeStatus, "wsgi_code"),
             "has not redifined HTTP status code")
@@ -156,14 +159,15 @@ class TestNodesController(unittest.TestCase):
 
     @mock.patch('balancer.core.api.lb_update_node', autospec=True)
     def test_update(self, mock_lb_update_node):
-        req_kwargs = {'lb_id': '1',
+        req_kwargs = {'tenant_id': 'fake_tenant',
+                      'lb_id': '1',
                       'node_id': '1',
                       'body': {'node': 'node'}}
         mock_lb_update_node.return_value = {'nodeID': '1'}
         resp = self.controller.update(self.req, **req_kwargs)
         self.assertTrue(mock_lb_update_node.called)
-        mock_lb_update_node.assert_called_once_with(self.conf, '1', '1',
-                                                    {'node': 'node'})
+        mock_lb_update_node.assert_called_once_with(self.conf,
+                'fake_tenant', '1', '1', {'node': 'node'})
         self.assertFalse(hasattr(self.controller.update, "wsgi_code"),
             "has not redifined HTTP status code")
         self.assertEqual(resp, {"node": {'nodeID': '1'}})
