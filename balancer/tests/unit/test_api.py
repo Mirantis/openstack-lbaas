@@ -472,13 +472,16 @@ class TestRouter(unittest.TestCase):
         for url, method, controller, action in list_of_methods:
             LOG.info('Verifying %s to %s', method, url)
             m = self.obj.map.match(url, {"REQUEST_METHOD": method})
-            self.assertTrue(m is not None)
+            self.assertTrue(m is not None, "Route not found for %s %s" % (
+                    method, url))
             controller0 = m.pop('controller')
             action0 = m.pop('action')
-            self.assertTrue(isinstance(controller0, wsgi.Resource))
-            LOG.debug("%s %s", controller0.controller, action)
-            self.assertTrue(isinstance(controller0.controller,
-                controller))
+            self.assertTrue(isinstance(controller0, wsgi.Resource),
+                    "Controller for %s %s is not wshi.Resource instance." % (
+                    method, url))
+            self.assertTrue(isinstance(controller0.controller, controller),
+                    "Inner controller for %s %s is not %s.%s instance." % (
+                    method, url, controller.__module__, controller.__name__))
             self.assertEquals(action0, action)
             mok = mock.mocksignature(getattr(controller, action))
             if method == "POST" or method == "PUT":
