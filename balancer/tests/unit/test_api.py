@@ -161,7 +161,7 @@ class TestNodesController(unittest.TestCase):
     @mock.patch('balancer.core.api.lb_update_node', autospec=True)
     def test_update(self, mock_lb_update_node):
         req_kwargs = {'lb_id': '1',
-                      'id': '1',
+                      'node_id': '1',
                       'body': {'node': 'node'}}
         mock_lb_update_node.return_value = {'nodeID': '1'}
         resp = self.controller.update(self.req, **req_kwargs)
@@ -409,62 +409,65 @@ class TestRouter(unittest.TestCase):
 
     def test_mapper(self):
         list_of_methods = (
+            # loadbalancers
             ("/loadbalancers", "GET", loadbalancers.Controller, "index"),
+            ("/loadbalancers", "POST", loadbalancers.Controller, "create"),
+            ("/loadbalancers/{lb_id}", "GET", loadbalancers.Controller,
+                "show"),
+            ("/loadbalancers/{lb_id}", "PUT", loadbalancers.Controller,
+                "update"),
+            ("/loadbalancers/{lb_id}", "DELETE", loadbalancers.Controller,
+                "delete"),
             ("/loadbalancers/find_for_VM/{vm_id}", "GET",
                 loadbalancers.Controller, "findLBforVM"),
-            ("/loadbalancers/{id}", "GET", loadbalancers.Controller,
-                "show"),
-            ("/loadbalancers/{id}/details", "GET", loadbalancers.Controller,
+            ("/loadbalancers/{lb_id}/details", "GET", loadbalancers.Controller,
                 "details"),
-            ("/loadbalancers/{id}", "DELETE", loadbalancers.Controller,
-                "delete"),
-            ("/loadbalancers/{id}", "PUT", loadbalancers.Controller,
-                "update"),
-            ("/loadbalancers/{lb_id}/nodes", "POST", nodes.Controller,
-                "create"),
+            # nodes
             ("/loadbalancers/{lb_id}/nodes", "GET", nodes.Controller,
                 "index"),
-            ("/loadbalancers/{lb_id}/nodes/{id}", "DELETE",
-                nodes.Controller, "delete"),
-            ("/loadbalancers/{lb_id}/nodes/{id}", "GET",
+            ("/loadbalancers/{lb_id}/nodes", "POST", nodes.Controller,
+                "create"),
+            ("/loadbalancers/{lb_id}/nodes/{node_id}", "GET",
                 nodes.Controller, "show"),
-            ("/loadbalancers/{lb_id}/nodes/{id}", "PUT",
+            ("/loadbalancers/{lb_id}/nodes/{node_id}", "PUT",
                 nodes.Controller, "update"),
-            ("/loadbalancers/{lb_id}/nodes/{id}/{status}", "PUT",
+            ("/loadbalancers/{lb_id}/nodes/{node_id}", "DELETE",
+                nodes.Controller, "delete"),
+            ("/loadbalancers/{lb_id}/nodes/{node_id}/{status}", "PUT",
                 nodes.Controller, "changeNodeStatus"),
+            # probes
             ("/loadbalancers/{lb_id}/healthMonitoring", "GET",
                 probes.Controller, "index"),
-            ("/loadbalancers/{lb_id}/healthMonitoring/{id}",
-                "GET", probes.Controller, "show"),
             ("/loadbalancers/{lb_id}/healthMonitoring", "POST",
                 probes.Controller, "create"),
-            ("/loadbalancers/{lb_id}/healthMonitoring/{id}", "DELETE",
+            ("/loadbalancers/{lb_id}/healthMonitoring/{probe_id}",
+                "GET", probes.Controller, "show"),
+            ("/loadbalancers/{lb_id}/healthMonitoring/{probe_id}", "DELETE",
                 probes.Controller, "delete"),
+            # stickies
             ("/loadbalancers/{lb_id}/sessionPersistence", "GET",
                 stickies.Controller, "index"),
-            ("/loadbalancers/{lb_id}/sessionPersistence/{id}", "GET",
-                stickies.Controller, "show"),
             ("/loadbalancers/{lb_id}/sessionPersistence", "POST",
                 stickies.Controller, "create"),
-            ("/loadbalancers/{lb_id}/sessionPersistence/{id}",
+            ("/loadbalancers/{lb_id}/sessionPersistence/{sticky_id}", "GET",
+                stickies.Controller, "show"),
+            ("/loadbalancers/{lb_id}/sessionPersistence/{sticky_id}",
                 "DELETE", stickies.Controller, "delete"),
-
-            # Virtual IPs
+            # vips
             ("/loadbalancers/{lb_id}/virtualIps", "GET",
                 vips.Controller, "index"),
             ("/loadbalancers/{lb_id}/virtualIps", "POST",
                 vips.Controller, "create"),
-            ("/loadbalancers/{lb_id}/virtualIps/{id}", "GET",
+            ("/loadbalancers/{lb_id}/virtualIps/{vip_id}", "GET",
                 vips.Controller, "show"),
-            ("/loadbalancers/{lb_id}/virtualIps/{id}", "DELETE",
+            ("/loadbalancers/{lb_id}/virtualIps/{vip_id}", "DELETE",
                 vips.Controller, "delete"),
-
-            ("/loadbalancers", "POST", loadbalancers.Controller, "create"),
+            # devices
             ("/devices", "GET", devices.Controller, "index"),
-            ("/devices/{id}", "GET", devices.Controller, "show"),
-            ("/devices/{id}/info", "GET", devices.Controller, "info"),
             ("/devices", "POST", devices.Controller, "create"),
-            ("/devices/{id}", "DELETE", devices.Controller, "delete"),
+            ("/devices/{device_id}", "GET", devices.Controller, "show"),
+            ("/devices/{device_id}", "DELETE", devices.Controller, "delete"),
+            ("/devices/{device_id}/info", "GET", devices.Controller, "info"),
         )
         for url, method, controller, action in list_of_methods:
             LOG.info('Verifying %s to %s', method, url)
@@ -473,6 +476,7 @@ class TestRouter(unittest.TestCase):
             controller0 = m.pop('controller')
             action0 = m.pop('action')
             self.assertTrue(isinstance(controller0, wsgi.Resource))
+            LOG.debug("%s %s", controller0.controller, action)
             self.assertTrue(isinstance(controller0.controller,
                 controller))
             self.assertEquals(action0, action)
@@ -483,5 +487,5 @@ class TestRouter(unittest.TestCase):
                 mok('SELF', 'REQUEST', **m)
             except TypeError:
                 self.fail('Arguments in route "%s %s" does not match %s.%s.%s '
-                            'signature' % (method, url, controller.__module__,
-                                       controller.__name__, action))
+                          'signature: %s' % (method, url,
+                    controller.__module__, controller.__name__, action, m))

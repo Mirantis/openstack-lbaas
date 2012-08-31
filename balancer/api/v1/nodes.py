@@ -42,25 +42,25 @@ class Controller(object):
         LOG.debug("Got showNodes request. Request: %s", req)
         return {'nodes': core_api.lb_show_nodes(self.conf, lb_id)}
 
-    def show(self, req, lb_id, id):
+    def show(self, req, lb_id, node_id):
         LOG.debug("Got showNode request. Request: %s", req)
         return {'node': db_api.unpack_extra(
-            db_api.server_get(self.conf, id, lb_id))}
+            db_api.server_get(self.conf, node_id, lb_id))}
 
     @utils.http_success_code(204)
-    def delete(self, req, lb_id, id):
+    def delete(self, req, lb_id, node_id):
         LOG.debug("Got deleteNode request. Request: %s", req)
-        core_api.lb_delete_node(self.conf, lb_id, id)
+        core_api.lb_delete_node(self.conf, lb_id, node_id)
 
-    def changeNodeStatus(self, req, lb_id, id, status, body):
+    def changeNodeStatus(self, req, lb_id, node_id, status, body):
         LOG.debug("Got changeNodeStatus request. Request: %s", req)
-        result = core_api.lb_change_node_status(self.conf, lb_id, id,
+        result = core_api.lb_change_node_status(self.conf, lb_id, node_id,
                                                          status)
         return {"node": result}
 
-    def update(self, req, lb_id, id, body):
+    def update(self, req, lb_id, node_id, body):
         LOG.debug("Got updateNode request. Request: %s", req)
-        result = core_api.lb_update_node(self.conf, lb_id, id, body)
+        result = core_api.lb_update_node(self.conf, lb_id, node_id, body)
         return {"node": result}
 
 

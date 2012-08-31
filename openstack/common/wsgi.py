@@ -310,6 +310,10 @@ class Resource(object):
         self.serializer = serializer
         self.deserializer = deserializer
 
+    # NOTE(yorik-sar): ugly fix for Routes misbehaviour
+    def __add__(self, other):
+        return other
+
     @webob.dec.wsgify(RequestClass=Request)
     def __call__(self, request):
         """WSGI method that controls (de)serialization and method dispatch."""

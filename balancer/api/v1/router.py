@@ -45,48 +45,45 @@ class API(wsgi.Router):
         lb_resource = loadbalancers.create_resource(self.conf)
         nd_resource = nodes.create_resource(self.conf)
 
-        mapper.resource("loadbalancer", "loadbalancers",
-         member={'details': 'GET'},
-         controller=lb_resource, collection={'detail': 'GET'})
-
-        mapper.resource('node', 'nodes', controller=nd_resource,
-         parent_resource={'member_name': 'lb',
-         'collection_name': 'loadbalancers'})
+        lb_collection = mapper.collection("loadbalancers", "loadbalancer",
+                controller=lb_resource, member_prefix="/{lb_id}",
+                formatted=False)
+        lb_collection.member.link('details')
 
         mapper.connect("/loadbalancers/find_for_VM/{vm_id}",
                        controller=lb_resource,
                        action="findLBforVM", conditions={'method': ["GET"]})
 
-        mapper.connect("/loadbalancers/{lb_id}/nodes/{id}/{status}",
-                       controller=nd_resource, action="changeNodeStatus",
-                       conditions={'method': ["PUT"]})
+        nd_collection = lb_collection.member.collection('nodes', 'node',
+                controller=nd_resource, member_prefix="/{node_id}",
+                formatted=False)
+        nd_collection.member.connect("/{status}", action="changeNodeStatus",
+                   conditions={'method': ["PUT"]})
 
         pb_resource = probes.create_resource(self.conf)
 
-        mapper.resource('', 'healthMonitoring',
-         controller=pb_resource,
-         parent_resource={'member_name': 'lb',
-         'collection_name': 'loadbalancers'})
+        lb_collection.member.collection('healthMonitoring', '',
+                controller=pb_resource, member_prefix="/{probe_id}",
+                formatted=False)
 
         st_resource = stickies.create_resource(self.conf)
 
-        mapper.resource('', 'sessionPersistence',
-         controller=st_resource,
-         parent_resource={'member_name': 'lb',
-         'collection_name': 'loadbalancers'})
+        lb_collection.member.collection('sessionPersistence', '',
+                controller=st_resource, member_prefix="/{sticky_id}",
+                formatted=False)
 
         vip_resource = vips.create_resource(self.conf)
 
-        mapper.resource("virtualIp", "virtualIps",
-         controller=vip_resource,
-         parent_resource={'member_name': 'lb',
-         'collection_name': 'loadbalancers'})
+        lb_collection.member.collection('virtualIps', 'virtualIp',
+                controller=vip_resource, member_prefix="/{vip_id}",
+                formatted=False)
 
         device_resource = devices.create_resource(self.conf)
 
-        mapper.resource("device", "devices", controller=device_resource,
-                        member={'info': 'GET'},
-                        collection={'detail': 'GET'})
+        device_collection = mapper.collection('devices', 'device',
+                controller=device_resource, member_prefix="/{device_id}",
+                formatted=False)
+        device_collection.member.link('info')
 
         # NOTE(yorik-sar): broken
         #mapper.connect("/devices/{id}/status", controller=device_resource,

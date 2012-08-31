@@ -60,25 +60,25 @@ class Controller(object):
         return {'loadbalancer': {'id': lb_id}}
 
     @utils.http_success_code(204)
-    def delete(self, req, id):
+    def delete(self, req, lb_id):
         LOG.debug("Got delete request. Request: %s", req)
-        core_api.delete_lb(self.conf, id)
+        core_api.delete_lb(self.conf, lb_id)
 
-    def show(self, req, id):
+    def show(self, req, lb_id):
         LOG.debug("Got loadbalancerr info request. Request: %s", req)
-        result = core_api.lb_get_data(self.conf, id)
+        result = core_api.lb_get_data(self.conf, lb_id)
         return {'loadbalancer': result}
 
-    def details(self, req, id):
+    def details(self, req, lb_id):
         LOG.debug("Got loadbalancerr info request. Request: %s", req)
-        result = core_api.lb_show_details(self.conf, id)
+        result = core_api.lb_show_details(self.conf, lb_id)
         return result
 
     @utils.http_success_code(202)
-    def update(self, req, id, body):
+    def update(self, req, lb_id, body):
         LOG.debug("Got update request. Request: %s", req)
-        core_api.update_lb(self.conf, id, body)
-        return {'loadbalancer': {'id': id}}
+        core_api.update_lb(self.conf, lb_id, body)
+        return {'loadbalancer': {'id': lb_id}}
 
 
 def create_resource(conf):

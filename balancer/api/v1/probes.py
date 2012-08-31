@@ -38,9 +38,9 @@ class Controller(object):
         result = core_api.lb_show_probes(self.conf, lb_id)
         return result
 
-    def show(self, req, lb_id, id):
+    def show(self, req, lb_id, probe_id):
         LOG.debug("Got showProbe request. Request: %s", req)
-        probe = db_api.probe_get(self.conf, id)
+        probe = db_api.probe_get(self.conf, probe_id)
         return {"healthMonitoring": db_api.unpack_extra(probe)}
 
     def create(self, req, lb_id, body):
@@ -51,9 +51,9 @@ class Controller(object):
         return {'healthMonitoring': probe}
 
     @utils.http_success_code(204)
-    def delete(self, req, lb_id, id):
+    def delete(self, req, lb_id, probe_id):
         LOG.debug("Got deleteProbe request. Request: %s", req)
-        core_api.lb_delete_probe(self.conf, lb_id, id)
+        core_api.lb_delete_probe(self.conf, lb_id, probe_id)
 
 
 def create_resource(conf):

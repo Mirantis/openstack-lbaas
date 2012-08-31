@@ -38,9 +38,9 @@ class Controller(object):
         result = core_api.lb_show_sticky(self.conf, lb_id)
         return result
 
-    def show(self, req, lb_id, id):
+    def show(self, req, lb_id, sticky_id):
         LOG.debug("Got showStickiness request. Request: %s", req)
-        sticky = db_api.sticky_get(self.conf, id)
+        sticky = db_api.sticky_get(self.conf, sticky_id)
         return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
     def create(self, req, lb_id, body):
@@ -49,9 +49,9 @@ class Controller(object):
         return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
     @utils.http_success_code(204)
-    def delete(self, req, lb_id, id):
+    def delete(self, req, lb_id, sticky_id):
         LOG.debug("Got deleteSticky request. Request: %s", req)
-        core_api.lb_delete_sticky(self.conf, lb_id, id)
+        core_api.lb_delete_sticky(self.conf, lb_id, sticky_id)
 
 
 def create_resource(conf):

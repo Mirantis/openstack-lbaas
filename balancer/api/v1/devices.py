@@ -54,9 +54,9 @@ class Controller(object):
         device = core_api.device_create(self.conf, **params)
         return {"device": db_api.unpack_extra(device)}
 
-    def show(self, req, id):
+    def show(self, req, device_id):
         LOG.debug("Got device data request. Request: %s" % req)
-        device_ref = db_api.device_get(self.conf, id)
+        device_ref = db_api.device_get(self.conf, device_id)
         return {'device': db_api.unpack_extra(device_ref)}
 
     def device_status(self, req, **args):
@@ -104,9 +104,9 @@ class Controller(object):
         return {'devices': list}
 
     @utils.http_success_code(204)
-    def delete(self, req, id):
+    def delete(self, req, device_id):
         LOG.debug("Got delete request. Request: %s", req)
-        core_api.device_delete(self.conf, id)
+        core_api.device_delete(self.conf, device_id)
 
     def show_algorithms(self, req):
         LOG.debug("Got algorithms request. Request: %s", req)
