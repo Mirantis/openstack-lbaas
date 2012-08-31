@@ -30,66 +30,62 @@ class TestLoadBalancersController(unittest.TestCase):
     @mock.patch('balancer.core.api.lb_find_for_vm', autospec=True)
     def test_find_lb_for_vm(self, mock_lb_find_for_vm):
         mock_lb_find_for_vm.return_value = 'foo'
-        self.req.headers = {'X-Tenant-Id': 'fake_tenant_id',
-                            'X-Tenant-Name': 'fake_tenant_name'}
-        resp = self.controller.findLBforVM(self.req, vm_id='123')
+        resp = self.controller.findLBforVM(self.req, 'fake_tenant', '123')
         self.assertTrue(mock_lb_find_for_vm.called)
-        mock_lb_find_for_vm.assert_called_once_with(self.conf, '123')
+        mock_lb_find_for_vm.assert_called_once_with(self.conf,
+                'fake_tenant', '123')
         self.assertEqual(resp, {'loadbalancers': 'foo'})
 
     @mock.patch('balancer.core.api.lb_get_index', autospec=True)
     def test_index(self, mock_lb_get_index):
         mock_lb_get_index.return_value = 'foo'
-        self.req.headers = {'X-Tenant-Id': 'fake_tenant_id'}
-        resp = self.controller.index(self.req)
+        resp = self.controller.index(self.req, 'fake_tenant')
         self.assertTrue(mock_lb_get_index.called)
-        mock_lb_get_index.assert_called_once_with(
-                                    self.conf,
-                                    self.req.headers.get('X-Tenant-Id', ""))
+        mock_lb_get_index.assert_called_once_with(self.conf, 'fake_tenant')
         self.assertEqual(resp, {'loadbalancers': 'foo'})
 
     @mock.patch('balancer.core.api.create_lb', autospec=True)
     def test_create(self, mock_create_lb):
         mock_create_lb.return_value = '1'
-        self.req.headers = {'X-Tenant-Id': 'fake_tenant_id'}
-        resp = self.controller.create(self.req, {})
+        resp = self.controller.create(self.req, 'fake_tenant', {})
         self.assertTrue(mock_create_lb.called)
         mock_create_lb.assert_called_once_with(
                     self.conf,
-                    {'tenant_id': self.req.headers.get('X-Tenant-Id', "")})
+                    {'tenant_id': 'fake_tenant'})
         self.assertEqual(resp, {'loadbalancer': {'id': '1'}})
         self.code_assert(202, self.controller.create)
 
     @mock.patch('balancer.core.api.delete_lb', autospec=True)
     def test_delete(self, mock_delete_lb):
-        resp = self.controller.delete(self.req, 1)
+        resp = self.controller.delete(self.req, 'fake_tenant', 1)
         self.assertTrue(mock_delete_lb.called)
         self.code_assert(204, self.controller.delete)
-        mock_delete_lb.assert_called_once_with(self.conf, 1)
+        mock_delete_lb.assert_called_once_with(self.conf, 'fake_tenant', 1)
         self.assertEqual(resp, None)
 
     @mock.patch('balancer.core.api.lb_get_data', autospec=True)
     def test_show(self, mock_lb_get_data):
         mock_lb_get_data.return_value = 'foo'
-        resp = self.controller.show(self.req, 1)
+        resp = self.controller.show(self.req, 'fake_tenant', 1)
         self.assertTrue(mock_lb_get_data.called)
-        mock_lb_get_data.assert_called_once_with(self.conf, 1)
+        mock_lb_get_data.assert_called_once_with(self.conf, 'fake_tenant', 1)
         self.assertEqual(resp, {'loadbalancer': 'foo'})
 
     @mock.patch('balancer.core.api.lb_show_details', autospec=True)
     def test_details(self, mock_lb_show_details):
         mock_lb_show_details.return_value = 'foo'
-        resp = self.controller.details(self.req, 1)
+        resp = self.controller.details(self.req, 'fake_tenant', 1)
         self.assertTrue(mock_lb_show_details.called)
-        mock_lb_show_details.assert_called_once_with(self.conf, 1)
+        mock_lb_show_details.assert_called_once_with(self.conf,
+                'fake_tenant', 1)
         self.assertEqual('foo', resp)
 
     @mock.patch('balancer.core.api.update_lb', autospec=True)
     def test_update(self, mock_update_lb):
-        resp = self.controller.update(self.req, 1, {})
+        resp = self.controller.update(self.req, 'fake_tenant', 1, {})
         self.assertTrue(mock_update_lb.called)
         self.code_assert(202, self.controller.update)
-        mock_update_lb.assert_called_once_with(self.conf, 1, {})
+        mock_update_lb.assert_called_once_with(self.conf, 'fake_tenant', 1, {})
         self.assertEquals(resp, {"loadbalancer": {"id": 1}})
 
 

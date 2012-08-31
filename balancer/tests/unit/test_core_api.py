@@ -74,8 +74,8 @@ class TestBalancer(unittest.TestCase):
         vm_id = mock.Mock()
         mock_api.return_value = ['foo']
         mock_extra.return_value = 'foo'
-        resp = api.lb_find_for_vm(self.conf, vm_id, self.tenant_id)
-        mock_api.assert_called_once_with(self.conf, vm_id, self.tenant_id)
+        resp = api.lb_find_for_vm(self.conf, 'fake_tenant', vm_id)
+        mock_api.assert_called_once_with(self.conf, 'fake_tenant', vm_id)
         mock_extra.assert_called_once_with('foo')
         self.assertTrue(mock_api.called)
         self.assertEqual(resp, ['foo'])
@@ -91,7 +91,7 @@ class TestBalancer(unittest.TestCase):
         mocks[5].return_value = {"virtualIps": 1, "nodes": 2,
                 "healthMonitor": 3, "sessionPersistence": 4}
         mocks[6].return_value = mock.MagicMock(spec=models.ServerFarm)
-        api.lb_show_details(self.conf, self.lb_id)
+        api.lb_show_details(self.conf, 'fake_tenant', self.lb_id)
         for mok in mocks:
             self.assertTrue(mok.called, "This mock %s didn't call"
                     % mok._mock_name)
@@ -99,14 +99,14 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.db.api.unpack_extra")
     def test_lb_get_data_0(self, mock_api, mock_bal):
-        api.lb_get_data(self.conf, self.lb_id)
+        api.lb_get_data(self.conf, 'fake_tenant', self.lb_id)
         self.assertTrue(mock_api.called)
 
     @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.db.api.unpack_extra")
     def test_lb_get_data_1(self, mock_api, mock_bal):
         mock_api.return_value = {"id": 1, "virtualIps": "cranch"}
-        res = api.lb_get_data(self.conf, self.lb_id)
+        res = api.lb_get_data(self.conf, 'fake_tenant', self.lb_id)
         self.assertTrue(mock_api.called)
         self.assertEquals(res, {"id": 1})
 
@@ -150,13 +150,14 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.drivers.get_device_driver")
     def test_update_lb_0(self, *mocks):
         """No exception"""
-        resp = api.update_lb(self.conf, self.lb_id, self.lb_body,
-                             async=False)
+        resp = api.update_lb(self.conf,
+                'fake_tenant', self.lb_id, self.lb_body, async=False)
         for mock in mocks:
             self.assertTrue(mock.called)
         mocks[0].assert_called_once_with(self.conf,
                                          mocks[1].return_value['device_id'])
-        mocks[1].assert_called_once_with(self.conf, self.lb_id)
+        mocks[1].assert_called_once_with(self.conf, self.lb_id,
+                tenant_id='fake_tenant')
         mocks[2].assert_called_once_with(mocks[1].return_value, self.lb_body)
         mocks[3].assert_called_with(self.conf, self.lb_id,
                 {'status': "ACTIVE"})
@@ -183,7 +184,7 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.core.commands.delete_loadbalancer")
     def test_delete_lb(self, mock_command, mock_driver, mock_api):
         mock_api.return_value = mock.MagicMock()
-        api.delete_lb(self.conf, self.lb_id)
+        api.delete_lb(self.conf, 'fake_tenant', self.lb_id)
         self.assertTrue(mock_api.called)
         self.assertTrue(mock_command.called)
         self.assertTrue(mock_driver.called)

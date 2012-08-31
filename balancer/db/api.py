@@ -106,10 +106,12 @@ def device_destroy(conf, device_id):
 # LoadBalancer
 
 
-def loadbalancer_get(conf, loadbalancer_id, session=None):
+def loadbalancer_get(conf, loadbalancer_id, tenant_id=None, session=None):
     session = session or get_session(conf)
-    loadbalancer_ref = session.query(models.LoadBalancer).\
-                               filter_by(id=loadbalancer_id).first()
+    query = session.query(models.LoadBalancer).filter_by(id=loadbalancer_id)
+    if tenant_id:
+        query = query.filter_by(tenant_id=tenant_id)
+    loadbalancer_ref = query.first()
     if not loadbalancer_ref:
         raise exception.LoadBalancerNotFound(loadbalancer_id=loadbalancer_id)
     return loadbalancer_ref
@@ -121,7 +123,7 @@ def loadbalancer_get_all_by_project(conf, tenant_id):
     return query.all()
 
 
-def loadbalancer_get_all_by_vm_id(conf, vm_id, tenant_id):
+def loadbalancer_get_all_by_vm_id(conf, tenant_id, vm_id):
     session = get_session(conf)
     query = session.query(models.LoadBalancer).distinct().\
                     filter_by(tenant_id=tenant_id).\

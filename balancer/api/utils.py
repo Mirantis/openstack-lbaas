@@ -1,3 +1,6 @@
+import functools
+
+
 def http_success_code(code):
     """Attaches response code to a method.
 
@@ -10,3 +13,10 @@ def http_success_code(code):
         func.wsgi_code = code
         return func
     return decorator
+
+
+def verify_tenant(func):
+    @functools.wraps(func)
+    def __inner(self, req, tenant_id, **kwargs):
+        return func(self, req, tenant_id=tenant_id, **kwargs)
+    return __inner

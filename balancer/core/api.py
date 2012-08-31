@@ -43,7 +43,7 @@ def asynchronous(func):
     return _inner
 
 
-def lb_get_index(conf, tenant_id=''):
+def lb_get_index(conf, tenant_id):
     lbs = db_api.loadbalancer_get_all_by_project(conf, tenant_id)
     lbs = [db_api.unpack_extra(lb) for lb in lbs]
 
@@ -53,15 +53,15 @@ def lb_get_index(conf, tenant_id=''):
     return lbs
 
 
-def lb_find_for_vm(conf, vm_id, tenant_id=''):
-    lbs = db_api.loadbalancer_get_all_by_vm_id(conf, vm_id, tenant_id)
+def lb_find_for_vm(conf, tenant_id, vm_id):
+    lbs = db_api.loadbalancer_get_all_by_vm_id(conf, tenant_id, vm_id)
     lbs = [db_api.unpack_extra(lb) for lb in lbs]
     return lbs
 
 
-def lb_get_data(conf, lb_id):
+def lb_get_data(conf, tenant_id, lb_id):
     logger.debug("Getting information about loadbalancer with id: %s" % lb_id)
-    lb = db_api.loadbalancer_get(conf, lb_id)
+    lb = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     lb_dict = db_api.unpack_extra(lb)
     if 'virtualIps' in lb_dict:
         lb_dict.pop("virtualIps")
@@ -69,8 +69,8 @@ def lb_get_data(conf, lb_id):
     return lb_dict
 
 
-def lb_show_details(conf, lb_id):
-    lb = db_api.loadbalancer_get(conf, lb_id)
+def lb_show_details(conf, tenant_id, lb_id):
+    lb = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
     vips = db_api.virtualserver_get_all_by_sf_id(conf, sf['id'])
     rs = db_api.server_get_all_by_sf_id(conf, sf['id'])
@@ -112,8 +112,8 @@ def create_lb(conf, params):
 
 
 @asynchronous
-def update_lb(conf, lb_id, lb_body):
-    lb_ref = db_api.loadbalancer_get(conf, lb_id)
+def update_lb(conf, tenant_id, lb_id, lb_body):
+    lb_ref = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     old_lb_ref = copy.deepcopy(lb_ref)
     db_api.pack_update(lb_ref, lb_body)
     new_lb_ref = db_api.loadbalancer_update(conf, lb_id, lb_ref)
@@ -129,8 +129,8 @@ def update_lb(conf, lb_id, lb_body):
                                {'status': lb_status.ACTIVE})
 
 
-def delete_lb(conf, lb_id):
-    lb = db_api.loadbalancer_get(conf, lb_id)
+def delete_lb(conf, tenant_id, lb_id):
+    lb = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
         commands.delete_loadbalancer(ctx, lb)
