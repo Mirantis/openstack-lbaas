@@ -42,10 +42,11 @@ class API(wsgi.Router):
         self.conf = conf
         mapper = routes.Mapper()
 
-        lb_resource = loadbalancers.create_resource(self.conf)
-        nd_resource = nodes.create_resource(self.conf)
+        tenant_mapper = mapper.submapper(path_prefix="/{tenant_id}")
 
-        lb_collection = mapper.collection("loadbalancers", "loadbalancer",
+        lb_resource = loadbalancers.create_resource(self.conf)
+        lb_collection = tenant_mapper.collection(
+                "loadbalancers", "loadbalancer",
                 controller=lb_resource, member_prefix="/{lb_id}",
                 formatted=False)
         lb_collection.member.link('details')
@@ -54,6 +55,7 @@ class API(wsgi.Router):
                        controller=lb_resource,
                        action="findLBforVM", conditions={'method': ["GET"]})
 
+        nd_resource = nodes.create_resource(self.conf)
         nd_collection = lb_collection.member.collection('nodes', 'node',
                 controller=nd_resource, member_prefix="/{node_id}",
                 formatted=False)
