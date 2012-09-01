@@ -115,19 +115,24 @@ class TestHaproxyDriverRemoteConfig (unittest.TestCase):
         self.assertFalse(self.remote_config.validate_config())
 
 
+class SSHMock(Mock):
+    def exec_command(self, str1):
+        return [str1, Mock()]
+
+
 class TestHaproxyDriverRemoteService (unittest.TestCase):
     def setUp(self):
         self.remote_service = RemoteService(device_fake)
-        self.remote_service.ssh = Mock()
+        self.remote_service.ssh = SSHMock()
 
     def test_start_service(self):
-        self.assertTrue(self.remote_service.start())
+        self.remote_service.start()
 
     def test_stop_service(self):
-        self.assertTrue(self.remote_service.stop())
+        self.remote_service.stop()
 
     def test_restart_service(self):
-        self.assertTrue(self.remote_service.restart())
+        self.remote_service.restart()
 
 
 class TestHaproxyDriverRemoteInterface (unittest.TestCase):
@@ -196,7 +201,7 @@ class TestHaproxyDeriverAllFunctions (unittest.TestCase):
         self.driver.create_server_farm(server_farm, predictor)
 
     def test_create_server_farm_with_leastconnections(self):
-        self.driver.create_server_farm(server_farm, predictor_leastconnections)
+        self.driver.create_server_farm(server_farm, predictor_connections)
 
     def test_create_server_farm_with_hashaddr(self):
         self.driver.create_server_farm(server_farm, predictor_hashaddr)

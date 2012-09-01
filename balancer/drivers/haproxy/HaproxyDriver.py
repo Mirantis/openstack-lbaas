@@ -154,7 +154,8 @@ class HaproxyDriver(base_driver.BaseDriver):
         haproxy_rserver.weight = rserver.get('weight') or 1
         haproxy_rserver.address = rserver['address']
         haproxy_rserver.port = rserver.get('port') or 0
-        haproxy_rserver.maxconn = rserver['extra'].get('maxCon') or 10000
+        if rserver.get('extra'):
+            haproxy_rserver.maxconn = rserver['extra'].get('maxCon') or 10000
         #Modify remote config file, check and restart remote haproxy
         logger.debug('[HAPROXY] Creating rserver %s in the '
                      'backend block %s' %
@@ -255,8 +256,7 @@ class HaproxyDriver(base_driver.BaseDriver):
         config_file = self._get_config()
 
         remote_socket = RemoteSocketOperation(self.device_ref,
-                                        haproxy_serverfarm, haproxy_rserver,
-                                        self.interface, self.haproxy_socket)
+                                        haproxy_serverfarm, rserver)
         if type_of_operation == 'suspend':
             config_file.enable_disable_reserver_in_backend_block(
                              haproxy_serverfarm, haproxy_rserver, 'disable')
