@@ -270,8 +270,13 @@ class HaproxyDriver(base_driver.BaseDriver):
         haproxy_serverfarm.name = serverfarm['id']
 
         predictor_type = predictor['type'].upper()
-        haproxy_serverfarm.balance = self.algorithms.get(predictor_type,
-                                            self.default_algorithm)
+        algorithm = self.algorithms.get(predictor_type)
+        if algorithms is not None:
+            haproxy_serverfarm.balance = algorithm
+        else:
+            logger.warning("Unknown algorithm %r, used default value %r.",
+                           predictor_type, self.default_algorithm)
+            haproxy_serverfarm.balance = self.default_algorithm
 
         config_file = self._get_config()
         config_file.add_backend(haproxy_serverfarm)
