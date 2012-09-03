@@ -25,8 +25,18 @@ from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation
 
 logger = logging.getLogger(__name__)
 
+ALGORITHMS_MAPPING = {
+    'ROUND_ROBIN': 'roundrobin',
+    'LEAST_CONNECTION': 'leastconn',
+    'HASH_SOURCE': 'source',
+    'HASH_URI': 'uri',
+}
+
 
 class HaproxyDriver(base_driver.BaseDriver):
+    algorithms = ALGORITHMS_MAPPING
+    default_algorithm = ALGORITHMS_MAPPING['ROUND_ROBIN']
+
     def __init__(self, conf, device_ref):
         super(HaproxyDriver, self).__init__(conf, device_ref)
         device_extra = self.device_ref.get('extra') or {}
@@ -259,14 +269,9 @@ class HaproxyDriver(base_driver.BaseDriver):
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['id']
 
-        if predictor.get('type').lower() == 'roundrobin':
-            haproxy_serverfarm.balance = 'roundrobin'
-        elif predictor.get('type').lower() == 'leastconnections':
-            haproxy_serverfarm.balance = 'leastconn'
-        elif predictor.get('type').lower() == 'hashaddr':
-            haproxy_serverfarm.balance = 'source'
-        elif predictor.get('type').lower() == 'hashurl':
-            haproxy_serverfarm.balance = 'uri'
+        predictor_type = predictor['type'].upper()
+        haproxy_serverfarm.balance = self.algorithms.get(predictor_type,
+                                            self.default_algorithm)
 
         config_file = self._get_config()
         config_file.add_backend(haproxy_serverfarm)
