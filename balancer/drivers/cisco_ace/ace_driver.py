@@ -424,7 +424,7 @@ class AceDriver(BaseDriver):
 
     def create_server_farm(self, sf, predictor):
         sf_type = sf['type'].lower()
-        sf_extra = sf.get('extra') or {}
+        sf_extra = sf['extra'] or {}
         cmd = "serverfarm " + sf_type + " " + sf['id']
         if sf_extra.get('description'):
             cmd += "\ndescription " + sf_extra['description']
@@ -432,28 +432,29 @@ class AceDriver(BaseDriver):
             cmd += "\nfailaction " + sf_extra['failAction']
         if predictor.get('type'):
             type_ = predictor['type'].lower()
+            predictor_extra = predictor['extra'] or {}
             if (type_ == "leastbandwidth"):
                 type_ = "least-bandwidth"
-                accessTime = predictor.get('extra').get('accessTime')
+                accessTime = predictor_extra.get('accessTime')
                 if accessTime:
                     type_ += " assess-time " + str(accessTime)
                 if sf_extra.get('accessTime'):
-                    type_ += " samples " + predictor.get('extra').get('sample')
+                    type_ += " samples " + predictor_extra.get('sample')
             elif (type_ == "leastconnections"):
                 type_ = "leastconns slowstart " + \
-                        predictor.get('extra').get('slowStartDur')
+                        predictor_extra.get('slowStartDur')
             elif (type_ == "leastloaded"):
                 type_ = "least-loaded probe " + \
-                        predictor.get('extra').get('snmpProbe')
+                        predictor_extra.get('snmpProbe')
             elif (type_ == "hashaddress"):
                 type_ = "hash address "
-                if predictor.get('extra').get('netmask'):
-                    type_ += predictor['extra']['netmask']
-                    if predictor.get('extra').get('prefix'):
+                if predictor_extra.get('netmask'):
+                    type_ += predictor_extra['netmask']
+                    if predictor_extra.get('prefix'):
                         type_ += "\npredictor hash address v6-prefix " + \
-                                predictor['extra']['prefix']
-                elif predictor.get('extra').get('prefix'):
-                    type_ += predictor['extra']['prefix']
+                                predictor_extra['prefix']
+                elif predictor_extra.get('prefix'):
+                    type_ += predictor_extra['prefix']
             cmd += "\npredictor " + type_
         if (sf_type == "host"):
             if sf_extra.get('failOnAll'):
