@@ -33,29 +33,32 @@ class Controller(object):
         self.conf = conf
 
     @utils.http_success_code(200)
-    def index(self, req, lb_id):
+    def index(self, req, tenant_id, lb_id):
         LOG.debug("Got index request. Request: %s", req)
         vips = map(db_api.unpack_extra,
-                   db_api.virtualserver_get_all_by_lb_id(self.conf, lb_id))
+                   db_api.virtualserver_get_all_by_lb_id(self.conf,
+                       lb_id, tenant_id=tenant_id))
         return {"virtualIps": vips}
 
-    def create(self, req, lb_id, body):
+    def create(self, req, tenant_id, lb_id, body):
         LOG.debug("Called create(), req: %r, lb_id: %s, body: %r",
                      req, lb_id, body)
-        vip = core_api.lb_add_vip(self.conf, lb_id, body['virtualIp'])
+        vip = core_api.lb_add_vip(self.conf,
+                tenant_id, lb_id, body['virtualIp'])
         return {'virtualIp': vip}
 
-    def show(self, req, lb_id, id):
-        LOG.debug("Called show(), req: %r, lb_id: %s, id: %s",
-                     req, lb_id, id)
-        vip_ref = db_api.virtualserver_get(self.conf, id)
+    def show(self, req, tenant_id, lb_id, vip_id):
+        LOG.debug("Called show(), req: %r, lb_id: %s, vip_id: %s",
+                     req, lb_id, vip_id)
+        vip_ref = db_api.virtualserver_get(self.conf,
+                vip_id, tenant_id=tenant_id)
         return {'virtualIp': db_api.unpack_extra(vip_ref)}
 
     @utils.http_success_code(204)
-    def delete(self, req, lb_id, id):
-        LOG.debug("Called delete(), req: %r, lb_id: %s, id: %s",
-                     req, lb_id, id)
-        core_api.lb_delete_vip(self.conf, lb_id, id)
+    def delete(self, req, tenant_id, lb_id, vip_id):
+        LOG.debug("Called delete(), req: %r, lb_id: %s, vip_id: %s",
+                     req, lb_id, vip_id)
+        core_api.lb_delete_vip(self.conf, tenant_id, lb_id, vip_id)
 
 
 def create_resource(conf):

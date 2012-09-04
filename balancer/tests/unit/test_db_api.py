@@ -313,9 +313,9 @@ class TestDBAPI(unittest.TestCase):
         node_ref2 = db_api.server_create(self.conf, node_fake2)
         node_ref3 = db_api.server_create(self.conf, node_fake3)
         node_ref4 = db_api.server_create(self.conf, node_fake4)
-        lbs1 = db_api.loadbalancer_get_all_by_vm_id(self.conf, 1, 'tenant1')
-        lbs2 = db_api.loadbalancer_get_all_by_vm_id(self.conf, 30, 'tenant2')
-        lbs3 = db_api.loadbalancer_get_all_by_vm_id(self.conf, 20, 'tenant2')
+        lbs1 = db_api.loadbalancer_get_all_by_vm_id(self.conf, 'tenant1', 1)
+        lbs2 = db_api.loadbalancer_get_all_by_vm_id(self.conf, 'tenant2', 30)
+        lbs3 = db_api.loadbalancer_get_all_by_vm_id(self.conf, 'tenant2', 20)
         self.assertEqual([dict(lb_ref1.iteritems())],
                          [dict(lb.iteritems()) for lb in lbs1])
         self.assertEqual([dict(lb_ref2.iteritems())],

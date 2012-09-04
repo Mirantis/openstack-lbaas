@@ -106,10 +106,12 @@ def device_destroy(conf, device_id):
 # LoadBalancer
 
 
-def loadbalancer_get(conf, loadbalancer_id, session=None):
+def loadbalancer_get(conf, loadbalancer_id, tenant_id=None, session=None):
     session = session or get_session(conf)
-    loadbalancer_ref = session.query(models.LoadBalancer).\
-                               filter_by(id=loadbalancer_id).first()
+    query = session.query(models.LoadBalancer).filter_by(id=loadbalancer_id)
+    if tenant_id:
+        query = query.filter_by(tenant_id=tenant_id)
+    loadbalancer_ref = query.first()
     if not loadbalancer_ref:
         raise exception.LoadBalancerNotFound(loadbalancer_id=loadbalancer_id)
     return loadbalancer_ref
@@ -121,7 +123,7 @@ def loadbalancer_get_all_by_project(conf, tenant_id):
     return query.all()
 
 
-def loadbalancer_get_all_by_vm_id(conf, vm_id, tenant_id):
+def loadbalancer_get_all_by_vm_id(conf, tenant_id, vm_id):
     session = get_session(conf)
     query = session.query(models.LoadBalancer).distinct().\
                     filter_by(tenant_id=tenant_id).\
@@ -171,9 +173,14 @@ def lb_count_active_by_device(conf, device_id):
 # Probe
 
 
-def probe_get(conf, probe_id, session=None):
+def probe_get(conf, probe_id, tenant_id=None, session=None):
     session = session or get_session(conf)
-    probe_ref = session.query(models.Probe).filter_by(id=probe_id).first()
+    query = session.query(models.Probe).filter_by(id=probe_id)
+    if tenant_id:
+        query = query.filter(models.Probe.sf_id == models.ServerFarm.id).\
+                  filter(models.LoadBalancer.id == models.ServerFarm.lb_id).\
+                  filter(models.LoadBalancer.tenant_id == tenant_id)
+    probe_ref = query.first()
     if not probe_ref:
         raise exception.ProbeNotFound(probe_id=probe_id)
     return probe_ref
@@ -223,9 +230,14 @@ def probe_destroy_by_sf_id(conf, sf_id, session=None):
 # Sticky
 
 
-def sticky_get(conf, sticky_id, session=None):
+def sticky_get(conf, sticky_id, tenant_id=None, session=None):
     session = session or get_session(conf)
-    sticky_ref = session.query(models.Sticky).filter_by(id=sticky_id).first()
+    query = session.query(models.Sticky).filter_by(id=sticky_id)
+    if tenant_id:
+        query = query.filter(models.Sticky.sf_id == models.ServerFarm.id).\
+                  filter(models.LoadBalancer.id == models.ServerFarm.lb_id).\
+                  filter(models.LoadBalancer.tenant_id == tenant_id)
+    sticky_ref = query.first()
     if not sticky_ref:
         raise exception.StickyNotFound(sticky_id=sticky_id)
     return sticky_ref
@@ -275,12 +287,19 @@ def sticky_destroy_by_sf_id(conf, sf_id, session=None):
 # Server
 
 
-def server_get(conf, server_id, lb_id=None, session=None):
+def server_get(conf, server_id, lb_id=None, tenant_id=None, session=None):
     session = session or get_session(conf)
     query = session.query(models.Server).filter_by(id=server_id)
     if lb_id:
         query = query.filter(models.ServerFarm.lb_id == lb_id).\
-                        filter(models.Server.sf_id == models.ServerFarm.id)
+                      filter(models.Server.sf_id == models.ServerFarm.id)
+        if tenant_id:
+            query = query.filter(models.LoadBalancer.id == lb_id).\
+                          filter(models.LoadBalancer.tenant_id == tenant_id)
+    elif tenant_id:
+        query = query.filter(models.Server.sf_id == models.ServerFarm.id).\
+                  filter(models.LoadBalancer.id == models.ServerFarm.lb_id).\
+                  filter(models.LoadBalancer.tenant_id == tenant_id)
     server_ref = query.first()
     if not server_ref:
         raise exception.ServerNotFound(server_id=server_id)
@@ -370,9 +389,12 @@ def serverfarm_get(conf, serverfarm_id, session=None):
     return serverfarm_ref
 
 
-def serverfarm_get_all_by_lb_id(conf, lb_id):
+def serverfarm_get_all_by_lb_id(conf, lb_id, tenant_id=None):
     session = get_session(conf)
     query = session.query(models.ServerFarm).filter_by(lb_id=lb_id)
+    if tenant_id:
+        query = query.filter_by(models.LoadBalancer.id == lb_id).\
+                      filter_by(models.LoadBalancer.tenant_id == tenant_id)
     return query.all()
 
 
@@ -449,10 +471,15 @@ def predictor_destroy_by_sf_id(conf, sf_id, session=None):
 # VirtualServer
 
 
-def virtualserver_get(conf, vserver_id, session=None):
+def virtualserver_get(conf, vserver_id, tenant_id=None, session=None):
     session = session or get_session(conf)
     vserver_ref = session.query(models.VirtualServer).\
                           filter_by(id=vserver_id).first()
+    if tenant_id:
+        query = query.\
+                  filter(models.VirtualServer.sf_id == models.ServerFarm.id).\
+                  filter(models.LoadBalancer.id == models.ServerFarm.lb_id).\
+                  filter(models.LoadBalancer.tenant_id == tenant_id)
     if not vserver_ref:
         raise exception.VirtualServerNotFound(virtualserver_id=vserver_id)
     return vserver_ref
@@ -464,11 +491,16 @@ def virtualserver_get_all_by_sf_id(conf, sf_id):
     return query.all()
 
 
-def virtualserver_get_all_by_lb_id(conf, lb_id):
+def virtualserver_get_all_by_lb_id(conf, lb_id, tenant_id=None):
     session = get_session(conf)
-    vips = session.query(models.VirtualServer).\
+    query = session.query(models.VirtualServer).\
                   filter(models.ServerFarm.lb_id == lb_id).\
-                  filter_by(sf_id=models.ServerFarm.id).all()
+                  filter_by(sf_id=models.ServerFarm.id)
+    if tenant_id:
+        query = query.\
+                  filter(models.LoadBalancer.id == models.ServerFarm.lb_id).\
+                  filter(models.LoadBalancer.tenant_id == tenant_id)
+    vips = wuery.all()
     return vips
 
 

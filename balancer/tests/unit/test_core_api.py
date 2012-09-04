@@ -74,8 +74,8 @@ class TestBalancer(unittest.TestCase):
         vm_id = mock.Mock()
         mock_api.return_value = ['foo']
         mock_extra.return_value = 'foo'
-        resp = api.lb_find_for_vm(self.conf, vm_id, self.tenant_id)
-        mock_api.assert_called_once_with(self.conf, vm_id, self.tenant_id)
+        resp = api.lb_find_for_vm(self.conf, 'fake_tenant', vm_id)
+        mock_api.assert_called_once_with(self.conf, 'fake_tenant', vm_id)
         mock_extra.assert_called_once_with('foo')
         self.assertTrue(mock_api.called)
         self.assertEqual(resp, ['foo'])
@@ -91,7 +91,7 @@ class TestBalancer(unittest.TestCase):
         mocks[5].return_value = {"virtualIps": 1, "nodes": 2,
                 "healthMonitor": 3, "sessionPersistence": 4}
         mocks[6].return_value = mock.MagicMock(spec=models.ServerFarm)
-        api.lb_show_details(self.conf, self.lb_id)
+        api.lb_show_details(self.conf, 'fake_tenant', self.lb_id)
         for mok in mocks:
             self.assertTrue(mok.called, "This mock %s didn't call"
                     % mok._mock_name)
@@ -99,14 +99,14 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.db.api.unpack_extra")
     def test_lb_get_data_0(self, mock_api, mock_bal):
-        api.lb_get_data(self.conf, self.lb_id)
+        api.lb_get_data(self.conf, 'fake_tenant', self.lb_id)
         self.assertTrue(mock_api.called)
 
     @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.db.api.unpack_extra")
     def test_lb_get_data_1(self, mock_api, mock_bal):
         mock_api.return_value = {"id": 1, "virtualIps": "cranch"}
-        res = api.lb_get_data(self.conf, self.lb_id)
+        res = api.lb_get_data(self.conf, 'fake_tenant', self.lb_id)
         self.assertTrue(mock_api.called)
         self.assertEquals(res, {"id": 1})
 
@@ -150,13 +150,14 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.drivers.get_device_driver")
     def test_update_lb_0(self, *mocks):
         """No exception"""
-        resp = api.update_lb(self.conf, self.lb_id, self.lb_body,
-                             async=False)
+        resp = api.update_lb(self.conf,
+                'fake_tenant', self.lb_id, self.lb_body, async=False)
         for mock in mocks:
             self.assertTrue(mock.called)
         mocks[0].assert_called_once_with(self.conf,
                                          mocks[1].return_value['device_id'])
-        mocks[1].assert_called_once_with(self.conf, self.lb_id)
+        mocks[1].assert_called_once_with(self.conf, self.lb_id,
+                tenant_id='fake_tenant')
         mocks[2].assert_called_once_with(mocks[1].return_value, self.lb_body)
         mocks[3].assert_called_with(self.conf, self.lb_id,
                 {'status': "ACTIVE"})
@@ -183,7 +184,7 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.core.commands.delete_loadbalancer")
     def test_delete_lb(self, mock_command, mock_driver, mock_api):
         mock_api.return_value = mock.MagicMock()
-        api.delete_lb(self.conf, self.lb_id)
+        api.delete_lb(self.conf, 'fake_tenant', self.lb_id)
         self.assertTrue(mock_api.called)
         self.assertTrue(mock_command.called)
         self.assertTrue(mock_driver.called)
@@ -198,7 +199,7 @@ class TestBalancer(unittest.TestCase):
     def test_lb_add_nodes(self, *mocks):
         mocks[2].return_value = {'device_id': 1}
         mocks[3].return_value = [{'id': 1}]
-        api.lb_add_nodes(self.conf, self.lb_id, self.lb_nodes)
+        api.lb_add_nodes(self.conf, 'fake_tenant', self.lb_id, self.lb_nodes)
         for mok in mocks:
             self.assertTrue(mok.called, "This mock didn't call %s"
                     % mok._mock_name)
@@ -208,7 +209,7 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
     def test_lb_show_nodes(self, mock_serverfarm, mock_server, mock_unpack):
         mock_serverfarm.return_value = self.dict_list
-        api.lb_show_nodes(self.conf, 1)
+        api.lb_show_nodes(self.conf, 'fake_tenant', 1)
         self.assertTrue(mock_serverfarm.called)
         self.assertTrue(mock_server.called)
 
@@ -220,7 +221,8 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.server_destroy")
     def test_lb_delete_node(self, *mocks):
         mocks[5].return_value = self.dict_list
-        api.lb_delete_node(self.conf, self.lb_id, self.lb_node_id)
+        api.lb_delete_node(self.conf,
+                'fake_tenant', self.lb_id, self.lb_node_id)
         for mock in mocks:
             self.assertTrue(mock.called)
 
@@ -233,8 +235,8 @@ class TestBalancer(unittest.TestCase):
     def test_lb_change_node_status_0(self, *mocks):
         """Activate server called"""
         lb_node_status = "inservice"
-        api.lb_change_node_status(self.conf, self.lb_id, self.lb_node_id,
-                    lb_node_status)
+        api.lb_change_node_status(self.conf,
+                'fake_tenant', self.lb_id, self.lb_node_id, lb_node_status)
         for mock in mocks:
             self.assertTrue(mock.called)
 
@@ -247,8 +249,8 @@ class TestBalancer(unittest.TestCase):
     def test_lb_change_node_status_1(self, *mocks):
         """Suspend server called"""
         lb_node_status = ""
-        api.lb_change_node_status(self.conf, self.lb_id, self.lb_node_id,
-                    lb_node_status)
+        api.lb_change_node_status(self.conf,
+                'fake_tenant', self.lb_id, self.lb_node_id, lb_node_status)
         for mock in mocks:
             self.assertTrue(mock.called)
 
@@ -262,8 +264,8 @@ class TestBalancer(unittest.TestCase):
     def test_lb_change_node_status_2(self, *mocks):
         """return ok"""
         mocks[0].return_value = {'sf_id': 1, 'state': 'status'}
-        api.lb_change_node_status(self.conf, self.lb_id, self.lb_node_id,
-                'status')
+        api.lb_change_node_status(self.conf,
+                'fake_tenant', self.lb_id, self.lb_node_id, 'status')
         self.assertFalse(mocks[1].called)
         self.assertFalse(mocks[2].called)
 
@@ -278,8 +280,8 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.core.commands.add_rserver_to_server_farm")
     def test_lb_update_node_0(self, mock_com0, mock_com1, *mocks):
         """"""
-        api.lb_update_node(self.conf, self.lb_id, self.lb_node_id,
-                self.lb_node)
+        api.lb_update_node(self.conf,
+                'fake_tenant', self.lb_id, self.lb_node_id, self.lb_node)
         self.assertTrue(mock_com0.called)
         self.assertTrue(mock_com1.called)
 
@@ -297,14 +299,15 @@ class TestBalancer(unittest.TestCase):
         """"""
         mock_extra.return_value = self.dictionary
         mock_lb.return_value.__getitem__.return_value = 2
-        resp = api.lb_update_node(self.conf, self.lb_id, self.lb_node_id,
-                                  self.lb_node)
+        resp = api.lb_update_node(self.conf,
+                'fake_tenant', self.lb_id, self.lb_node_id, self.lb_node)
         self.assertEqual(resp, self.dictionary)
         mock_update.assert_called_once_with(self.conf,
                                             mock_get.return_value['id'],
                                             mock_get.return_value)
         mock_extra.assert_called_once_with(mock_update.return_value)
-        mock_get.assert_called_once_with(self.conf, self.lb_node_id)
+        mock_get.assert_called_once_with(self.conf,
+                self.lb_node_id, tenant_id='fake_tenant')
         mock_sf.assert_called_once_with(self.conf,
                                         mock_get.return_value['sf_id'])
         mock_lb.assert_called_once_with(self.conf, self.lb_id)
@@ -323,14 +326,15 @@ class TestBalancer(unittest.TestCase):
         db_api1.return_value.__getitem__.return_value.\
                              __getitem__.return_value = 2
         db_api2.return_value = {'probe': 'foo'}
-        resp = api.lb_show_probes(self.conf, self.lb_id)
+        resp = api.lb_show_probes(self.conf, 'fake_tenant', self.lb_id)
         self.assertTrue(db_api1.called)
         self.assertTrue(db_api2.called)
         self.assertTrue(db_api2.call_count == 2)
         self.assertEqual(resp, {'healthMonitoring': [{'probe': 'foo'},
                                                      {'probe': 'foo'}]})
         db_api0.assert_called_once_with(self.conf, 2)
-        db_api1.assert_called_once_with(self.conf, self.lb_id)
+        db_api1.assert_called_once_with(self.conf,
+                self.lb_id, tenant_id='fake_tenant')
         db_api2.assert_any_call(self.dict_list[0])
         db_api2.assert_any_call(self.dict_list[1])
 
@@ -340,7 +344,7 @@ class TestBalancer(unittest.TestCase):
     def test_lb_show_probes_1(self, db_api0, db_api1, db_api2):
         db_api1.return_value = []
         with self.assertRaises(exc.ServerFarmNotFound):
-            api.lb_show_probes(self.conf, self.lb_id)
+            api.lb_show_probes(self.conf, 'fake_tenant', self.lb_id)
             self.assertFalse(db_api0.called)
             self.assertFalse(db_api2.called)
 
@@ -357,13 +361,14 @@ class TestBalancer(unittest.TestCase):
         lb_probe = {'type': 'Gvido'}
         mock_sf.return_value.__getitem__.return_value = {'id': 'foo'}
         mock_unpack.return_value = self.dictionary
-        resp = api.lb_add_probe(self.conf, self.lb_id, lb_probe)
+        resp = api.lb_add_probe(self.conf, 'fake_tenant', self.lb_id, lb_probe)
         self.assertEqual(resp, self.dictionary)
         mock_unpack.assert_called_once_with(mock_create.return_value)
         mock_pack.assert_called_once_with(lb_probe)
         mock_create.assert_called_once_with(self.conf, mock_pack.return_value)
         mock_sf.assert_called_once_with(self.conf, mock_lb.return_value['id'])
-        mock_lb.assert_called_once_with(self.conf, self.lb_id)
+        mock_lb.assert_called_once_with(self.conf,
+                self.lb_id, tenant_id='fake_tenant')
         with mock_driver.return_value.request_context() as ctx:
             mock_command.assert_called_once_with(ctx, {'id': 'foo'},
                                                  mock_create.return_value)
@@ -378,7 +383,7 @@ class TestBalancer(unittest.TestCase):
     def test_lb_add_probe_1(self, *mocks):
         """lb_probe['type']=None"""
         lb_probe = {'type': None}
-        resp = api.lb_add_probe(self.conf, self.lb_id, lb_probe)
+        resp = api.lb_add_probe(self.conf, 'fake_tenant', self.lb_id, lb_probe)
         self.assertEqual(resp, None)
         for mock in mocks:
             self.assertFalse(mock.called)
@@ -390,7 +395,7 @@ class TestBalancer(unittest.TestCase):
         lb_probe = {'type': 'Gvido'}
         mock_sf.return_value = []
         with self.assertRaises(exc.ServerFarmNotFound):
-            api.lb_add_probe(self.conf, self.lb_id, lb_probe)
+            api.lb_add_probe(self.conf, 'fake_tenant', self.lb_id, lb_probe)
 
     @mock.patch("balancer.db.api.loadbalancer_get")
     @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
@@ -404,7 +409,7 @@ class TestBalancer(unittest.TestCase):
         lb_probe = {'type': 'Gvido'}
         mocks[5].side_effect = IndexError
         with self.assertRaises(exc.ServerFarmNotFound):
-            api.lb_add_probe(self.conf, self.lb_id, lb_probe)
+            api.lb_add_probe(self.conf, 'fake_tenant', self.lb_id, lb_probe)
    #     for mok in mocks:
    #         self.assertTrue(mok.called)
 
@@ -416,7 +421,7 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.core.commands.remove_probe_from_server_farm")
     def test_lb_delete_probe(self, *mocks):
         mocks[5].return_value = self.dict_list
-        api.lb_delete_probe(self.conf, self.lb_id, self.lb_id)
+        api.lb_delete_probe(self.conf, 'fake_tenant', self.lb_id, self.lb_id)
         for mok in mocks:
             self.assertTrue(mok.called)
 
@@ -449,9 +454,10 @@ class TestBalancer(unittest.TestCase):
         mock_get_device_driver.return_value = \
             mock.Mock(request_context=mock.Mock(return_value=ctx))
         # Call
-        api.lb_add_vip(self.conf, 'fakelbid', 'fakevipdict')
+        api.lb_add_vip(self.conf, 'fake_tenant', 'fakelbid', 'fakevipdict')
         # Assert
-        mock_loadbalancer_get.assert_called_once_with(self.conf, 'fakelbid')
+        mock_loadbalancer_get.assert_called_once_with(self.conf,
+                'fakelbid', tenant_id='fake_tenant')
         mock_serverfarm_get_all_by_lb_id.assert_called_once_with(self.conf,
                                                                  'fakelbid1')
         mock_virtualserver_pack_extra.assert_called_once_with('fakevipdict')
@@ -483,7 +489,7 @@ class TestBalancer(unittest.TestCase):
                                mock_unpack_extra):
         mock_serverfarm_get_all_by_lb_id.return_value = []
         with self.assertRaises(exc.ServerFarmNotFound):
-            api.lb_add_vip(self.conf, 'fakelbid', 'fakevipdict')
+            api.lb_add_vip(self.conf, 'fake_tenant', 'fakelbid', 'fakevipdict')
         self.assertTrue(mock_loadbalancer_get.called)
         self.assertTrue(mock_serverfarm_get_all_by_lb_id.called)
         self.assertFalse(mock_virtualserver_pack_extra.called)
@@ -512,9 +518,10 @@ class TestBalancer(unittest.TestCase):
         mock_get_device_driver.return_value = \
             mock.Mock(request_context=mock.Mock(return_value=ctx))
         # Call
-        api.lb_delete_vip(self.conf, 'fakelbid', 'fakevipid')
+        api.lb_delete_vip(self.conf, 'fake_tenant', 'fakelbid', 'fakevipid')
         # Assert
-        mock_loadbalancer_get.assert_called_once_with(self.conf, 'fakelbid')
+        mock_loadbalancer_get.assert_called_once_with(self.conf,
+                'fakelbid', tenant_id='fake_tenant')
         mock_virtualserver_get.assert_called_once_with(self.conf, 'fakevipid')
         mock_virtualserver_destroy.assert_called_once_with(self.conf,
                                                            'fakevipid')
@@ -530,7 +537,7 @@ class TestBalancer(unittest.TestCase):
         db_api1.return_value = self.dict_list
         db_api2.return_value.__getitem__.return_value.\
                              __getitem__.return_value = 2
-        resp = api.lb_show_sticky(self.conf, self.lb_id)
+        resp = api.lb_show_sticky(self.conf, 'fake_tenant', self.lb_id)
         self.assertEqual(resp, {"sessionPersistence": [{'sticky': 'foo'},
                                                        {'sticky': 'foo'}]})
         self.assertTrue(db_api0.called)
@@ -540,7 +547,8 @@ class TestBalancer(unittest.TestCase):
         db_api0.assert_any_call(self.dict_list[0])
         db_api0.assert_any_call(self.dict_list[1])
         db_api1.assert_called_once_with(self.conf, 2)
-        db_api2.assert_called_once_with(self.conf, self.lb_id)
+        db_api2.assert_called_once_with(self.conf,
+                self.lb_id, tenant_id='fake_tenant')
 
     @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
     @mock.patch("balancer.db.api.sticky_get_all_by_sf_id")
@@ -548,7 +556,7 @@ class TestBalancer(unittest.TestCase):
     def test_lb_show_sticky1(self, db_api0, db_api1, db_api2):
         db_api2.return_value = []
         with self.assertRaises(exc.ServerFarmNotFound):
-            api.lb_show_sticky(self.conf, self.lb_id)
+            api.lb_show_sticky(self.conf, 'fake_tenant', self.lb_id)
             self.assertFalse(db_api0.called)
             self.assertFalse(db_api1.called)
 
@@ -562,7 +570,7 @@ class TestBalancer(unittest.TestCase):
     def test_lb_add_sticky0(self, *mocks):
         mocks[4].return_value = self.dict_list
         sticky = mock.MagicMock()
-        api.lb_add_sticky(self.conf, self.lb_id, sticky)
+        api.lb_add_sticky(self.conf, 'fake_tenant', self.lb_id, sticky)
         for mok in mocks:
             self.assertTrue(mok.called)
 
@@ -575,7 +583,7 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.core.commands.add_sticky_to_loadbalancer")
     def test_lb_add_sticky1(self, *mocks):
         sticky = {'persistenceType': None}
-        resp = api.lb_add_sticky(self.conf, self.lb_id, sticky)
+        resp = api.lb_add_sticky(self.conf, 'fake_tenant', self.lb_id, sticky)
         self.assertEqual(resp, None)
         for mock in mocks:
             self.assertFalse(mock.called)
@@ -588,9 +596,10 @@ class TestBalancer(unittest.TestCase):
     def test_lb_delete_sticky(self, mock_command, mock_driver, mock_destroy,
                               mock_get, mock_bal):
         mock_bal.return_value = {'id': 2, 'device_id': 2}
-        resp = api.lb_delete_sticky(self.conf, self.lb_id, 1)
+        resp = api.lb_delete_sticky(self.conf, 'fake_tenant', self.lb_id, 1)
         self.assertEqual(resp, 1)
-        mock_bal.assert_called_once_with(self.conf, self.lb_id)
+        mock_bal.assert_called_once_with(self.conf,
+                self.lb_id, tenant_id='fake_tenant')
         mock_get.assert_called_once_with(self.conf, 1)
         mock_destroy.assert_called_once_with(self.conf, 1)
         mock_driver.assert_called_once_with(self.conf, 2)

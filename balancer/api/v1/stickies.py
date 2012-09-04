@@ -33,25 +33,25 @@ class Controller(object):
                                                 "stickies.py %s", conf)
         self.conf = conf
 
-    def index(self, req, lb_id):
+    def index(self, req, tenant_id, lb_id):
         LOG.debug("Got showStickiness request. Request: %s", req)
-        result = core_api.lb_show_sticky(self.conf, lb_id)
+        result = core_api.lb_show_sticky(self.conf, tenant_id, lb_id)
         return result
 
-    def show(self, req, lb_id, id):
+    def show(self, req, tenant_id, lb_id, sticky_id):
         LOG.debug("Got showStickiness request. Request: %s", req)
-        sticky = db_api.sticky_get(self.conf, id)
+        sticky = db_api.sticky_get(self.conf, sticky_id, tenant_id=tenant_id)
         return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
-    def create(self, req, lb_id, body):
+    def create(self, req, tenant_id, lb_id, body):
         LOG.debug("Got addSticky request. Request: %s", req)
-        sticky = core_api.lb_add_sticky(self.conf, lb_id, body)
+        sticky = core_api.lb_add_sticky(self.conf, tenant_id, lb_id, body)
         return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
     @utils.http_success_code(204)
-    def delete(self, req, lb_id, id):
+    def delete(self, req, tenant_id, lb_id, sticky_id):
         LOG.debug("Got deleteSticky request. Request: %s", req)
-        core_api.lb_delete_sticky(self.conf, lb_id, id)
+        core_api.lb_delete_sticky(self.conf, tenant_id, lb_id, sticky_id)
 
 
 def create_resource(conf):
