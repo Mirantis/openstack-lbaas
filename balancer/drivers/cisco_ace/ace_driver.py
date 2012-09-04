@@ -445,7 +445,16 @@ class AceDriver(BaseDriver):
             elif (type_ == "leastloaded"):
                 type_ = "least-loaded probe " + \
                         predictor.get('extra').get('snmpProbe')
-        cmd += "\npredictor " + type_
+            elif (type_ == "hashaddress"):
+                type_ = "hash address "
+                if predictor.get('extra').get('netmask'):
+                    type_ += predictor['extra']['netmask']
+                    if predictor.get('extra').get('prefix'):
+                        type_ += "\npredictor hash address v6-prefix " + \
+                                predictor['extra']['prefix']
+                elif predictor.get('extra').get('prefix'):
+                    type_ += predictor['extra']['prefix']
+            cmd += "\npredictor " + type_
         if (sf_type == "host"):
             if sf_extra.get('failOnAll'):
                 cmd += "\nfail-on-all"
