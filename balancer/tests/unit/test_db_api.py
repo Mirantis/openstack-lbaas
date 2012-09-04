@@ -254,6 +254,13 @@ class TestDBAPI(unittest.TestCase):
         err = cm.exception
         self.assertEqual(err.kwargs, {'device_id': device_ref['id']})
 
+    def _create_lb_and_sf(self, device_id, tenant_id):
+        lb_values = get_fake_lb(device_id, tenant_id)
+        lb_ref = db_api.loadbalancer_create(self.conf, lb_values)
+        sf_values = get_fake_sf(lb_ref['id'])
+        sf_ref = db_api.serverfarm_create(self.conf, sf_values)
+        return lb_ref['id'], sf_ref['id']
+
     def test_loadbalancer_create(self):
         values = get_fake_lb('1', 'tenant1')
         lb_ref = db_api.loadbalancer_create(self.conf, values)
@@ -282,6 +289,22 @@ class TestDBAPI(unittest.TestCase):
         lb_ref2 = db_api.loadbalancer_get(self.conf, lb_ref1['id'])
         self.assertEqual(dict(lb_ref1.iteritems()),
                          dict(lb_ref2.iteritems()))
+
+    def test_loadbalancer_get_with_tenant(self):
+        db_api.loadbalancer_create(self.conf, get_fake_lb('1', 'tenant1'))
+        values = get_fake_lb('2', 'tenant2')
+        lb_ref1 = db_api.loadbalancer_create(self.conf, values)
+        lb_ref2 = db_api.loadbalancer_get(self.conf,
+                lb_ref1['id'], tenant_id='tenant2')
+        self.assertEqual(dict(lb_ref1.iteritems()),
+                         dict(lb_ref2.iteritems()))
+
+    def test_loadbalancer_get_with_tenant_fails(self):
+        values = get_fake_lb('1', 'tenant1')
+        lb_ref1 = db_api.loadbalancer_create(self.conf, values)
+        with self.assertRaises(exception.LoadBalancerNotFound):
+            db_api.loadbalancer_get(self.conf,
+                    lb_ref1['id'], tenant_id='tenant2')
 
     def test_loadbalancer_get_all_by_project(self):
         values = get_fake_lb('1', 'tenant1')
@@ -390,6 +413,12 @@ class TestDBAPI(unittest.TestCase):
         self.assertEqual(dict(probe_ref1.iteritems()),
                          dict(probe_ref2.iteritems()))
 
+    def test_probe_get_with_tenant_fails(self):
+        lb_id, sf_id = self._create_lb_and_sf('1', 'tenant1')
+        probe_ref = db_api.probe_create(self.conf, get_fake_probe(sf_id))
+        with self.assertRaises(exception.ProbeNotFound):
+            db_api.probe_get(self.conf, probe_ref['id'], tenant_id='tenant2')
+
     def test_probe_destroy_by_sf_id(self):
         values1 = get_fake_probe('1')
         values2 = get_fake_probe('2')
@@ -461,6 +490,12 @@ class TestDBAPI(unittest.TestCase):
         sticky_ref2 = db_api.sticky_get(self.conf, sticky_ref1['id'])
         self.assertEqual(dict(sticky_ref1.iteritems()),
                          dict(sticky_ref2.iteritems()))
+
+    def test_sticky_get_with_tenant_fails(self):
+        lb_id, sf_id = self._create_lb_and_sf('1', 'tenant1')
+        sticky_ref = db_api.sticky_create(self.conf, get_fake_sticky(sf_id))
+        with self.assertRaises(exception.StickyNotFound):
+            db_api.sticky_get(self.conf, sticky_ref['id'], tenant_id='tenant2')
 
     def test_sticky_destroy_by_sf_id(self):
         values = get_fake_sticky('1')
@@ -538,16 +573,46 @@ class TestDBAPI(unittest.TestCase):
                          dict(server_ref2.iteritems()))
 
     def test_server_get1(self):
-        lb_values = get_fake_lb('1', 'tenant1')
-        lb = db_api.loadbalancer_create(self.conf, lb_values)
-        sf_values = get_fake_sf(lb['id'])
-        sf = db_api.serverfarm_create(self.conf, sf_values)
-
-        server_values = get_fake_server(sf['id'], 1)
+        lb_id, sf_id = self._create_lb_and_sf('1', 'tenant1')
+        server_values = get_fake_server(sf_id, 1)
         server_ref1 = db_api.server_create(self.conf, server_values)
-        server_ref2 = db_api.server_get(self.conf, server_ref1['id'], lb['id'])
+        server_ref2 = db_api.server_get(self.conf, server_ref1['id'], lb_id)
         self.assertEqual(dict(server_ref1.iteritems()),
                          dict(server_ref2.iteritems()))
+
+    def test_server_get2(self):
+        lb_id, sf_id = self._create_lb_and_sf('1', 'tenant1')
+        server_values = get_fake_server(sf_id, 1)
+        server_ref1 = db_api.server_create(self.conf, server_values)
+        server_ref2 = db_api.server_get(self.conf,
+                server_ref1['id'], lb_id, tenant_id='tenant1')
+        self.assertEqual(dict(server_ref1.iteritems()),
+                         dict(server_ref2.iteritems()))
+
+    def test_server_get2_fails(self):
+        lb_id, sf_id = self._create_lb_and_sf('1', 'tenant1')
+        server_values = get_fake_server(sf_id, 1)
+        server_ref1 = db_api.server_create(self.conf, server_values)
+        with self.assertRaises(exception.ServerNotFound):
+            db_api.server_get(self.conf,
+                server_ref1['id'], lb_id, tenant_id='tenant2')
+
+    def test_server_get3(self):
+        lb_id, sf_id = self._create_lb_and_sf('1', 'tenant1')
+        server_values = get_fake_server(sf_id, 1)
+        server_ref1 = db_api.server_create(self.conf, server_values)
+        server_ref2 = db_api.server_get(self.conf,
+                server_ref1['id'], tenant_id='tenant1')
+        self.assertEqual(dict(server_ref1.iteritems()),
+                         dict(server_ref2.iteritems()))
+
+    def test_server_get3_fails(self):
+        lb_id, sf_id = self._create_lb_and_sf('1', 'tenant1')
+        server_values = get_fake_server(sf_id, 1)
+        server_ref1 = db_api.server_create(self.conf, server_values)
+        with self.assertRaises(exception.ServerNotFound):
+            db_api.server_get(self.conf,
+                server_ref1['id'], tenant_id='tenant2')
 
     def test_server_destroy_by_sf_id(self):
         values = get_fake_server('1', 1)
@@ -634,6 +699,12 @@ class TestDBAPI(unittest.TestCase):
                          [dict(sf.iteritems()) for sf in sfs1])
         self.assertEqual([dict(sf_ref2.iteritems())],
                          [dict(sf.iteritems()) for sf in sfs2])
+
+    def test_serverfarm_get_all_by_lb_id1(self):
+        lb_id, sf_id = self._create_lb_and_sf('1', 'tenant1')
+        res = db_api.serverfarm_get_all_by_lb_id(self.conf,
+                lb_id, tenant_id='tenant2')
+        self.assertEqual([], res)
 
     def test_serverfarm_update(self):
         values = get_fake_sf('1')
@@ -753,6 +824,44 @@ class TestDBAPI(unittest.TestCase):
                          [dict(vs.iteritems()) for vs in [virtualserver3,
                                                           virtualserver4]])
 
+    def test_virtualserver_get_all_by_lb_id(self):
+        lb_id1, sf_id1 = self._create_lb_and_sf('1', 'tenant1')
+        values = get_fake_virtualserver(sf_id1, lb_id1)
+        virtualserver1 = db_api.virtualserver_create(self.conf, values)
+        virtualserver2 = db_api.virtualserver_create(self.conf, values)
+        lb_id2, sf_id2 = self._create_lb_and_sf('1', 'tenant1')
+        values = get_fake_virtualserver(sf_id2, lb_id2)
+        virtualserver3 = db_api.virtualserver_create(self.conf, values)
+        virtualserver4 = db_api.virtualserver_create(self.conf, values)
+        virtualservers1 = db_api.virtualserver_get_all_by_lb_id(self.conf,
+                lb_id1)
+        virtualservers2 = db_api.virtualserver_get_all_by_lb_id(self.conf,
+                lb_id2)
+        self.assertEqual([dict(vs.iteritems()) for vs in virtualservers1],
+                         [dict(vs.iteritems()) for vs in [virtualserver1,
+                                                          virtualserver2]])
+        self.assertEqual([dict(vs.iteritems()) for vs in virtualservers2],
+                         [dict(vs.iteritems()) for vs in [virtualserver3,
+                                                          virtualserver4]])
+
+    def test_virtualserver_get_all_by_lb_id_with_tenant(self):
+        lb_id1, sf_id1 = self._create_lb_and_sf('1', 'tenant1')
+        values = get_fake_virtualserver(sf_id1, lb_id1)
+        virtualserver1 = db_api.virtualserver_create(self.conf, values)
+        virtualserver2 = db_api.virtualserver_create(self.conf, values)
+        lb_id2, sf_id2 = self._create_lb_and_sf('1', 'tenant2')
+        values = get_fake_virtualserver(sf_id2, lb_id2)
+        virtualserver3 = db_api.virtualserver_create(self.conf, values)
+        virtualserver4 = db_api.virtualserver_create(self.conf, values)
+        virtualservers1 = db_api.virtualserver_get_all_by_lb_id(self.conf,
+                lb_id1, tenant_id='tenant1')
+        virtualservers2 = db_api.virtualserver_get_all_by_lb_id(self.conf,
+                lb_id2, tenant_id='tenant1')
+        self.assertEqual([dict(vs.iteritems()) for vs in virtualservers1],
+                         [dict(vs.iteritems()) for vs in [virtualserver1,
+                                                          virtualserver2]])
+        self.assertEqual([], virtualservers2)
+
     def test_virtualserver_update(self):
         values = get_fake_virtualserver('1', '1')
         virtualserver_ref = db_api.virtualserver_create(self.conf, values)
@@ -776,6 +885,23 @@ class TestDBAPI(unittest.TestCase):
                                                       virtualserver_ref1['id'])
         self.assertEqual(dict(virtualserver_ref1.iteritems()),
                          dict(virtualserver_ref2.iteritems()))
+
+    def test_virtualserver_get_with_tenant(self):
+        lb_id, sf_id = self._create_lb_and_sf('1', 'tenant1')
+        values = get_fake_virtualserver(sf_id, lb_id)
+        virtualserver_ref1 = db_api.virtualserver_create(self.conf, values)
+        virtualserver_ref2 = db_api.virtualserver_get(self.conf,
+                virtualserver_ref1['id'], tenant_id='tenant1')
+        self.assertEqual(dict(virtualserver_ref1.iteritems()),
+                         dict(virtualserver_ref2.iteritems()))
+
+    def test_virtualserver_get_with_tenant_fails(self):
+        lb_id, sf_id = self._create_lb_and_sf('1', 'tenant1')
+        values = get_fake_virtualserver(sf_id, lb_id)
+        virtualserver_ref1 = db_api.virtualserver_create(self.conf, values)
+        with self.assertRaises(exception.VirtualServerNotFound):
+            db_api.virtualserver_get(self.conf,
+                virtualserver_ref1['id'], tenant_id='tenant2')
 
     def test_virtualserver_destroy_by_sf_id(self):
         values = get_fake_virtualserver('1', '1')
