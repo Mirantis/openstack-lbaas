@@ -256,9 +256,10 @@ class TestProbesController(unittest.TestCase):
     @mock.patch('balancer.core.api.lb_show_probes', autospec=True)
     def test_index(self, mock_lb_show_probes):
         mock_lb_show_probes.return_value = 'foo'
-        resp = self.controller.index(self.req, 1)
+        resp = self.controller.index(self.req, 'fake_tenant', 1)
         self.assertTrue(mock_lb_show_probes.called)
-        mock_lb_show_probes.assert_called_once_with(self.conf, 1)
+        mock_lb_show_probes.assert_called_once_with(self.conf,
+                'fake_tenant', 1)
         self.assertEqual(resp, 'foo')
 
     @mock.patch('balancer.db.api.unpack_extra', autospec=True)
@@ -266,10 +267,11 @@ class TestProbesController(unittest.TestCase):
     def test_show(self, mock_lb_show_probe_by_id, mock_extra):
         mock_lb_show_probe_by_id.return_value = ['foo']
         mock_extra.return_value = 'foo'
-        resp = self.controller.show(self.req, 1, 1)
+        resp = self.controller.show(self.req, 'fake_tenant', 1, 1)
         self.assertTrue(mock_lb_show_probe_by_id.called)
         self.assertTrue(mock_extra.called)
-        mock_lb_show_probe_by_id.assert_called_once_with(self.conf, 1)
+        mock_lb_show_probe_by_id.assert_called_once_with(self.conf,
+                1, tenant_id='fake_tenant')
         mock_extra.assert_called_once_with(['foo'])
         self.assertEqual(resp, {'healthMonitoring': 'foo'})
 
@@ -277,17 +279,18 @@ class TestProbesController(unittest.TestCase):
     def test_create(self, mock_lb_add_probe):
         mock_lb_add_probe.return_value = {'id': '2'}
         body = {'healthMonitoring': {'probe': 'foo'}}
-        resp = self.controller.create(self.req, '1', body)
+        resp = self.controller.create(self.req, 'fake_tenant', '1', body)
         self.assertTrue(mock_lb_add_probe.called)
-        mock_lb_add_probe.assert_called_once_with(self.conf, '1',
-                                                  {'probe': 'foo'})
+        mock_lb_add_probe.assert_called_once_with(self.conf,
+                'fake_tenant', '1', {'probe': 'foo'})
         self.assertEqual(resp, {'healthMonitoring': {'id': '2'}})
 
     @mock.patch('balancer.core.api.lb_delete_probe', autospec=True)
     def test_delete(self, mock_lb_delete_probe):
-        resp = self.controller.delete(self.req, 1, 1)
+        resp = self.controller.delete(self.req, 'fake_tenant', 1, 1)
         self.assertTrue(mock_lb_delete_probe.called)
-        mock_lb_delete_probe.assert_called_once_with(self.conf, 1, 1)
+        mock_lb_delete_probe.assert_called_once_with(self.conf,
+                'fake_tenant', 1, 1)
         self.assertEqual(resp, None)
         self.code_assert(204, self.controller.delete)
 

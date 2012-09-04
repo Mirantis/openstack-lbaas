@@ -173,9 +173,14 @@ def lb_count_active_by_device(conf, device_id):
 # Probe
 
 
-def probe_get(conf, probe_id, session=None):
+def probe_get(conf, probe_id, tenant_id=None, session=None):
     session = session or get_session(conf)
-    probe_ref = session.query(models.Probe).filter_by(id=probe_id).first()
+    query = session.query(models.Probe).filter_by(id=probe_id)
+    if tenant_id:
+        query = query.filter(models.Probe.sf_id == models.ServerFarm.id).\
+                  filter(models.LoadBalancer.id == models.ServerFarm.lb_id).\
+                  filter(models.LoadBalancer.tenant_id == tenant_id)
+    probe_ref = query.first()
     if not probe_ref:
         raise exception.ProbeNotFound(probe_id=probe_id)
     return probe_ref

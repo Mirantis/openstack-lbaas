@@ -33,27 +33,27 @@ class Controller(object):
                                                 "probes.py %s", conf)
         self.conf = conf
 
-    def index(self, req, lb_id):
+    def index(self, req, tenant_id, lb_id):
         LOG.debug("Got showMonitoring request. Request: %s", req)
-        result = core_api.lb_show_probes(self.conf, lb_id)
+        result = core_api.lb_show_probes(self.conf, tenant_id, lb_id)
         return result
 
-    def show(self, req, lb_id, probe_id):
+    def show(self, req, tenant_id, lb_id, probe_id):
         LOG.debug("Got showProbe request. Request: %s", req)
-        probe = db_api.probe_get(self.conf, probe_id)
+        probe = db_api.probe_get(self.conf, probe_id, tenant_id=tenant_id)
         return {"healthMonitoring": db_api.unpack_extra(probe)}
 
-    def create(self, req, lb_id, body):
+    def create(self, req, tenant_id, lb_id, body):
         LOG.debug("Got addProbe request. Request: %s", req)
-        probe = core_api.lb_add_probe(self.conf, lb_id,
+        probe = core_api.lb_add_probe(self.conf, tenant_id, lb_id,
                                       body['healthMonitoring'])
         LOG.debug("Return probe: %r", probe)
         return {'healthMonitoring': probe}
 
     @utils.http_success_code(204)
-    def delete(self, req, lb_id, probe_id):
+    def delete(self, req, tenant_id, lb_id, probe_id):
         LOG.debug("Got deleteProbe request. Request: %s", req)
-        core_api.lb_delete_probe(self.conf, lb_id, probe_id)
+        core_api.lb_delete_probe(self.conf, tenant_id, lb_id, probe_id)
 
 
 def create_resource(conf):

@@ -210,9 +210,10 @@ def lb_update_node(conf, tenant_id, lb_id, lb_node_id, lb_node):
     return db_api.unpack_extra(new_rs)
 
 
-def lb_show_probes(conf, lb_id):
+def lb_show_probes(conf, tenant_id, lb_id):
     try:
-        sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+        sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_id,
+                tenant_id=tenant_id)[0]
     except IndexError:
         raise exc.ServerFarmNotFound
 
@@ -226,13 +227,13 @@ def lb_show_probes(conf, lb_id):
     return dict
 
 
-def lb_add_probe(conf, lb_id, probe_dict):
+def lb_add_probe(conf, tenant_id, lb_id, probe_dict):
     logger.debug("Got new probe description %s" % probe_dict)
     # NOTE(akscram): historically strange validation, wrong place for it.
     if probe_dict['type'] is None:
         return
 
-    lb_ref = db_api.loadbalancer_get(conf, lb_id)
+    lb_ref = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     # NOTE(akscram): server farms are really only create problems than
     #                they solve multiply use of the virtual IPs.
     try:
@@ -250,8 +251,8 @@ def lb_add_probe(conf, lb_id, probe_dict):
     return db_api.unpack_extra(probe_ref)
 
 
-def lb_delete_probe(conf, lb_id, probe_id):
-    lb = db_api.loadbalancer_get(conf, lb_id)
+def lb_delete_probe(conf, tenant_id, lb_id, probe_id):
+    lb = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
     probe = db_api.probe_get(conf, probe_id)
     db_api.probe_destroy(conf, probe_id)
