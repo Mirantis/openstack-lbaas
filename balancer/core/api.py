@@ -143,6 +143,8 @@ def lb_add_nodes(conf, tenant_id, lb_id, nodes):
     for node in nodes:
         values = db_api.server_pack_extra(node)
         values['sf_id'] = sf['id']
+        if not values['status']:
+            values['status'] = 'INSERVICE'
         rs_ref = db_api.server_create(conf, values)
         device_driver = drivers.get_device_driver(conf, lb['device_id'])
         with device_driver.request_context() as ctx:
