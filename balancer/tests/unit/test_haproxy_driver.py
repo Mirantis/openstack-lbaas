@@ -115,15 +115,13 @@ class TestHaproxyDriverRemoteConfig (unittest.TestCase):
         self.assertFalse(self.remote_config.validate_config())
 
 
-class SSHMock(Mock):
-    def exec_command(self, str1):
-        return [str1, Mock()]
-
-
 class TestHaproxyDriverRemoteService (unittest.TestCase):
     def setUp(self):
         self.remote_service = RemoteService(device_fake)
-        self.remote_service.ssh = SSHMock()
+        self.remote_service.ssh = Mock()
+        file_channel = MagicMock(spec=file)
+        self.remote_interface.ssh.exec_command.return_value = [file_channel,
+                                                 file_channel, file_channel]
 
     def test_start_service(self):
         self.remote_service.start()
