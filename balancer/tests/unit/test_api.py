@@ -311,19 +311,21 @@ class TestStickiesController(unittest.TestCase):
     @mock.patch('balancer.core.api.lb_show_sticky', autospec=True)
     def test_index(self, mock_lb_show_sticky):
         mock_lb_show_sticky.return_value = 'foo'
-        resp = self.controller.index(self.req, 1)
+        resp = self.controller.index(self.req, 'fake_tenant', 1)
         self.assertTrue(mock_lb_show_sticky.called)
-        mock_lb_show_sticky.assert_called_once_with(self.conf, 1)
+        mock_lb_show_sticky.assert_called_once_with(self.conf,
+                'fake_tenant', 1)
         self.assertEqual(resp, 'foo')
 
     @mock.patch('balancer.db.api.unpack_extra', autospec=True)
     @mock.patch('balancer.db.api.sticky_get', autospec=True)
     def test_show(self, mock_func, mock_extra):
         mock_extra.return_value = 'foo'
-        resp = self.controller.show(self.req, 1, 1)
+        resp = self.controller.show(self.req, 'fake_tenant', 1, 1)
         self.assertTrue(mock_func.called)
         self.assertTrue(mock_extra.called)
-        mock_func.assert_called_once_with(self.conf, 1)
+        mock_func.assert_called_once_with(self.conf,
+                1, tenant_id='fake_tenant')
         mock_extra.assert_called_once_with(mock_func.return_value)
         self.assertEqual(resp, {'sessionPersistence': 'foo'})
 
@@ -332,19 +334,20 @@ class TestStickiesController(unittest.TestCase):
     def test_create(self, mock_lb_add_sticky, mock_unpack):
         mock_unpack.return_value = '1'
         mock_lb_add_sticky.return_value = ['1']
-        resp = self.controller.create(self.req, 1,
-                {'sessionPersistence': 'foo'})
+        resp = self.controller.create(self.req,
+                'fake_tenant', 1, {'sessionPersistence': 'foo'})
         self.assertTrue(mock_lb_add_sticky.called)
-        mock_lb_add_sticky.assert_called_once_with(self.conf, 1,
-                                                {'sessionPersistence': 'foo'})
+        mock_lb_add_sticky.assert_called_once_with(self.conf,
+                'fake_tenant', 1, {'sessionPersistence': 'foo'})
         mock_unpack.assert_called_once_with(['1'])
         self.assertEqual(resp, {"sessionPersistence": "1"})
 
     @mock.patch('balancer.core.api.lb_delete_sticky', autospec=True)
     def test_delete(self, mock_lb_delete_sticky):
-        resp = self.controller.delete(self.req, 1, 1)
+        resp = self.controller.delete(self.req, 'fake_tenant', 1, 1)
         self.assertTrue(mock_lb_delete_sticky.called)
-        mock_lb_delete_sticky.assert_called_once_with(self.conf, 1, 1)
+        mock_lb_delete_sticky.assert_called_once_with(self.conf,
+                'fake_tenant', 1, 1)
         self.assertEqual(resp, None)
         self.code_assert(204, self.controller.delete)
 

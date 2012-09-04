@@ -230,9 +230,14 @@ def probe_destroy_by_sf_id(conf, sf_id, session=None):
 # Sticky
 
 
-def sticky_get(conf, sticky_id, session=None):
+def sticky_get(conf, sticky_id, tenant_id=None, session=None):
     session = session or get_session(conf)
-    sticky_ref = session.query(models.Sticky).filter_by(id=sticky_id).first()
+    query = session.query(models.Sticky).filter_by(id=sticky_id)
+    if tenant_id:
+        query = query.filter(models.Sticky.sf_id == models.ServerFarm.id).\
+                  filter(models.LoadBalancer.id == models.ServerFarm.lb_id).\
+                  filter(models.LoadBalancer.tenant_id == tenant_id)
+    sticky_ref = query.first()
     if not sticky_ref:
         raise exception.StickyNotFound(sticky_id=sticky_id)
     return sticky_ref

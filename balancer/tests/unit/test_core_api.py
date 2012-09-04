@@ -535,7 +535,7 @@ class TestBalancer(unittest.TestCase):
         db_api1.return_value = self.dict_list
         db_api2.return_value.__getitem__.return_value.\
                              __getitem__.return_value = 2
-        resp = api.lb_show_sticky(self.conf, self.lb_id)
+        resp = api.lb_show_sticky(self.conf, 'fake_tenant', self.lb_id)
         self.assertEqual(resp, {"sessionPersistence": [{'sticky': 'foo'},
                                                        {'sticky': 'foo'}]})
         self.assertTrue(db_api0.called)
@@ -545,7 +545,8 @@ class TestBalancer(unittest.TestCase):
         db_api0.assert_any_call(self.dict_list[0])
         db_api0.assert_any_call(self.dict_list[1])
         db_api1.assert_called_once_with(self.conf, 2)
-        db_api2.assert_called_once_with(self.conf, self.lb_id)
+        db_api2.assert_called_once_with(self.conf,
+                self.lb_id, tenant_id='fake_tenant')
 
     @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
     @mock.patch("balancer.db.api.sticky_get_all_by_sf_id")
@@ -553,7 +554,7 @@ class TestBalancer(unittest.TestCase):
     def test_lb_show_sticky1(self, db_api0, db_api1, db_api2):
         db_api2.return_value = []
         with self.assertRaises(exc.ServerFarmNotFound):
-            api.lb_show_sticky(self.conf, self.lb_id)
+            api.lb_show_sticky(self.conf, 'fake_tenant', self.lb_id)
             self.assertFalse(db_api0.called)
             self.assertFalse(db_api1.called)
 
@@ -567,7 +568,7 @@ class TestBalancer(unittest.TestCase):
     def test_lb_add_sticky0(self, *mocks):
         mocks[4].return_value = self.dict_list
         sticky = mock.MagicMock()
-        api.lb_add_sticky(self.conf, self.lb_id, sticky)
+        api.lb_add_sticky(self.conf, 'fake_tenant', self.lb_id, sticky)
         for mok in mocks:
             self.assertTrue(mok.called)
 
@@ -580,7 +581,7 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.core.commands.add_sticky_to_loadbalancer")
     def test_lb_add_sticky1(self, *mocks):
         sticky = {'persistenceType': None}
-        resp = api.lb_add_sticky(self.conf, self.lb_id, sticky)
+        resp = api.lb_add_sticky(self.conf, 'fake_tenant', self.lb_id, sticky)
         self.assertEqual(resp, None)
         for mock in mocks:
             self.assertFalse(mock.called)
@@ -593,9 +594,10 @@ class TestBalancer(unittest.TestCase):
     def test_lb_delete_sticky(self, mock_command, mock_driver, mock_destroy,
                               mock_get, mock_bal):
         mock_bal.return_value = {'id': 2, 'device_id': 2}
-        resp = api.lb_delete_sticky(self.conf, self.lb_id, 1)
+        resp = api.lb_delete_sticky(self.conf, 'fake_tenant', self.lb_id, 1)
         self.assertEqual(resp, 1)
-        mock_bal.assert_called_once_with(self.conf, self.lb_id)
+        mock_bal.assert_called_once_with(self.conf,
+                self.lb_id, tenant_id='fake_tenant')
         mock_get.assert_called_once_with(self.conf, 1)
         mock_destroy.assert_called_once_with(self.conf, 1)
         mock_driver.assert_called_once_with(self.conf, 2)

@@ -262,9 +262,10 @@ def lb_delete_probe(conf, tenant_id, lb_id, probe_id):
     return probe_id
 
 
-def lb_show_sticky(conf, lb_id):
+def lb_show_sticky(conf, tenant_id, lb_id):
     try:
-        sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
+        sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_id,
+                tenant_id=tenant_id)[0]
     except IndexError:
         raise  exc.ServerFarmNotFound
 
@@ -278,11 +279,11 @@ def lb_show_sticky(conf, lb_id):
     return dict
 
 
-def lb_add_sticky(conf, lb_id, st):
+def lb_add_sticky(conf, tenant_id, lb_id, st):
     logger.debug("Got new sticky description %s" % st)
     if st['persistenceType'] is None:
         return
-    lb = db_api.loadbalancer_get(conf, lb_id)
+    lb = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
     values = db_api.sticky_pack_extra(st)
     values['sf_id'] = sf['id']
@@ -293,8 +294,8 @@ def lb_add_sticky(conf, lb_id, st):
     return db_api.unpack_extra(sticky_ref)
 
 
-def lb_delete_sticky(conf, lb_id, sticky_id):
-    lb = db_api.loadbalancer_get(conf, lb_id)
+def lb_delete_sticky(conf, tenant_id, lb_id, sticky_id):
+    lb = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     sticky = db_api.sticky_get(conf, sticky_id)
     device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
