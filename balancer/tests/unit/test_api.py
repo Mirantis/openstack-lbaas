@@ -193,10 +193,11 @@ class TestVIPsController(unittest.TestCase):
         """VIPs should be found"""
         mock_get.return_value = ['foo']
         mock_unpack.return_value = 'foo1'
-        resp = self.controller.index(self.req, '1')
+        resp = self.controller.index(self.req, 'fake_tenant', '1')
         self.assertTrue(mock_get.called)
         self.assertTrue(mock_unpack.called)
-        mock_get.assert_called_once_with(self.conf, '1')
+        mock_get.assert_called_once_with(self.conf,
+                '1', tenant_id='fake_tenant')
         mock_unpack.assert_called_once_with('foo')
         self.assertEqual(resp, {'virtualIps': ['foo1']})
 
@@ -206,17 +207,17 @@ class TestVIPsController(unittest.TestCase):
         """Should raise exception"""
         mock_get.side_effect = exception.VirtualServerNotFound()
         with self.assertRaises(exception.VirtualServerNotFound):
-            resp = self.controller.index(self.req, '1')
+            resp = self.controller.index(self.req, 'fake_tenant', '1')
             self.assertEqual(resp, None)
 
     @mock.patch('balancer.core.api.lb_add_vip', autospec=True)
     def test_create(self, mock_lb_add_vip):
         mock_lb_add_vip.return_value = 'fakevip'
-        resp = self.controller.create(self.req, 'fakelbid',
-                                      {'virtualIp': 'fakebody'})
+        resp = self.controller.create(self.req,
+                'fake_tenant', 'fakelbid', {'virtualIp': 'fakebody'})
         self.assertTrue(mock_lb_add_vip.called)
-        mock_lb_add_vip.assert_called_once_with(self.conf, 'fakelbid',
-                                                'fakebody')
+        mock_lb_add_vip.assert_called_once_with(self.conf,
+                'fake_tenant', 'fakelbid', 'fakebody')
         self.assertEqual(resp, {'virtualIp': 'fakevip'})
 
     @mock.patch('balancer.db.api.unpack_extra', autospec=True)
@@ -224,19 +225,22 @@ class TestVIPsController(unittest.TestCase):
     def test_show(self, mock_virtualserver_get, mock_unpack_extra):
         mock_virtualserver_get.return_value = 'fakevip'
         mock_unpack_extra.return_value = 'packedfakevip'
-        resp = self.controller.show(self.req, 'fakelbid', 'fakeid')
+        resp = self.controller.show(self.req,
+                'fake_tenant', 'fakelbid', 'fakeid')
         self.assertTrue(mock_virtualserver_get.called)
         self.assertTrue(mock_unpack_extra.called)
-        mock_virtualserver_get.assert_called_once_with(self.conf, 'fakeid')
+        mock_virtualserver_get.assert_called_once_with(self.conf,
+                'fakeid', tenant_id='fake_tenant')
         mock_unpack_extra.assert_called_once_with('fakevip')
         self.assertEqual(resp, {'virtualIp': 'packedfakevip'})
 
     @mock.patch('balancer.core.api.lb_delete_vip', autospec=True)
     def test_delete(self, mock_lb_delete_vip):
-        resp = self.controller.delete(self.conf, 'fakelbid', 'fakeid')
+        resp = self.controller.delete(self.conf,
+                'fake_tenant', 'fakelbid', 'fakeid')
         self.assertTrue(mock_lb_delete_vip.called)
-        mock_lb_delete_vip.assert_called_once_with(self.conf, 'fakelbid',
-                                                   'fakeid')
+        mock_lb_delete_vip.assert_called_once_with(self.conf,
+                'fake_tenant', 'fakelbid', 'fakeid')
         self.code_assert(204, self.controller.delete)
 
 

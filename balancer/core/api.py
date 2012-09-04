@@ -304,10 +304,10 @@ def lb_delete_sticky(conf, tenant_id, lb_id, sticky_id):
     return sticky_id
 
 
-def lb_add_vip(conf, lb_id, vip_dict):
+def lb_add_vip(conf, tenant_id, lb_id, vip_dict):
     logger.debug("Called lb_add_vip(), conf: %r, lb_id: %s, vip_dict: %r",
                  conf, lb_id, vip_dict)
-    lb_ref = db_api.loadbalancer_get(conf, lb_id)
+    lb_ref = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     # NOTE(akscram): server farms are really only create problems than
     #                they solve multiply use of the virtual IPs.
     try:
@@ -325,10 +325,10 @@ def lb_add_vip(conf, lb_id, vip_dict):
     return db_api.unpack_extra(vip_ref)
 
 
-def lb_delete_vip(conf, lb_id, vip_id):
+def lb_delete_vip(conf, tenant_id, lb_id, vip_id):
     logger.debug("Called lb_delete_vip(), conf: %r, lb_id: %s, vip_id: %s",
                  conf, lb_id, vip_id)
-    lb_ref = db_api.loadbalancer_get(conf, lb_id)
+    lb_ref = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     vip_ref = db_api.virtualserver_get(conf, vip_id)
     device_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
     with device_driver.request_context() as ctx:

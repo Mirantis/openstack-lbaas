@@ -454,9 +454,10 @@ class TestBalancer(unittest.TestCase):
         mock_get_device_driver.return_value = \
             mock.Mock(request_context=mock.Mock(return_value=ctx))
         # Call
-        api.lb_add_vip(self.conf, 'fakelbid', 'fakevipdict')
+        api.lb_add_vip(self.conf, 'fake_tenant', 'fakelbid', 'fakevipdict')
         # Assert
-        mock_loadbalancer_get.assert_called_once_with(self.conf, 'fakelbid')
+        mock_loadbalancer_get.assert_called_once_with(self.conf,
+                'fakelbid', tenant_id='fake_tenant')
         mock_serverfarm_get_all_by_lb_id.assert_called_once_with(self.conf,
                                                                  'fakelbid1')
         mock_virtualserver_pack_extra.assert_called_once_with('fakevipdict')
@@ -488,7 +489,7 @@ class TestBalancer(unittest.TestCase):
                                mock_unpack_extra):
         mock_serverfarm_get_all_by_lb_id.return_value = []
         with self.assertRaises(exc.ServerFarmNotFound):
-            api.lb_add_vip(self.conf, 'fakelbid', 'fakevipdict')
+            api.lb_add_vip(self.conf, 'fake_tenant', 'fakelbid', 'fakevipdict')
         self.assertTrue(mock_loadbalancer_get.called)
         self.assertTrue(mock_serverfarm_get_all_by_lb_id.called)
         self.assertFalse(mock_virtualserver_pack_extra.called)
@@ -517,9 +518,10 @@ class TestBalancer(unittest.TestCase):
         mock_get_device_driver.return_value = \
             mock.Mock(request_context=mock.Mock(return_value=ctx))
         # Call
-        api.lb_delete_vip(self.conf, 'fakelbid', 'fakevipid')
+        api.lb_delete_vip(self.conf, 'fake_tenant', 'fakelbid', 'fakevipid')
         # Assert
-        mock_loadbalancer_get.assert_called_once_with(self.conf, 'fakelbid')
+        mock_loadbalancer_get.assert_called_once_with(self.conf,
+                'fakelbid', tenant_id='fake_tenant')
         mock_virtualserver_get.assert_called_once_with(self.conf, 'fakevipid')
         mock_virtualserver_destroy.assert_called_once_with(self.conf,
                                                            'fakevipid')

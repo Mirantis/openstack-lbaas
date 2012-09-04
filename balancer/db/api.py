@@ -471,10 +471,15 @@ def predictor_destroy_by_sf_id(conf, sf_id, session=None):
 # VirtualServer
 
 
-def virtualserver_get(conf, vserver_id, session=None):
+def virtualserver_get(conf, vserver_id, tenant_id=None, session=None):
     session = session or get_session(conf)
     vserver_ref = session.query(models.VirtualServer).\
                           filter_by(id=vserver_id).first()
+    if tenant_id:
+        query = query.\
+                  filter(models.VirtualServer.sf_id == models.ServerFarm.id).\
+                  filter(models.LoadBalancer.id == models.ServerFarm.lb_id).\
+                  filter(models.LoadBalancer.tenant_id == tenant_id)
     if not vserver_ref:
         raise exception.VirtualServerNotFound(virtualserver_id=vserver_id)
     return vserver_ref
@@ -486,11 +491,16 @@ def virtualserver_get_all_by_sf_id(conf, sf_id):
     return query.all()
 
 
-def virtualserver_get_all_by_lb_id(conf, lb_id):
+def virtualserver_get_all_by_lb_id(conf, lb_id, tenant_id=None):
     session = get_session(conf)
-    vips = session.query(models.VirtualServer).\
+    query = session.query(models.VirtualServer).\
                   filter(models.ServerFarm.lb_id == lb_id).\
-                  filter_by(sf_id=models.ServerFarm.id).all()
+                  filter_by(sf_id=models.ServerFarm.id)
+    if tenant_id:
+        query = query.\
+                  filter(models.LoadBalancer.id == models.ServerFarm.lb_id).\
+                  filter(models.LoadBalancer.tenant_id == tenant_id)
+    vips = wuery.all()
     return vips
 
 
