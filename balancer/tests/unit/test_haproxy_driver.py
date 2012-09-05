@@ -96,7 +96,7 @@ haproxy_rserver1.port = '12345'
 haproxy_rserver1.fall = '11'
 
 
-class TestHaproxyDriverRemoteConfig (unittest.TestCase):
+class TestHaproxyDriverRemoteConfig(unittest.TestCase):
     def setUp(self):
         self.remote_config = RemoteConfig(device_fake, '/tmp',
                         '/etc/haproxy', 'haproxy.conf')
@@ -115,13 +115,13 @@ class TestHaproxyDriverRemoteConfig (unittest.TestCase):
         self.assertFalse(self.remote_config.validate_config())
 
 
-class TestHaproxyDriverRemoteService (unittest.TestCase):
+class TestHaproxyDriverRemoteService(unittest.TestCase):
     def setUp(self):
         self.remote_service = RemoteService(device_fake)
         self.remote_service.ssh = Mock()
-        file_channel = MagicMock(spec=file)
-        self.remote_interface.ssh.exec_command.return_value = [file_channel,
-                                                 file_channel, file_channel]
+        a = Mock()
+        a.file_channel = MagicMock(spec=file)
+        self.remote_service.ssh.exec_command.return_value = [a, a, a]
 
     def test_start_service(self):
         self.remote_service.start()
@@ -133,7 +133,7 @@ class TestHaproxyDriverRemoteService (unittest.TestCase):
         self.remote_service.restart()
 
 
-class TestHaproxyDriverRemoteInterface (unittest.TestCase):
+class TestHaproxyDriverRemoteInterface(unittest.TestCase):
     def setUp(self):
         self.remote_interface = RemoteInterface(device_fake, frontend)
         self.remote_interface.ssh = Mock()
@@ -148,7 +148,7 @@ class TestHaproxyDriverRemoteInterface (unittest.TestCase):
         self.assertTrue(self.remote_interface.del_ip())
 
 
-class TestHaproxyDriverRemoteSocketOperation (unittest.TestCase):
+class TestHaproxyDriverRemoteSocketOperation(unittest.TestCase):
     def setUp(self):
         self.remote_socket = RemoteSocketOperation(device_fake,
                                                 backend, rserver)
@@ -161,7 +161,7 @@ class TestHaproxyDriverRemoteSocketOperation (unittest.TestCase):
         self.assertTrue(self.remote_socket.get_statistics())
 
 
-class TestHaproxyDeriverAllFunctions (unittest.TestCase):
+class TestHaproxyDriverAllFunctions(unittest.TestCase):
     def setUp(self):
         self.remote_socket = RemoteSocketOperation(device_fake,
                                                 backend, rserver)
