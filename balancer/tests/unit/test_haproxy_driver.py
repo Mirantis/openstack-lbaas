@@ -6,72 +6,59 @@ import shutil
 import filecmp
 import mock
 
-from mock import Mock, MagicMock
-from balancer.drivers.haproxy.HaproxyDriver import HaproxyConfigFile
-from balancer.drivers.haproxy.HaproxyDriver import HaproxyFronted
-from balancer.drivers.haproxy.HaproxyDriver import HaproxyBackend
-from balancer.drivers.haproxy.HaproxyDriver import HaproxyRserver
-from balancer.drivers.haproxy.HaproxyDriver import HaproxyListen
-from balancer.drivers.haproxy.HaproxyDriver import HaproxyDriver
-from balancer.drivers.haproxy.RemoteControl import RemoteConfig
-from balancer.drivers.haproxy.RemoteControl import RemoteService
-from balancer.drivers.haproxy.RemoteControl import RemoteInterface
-from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation
+import balancer.drivers.haproxy.HaproxyDriver as Driver
 
-device_fake = {'ip': '192.168.19.86',
-    'port': '22',
-    'user': 'user',
-    'password': 'swordfish',
-    'extra': {'interface': 'eth0',
-    'socket': '/tmp/haproxy.sock',
-    'remote_conf_dir': '/etc/haproxy',
-    'remote_conf_file': 'haproxy.cfg'}}
-#
+
+device_fake1 = {'id': 'fake1',
+                'type': 'FAKE',
+                'version': '1',
+                'ip': '10.0.0.10',
+                'port': 1010,
+                'user': 'user1',
+                'password': 'secrete1',
+                'extra': {'interface': 'eth0',
+                'socket': '/tmp/haproxy.sock',
+                'remote_conf_dir': '/etc/haproxy',
+                'remote_conf_file': 'haproxy.cfg'}}
+
+device_fake2 = {'id': 'fake2',
+                'type': 'FAKE',
+                'version': '2',
+                'ip': '10.0.0.20',
+                'port': 2020,
+                'user': 'user2',
+                'password': 'secrete2',
+                'extra': {'interface': 'wlan10'}}
+
 conf = []
-#
-rserver = {'id': 'test_real_server',
-           'address': '123.123.123.123', 'port': '9090',
-           'weight': '8',  'maxCon': '30000'}
-#
-server_farm = {'id': 'SFname',  'type': 'HashAddrPredictor'}
-#
-virtualserver = {'id': 'VirtualServer',
-                 'address': '115.115.115.115',
-                 'port': '8080'}
-#
-probe = {'type': 'http',  'requestMethodType': 'GET',
-         'requestHTTPurl': '/index.html',
-         'minExpectStatus': '200'}
 
-#
-probe_https = {'type': 'https',  'requestMethodType': 'GET',
-         'requestHTTPurl': '/index.html',
-         'minExpectStatus': '200'}
+def merge_dicts(dict1, dict2):
+    result = dict1
+    for i in dict2:
+        result[i] = dict2[i]
+    return result
 
-#
-probe_tcp = {'type': 'tcp',  'requestMethodType': 'GET',
-         'requestHTTPurl': '/index.html',
-         'minExpectStatus': '200'}
+def get_fake_rserver(id_, parameters):
+    rserver = {'id': id_, 'weight': '8', 'address': '10.2.1.2', \
+               'port': '4055', 'minCon': '100', 'maxCon': '2000'}
+    return merge_dicts(rserver, parameters)
 
-#
-a = {'type': 'roudrobin'}
-a['extra'] = {}
-predictor = [a, ]
+def get_fake_server_farm(id_, parameters):
+    server_farm = {'id': id_, 'type': 'Host'}
+    return merge_dicts(server_farm, parameters)
 
-#
-a = {'type': 'leastconnections'}
-a['extra'] = {}
-predictor_connections = [a, ]
+def get_fake_virtual_ip(id_, parameters):
+    vip = {'id': id_, 'address': '100.1.1.1', 'port': '8801'}
+    return merge_dicts(vip, parameters)
 
-#
-a = {'type': 'hashurl'}
-a['extra'] = {}
-predictor_hashurl = [a, ]
+def get_fake_probe(id_, parameters):
+    probe = {'id': id_, 'type': 'HTTP', 'requestMethodType': 'GET', \
+             'requestHTTPUrl': '/index.html', 'minExpectStatus': '300'}
+    return merge_dicts(probe, parameters)
 
-#
-a = {'type': 'hashaddr'}
-a['extra'] = {}
-predictor_hashaddr = [a, ]
+def get_fake_predictor(id_, parameters):
+    predictor = {'id': id_, 'type': 'roundrobin', 'extra': {}}
+    return merge_dicts(predictor, parameters)
 
 #
 frontend = HaproxyFronted()
