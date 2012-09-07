@@ -33,16 +33,19 @@ class Controller(object):
                                                 "probes.py %s", conf)
         self.conf = conf
 
+    @utils.verify_tenant
     def index(self, req, tenant_id, lb_id):
         LOG.debug("Got showMonitoring request. Request: %s", req)
         result = core_api.lb_show_probes(self.conf, tenant_id, lb_id)
         return result
 
+    @utils.verify_tenant
     def show(self, req, tenant_id, lb_id, probe_id):
         LOG.debug("Got showProbe request. Request: %s", req)
         probe = db_api.probe_get(self.conf, probe_id, tenant_id=tenant_id)
         return {"healthMonitoring": db_api.unpack_extra(probe)}
 
+    @utils.verify_tenant
     def create(self, req, tenant_id, lb_id, body):
         LOG.debug("Got addProbe request. Request: %s", req)
         probe = core_api.lb_add_probe(self.conf, tenant_id, lb_id,
@@ -51,6 +54,7 @@ class Controller(object):
         return {'healthMonitoring': probe}
 
     @utils.http_success_code(204)
+    @utils.verify_tenant
     def delete(self, req, tenant_id, lb_id, probe_id):
         LOG.debug("Got deleteProbe request. Request: %s", req)
         core_api.lb_delete_probe(self.conf, tenant_id, lb_id, probe_id)

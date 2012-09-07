@@ -33,6 +33,7 @@ class Controller(object):
         self.conf = conf
 
     @utils.http_success_code(200)
+    @utils.verify_tenant
     def index(self, req, tenant_id, lb_id):
         LOG.debug("Got index request. Request: %s", req)
         vips = map(db_api.unpack_extra,
@@ -40,6 +41,7 @@ class Controller(object):
                        lb_id, tenant_id=tenant_id))
         return {"virtualIps": vips}
 
+    @utils.verify_tenant
     def create(self, req, tenant_id, lb_id, body):
         LOG.debug("Called create(), req: %r, lb_id: %s, body: %r",
                      req, lb_id, body)
@@ -47,6 +49,7 @@ class Controller(object):
                 tenant_id, lb_id, body['virtualIp'])
         return {'virtualIp': vip}
 
+    @utils.verify_tenant
     def show(self, req, tenant_id, lb_id, vip_id):
         LOG.debug("Called show(), req: %r, lb_id: %s, vip_id: %s",
                      req, lb_id, vip_id)
@@ -55,6 +58,7 @@ class Controller(object):
         return {'virtualIp': db_api.unpack_extra(vip_ref)}
 
     @utils.http_success_code(204)
+    @utils.verify_tenant
     def delete(self, req, tenant_id, lb_id, vip_id):
         LOG.debug("Called delete(), req: %r, lb_id: %s, vip_id: %s",
                      req, lb_id, vip_id)

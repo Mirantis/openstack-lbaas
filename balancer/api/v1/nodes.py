@@ -33,31 +33,37 @@ class Controller(object):
                                                 "nodes.py %s", conf)
         self.conf = conf
 
+    @utils.verify_tenant
     def create(self, req, tenant_id, lb_id, body):
         LOG.debug("Got addNode request. Request: %s", req)
         return {'nodes': core_api.lb_add_nodes(self.conf, tenant_id, lb_id,
             body['nodes'])}
 
+    @utils.verify_tenant
     def index(self, req, tenant_id, lb_id):
         LOG.debug("Got showNodes request. Request: %s", req)
         return {'nodes': core_api.lb_show_nodes(self.conf, tenant_id, lb_id)}
 
+    @utils.verify_tenant
     def show(self, req, tenant_id, lb_id, node_id):
         LOG.debug("Got showNode request. Request: %s", req)
         return {'node': db_api.unpack_extra(
             db_api.server_get(self.conf, node_id, lb_id, tenant_id=tenant_id))}
 
     @utils.http_success_code(204)
+    @utils.verify_tenant
     def delete(self, req, tenant_id, lb_id, node_id):
         LOG.debug("Got deleteNode request. Request: %s", req)
         core_api.lb_delete_node(self.conf, tenant_id, lb_id, node_id)
 
+    @utils.verify_tenant
     def changeNodeStatus(self, req, tenant_id, lb_id, node_id, status, body):
         LOG.debug("Got changeNodeStatus request. Request: %s", req)
         result = core_api.lb_change_node_status(self.conf,
                 tenant_id, lb_id, node_id, status)
         return {"node": result}
 
+    @utils.verify_tenant
     def update(self, req, tenant_id, lb_id, node_id, body):
         LOG.debug("Got updateNode request. Request: %s", req)
         result = core_api.lb_update_node(self.conf,

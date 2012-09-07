@@ -19,7 +19,7 @@ class TestLoadBalancersController(unittest.TestCase):
         super(TestLoadBalancersController, self).setUp()
         self.conf = mock.Mock()
         self.controller = loadbalancers.Controller(self.conf)
-        self.req = mock.Mock()
+        self.req = mock.Mock(spec=['headers'])
 
     def code_assert(self, code, func):
         self.assertTrue(hasattr(func, "wsgi_code"),
@@ -94,7 +94,7 @@ class TestNodesController(unittest.TestCase):
         super(TestNodesController, self).setUp()
         self.conf = mock.Mock()
         self.controller = nodes.Controller(self.conf)
-        self.req = mock.Mock()
+        self.req = mock.Mock(spec=['headers'])
 
     def code_assert(self, code, func):
         self.assertTrue(hasattr(func, "wsgi_code"),
@@ -178,7 +178,7 @@ class TestVIPsController(unittest.TestCase):
         super(TestVIPsController, self).setUp()
         self.conf = mock.Mock()
         self.controller = vips.Controller(self.conf)
-        self.req = mock.Mock()
+        self.req = mock.Mock(spec=['headers'])
 
     def code_assert(self, code, func):
         self.assertTrue(hasattr(func, "wsgi_code"),
@@ -236,7 +236,7 @@ class TestVIPsController(unittest.TestCase):
 
     @mock.patch('balancer.core.api.lb_delete_vip', autospec=True)
     def test_delete(self, mock_lb_delete_vip):
-        resp = self.controller.delete(self.conf,
+        resp = self.controller.delete(self.req,
                 'fake_tenant', 'fakelbid', 'fakeid')
         self.assertTrue(mock_lb_delete_vip.called)
         mock_lb_delete_vip.assert_called_once_with(self.conf,
@@ -249,7 +249,7 @@ class TestProbesController(unittest.TestCase):
         super(TestProbesController, self).setUp()
         self.conf = mock.Mock()
         self.controller = probes.Controller(self.conf)
-        self.req = mock.Mock()
+        self.req = mock.Mock(spec=['headers'])
 
     def code_assert(self, code, func):
         self.assertTrue(hasattr(func, "wsgi_code"),
@@ -304,7 +304,7 @@ class TestStickiesController(unittest.TestCase):
         super(TestStickiesController, self).setUp()
         self.conf = mock.Mock()
         self.controller = stickies.Controller(self.conf)
-        self.req = mock.Mock()
+        self.req = mock.Mock(spec=['headers'])
 
     def code_assert(self, code, func):
         self.assertTrue(hasattr(func, "wsgi_code"),
@@ -360,7 +360,7 @@ class TestDeviceController(unittest.TestCase):
     def setUp(self):
         self.conf = mock.Mock()
         self.controller = devices.Controller(self.conf)
-        self.req = mock.Mock()
+        self.req = mock.Mock(spec=['headers'])
 
     @mock.patch('balancer.core.api.device_get_index', autospec=True)
     def test_index(self, mock_device_get_index):

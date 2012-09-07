@@ -32,17 +32,20 @@ class Controller(object):
                                                 "loadbalancers.py %s", conf)
         self.conf = conf
 
+    @utils.verify_tenant
     def findLBforVM(self, req, tenant_id, vm_id):
         LOG.debug("Got index request. Request: %s", req)
         result = core_api.lb_find_for_vm(self.conf, tenant_id, vm_id)
         return {'loadbalancers': result}
 
+    @utils.verify_tenant
     def index(self, req, tenant_id):
         LOG.debug("Got index request. Request: %s", req)
         result = core_api.lb_get_index(self.conf, tenant_id)
         return {'loadbalancers': result}
 
     @utils.http_success_code(202)
+    @utils.verify_tenant
     def create(self, req, tenant_id, body):
         LOG.debug("Got create request. Request: %s", req)
         #here we need to decide which device should be used
@@ -54,21 +57,25 @@ class Controller(object):
         return {'loadbalancer': {'id': lb_id}}
 
     @utils.http_success_code(204)
+    @utils.verify_tenant
     def delete(self, req, tenant_id, lb_id):
         LOG.debug("Got delete request. Request: %s", req)
         core_api.delete_lb(self.conf, tenant_id, lb_id)
 
+    @utils.verify_tenant
     def show(self, req, tenant_id, lb_id):
         LOG.debug("Got loadbalancerr info request. Request: %s", req)
         result = core_api.lb_get_data(self.conf, tenant_id, lb_id)
         return {'loadbalancer': result}
 
+    @utils.verify_tenant
     def details(self, req, tenant_id, lb_id):
         LOG.debug("Got loadbalancerr info request. Request: %s", req)
         result = core_api.lb_show_details(self.conf, tenant_id, lb_id)
         return result
 
     @utils.http_success_code(202)
+    @utils.verify_tenant
     def update(self, req, tenant_id, lb_id, body):
         LOG.debug("Got update request. Request: %s", req)
         core_api.update_lb(self.conf, tenant_id, lb_id, body)

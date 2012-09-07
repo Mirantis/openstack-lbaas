@@ -33,22 +33,26 @@ class Controller(object):
                                                 "stickies.py %s", conf)
         self.conf = conf
 
+    @utils.verify_tenant
     def index(self, req, tenant_id, lb_id):
         LOG.debug("Got showStickiness request. Request: %s", req)
         result = core_api.lb_show_sticky(self.conf, tenant_id, lb_id)
         return result
 
+    @utils.verify_tenant
     def show(self, req, tenant_id, lb_id, sticky_id):
         LOG.debug("Got showStickiness request. Request: %s", req)
         sticky = db_api.sticky_get(self.conf, sticky_id, tenant_id=tenant_id)
         return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
+    @utils.verify_tenant
     def create(self, req, tenant_id, lb_id, body):
         LOG.debug("Got addSticky request. Request: %s", req)
         sticky = core_api.lb_add_sticky(self.conf, tenant_id, lb_id, body)
         return {"sessionPersistence": db_api.unpack_extra(sticky)}
 
     @utils.http_success_code(204)
+    @utils.verify_tenant
     def delete(self, req, tenant_id, lb_id, sticky_id):
         LOG.debug("Got deleteSticky request. Request: %s", req)
         core_api.lb_delete_sticky(self.conf, tenant_id, lb_id, sticky_id)

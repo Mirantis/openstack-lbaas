@@ -27,12 +27,14 @@ class RequestContext(object):
     accesses the system, as well as additional request information.
     """
 
-    def __init__(self, auth_tok=None, user=None, tenant=None, roles=None,
-                 is_admin=False, read_only=False, show_deleted=False,
-                 owner_is_tenant=True):
+    def __init__(self, auth_tok=None, user=None, user_id=None, tenant=None,
+            tenant_id=None, roles=None, is_admin=False, read_only=False,
+            show_deleted=False, owner_is_tenant=True):
         self.auth_tok = auth_tok
         self.user = user
+        self.user_id = user_id
         self.tenant = tenant
+        self.tenant_id = tenant_id
         self.roles = roles or []
         self.is_admin = is_admin
         self.read_only = read_only
@@ -102,11 +104,13 @@ class ContextMiddleware(wsgi.Middleware):
         if auth_tok:
             if req.headers.get('X-Identity-Status') == 'Confirmed':
                 # 1. Auth-token is passed, check other headers
-                user = req.headers.get('X-User')
-                tenant = req.headers.get('X-Tenant')
+                user = req.headers.get('X-User-Name')
+                user_id = req.headers.get('X-User-Id')
+                tenant = req.headers.get('X-Tenant-Name')
+                tenant_id = req.headers.get('X-Tenant-Id')
                 roles = [r.strip()
                          for r in req.headers.get('X-Role', '').split(',')]
-                is_admin = 'Admin' in roles
+                is_admin = any(role.lower() == 'admin' for role in roles)
             else:
                 # 2. Indentity-Status not confirmed
                 # FIXME(sirp): not sure what the correct behavior in this case
@@ -115,10 +119,12 @@ class ContextMiddleware(wsgi.Middleware):
         else:
             # 3. Auth-token is ommited, assume NoAuth
             user = None
+            user_id = None
             tenant = None
+            tenant_id = None
             roles = []
             is_admin = True
 
-        req.context = self.make_context(
-            auth_tok=auth_tok, user=user, tenant=tenant, roles=roles,
-            is_admin=is_admin)
+        req.context = self.make_context(auth_tok=auth_tok, user=user,
+                user_id=user_id, tenant=tenant, tenant_id=tenant_id,
+                roles=roles, is_admin=is_admin)

@@ -31,6 +31,7 @@ class Controller(object):
         LOG.debug("Creating device controller with config: %s", conf)
         self.conf = conf
 
+    @utils.require_admin
     def index(self, req):
         try:
             LOG.debug("Got index request. Request: %s", req)
@@ -46,6 +47,7 @@ class Controller(object):
             LOG.debug(msg)
             raise webob.exc.HTTPForbidden(msg)
 
+    @utils.require_admin
     def create(self, req, body):
         LOG.debug("Got create request. Request: %s", req)
         params = body
@@ -54,6 +56,7 @@ class Controller(object):
         device = core_api.device_create(self.conf, **params)
         return {"device": db_api.unpack_extra(device)}
 
+    @utils.require_admin
     def show(self, req, device_id):
         LOG.debug("Got device data request. Request: %s" % req)
         device_ref = db_api.device_get(self.conf, device_id)
@@ -87,6 +90,7 @@ class Controller(object):
         finally:
             pass
 
+    @utils.require_admin
     def info(self, req, **args):
         try:
             args['query_params'] = req.GET
@@ -104,15 +108,18 @@ class Controller(object):
         return {'devices': list}
 
     @utils.http_success_code(204)
+    @utils.require_admin
     def delete(self, req, device_id):
         LOG.debug("Got delete request. Request: %s", req)
         core_api.device_delete(self.conf, device_id)
 
+    @utils.require_admin
     def show_algorithms(self, req):
         LOG.debug("Got algorithms request. Request: %s", req)
         algorithms = core_api.device_show_algorithms(self.conf)
         return {'algorithms': algorithms}
 
+    @utils.require_admin
     def show_protocols(self, req):
         LOG.debug("Got protocols request. Request: %s", req)
         protocols = core_api.device_show_protocols(self.conf)
