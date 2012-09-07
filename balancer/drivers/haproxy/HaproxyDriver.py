@@ -55,8 +55,13 @@ class HaproxyDriver(base_driver.BaseDriver):
             self.haproxy_socket = '/tmp/haproxy.sock'
         else:
             self.haproxy_socket = device_extra['socket']
-        self.config_file = None
+        self.config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
+                                             self.configfilename))
+        self.remote_config = RemoteConfig(self.device_ref, self.localpath,
+                                     self.remotepath, self.configfilename)
         self.config_was_deployed = True
+        self.remote_socket = RemoteSocketOperation(self.device_ref)
+        self.remote_interface = RemoteInterface(self.device_ref)
 
     def request_context(self):
         mgr = super(HaproxyDriver, self).request_context()
@@ -64,12 +69,7 @@ class HaproxyDriver(base_driver.BaseDriver):
         return mgr
 
     def _get_config(self):
-        if self.config_file == None:
-            self.config_file = HaproxyConfigFile('%s/%s' % (self.localpath,
-                                            self.configfilename))
-            remote = RemoteConfig(self.device_ref, self.localpath,
-                                  self.remotepath, self.configfilename)
-            remote.get_config()
+        self.remote_config.get_config()
         self.config_was_deployed = False
         logger.debug("Marking as not deployed")
         return self.config_file
@@ -190,9 +190,7 @@ class HaproxyDriver(base_driver.BaseDriver):
         haproxy_serverfarm.name = serverfarm['id']
         logger.debug('[HAPROXY] create VIP %s' % haproxy_serverfarm.name)
         #Add new IP address
-        remote_interface = RemoteInterface(self.device_ref,
-                                           haproxy_virtualserver)
-        remote_interface.add_ip()
+        self.remote_interface.add_ip(haproxy_virtualserver)
         #Modify remote config file, check and restart remote haproxy
         config_file = self._get_config()
         config_file.add_frontend(haproxy_virtualserver, haproxy_serverfarm)
@@ -255,16 +253,14 @@ class HaproxyDriver(base_driver.BaseDriver):
         haproxy_serverfarm.name = serverfarm['id']
         config_file = self._get_config()
 
-        remote_socket = RemoteSocketOperation(self.device_ref,
-                                        haproxy_serverfarm, rserver)
         if type_of_operation == 'suspend':
             config_file.enable_disable_reserver_in_backend_block(
                              haproxy_serverfarm, haproxy_rserver, 'disable')
-            remote_socket.suspend_server()
+            self.remote_socket.suspend_server(haproxy_serverfarm, rserver)
         elif type_of_operation == 'activate':
             config_file.enable_disable_reserver_in_backend_block(
                              haproxy_serverfarm, haproxy_rserver, 'enable')
-            remote_socket.activate_server()
+            self.remote_socket.activate_server(haproxy_serverfarm, rserver)
 
     def create_server_farm(self, serverfarm, predictor):
         if not bool(serverfarm['id']):
@@ -273,15 +269,14 @@ class HaproxyDriver(base_driver.BaseDriver):
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['id']
 
-        for p in predictor:
-            if p.get('type').lower() == 'roundrobin':
-                haproxy_serverfarm.balance = 'roundrobin'
-            elif p.get('type').lower() == 'leastconnections':
-                haproxy_serverfarm.balance = 'leastconn'
-            elif p.get('type').lower() == 'hashaddr':
-                haproxy_serverfarm.balance = 'source'
-            elif p.get('type').lower() == 'hashurl':
-                haproxy_serverfarm.balance = 'uri'
+        if predictor.get('type').lower() == 'roundrobin':
+            haproxy_serverfarm.balance = 'roundrobin'
+        elif predictor.get('type').lower() == 'leastconnections':
+            haproxy_serverfarm.balance = 'leastconn'
+        elif predictor.get('type').lower() == 'hashaddr':
+            haproxy_serverfarm.balance = 'source'
+        elif predictor.get('type').lower() == 'hashurl':
+            haproxy_serverfarm.balance = 'uri'
 
         config_file = self._get_config()
         config_file.add_backend(haproxy_serverfarm)
@@ -302,9 +297,7 @@ class HaproxyDriver(base_driver.BaseDriver):
     def finalize_config(self, good):
         if good and not self.config_was_deployed:
             logger.debug("[HAPROXY] Deploying configuration")
-            remote = RemoteConfig(self.device_ref, self.localpath,
-                                  self.remotepath, self.configfilename)
-            remote.put_config()
+            self.remote_config.put_config()
             if remote.validate_config():
                 service = RemoteService(self.device_ref)
                 if service.restart():

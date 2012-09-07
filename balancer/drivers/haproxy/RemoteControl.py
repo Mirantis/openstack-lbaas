@@ -36,8 +36,8 @@ class RemoteConfig(object):
         sftp.put('%s/%s' % (self.localpath, self.configfilename),
                  '/tmp/%s.remote' % self.configfilename)
         self.ssh.exec_command('sudo mv /tmp/%s.remote %s/%s' %
-                               (self.configfilename, self.remotepath,
-                                   self.configfilename))
+                              (self.configfilename, self.remotepath,
+                               self.configfilename))
         sftp.close()
         self.ssh.close()
         return True
@@ -105,18 +105,18 @@ class RemoteService(object):
 
 
 class RemoteInterface(object):
-    def __init__(self, device_ref, frontend):
+    def __init__(self, device_ref):
         device_extra = device_ref.get('extra')
         self.interface = device_extra.get('interface')
-        self.IP = frontend.bind_address
         self.host = device_ref['ip']
         self.user = device_ref['user']
         self.password = device_ref['password']
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    def add_ip(self):
+    def add_ip(self, frontend):
         self.ssh.connect(self.host, username=self.user, password=self.password)
+        self.IP = frontend.bind_address
         logger.debug('[HAPROXY] trying to add IP-%s to inteface %s' %
                                 (self.IP,  self.interface))
         stdin, stdout, stderr = self.ssh.exec_command('ip addr show dev %s' %
@@ -133,8 +133,9 @@ class RemoteInterface(object):
         self.ssh.close()
         return True
 
-    def del_ip(self):
+    def del_ip(self, frontend):
         self.ssh.connect(self.host, username=self.user, password=self.password)
+        self.IP = frontend.bind_address
         stdin, stdout, stderr = self.ssh.exec_command('ip addr show dev %s' %
                                (self.interface))
         ssh_out = stdout.read()
@@ -154,23 +155,27 @@ class RemoteSocketOperation(object):
     '''
     Remote operations via haproxy socket
     '''
-    def __init__(self, device_ref, backend, rserver):
+    def __init__(self, device_ref):
         device_extra = device_ref.get('extra')
         self.interface = device_extra.get('interface')
         self.haproxy_socket = device_extra.get('socket')
         self.host = device_ref['ip']
         self.user = device_ref['user']
         self.password = device_ref['password']
-        self.backend_name = backend.name
-        self.rserver_name = rserver['id']
+        self.backend_name = ''
+        self.rserver_name = ''
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    def suspend_server(self):
+    def suspend_server(self, backend, rserver):
+        self.backend_name = backend.name
+        self.rserver_name = rserver['id']
         self._operation_with_server_via_socket('disable')
         return True
 
-    def activate_server(self):
+    def activate_server(self, backend, rserver):
+        self.backend_name = backend.name
+        self.rserver_name = rserver['id']
         self._operation_with_server_via_socket('enable')
         return True
 
