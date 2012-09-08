@@ -19,7 +19,7 @@ import logging
 
 from openstack.common import wsgi
 
-from balancer.api import utils
+from balancer import utils
 from balancer.core import api as core_api
 from balancer.db import api as db_api
 

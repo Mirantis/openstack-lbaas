@@ -1,5 +1,5 @@
 import unittest
-import balancer.api.utils as utils
+from balancer import utils
 
 
 class TestHttpCode(unittest.TestCase):
