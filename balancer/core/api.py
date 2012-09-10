@@ -28,6 +28,7 @@ from balancer.core import lb_status
 from balancer.core import scheduler
 from balancer import drivers
 from balancer.db import api as db_api
+from balancer import utils
 
 
 logger = logging.getLogger(__name__)
@@ -122,9 +123,9 @@ def update_lb(conf, tenant_id, lb_id, lb_body):
         try:
             commands.update_loadbalancer(ctx, old_lb_ref, new_lb_ref)
         except Exception:
-            db_api.loadbalancer_update(conf, lb_id,
-                                       {'status': lb_status.ERROR})
-            raise
+            with utils.save_and_reraise_exception():
+                db_api.loadbalancer_update(conf, lb_id,
+                                           {'status': lb_status.ERROR})
     db_api.loadbalancer_update(conf, lb_id,
                                {'status': lb_status.ACTIVE})
 

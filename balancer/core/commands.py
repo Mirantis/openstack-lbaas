@@ -20,6 +20,7 @@ import logging
 import types
 
 import balancer.db.api as db_api
+from balancer import utils
 
 LOG = logging.getLogger(__name__)
 
@@ -110,10 +111,10 @@ def create_rserver(ctx, rs):
             db_api.server_update(ctx.conf, rs['id'], rs)
         yield
     except Exception:
-        ctx.device.delete_real_server(rs)
-        rs['deployed'] = 'False'
-        db_api.server_update(ctx.conf, rs['id'], rs)
-        raise
+        with utils.save_and_reraise_exception():
+            ctx.device.delete_real_server(rs)
+            rs['deployed'] = 'False'
+            db_api.server_update(ctx.conf, rs['id'], rs)
 
 
 @ignore_exceptions
@@ -161,8 +162,8 @@ def create_server_farm(ctx, sf):
         db_api.serverfarm_update(ctx.conf, sf['id'], {'deployed': True})
         yield
     except Exception:
-        delete_server_farm(ctx, sf)
-        raise
+        with utils.save_and_reraise_exception():
+            delete_server_farm(ctx, sf)
 
 
 @with_rollback
@@ -174,8 +175,9 @@ def add_rserver_to_server_farm(ctx, server_farm, rserver):
         ctx.device.add_real_server_to_server_farm(server_farm, rserver)
         yield
     except Exception:
-        ctx.device.delete_real_server_from_server_farm(server_farm, rserver)
-        raise
+        with utils.save_and_reraise_exception():
+            ctx.device.delete_real_server_from_server_farm(server_farm,
+                    rserver)
 
 
 @ignore_exceptions
@@ -197,8 +199,8 @@ def create_probe(ctx, probe):
         db_api.probe_update(ctx.conf, probe['id'], {'deployed': True})
         yield
     except Exception:
-        delete_probe(ctx, probe)
-        raise
+        with utils.save_and_reraise_exception():
+            delete_probe(ctx, probe)
 
 
 @with_rollback
@@ -207,8 +209,8 @@ def add_probe_to_server_farm(ctx, server_farm, probe):
         ctx.device.add_probe_to_server_farm(server_farm, probe)
         yield
     except Exception:
-        ctx.device.delete_probe_from_server_farm(server_farm, probe)
-        raise
+        with utils.save_and_reraise_exception():
+            ctx.device.delete_probe_from_server_farm(server_farm, probe)
 
 
 @ignore_exceptions
@@ -238,8 +240,8 @@ def create_vip(ctx, vip, server_farm):
         db_api.virtualserver_update(ctx.conf, vip['id'], {'deployed': True})
         yield
     except Exception:
-        delete_vip(ctx, vip)
-        raise
+        with utils.save_and_reraise_exception():
+            delete_vip(ctx, vip)
 
 
 def create_loadbalancer(ctx, balancer, nodes, probes, vips):
