@@ -284,7 +284,7 @@ def lb_show_sticky(conf, tenant_id, lb_id):
 
 def lb_add_sticky(conf, tenant_id, lb_id, st):
     logger.debug("Got new sticky description %s" % st)
-    if st['persistenceType'] is None:
+    if st['type'] is None:
         return
     lb = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     sf = db_api.serverfarm_get_all_by_lb_id(conf, lb_id)[0]
@@ -323,7 +323,9 @@ def lb_add_vip(conf, tenant_id, lb_id, vip_dict):
     values['sf_id'] = sf_ref['id']
     # XXX(akscram): Set default protocol from LoadBalancer to
     #               VirtualServer if it is not present.
-    if 'protocol' not in values['extra']:
+    if not values['extra']:
+        values['extra'] = {'protocol': lb_ref['protocol']}
+    elif 'protocol' not in values['extra']:
         values['extra']['protocol'] = lb_ref['protocol']
     vip_ref = db_api.virtualserver_create(conf, values)
     device_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
