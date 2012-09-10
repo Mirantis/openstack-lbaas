@@ -388,11 +388,6 @@ def device_show_protocols(conf):
     return protocols
 
 
-# NOTE(ash): unused func
 def device_delete(conf, device_id):
     db_api.device_destroy(conf, device_id)
-
-#    sc = ServiceController.Instance(conf)
-#    sched = sc.scheduller
-#    sched.addDevice(dev)
-    return
+    drivers.delete_device_driver(conf, device_id)
