@@ -142,8 +142,6 @@ class TestHaproxyDriverRemoteInterface(unittest.TestCase):
 
 class TestHaproxyDriverRemoteSocketOperation(unittest.TestCase):
     def setUp(self):
-        #backend = get_fake_HaproxyBackend('test1')
-        #rserver = get_fake_rserver('test_rserver', {'address': '10.12.3.2'})
         self.remote_socket = RemoteControl.RemoteSocketOperation(device_fake)
         self.remote_socket.ssh = Mock()
         file_channel = MagicMock(spec=file)
@@ -156,20 +154,19 @@ class TestHaproxyDriverRemoteSocketOperation(unittest.TestCase):
 
 class TestHaproxyDriverAllFunctions(unittest.TestCase):
     def setUp(self):
-        #backend = get_fake_HaproxyBackend('test1')
-        #rserver = get_fake_rserver('test_rserver', {'address': '10.12.3.2'})
-        self.remote_socket = RemoteControl.RemoteSocketOperation(device_fake)
-        self.remote_socket.ssh = Mock()
-        file_channel = MagicMock(spec=file)
-        self.remote_socket.ssh.exec_command.return_value = [file_channel,
-                                                file_channel, file_channel]
         self.driver = Driver.HaproxyDriver(conf, device_fake)
         self.driver.config_file = Mock()
-        self.driver.remote_socket = Mock()
         self.driver.remote_config = Mock()
-        self.driver.remote_interface = Mock()
-        self.remote_config = Mock()
-        self.remote_config.ssh = Mock()
+
+        self.driver.remote_socket = \
+                    RemoteControl.RemoteSocketOperation(device_fake)
+        a = Mock()
+        a.file_channel = MagicMock(spec=file)
+        self.driver.remote_socket.ssh = Mock()
+        self.driver.remote_socket.ssh.exec_command.return_value = [a, a, a]
+
+        self.driver.remote_interface = RemoteInterface(self.device_ref)
+        self.driver.remote_interface.ssh = Mock()
 
     def test_create_real_server(self):
         ha_rserver = get_fake_Haproxy_rserver('Test_Rserver')
@@ -207,22 +204,26 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
 
     def test_create_server_farm_with_round_robin(self):
         sf = get_fake_server_farm('SF-001', {})
-        predictor = get_fake_predictor('testPredictor01', {})
+        predictor = get_fake_predictor('testPredictor01',
+                                  {'type': 'roundrobin'})
         self.driver.create_server_farm(sf, predictor)
 
     def test_create_server_farm_with_leastconnections(self):
         sf = get_fake_server_farm('SF-001', {})
-        predictor_connections = get_fake_predictor('testPredictor01', {})
+        predictor_connections = get_fake_predictor('testPredictor01',
+                                        {'type': 'leastconnections'})
         self.driver.create_server_farm(sf, predictor_connections)
 
     def test_create_server_farm_with_hashaddr(self):
         sf = get_fake_server_farm('SF-001', {})
-        predictor_hashaddr = get_fake_predictor('testPredictor01', {})
+        predictor_hashaddr = get_fake_predictor('testPredictor01',
+                                             {'type': 'hashaddr'})
         self.driver.create_server_farm(sf, predictor_hashaddr)
 
     def test_create_server_farm_with_hashurl(self):
         sf = get_fake_server_farm('SF-001', {})
-        predictor_hashurl = get_fake_predictor('testPredictor01', {})
+        predictor_hashurl = get_fake_predictor('testPredictor01',
+                                             {'type': 'hashurl'})
         self.driver.create_server_farm(sf, predictor_hashurl)
 
     def test_delete_server_farm(self):
