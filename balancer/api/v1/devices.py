@@ -113,13 +113,11 @@ class Controller(object):
         LOG.debug("Got delete request. Request: %s", req)
         core_api.device_delete(self.conf, device_id)
 
-    @utils.require_admin
     def show_algorithms(self, req):
         LOG.debug("Got algorithms request. Request: %s", req)
         algorithms = core_api.device_show_algorithms(self.conf)
         return {'algorithms': algorithms}
 
-    @utils.require_admin
     def show_protocols(self, req):
         LOG.debug("Got protocols request. Request: %s", req)
         protocols = core_api.device_show_protocols(self.conf)
