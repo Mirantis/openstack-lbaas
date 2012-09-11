@@ -210,20 +210,12 @@ class HaproxyDriver(base_driver.BaseDriver):
             logger.debug('[HAPROXY] ip %s is not used in any '
                          'frontend, deleting it from remote interface' %
                          haproxy_virtualserver.bind_address)
-            remote_interface = RemoteInterface(self.device_ref,
-                                               haproxy_virtualserver)
-            remote_interface.del_ip()
+            self.remote_interface.del_ip(haproxy_virtualserver)
         config_file.delete_block(haproxy_virtualserver)
 
     def get_statistics(self, serverfarm, rserver):
-        haproxy_rserver = HaproxyRserver()
-        haproxy_rserver.name = rserver['id']
-        haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['id']
-        remote_socket = RemoteSocketOperation(self.device_ref,
-                                        haproxy_serverfarm, haproxy_rserver,
-                                        self.interface, self.haproxy_socket)
-        out = remote_socket.get_statistics()
+        out = self.remote_socket.get_statistics(self.remote_socket,\
+                                    serverfarm['id'], rserver['id'])
         statistics = {}
         if out:
             status_line = out.split(",")
@@ -235,9 +227,6 @@ class HaproxyDriver(base_driver.BaseDriver):
             statistics['connMax'] = [5]
             statistics['connRateLimit'] = [34]
             statistics['bandwRateLimit'] = [35]
-# NOTE: broken because use indeterminate state variable
-#        logger.debug('[HAPROXY] statistics rserver state is \'%s\'',
-#                statistics.state)
         return statistics
 
     def suspend_real_server(self, serverfarm, rserver):
@@ -298,9 +287,8 @@ class HaproxyDriver(base_driver.BaseDriver):
         if good and not self.config_was_deployed:
             logger.debug("[HAPROXY] Deploying configuration")
             self.remote_config.put_config()
-            if remote.validate_config():
-                service = RemoteService(self.device_ref)
-                if service.restart():
+            if self.remote_config.validate_config():
+                if self.remote_service.restart():
                     self.config_was_deployed = True
                 else:
                     logger.error("[HAPROXY] failed to restart haproxy")
