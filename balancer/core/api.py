@@ -323,7 +323,7 @@ def lb_add_vip(conf, tenant_id, lb_id, vip_dict):
     values['sf_id'] = sf_ref['id']
     # XXX(akscram): Set default protocol from LoadBalancer to
     #               VirtualServer if it is not present.
-    if not values['extra']:
+    if not values.get('extra'):
         values['extra'] = {'protocol': lb_ref['protocol']}
     elif 'protocol' not in values['extra']:
         values['extra']['protocol'] = lb_ref['protocol']

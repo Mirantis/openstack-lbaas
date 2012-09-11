@@ -36,6 +36,7 @@ def get_device_driver(conf, device_id):
         DEVICE_DRIVERS[device_id] = cls(conf, device_ref)
         return DEVICE_DRIVERS[device_id]
 
+
 def delete_device_driver(conf, device_id):
     try:
         del DEVICE_DRIVERS[device_id]
