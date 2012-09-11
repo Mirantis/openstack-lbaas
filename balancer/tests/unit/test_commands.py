@@ -445,6 +445,7 @@ class TestLoadbalancer(unittest.TestCase):
     def test_create_loadbalancer_0(self, *mocks):
         """All here"""
         mocks[0].return_value = {'id': 1,
+            'protocol': 'HTTP',
             'nodes': [{'name': 'node0'}, {'name': 'node1'}],
             'healthMonitoring': [{'name': 'probe0'}, {"name": "probe1"}],
             'virtualIps': [{'name': "vip0"}, {'name': "vip1"}]}

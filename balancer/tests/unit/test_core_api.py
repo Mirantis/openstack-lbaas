@@ -441,9 +441,12 @@ class TestBalancer(unittest.TestCase):
                         mock_create_vip,
                         mock_unpack_extra):
         # Mock
-        mock_loadbalancer_get.return_value = lb_ref = mock.MagicMock()
-        lb_ref.__getitem__.side_effect = ['fakelbid1', 'fakelbid2',
-                                          'fakedeviceid']
+        lb_ref = {
+            'id': 'fakelbid',
+            'device_id': 'fakedeviceid',
+            'protocol': 'HTTP',
+        }
+        mock_loadbalancer_get.return_value = lb_ref
         sf_ref = mock.MagicMock()
         sf_ref.__getitem__.return_value = 'fakesfid'
         mock_serverfarm_get_all_by_lb_id.return_value = [sf_ref]
@@ -459,18 +462,19 @@ class TestBalancer(unittest.TestCase):
         mock_loadbalancer_get.assert_called_once_with(self.conf,
                 'fakelbid', tenant_id='fake_tenant')
         mock_serverfarm_get_all_by_lb_id.assert_called_once_with(self.conf,
-                                                                 'fakelbid1')
+                                                                 'fakelbid')
         mock_virtualserver_pack_extra.assert_called_once_with('fakevipdict')
-        mock_virtualserver_create.assert_called_once_with(self.conf,
-            {'lb_id': 'fakelbid2', 'sf_id': 'fakesfid'})
+        mock_virtualserver_create.assert_called_once_with(self.conf, {
+            'lb_id': 'fakelbid',
+            'sf_id': 'fakesfid',
+            'extra': {
+                'protocol': 'HTTP',
+            },
+        })
         mock_get_device_driver.assert_called_once_with(self.conf,
                                                        'fakedeviceid')
         mock_create_vip.assert_called_once_with(enter_ctx, vip_ref, sf_ref)
         mock_unpack_extra.assert_called_once_with(vip_ref)
-        self.assertEqual(lb_ref.__getitem__.call_args_list,
-                         [mock.call('id'),
-                          mock.call('id'),
-                          mock.call('device_id')])
 
     @mock.patch("balancer.db.api.unpack_extra", autospec=True)
     @mock.patch("balancer.core.commands.create_vip", autospec=True)
@@ -582,7 +586,7 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.core.commands.add_sticky_to_loadbalancer")
     def test_lb_add_sticky1(self, *mocks):
-        sticky = {'persistenceType': None}
+        sticky = {'type': None}
         resp = api.lb_add_sticky(self.conf, 'fake_tenant', self.lb_id, sticky)
         self.assertEqual(resp, None)
         for mock in mocks:

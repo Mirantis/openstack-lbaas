@@ -272,6 +272,10 @@ def create_loadbalancer(ctx, balancer, nodes, probes, vips):
         vip_values = db_api.virtualserver_pack_extra(vip)
         vip_values['lb_id'] = lb['id']
         vip_values['sf_id'] = sf['id']
+        if not vip_values.get('extra'):
+            vip_values['extra'] = {'protocol': lb['protocol']}
+        elif 'protocol' not in vip_values['extra']:
+            vip_values['extra']['protocol'] = lb['protocol']
         vip_ref = db_api.virtualserver_create(ctx.conf, vip_values)
         create_vip(ctx, vip_ref, sf)
 
