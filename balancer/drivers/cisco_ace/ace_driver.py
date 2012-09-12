@@ -15,55 +15,63 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import hashlib
+from hashlib import md5
 import urllib2
 import base64
 import logging
 import ipaddr
-from balancer.drivers.base_driver import BaseDriver, is_sequence
+from balancer.drivers.base_driver import BaseDriver
+from balancer.drivers.base_driver import is_sequence
 import openstack.common.exception
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 class AceDriver(BaseDriver):
     def __init__(self,  conf,  device_ref):
-        super(AceDriver, self).__init__(conf, device_ref)
-        self.url = "https://%s:%s/bin/xml_agent" % (device_ref['ip'],
-                                                    device_ref['port'])
+        #super(AceDriver, self).__init__(conf, device_ref) ???
+        url = "https://%s:%s/bin/xml_agent" % (device_ref['ip'], \
+                                               device_ref['port'])
         base64str = base64.encodestring('%s:%s' % \
             (device_ref['user'], device_ref['password']))[:-1]
-        self.authheader = "Basic %s" % base64str
+        authheader = "Basic %s" % base64str
+        self.request = urllib2.Request(url).add_header("Authorization", \
+                                                               authheader)
+        self.send_data = urllib2.urlopen
 
     def deployConfig(self, s):
-        request = urllib2.Request(self.url)
-        request.add_header("Authorization", self.authheader)
-        d = "xml_cmd=<request_raw>\nconfigure\n%s\nend\n</request_raw>" % s
-        logger.debug("send data to ACE:\n" + d)
+        data = 'xml_cmd=<request_raw>\nconfigure\n%s\nend\n</request_raw>' % s
+        LOG.debug('send data to ACE:\n' + data)
         try:
-            message = urllib2.urlopen(request, d)
-            s = message.read()
+            response = self.send_data(self.request, data).read()
         except Exception:
             raise
-        logger.debug("data from ACE:\n" + s)
-        if 'XML_CMD_SUCCESS' in s:
+        LOG.debug('data from ACE:\n' + response)
+        if 'XML_CMD_SUCCESS' in response:
             return 'OK'
-        else:
-            return 'Error'
+        return 'Error'
 
     def getConfig(self, s):
-        request = urllib2.Request(self.url)
-        request.add_header("Authorization", self.authheader)
-        data = "xml_cmd=<request_raw>\nshow runn %s\n</request_raw>" % s
-        logger.debug("send data to ACE:\n" + data)
+        data = 'xml_cmd=<request_raw>\nshow runn %s\n</request_raw>' % s
+        LOG.debug('send data to ACE:\n' + data)
         try:
-            message = urllib2.urlopen(request, data)
-            s = message.read()
+            response = self.send_data(self.request, data).read()
         except Exception:
             raise
-        logger.debug("data from ACE:\n" + s)
-        return s
+        LOG.debug("data from ACE:\n" + response)
+        return response
+
+    def get_statistics(self, server_farm):
+        # TODO: Need to check work of this function with real device
+        data = 'xml_cmd=<request_raw>\nshow serverfarm %s' % server_farm['id']
+        data += '\n</request_raw>'
+        try:
+            response = self.send_data(self.request, data).read()
+        except Exception:
+            raise
+        LOG.debug("data from ACE:\n" + response)
+        return response
 
     def create_nat_pool(self, nat_pool):
         cmd = "int vlan " + str(nat_pool['vlan']) + \
@@ -86,7 +94,7 @@ class AceDriver(BaseDriver):
         if vip_extra.get('allVLANs'):
             cmd += "global"
         else:
-            cmd += "int-" + str(hashlib.md5(vip_extra['VLAN']).hexdigest())
+            cmd += "int-" + str(md5(vip_extra['VLAN']).hexdigest())
         cmd += "\nclass " + vip['id'] + \
                "\nnat dynamic " + str(nat_pool['id']) + \
                " vlan " + str(nat_pool['vlan'])
@@ -152,7 +160,7 @@ class AceDriver(BaseDriver):
         if not vip_extra.get('allVLANs'):
             nat_pool['vlan'] = vip_extra.get('VLAN')[-1]
         else:
-            logger.warning("\n\n Can't generate NAT Pool for All VLANs! \n\n")
+            LOG.warning("\n\n Can't generate NAT Pool for All VLANs! \n\n")
             nat_pool['vlan'] = '-1'
         nat_pool['netmask'] = vip['mask']
         if '4' in vip.get('ipVersion'):
@@ -423,23 +431,22 @@ class AceDriver(BaseDriver):
             cmd += "\ndescription " + sf_extra['description']
         if sf_extra.get('failAction'):
             cmd += "\nfailaction " + sf_extra['failAction']
-        for p in predictor:
-            if p.get('type'):
-                type = p['type'].lower()
-                if (type == "leastbandwidth"):
-                    type = "least-bandwidth"
-                    accessTime = p.get('extra').get('accessTime')
-                    if accessTime:
-                        type += " assess-time " + str(accessTime)
-                    if sf_extra.get('accessTime'):
-                        type += " samples " + p.get('extra').get('sample')
-                elif (type == "leastconnections"):
-                    type = "leastconns slowstart " + \
-                           p.get('extra').get('slowStartDur')
-                elif (type == "leastloaded"):
-                    type = "least-loaded probe " + \
-                           p.get('extra').get('snmpProbe')
-            cmd += "\npredictor " + type
+        if predictor.get('type'):
+            type_ = predictor['type'].lower()
+            if (type_ == "leastbandwidth"):
+                type_ = "least-bandwidth"
+                accessTime = predictor.get('extra').get('accessTime')
+                if accessTime:
+                    type_ += " assess-time " + str(accessTime)
+                if sf_extra.get('accessTime'):
+                    type_ += " samples " + predictor.get('extra').get('sample')
+            elif (type_ == "leastconnections"):
+                type_ = "leastconns slowstart " + \
+                        predictor.get('extra').get('slowStartDur')
+            elif (type_ == "leastloaded"):
+                type_ = "least-loaded probe " + \
+                        predictor.get('extra').get('snmpProbe')
+        cmd += "\npredictor " + type_
         if (sf_type == "host"):
             if sf_extra.get('failOnAll'):
                 cmd += "\nfail-on-all"
@@ -478,10 +485,10 @@ class AceDriver(BaseDriver):
     def add_real_server_to_server_farm(self, sf, rserver):
         rs_extra = rserver.get('extra') or {}
         cmd = "serverfarm " + sf['id'] + "\nrserver " + rserver['id']
-        if rserver.get('port'):
-            cmd += " " + rserver['port']
-        if rserver.get('weight'):
-            cmd += "\nweight " + str(rserver['weight'])
+        if rs_extra.get('port'):
+            cmd += " " + rs_extra['port']
+        if rs_extra.get('weight'):
+            cmd += "\nweight " + str(rs_extra['weight'])
         if rs_extra.get('backupRS'):
             cmd += "\nbackup-rserver " + srv_extra['backupRS']
             if rs_extra.get('backupRSport'):
@@ -600,7 +607,7 @@ class AceDriver(BaseDriver):
                 cmd += " backup " + st_extra['backupServerFarm']
                 if st_extra.get('enableStyckyOnBackupSF'):
                     cmd += " sticky"
-                if st_extra('aggregateState'):
+                if st_extra.get('aggregateState'):
                     cmd += " aggregate-state"
         self.deployConfig(cmd)
 
@@ -631,7 +638,7 @@ class AceDriver(BaseDriver):
         if vip_extra.get('allVLANs'):
             pmap = "global"
         else:
-            pmap = "int-" + str(hashlib.md5(vip_extra['VLAN']).hexdigest())
+            pmap = "int-" + str(md5(vip_extra['VLAN']).hexdigest())
         cmd = "access-list vip-acl extended permit ip any host " + \
               vip['address']
         self.deployConfig(cmd)
@@ -648,8 +655,6 @@ class AceDriver(BaseDriver):
         if vip_extra.get('backupServerFarm'):
             cmd += " backup " + vip_extra['backupServerFarm']
         cmd += "\nexit\nexit\nclass-map match-all " + vip['id'] + "\n"
-        if vip_extra.get('description'):
-            cmd += "description " + vip_extra['description'] + "\n"
         cmd += "match virtual-address " + vip['address'] + " " + \
                str(vip['mask']) + " " + vip_extra['proto'].lower()
         if vip_extra['proto'].lower() != "any" and vip_extra.get('port'):
@@ -667,7 +672,7 @@ class AceDriver(BaseDriver):
             try:
                 self.deployConfig(cmd)
             except:
-                logger.warning("Got exception on acl set")
+                LOG.warning("Got exception on acl set")
         else:
             VLAN = vip_extra['VLAN']
             if is_sequence(VLAN):
@@ -680,7 +685,7 @@ class AceDriver(BaseDriver):
                     try:
                         self.deployConfig(cmd)
                     except:
-                        logger.warning("Got exception on acl set")
+                        LOG.warning("Got exception on acl set")
             else:
                     cmd = "interface vlan " + str(VLAN) + \
                           "\nservice-policy input " + pmap
@@ -690,7 +695,7 @@ class AceDriver(BaseDriver):
                     try:
                         self.deployConfig(cmd)
                     except:
-                        logger.warning("Got exception on acl set")
+                        LOG.warning("Got exception on acl set")
         nat_pool = self.find_nat_pool_for_vip(vip)
         if nat_pool:
             self.add_nat_pool_to_vip(nat_pool, vip)
@@ -704,7 +709,7 @@ class AceDriver(BaseDriver):
         if vip_extra.get('allVLANs'):
             pmap = "global"
         else:
-            pmap = "int-" + str(hashlib.md5(vip_extra['VLAN']).hexdigest())
+            pmap = "int-" + str(md5(vip_extra['VLAN']).hexdigest())
         cmd = "policy-map multi-match " + pmap + "\nno class " + vip['id']
         self.deployConfig(cmd)
         cmd = "no class-map match-all " + vip['id'] + "\n"

@@ -201,8 +201,8 @@ class RemoteSocketOperation(object):
         """
         self.ssh.connect(self.host, username=self.user, password=self.password)
         stdin, stdout, stderr = self.ssh.exec_command(
-           'echo show stat | sudo socat stdio unix-connect:%s | grep %s,%s ' %
-            (socket, backend, rserver))
+           'echo show stat | sudo socat stdio unix-connect:%s | grep %s' %
+            (socket, backend))
         ssh_out = stdout.read()
         logger.debug('[HAPROXY] get statistics about reserver %s/%s.'
                     ' Result is \'%s\' ', backend, rserver, ssh_out)

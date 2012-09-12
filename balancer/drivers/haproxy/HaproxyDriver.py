@@ -213,9 +213,10 @@ class HaproxyDriver(base_driver.BaseDriver):
             self.remote_interface.del_ip(haproxy_virtualserver)
         config_file.delete_block(haproxy_virtualserver)
 
-    def get_statistics(self, serverfarm, rserver):
+    def get_statistics(self, serverfarm):
+        # TODO: Need to check work of this function with real device
         out = self.remote_socket.get_statistics(self.remote_socket,\
-                                    serverfarm['id'], rserver['id'])
+                                    serverfarm['id'])
         statistics = {}
         if out:
             status_line = out.split(",")

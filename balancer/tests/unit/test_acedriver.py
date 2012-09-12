@@ -16,27 +16,18 @@
 #    under the License.
 
 import unittest
+import mock
 
 from balancer.drivers.cisco_ace.ace_driver import AceDriver
-
-
-class TestDriver(AceDriver):
-    def deployConfig(self, s):
-        self.w += s
-        return 'OK'
-
-    def getConfig(self, s):
-        return 'test'
-
-    def ReadyToTest(self):
-        self.w = ""
 
 dev = {'ip': '10.4.15.21', 'port': '10443', \
        'user': 'admin', 'password': 'cisco123'}
 
 conf = []
-driver = TestDriver(conf, dev)
-driver.ReadyToTest()
+
+driver = AceDriver(conf, dev)
+driver.send_data = mock.Mock()
+driver.send_data().read = mock.Mock(return_value="str")
 
 rs_host = {'type': 'host', 'id': 'LB_test_rs01', \
            'address': '172.250.0.1', 'state': 'inservice'}
@@ -44,7 +35,8 @@ rs_host['extra'] = {'description': 'Created by test. RS type Host', \
                     'minCon': '2000000', 'maxCon': '3000000', \
                     'weight': '7', 'rateBandwidth': '500000', \
                     'rateConnection': '5000', 'failOnAll': 'True', \
-                    'port': '80', 'cookieStr': 'stringcookie'}
+                    'port': '80', 'cookieStr': 'stringcookie', \
+                    'state': 'In Service'}
 
 rs_redirect = {'type': 'redirect', 'id': 'LB_test_rs02', \
                'address': '172.250.0.2', 'state': 'outofservice'}
@@ -265,21 +257,16 @@ probe_vm['extra'] = {'description': 'Created by test. Probe type VM', \
                      'minCPUburstThresh': '97', 'maxMemBurstThresh': '97', \
                      'minMemBurstThresh': '97'}
 
-a = {'type': 'roudrobin'}
-a['extra'] = {}
-predictor = [a, ]
+predictor = {'id': 'test_pr', 'type': 'roudrobin'}
 
-a = {'type': 'leastbandwidth'}
-a['extra'] = {'accessTime': '10'}
-predictor_bandwidth = [a, ]
+predictor_bandwidth = {'id': 'test_pr', 'type': 'leastbandwidth'}
+predictor_bandwidth['extra'] = {'accessTime': '10'}
 
-a = {'type': 'leastconnections'}
-a['extra'] = {'slowStartDur': '10'}
-predictor_connections = [a, ]
+predictor_connections = {'id': 'test_pr', 'type': 'leastconnections'}
+predictor_connections['extra'] = {'slowStartDur': '10'}
 
-a = {'type': 'leastloaded'}
-a['extra'] = {'snmpProbe': 'unitTest-snmpProbe'}
-predictor_loaded = [a, ]
+predictor_loaded = {'id': 'test_pr', 'type': 'leastloaded'}
+predictor_loaded['extra'] = {'snmpProbe': 'unitTest-snmpProbe'}
 
 sf_host = {'type': 'Host', 'id': 'LB_test_sfarm01'}
 sf_host['extra'] = {'description': 'Created by test. Sfarm type Host', \
@@ -304,7 +291,8 @@ sticky_httpContent['extra'] = {'offset': '0', \
                                'backupServerFarm': 'LB_test_sfarm02', \
                                'replicateOnHAPeer': 'True', \
                                'timeout': '2880', \
-                               'timeoutActiveConn': 'True'}
+                               'timeoutActiveConn': 'True',
+                               'sf_id': 'SF-01'}
 
 sticky_httpCookie = {'type': 'HTTPCookie', \
                      'id': 'LB_test_stickyHTTPCookie'}
@@ -381,268 +369,457 @@ sticky_sipHeader['extra'] = {'serverFarm': 'LB_test_sfarm01', \
 vip_loadbalance = {'id': 'LB_test_VIP1', 'ipVersion': 'IPv4', \
                    'address': '10.250.250.250', 'mask': '255.255.255.0'}
 vip_loadbalance['extra'] = {'proto': 'TCP', 'appProto': 'HTTP', \
-                            'port': '20', 'VLAN': "2"}
+                            'port': '20', 'VLAN': "2",
+                            'description': 'simple vip for unit test'}
 
 vip_sticky = {'id': 'LB_test_VIP2', 'ipVersion': 'IPv4', \
               'address': '10.250.250.251', 'mask': '255.255.255.0'}
 vip_sticky['extra'] = {'proto': 'TCP', 'appProto': 'HTTPS', \
-                       'port': '5077', 'VLAN': '2'}
+                       'port': '5077', 'allVLANs': True}
 
 vip_test = {'id': 'test3', 'ipVersion': 'IPv4', \
              'address': '10.250.250.253', 'mask': '255.255.255.0'}
 vip_test['extra'] = {'proto': 'TCP', 'appProto': 'RTSP', \
-             'port': '507', 'VLAN': '56'}
+             'port': '507', 'allVLANs': True}
+
+ssl_proxy = {'id': 'ssl_proxy01', 'cert': '1.crt', 'key': 'secutity', \
+             'authGroup': 'test01', 'ocspServer': '1.com', \
+             'crl': 'A-test', 'crlBestEffort': True, \
+             'chainGroup': '1', 'CheckPriority': 'ddffdfd'}
 
 
 class Ace_DriverTestCase(unittest.TestCase):
     def test_01a_createRServer_typeHost(self):
+        k = driver.send_data.call_count
         driver.create_real_server(rs_host)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_01b_createRServer_typeRedirect(self):
+        k = driver.send_data.call_count
         driver.create_real_server(rs_redirect)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_01c_createRServer_typeHost(self):
+        k = driver.send_data.call_count
         driver.create_real_server(rs_test3)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_01d_createRServer_typeRedirect(self):
+        k = driver.send_data.call_count
         driver.create_real_server(rs_test4)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02a_createDNSProbe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_dns)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02b_createECHOUDPprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_echoUDP)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02c_createECHOTCPprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_echoTCP)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02d_createFINGERprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_finger)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02e_createFTPprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_ftp)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02f_createHTTPprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_http)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02g_createHTTPSprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_https)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02h_createICMPprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_icmp)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02i_createIMAPprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_imap)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02j_createPOPprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_pop)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02k_createRADIUSprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_radius)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02l_createRTSPprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_rtsp)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02m_createSCRIPTEDprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_scripted)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02n_createSIPUDPprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_sipUDP)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02o_createSMTPprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_smtp)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02p_createSNMPprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_snmp)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02r_createTCPprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_tcp)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02s_createTELNETprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_telnet)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02t_createUDPprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_udp)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_02u_createVMprobe(self):
+        k = driver.send_data.call_count
         driver.create_probe(probe_vm)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_03a_createServerFarm_typeHost(self):
+        k = driver.send_data.call_count
         driver.create_server_farm(sf_host, predictor)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_03b_createServerFarm_typeRedirect(self):
+        k = driver.send_data.call_count
         driver.create_server_farm(sf_redirect, predictor)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_03c_createServerFarm_with_predictor_leastbandwidth(self):
+        k = driver.send_data.call_count
         driver.create_server_farm(sf_host, predictor_bandwidth)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_03d_createServerFarm_with_predictor_leastconnections(self):
+        k = driver.send_data.call_count
         driver.create_server_farm(sf_redirect, predictor_connections)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_03e_createServerFarm_with_predictor_leastloaded(self):
+        k = driver.send_data.call_count
         driver.create_server_farm(sf_redirect, predictor_loaded)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_04_addRServerToSF(self):
+        k = driver.send_data.call_count
         driver.add_real_server_to_server_farm(sf_host,  rs_host)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_05_addProbeToSF(self):
-        driver.add_probe_to_server_farm(sf_host,  probe_http)
+        k = driver.send_data.call_count
+        driver.add_probe_to_server_farm(sf_host, probe_http)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_06a_createHTTPContentStickiness(self):
+        k = driver.send_data.call_count
         driver.create_stickiness(sticky_httpContent)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_06b_createHTTPCookieStickiness(self):
+        k = driver.send_data.call_count
         driver.create_stickiness(sticky_httpCookie)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_06c_createHTTPHeaderStickiness(self):
+        k = driver.send_data.call_count
         driver.create_stickiness(sticky_httpHeader)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_06d_createIPNetmaskStickiness(self):
+        k = driver.send_data.call_count
         driver.create_stickiness(sticky_ipnetmask)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_06e_createV6prefixStickiness(self):
+        k = driver.send_data.call_count
         driver.create_stickiness(sticky_v6prefix)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_06f_createL4payloadStickiness(self):
+        k = driver.send_data.call_count
         driver.create_stickiness(sticky_l4payload)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_06g_createRadiusStickiness(self):
+        k = driver.send_data.call_count
         driver.create_stickiness(sticky_radius)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_06h_createRTSPHeaderStickiness(self):
+        k = driver.send_data.call_count
         driver.create_stickiness(sticky_rtspHeader)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_06i_createSIPHeaderStickiness(self):
+        k = driver.send_data.call_count
         driver.create_stickiness(sticky_sipHeader)
+        self.assertTrue(driver.send_data.call_count > k)
 
-    def test_07a_createVIP_loadbalncer(self):
-        driver.create_virtual_ip(vip_loadbalance,  sf_host)
+    def test_07a_createVIP_loadbalancer(self):
+        k = driver.send_data.call_count
+        driver.create_virtual_ip(vip_loadbalance, sf_host)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_07b_createVIP_sticky(self):
-        driver.create_virtual_ip(vip_sticky,  sf_redirect)
+        k = driver.send_data.call_count
+        driver.create_virtual_ip(vip_sticky, sf_redirect)
+        self.assertTrue(driver.send_data.call_count > k)
 
-    def test_07c_createVIP_loadbalncer(self):
+    def test_07c_createVIP_loadbalancer(self):
+        k = driver.send_data.call_count
         driver.create_virtual_ip(vip_test,  sf_host)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_08_suspendRServer(self):
+        k = driver.send_data.call_count
         driver.suspend_real_server(sf_host, rs_host)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_08a_suspendRServerGlobal(self):
+        k = driver.send_data.call_count
         driver.suspend_real_server_global(rs_redirect)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_09_activateRServer(self):
+        k = driver.send_data.call_count
         driver.activate_real_server(sf_host, rs_host)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_09a_activateRServerGlobal(self):
+        k = driver.send_data.call_count
         driver.activate_real_server_global(rs_redirect)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_10a_deleteVIP_loadbalance(self):
+        k = driver.send_data.call_count
         driver.delete_virtual_ip(vip_loadbalance)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_10b_deleteVIP_sticky(self):
+        k = driver.send_data.call_count
         driver.delete_virtual_ip(vip_sticky)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_11a_deleteHTTPContentStickiness(self):
+        k = driver.send_data.call_count
         driver.delete_stickiness(sticky_httpContent)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_11b_deleteHTTPCookieStickiness(self):
+        k = driver.send_data.call_count
         driver.delete_stickiness(sticky_httpCookie)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_11c_deleteHTTPHeaderStickiness(self):
+        k = driver.send_data.call_count
         driver.delete_stickiness(sticky_httpHeader)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_11d_deleteIPNetmaskStickiness(self):
+        k = driver.send_data.call_count
         driver.delete_stickiness(sticky_ipnetmask)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_11e_deleteV6prefixStickiness(self):
+        k = driver.send_data.call_count
         driver.delete_stickiness(sticky_v6prefix)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_11f_deleteL4payloadStickiness(self):
+        k = driver.send_data.call_count
         driver.delete_stickiness(sticky_l4payload)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_11g_deleteRadiusStickiness(self):
+        k = driver.send_data.call_count
         driver.delete_stickiness(sticky_radius)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_11h_deleteRTSPHeaderStickiness(self):
+        k = driver.send_data.call_count
         driver.delete_stickiness(sticky_rtspHeader)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_11i_deleteSIPHeaderStickiness(self):
+        k = driver.send_data.call_count
         driver.delete_stickiness(sticky_sipHeader)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_12_deleteProbeFromSF(self):
+        k = driver.send_data.call_count
         driver.delete_probe_from_server_farm(sf_host, probe_http)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_13_deleteRServerFromSF(self):
+        k = driver.send_data.call_count
         driver.delete_real_server_from_server_farm(sf_host, rs_host)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_14a_deleteServerFarm_typeHost(self):
+        k = driver.send_data.call_count
         driver.delete_server_farm(sf_host)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_14b_deleteServerFarm_typeRedirect(self):
+        k = driver.send_data.call_count
         driver.delete_server_farm(sf_redirect)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15a_deleteDNSProbe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_dns)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15b_deleteECHOUDPprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_echoUDP)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15c_deleteECHOTCPprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_echoTCP)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15d_deleteFINGERprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_finger)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15e_deleteFTPprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_ftp)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15f_deleteHTTPprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_http)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15g_deleteHTTPSprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_https)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15h_deleteICMPprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_icmp)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15i_deleteIMAPprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_imap)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15j_deletePOPprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_pop)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15k_deleteRADIUSprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_radius)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15l_deleteRTSPprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_rtsp)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15m_deleteSCRIPTEDprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_scripted)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15n_deleteSIPUDPprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_sipUDP)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15o_deleteSMTPprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_smtp)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15p_deleteSNMPprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_snmp)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15r_deleteTCPprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_tcp)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15s_deleteTELNETprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_telnet)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15t_deleteUDPprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_udp)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_15u_deleteVMprobe(self):
+        k = driver.send_data.call_count
         driver.delete_probe(probe_vm)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_16a_deleteRServer_typeHost(self):
+        k = driver.send_data.call_count
         driver.delete_real_server(rs_host)
+        self.assertTrue(driver.send_data.call_count > k)
 
     def test_16b_deleteRServer_typeRedirect(self):
+        k = driver.send_data.call_count
         driver.delete_real_server(rs_redirect)
+        self.assertTrue(driver.send_data.call_count > k)
+
+    def test_get_statistics(self):
+        k = driver.send_data.call_count
+        driver.get_statistics(sf_host)
+        self.assertTrue(driver.send_data.call_count > k)
+
+    def test_create_ssl_proxy(self):
+        k = driver.send_data.call_count
+        driver.create_ssl_proxy(ssl_proxy)
+        self.assertTrue(driver.send_data.call_count > k)
+
+    def test_delete_ssl_proxy(self):
+        k = driver.send_data.call_count
+        driver.delete_ssl_proxy(ssl_proxy)
+        self.assertTrue(driver.send_data.call_count > k)

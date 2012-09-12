@@ -336,8 +336,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
     def test_get_statistics(self):
         k = self.driver.remote_socket.ssh.exec_command.called
         sf = get_fake_server_farm('sf-153', {})
-        rs = get_fake_rserver('real_server205', {'port': '23'})
-        self.driver.get_statistics(sf, rs)
+        self.driver.get_statistics(sf)
         self.assertTrue(self.driver.remote_socket.ssh.\
                         exec_command.called > k, 'Error in work with ssh')
 
