@@ -21,9 +21,6 @@ import mock
 
 from balancer.drivers.cisco_ace.ace_driver import AceDriver
 
-urllib2.urlopen = mock.Mock()
-urllib2.urlopen().read = mock.Mock(return_value="str")
-
 dev = {'ip': '10.4.15.21', 'port': '10443', \
        'user': 'admin', 'password': 'cisco123'}
 
@@ -390,353 +387,354 @@ ssl_proxy = {'id': 'ssl_proxy01', 'cert': '1.crt', 'key': 'secutity', \
 
 class Ace_DriverTestCase(unittest.TestCase):
     def setUp(self):
-        urllib2.urlopen.reset()
+        urllib2.urlopen = mock.Mock()
+        urllib2.urlopen().read = mock.Mock(return_value="str")
         self.driver = AceDriver(conf, dev)
 
     def test_01a_createRServer_typeHost(self):
         self.driver.create_real_server(rs_host)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_01b_createRServer_typeRedirect(self):
         self.driver.create_real_server(rs_redirect)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_01c_createRServer_typeHost(self):
         self.driver.create_real_server(rs_test3)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_01d_createRServer_typeRedirect(self):
         self.driver.create_real_server(rs_test4)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02a_createDNSProbe(self):
         self.driver.create_probe(probe_dns)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02b_createECHOUDPprobe(self):
         self.driver.create_probe(probe_echoUDP)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02c_createECHOTCPprobe(self):
         self.driver.create_probe(probe_echoTCP)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02d_createFINGERprobe(self):
         self.driver.create_probe(probe_finger)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02e_createFTPprobe(self):
         self.driver.create_probe(probe_ftp)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02f_createHTTPprobe(self):
         self.driver.create_probe(probe_http)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02g_createHTTPSprobe(self):
         self.driver.create_probe(probe_https)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02h_createICMPprobe(self):
         self.driver.create_probe(probe_icmp)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02i_createIMAPprobe(self):
         self.driver.create_probe(probe_imap)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02j_createPOPprobe(self):
         self.driver.create_probe(probe_pop)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02k_createRADIUSprobe(self):
         self.driver.create_probe(probe_radius)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02l_createRTSPprobe(self):
         self.driver.create_probe(probe_rtsp)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02m_createSCRIPTEDprobe(self):
         self.driver.create_probe(probe_scripted)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02n_createSIPUDPprobe(self):
         self.driver.create_probe(probe_sipUDP)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02o_createSMTPprobe(self):
         self.driver.create_probe(probe_smtp)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02p_createSNMPprobe(self):
         self.driver.create_probe(probe_snmp)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02r_createTCPprobe(self):
         self.driver.create_probe(probe_tcp)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02s_createTELNETprobe(self):
         self.driver.create_probe(probe_telnet)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02t_createUDPprobe(self):
         self.driver.create_probe(probe_udp)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_02u_createVMprobe(self):
         self.driver.create_probe(probe_vm)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_03a_createServerFarm_typeHost(self):
         self.driver.create_server_farm(sf_host, predictor)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_03b_createServerFarm_typeRedirect(self):
         self.driver.create_server_farm(sf_redirect, predictor)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_03c_createServerFarm_with_predictor_leastbandwidth(self):
         self.driver.create_server_farm(sf_host, predictor_bandwidth)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_03d_createServerFarm_with_predictor_leastconnections(self):
         self.driver.create_server_farm(sf_redirect, predictor_connections)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_03e_createServerFarm_with_predictor_leastloaded(self):
         self.driver.create_server_farm(sf_redirect, predictor_loaded)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_04_addRServerToSF(self):
         self.driver.add_real_server_to_server_farm(sf_host,  rs_host)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_05_addProbeToSF(self):
         self.driver.add_probe_to_server_farm(sf_host, probe_http)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_06a_createHTTPContentStickiness(self):
         self.driver.create_stickiness(sticky_httpContent)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_06b_createHTTPCookieStickiness(self):
         self.driver.create_stickiness(sticky_httpCookie)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_06c_createHTTPHeaderStickiness(self):
         self.driver.create_stickiness(sticky_httpHeader)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_06d_createIPNetmaskStickiness(self):
         self.driver.create_stickiness(sticky_ipnetmask)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_06e_createV6prefixStickiness(self):
         self.driver.create_stickiness(sticky_v6prefix)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_06f_createL4payloadStickiness(self):
         self.driver.create_stickiness(sticky_l4payload)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_06g_createRadiusStickiness(self):
         self.driver.create_stickiness(sticky_radius)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_06h_createRTSPHeaderStickiness(self):
         self.driver.create_stickiness(sticky_rtspHeader)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_06i_createSIPHeaderStickiness(self):
         self.driver.create_stickiness(sticky_sipHeader)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_07a_createVIP_loadbalancer(self):
         self.driver.create_virtual_ip(vip_loadbalance, sf_host)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count > 1)
 
     def test_07b_createVIP_sticky(self):
         self.driver.create_virtual_ip(vip_sticky, sf_redirect)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count > 1)
 
     def test_07c_createVIP_loadbalancer(self):
         self.driver.create_virtual_ip(vip_test,  sf_host)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count > 1)
 
     def test_08_suspendRServer(self):
         self.driver.suspend_real_server(sf_host, rs_host)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_08a_suspendRServerGlobal(self):
         self.driver.suspend_real_server_global(rs_redirect)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_09_activateRServer(self):
         self.driver.activate_real_server(sf_host, rs_host)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_09a_activateRServerGlobal(self):
         self.driver.activate_real_server_global(rs_redirect)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_10a_deleteVIP_loadbalance(self):
         self.driver.delete_virtual_ip(vip_loadbalance)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count > 1)
 
     def test_10b_deleteVIP_sticky(self):
         self.driver.delete_virtual_ip(vip_sticky)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count > 1)
 
     def test_11a_deleteHTTPContentStickiness(self):
         self.driver.delete_stickiness(sticky_httpContent)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_11b_deleteHTTPCookieStickiness(self):
         self.driver.delete_stickiness(sticky_httpCookie)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_11c_deleteHTTPHeaderStickiness(self):
         self.driver.delete_stickiness(sticky_httpHeader)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_11d_deleteIPNetmaskStickiness(self):
         self.driver.delete_stickiness(sticky_ipnetmask)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_11e_deleteV6prefixStickiness(self):
         self.driver.delete_stickiness(sticky_v6prefix)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_11f_deleteL4payloadStickiness(self):
         self.driver.delete_stickiness(sticky_l4payload)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_11g_deleteRadiusStickiness(self):
         self.driver.delete_stickiness(sticky_radius)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_11h_deleteRTSPHeaderStickiness(self):
         self.driver.delete_stickiness(sticky_rtspHeader)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_11i_deleteSIPHeaderStickiness(self):
         self.driver.delete_stickiness(sticky_sipHeader)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_12_deleteProbeFromSF(self):
         self.driver.delete_probe_from_server_farm(sf_host, probe_http)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_13_deleteRServerFromSF(self):
         self.driver.delete_real_server_from_server_farm(sf_host, rs_host)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_14a_deleteServerFarm_typeHost(self):
         self.driver.delete_server_farm(sf_host)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_14b_deleteServerFarm_typeRedirect(self):
         self.driver.delete_server_farm(sf_redirect)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15a_deleteDNSProbe(self):
         self.driver.delete_probe(probe_dns)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15b_deleteECHOUDPprobe(self):
         self.driver.delete_probe(probe_echoUDP)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15c_deleteECHOTCPprobe(self):
         self.driver.delete_probe(probe_echoTCP)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15d_deleteFINGERprobe(self):
         self.driver.delete_probe(probe_finger)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15e_deleteFTPprobe(self):
         self.driver.delete_probe(probe_ftp)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15f_deleteHTTPprobe(self):
         self.driver.delete_probe(probe_http)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15g_deleteHTTPSprobe(self):
         self.driver.delete_probe(probe_https)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15h_deleteICMPprobe(self):
         self.driver.delete_probe(probe_icmp)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15i_deleteIMAPprobe(self):
         self.driver.delete_probe(probe_imap)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15j_deletePOPprobe(self):
         self.driver.delete_probe(probe_pop)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15k_deleteRADIUSprobe(self):
         self.driver.delete_probe(probe_radius)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15l_deleteRTSPprobe(self):
         self.driver.delete_probe(probe_rtsp)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15m_deleteSCRIPTEDprobe(self):
         self.driver.delete_probe(probe_scripted)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15n_deleteSIPUDPprobe(self):
         self.driver.delete_probe(probe_sipUDP)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15o_deleteSMTPprobe(self):
         self.driver.delete_probe(probe_smtp)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15p_deleteSNMPprobe(self):
         self.driver.delete_probe(probe_snmp)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15r_deleteTCPprobe(self):
         self.driver.delete_probe(probe_tcp)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15s_deleteTELNETprobe(self):
         self.driver.delete_probe(probe_telnet)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15t_deleteUDPprobe(self):
         self.driver.delete_probe(probe_udp)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_15u_deleteVMprobe(self):
         self.driver.delete_probe(probe_vm)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_16a_deleteRServer_typeHost(self):
         self.driver.delete_real_server(rs_host)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_16b_deleteRServer_typeRedirect(self):
         self.driver.delete_real_server(rs_redirect)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_get_statistics(self):
         self.driver.get_statistics(sf_host)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_create_ssl_proxy(self):
         self.driver.create_ssl_proxy(ssl_proxy)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
 
     def test_delete_ssl_proxy(self):
         self.driver.delete_ssl_proxy(ssl_proxy)
-        self.assertTrue(urllib2.urlopen.call_count > 0)
+        self.assertTrue(urllib2.urlopen().read.call_count == 1)
