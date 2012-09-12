@@ -194,7 +194,7 @@ class RemoteSocketOperation(object):
                       (self.backend_name, self.rserver_name, out))
         self.ssh.close()
 
-    def get_statistics(self, socket, backend, rserver):
+    def get_statistics(self, socket, backend):
         """
             Get statistics from rserver / server farm
             for all serverafarm use BACKEND as self.rserver_name
@@ -205,6 +205,6 @@ class RemoteSocketOperation(object):
             (socket, backend))
         ssh_out = stdout.read()
         logger.debug('[HAPROXY] get statistics about reserver %s/%s.'
-                    ' Result is \'%s\' ', backend, rserver, ssh_out)
+                    ' Result is \'%s\' ', backend, ssh_out)
         self.ssh.close()
         return ssh_out

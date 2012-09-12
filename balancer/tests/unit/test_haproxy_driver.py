@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-#import os
-#import shutil
-#import filecmp
-from mock import Mock, MagicMock
+import paramiko
+from mock import Mock, MagicMock, patch
 
 import balancer.drivers.haproxy.HaproxyDriver as Driver
 import balancer.drivers.haproxy.RemoteControl as RemoteControl
 
+paramiko.SSHClient = Mock()
 
 device_fake = {'id': 'fake1',
                'type': 'FAKE',
@@ -151,9 +150,8 @@ class TestHaproxyDriverRemoteSocketOperation(unittest.TestCase):
 
     def test_get_statistics(self):
         sf = get_fake_server_farm('sf-01', {})
-        rs = get_fake_server_farm('real_server1', {'port': 950})
         self.assertTrue(self.remote_socket.\
-                        get_statistics(self.driver.remote_socket, sf, rs))
+                        get_statistics(self.driver.remote_socket, sf))
 
 
 class TestHaproxyDriverAllFunctions(unittest.TestCase):
@@ -166,6 +164,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
         self.driver.remote_config.ssh = mock_for_ssh
         self.driver.remote_socket.ssh = mock_for_ssh
         self.driver.remote_interface.ssh = mock_for_ssh
+        self.driver.config_file = Mock()
 
     def test_create_real_server(self):
         # check implementation of this method in HAProxy driver

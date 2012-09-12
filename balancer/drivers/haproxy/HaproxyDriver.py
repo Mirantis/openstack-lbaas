@@ -361,6 +361,7 @@ class HaproxyRserver():
 class HaproxyConfigFile:
     def __init__(self, haproxy_config_file_path='/tmp/haproxy.cfg'):
         self.haproxy_config_file_path = haproxy_config_file_path
+        self.open_file = open
 
     def get_config_file(self):
         return self.haproxy_config_file_path
@@ -533,7 +534,8 @@ class HaproxyConfigFile:
         return HaproxyBackend.name
 
     def _read_config_file(self):
-        haproxy_config_file = open(self.haproxy_config_file_path, 'r')
+        haproxy_config_file = self.open_file( \
+                                  self.haproxy_config_file_path, 'r')
         config_file = {}
         block_name = ''
         current_block = []
@@ -574,7 +576,8 @@ class HaproxyConfigFile:
         return config_file
 
     def _write_config_file(self, config_file):
-        haproxy_config_file = open(self.haproxy_config_file_path, 'w+')
+        haproxy_config_file = self.open_file( \
+                                  self.haproxy_config_file_path, 'w+')
         logger.debug('[HAPROXY] writing configuration to %s' %
                                             self.haproxy_config_file_path)
         haproxy_config_file.write('global\n')

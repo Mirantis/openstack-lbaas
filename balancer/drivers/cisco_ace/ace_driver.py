@@ -38,13 +38,12 @@ class AceDriver(BaseDriver):
         authheader = "Basic %s" % base64str
         self.request = urllib2.Request(url).add_header("Authorization", \
                                                                authheader)
-        self.send_data = urllib2.urlopen
 
     def deployConfig(self, s):
         data = 'xml_cmd=<request_raw>\nconfigure\n%s\nend\n</request_raw>' % s
         LOG.debug('send data to ACE:\n' + data)
         try:
-            response = self.send_data(self.request, data).read()
+            response = urllib2.urlopen(self.request, data).read()
         except Exception:
             raise
         LOG.debug('data from ACE:\n' + response)
@@ -56,7 +55,7 @@ class AceDriver(BaseDriver):
         data = 'xml_cmd=<request_raw>\nshow runn %s\n</request_raw>' % s
         LOG.debug('send data to ACE:\n' + data)
         try:
-            response = self.send_data(self.request, data).read()
+            response = urllib2.urlopen(self.request, data).read()
         except Exception:
             raise
         LOG.debug("data from ACE:\n" + response)
@@ -67,7 +66,7 @@ class AceDriver(BaseDriver):
         data = 'xml_cmd=<request_raw>\nshow serverfarm %s' % server_farm['id']
         data += '\n</request_raw>'
         try:
-            response = self.send_data(self.request, data).read()
+            response = urllib2.urlopen(self.request, data).read()
         except Exception:
             raise
         LOG.debug("data from ACE:\n" + response)
