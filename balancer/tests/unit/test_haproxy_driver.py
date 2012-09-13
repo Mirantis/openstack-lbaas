@@ -1,105 +1,106 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import os
-import shutil
-import filecmp
-import mock
+import paramiko
+from mock import Mock, MagicMock, patch
 
-from mock import Mock, MagicMock
-from balancer.drivers.haproxy.HaproxyDriver import HaproxyConfigFile
-from balancer.drivers.haproxy.HaproxyDriver import HaproxyFronted
-from balancer.drivers.haproxy.HaproxyDriver import HaproxyBackend
-from balancer.drivers.haproxy.HaproxyDriver import HaproxyRserver
-from balancer.drivers.haproxy.HaproxyDriver import HaproxyListen
-from balancer.drivers.haproxy.HaproxyDriver import HaproxyDriver
-from balancer.drivers.haproxy.RemoteControl import RemoteConfig
-from balancer.drivers.haproxy.RemoteControl import RemoteService
-from balancer.drivers.haproxy.RemoteControl import RemoteInterface
-from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation
+import balancer.drivers.haproxy.HaproxyDriver as Driver
+import balancer.drivers.haproxy.RemoteControl as RemoteControl
 
-device_fake = {'ip': '192.168.19.86',
-    'port': '22',
-    'user': 'user',
-    'password': 'swordfish',
-    'extra': {'interface': 'eth0',
-    'socket': '/tmp/haproxy.sock',
-    'remote_conf_dir': '/etc/haproxy',
-    'remote_conf_file': 'haproxy.cfg'}}
-#
+device_fake = {'id': 'fake1',
+               'type': 'FAKE',
+               'version': '1',
+               'ip': '10.0.0.10',
+               'port': 1010,
+               'user': 'user1',
+               'password': 'secrete1',
+               'extra': {'interface': 'eth0',
+               'socket': '/tmp/haproxy.sock',
+               'remote_conf_dir': '/etc/haproxy',
+               'remote_conf_file': 'haproxy.cfg'}}
+
 conf = []
-#
-rserver = {'id': 'test_real_server',
-           'address': '123.123.123.123', 'port': '9090',
-           'weight': '8',  'maxCon': '30000'}
-#
-server_farm = {'id': 'SFname',  'type': 'HashAddrPredictor'}
-#
-virtualserver = {'id': 'VirtualServer',
-                 'address': '115.115.115.115',
-                 'port': '8080'}
-#
-probe = {'type': 'http',  'requestMethodType': 'GET',
-         'requestHTTPurl': '/index.html',
-         'minExpectStatus': '200'}
-
-#
-probe_https = {'type': 'https',  'requestMethodType': 'GET',
-         'requestHTTPurl': '/index.html',
-         'minExpectStatus': '200'}
-
-#
-probe_tcp = {'type': 'tcp',  'requestMethodType': 'GET',
-         'requestHTTPurl': '/index.html',
-         'minExpectStatus': '200'}
-
-#
-a = {'type': 'roudrobin'}
-a['extra'] = {}
-predictor = [a, ]
-
-#
-a = {'type': 'leastconnections'}
-a['extra'] = {}
-predictor_connections = [a, ]
-
-#
-a = {'type': 'hashurl'}
-a['extra'] = {}
-predictor_hashurl = [a, ]
-
-#
-a = {'type': 'hashaddr'}
-a['extra'] = {}
-predictor_hashaddr = [a, ]
-
-#
-frontend = HaproxyFronted()
-frontend.bind_address = '1.1.1.1'
-frontend.bind_port = '8080'
-frontend.default_backend = 'server_farm'
-frontend.name = 'test_frontend'
-#
-backend = HaproxyBackend()
-backend.name = 'test_backend'
-backend.balance = 'source'
-#
-haproxy_rserver = HaproxyRserver()
-haproxy_rserver.name = "new_test_server"
-haproxy_rserver.address = '15.15.15.15'
-haproxy_rserver.port = '123'
-haproxy_rserver.fall = '10'
-haproxy_rserver1 = HaproxyRserver()
-haproxy_rserver1.name = "new_test_server_2"
-haproxy_rserver1.address = '25.25.25.25'
-haproxy_rserver1.port = '12345'
-haproxy_rserver1.fall = '11'
 
 
-class TestHaproxyDriverRemoteConfig (unittest.TestCase):
+def init_ssh_mock():
+    mock_for_ssh = Mock()
+    mock_for_ssh.exec_command.return_value = \
+         [MagicMock(spec=file), MagicMock(spec=file), MagicMock(spec=file)]
+    return mock_for_ssh
+
+
+def init_driver_with_mock():
+    mock_for_ssh = init_ssh_mock()
+    driver = Driver.HaproxyDriver(conf, device_fake)
+    driver.remote_config.ssh = mock_for_ssh
+    driver.remote_socket.ssh = mock_for_ssh
+    driver.remote_interface.ssh = mock_for_ssh
+    driver.config_file = Mock()
+    return driver
+
+
+def get_fake_rserver(id_, parameters):
+    rserver = {'id': id_, 'weight': '8', 'address': '10.2.1.2', \
+               'port': '4055'}
+    rserver['extra'] = {'minCon': '100', 'maxCon': '2000'}
+    rserver.update(parameters)
+    return rserver
+
+
+def get_fake_server_farm(id_, parameters):
+    server_farm = {'id': id_, 'type': 'Host'}
+    server_farm.update(parameters)
+    return server_farm
+
+
+def get_fake_virtual_ip(id_, parameters):
+    vip = {'id': id_, 'address': '100.1.1.1', 'port': '8801'}
+    vip.update(parameters)
+    return vip
+
+
+def get_fake_probe(id_, parameters):
+    probe = {'id': id_, 'type': 'HTTP', 'requestMethodType': 'GET', \
+             'requestHTTPUrl': '/index.html', 'minExpectStatus': '300'}
+    probe.update(parameters)
+    return probe
+
+
+def get_fake_predictor(id_, parameters):
+    predictor = {'id': id_, 'type': 'roundrobin', 'extra': {}}
+    predictor.update(parameters)
+    return predictor
+
+
+def get_fake_HaproxyFrontend(id_):
+    frontend = Driver.HaproxyFronted()
+    frontend.bind_address = '1.1.1.1'
+    frontend.bind_port = '8080'
+    frontend.default_backend = 'server_farm'
+    frontend.name = id_
+    return frontend
+
+
+def get_fake_HaproxyBackend(id_):
+    backend = Driver.HaproxyBackend()
+    backend.name = id_
+    backend.balance = 'source'
+    return backend
+
+
+def get_fake_Haproxy_rserver(id_):
+    haproxy_rserver = Driver.HaproxyRserver()
+    haproxy_rserver.name = id_
+    haproxy_rserver.address = '150.153.152.151'
+    haproxy_rserver.port = '12663'
+    haproxy_rserver.fall = '10'
+    return haproxy_rserver
+
+
+class TestHaproxyDriverRemoteConfig(unittest.TestCase):
     def setUp(self):
-        self.remote_config = RemoteConfig(device_fake, '/tmp',
-                        '/etc/haproxy', 'haproxy.conf')
+        self.remote_config = RemoteControl.RemoteConfig(device_fake, '/tmp',
+                                             '/etc/haproxy', 'haproxy.conf')
         self.remote_config.ssh = Mock()
 
     def test_get_config(self):
@@ -115,111 +116,211 @@ class TestHaproxyDriverRemoteConfig (unittest.TestCase):
         self.assertFalse(self.remote_config.validate_config())
 
 
-class TestHaproxyDriverRemoteService (unittest.TestCase):
+class TestHaproxyDriverRemoteService(unittest.TestCase):
     def setUp(self):
-        self.remote_service = RemoteService(device_fake)
+        self.remote_service = RemoteControl.RemoteService(device_fake)
         self.remote_service.ssh = Mock()
+        a = Mock()
+        a.file_channel = MagicMock(spec=file)
+        self.remote_service.ssh.exec_command.return_value = [a, a, a]
 
     def test_start_service(self):
-        self.assertTrue(self.remote_service.start())
+        self.remote_service.start()
 
     def test_stop_service(self):
-        self.assertTrue(self.remote_service.stop())
+        self.remote_service.stop()
 
     def test_restart_service(self):
-        self.assertTrue(self.remote_service.restart())
+        self.remote_service.restart()
 
 
-class TestHaproxyDriverRemoteInterface (unittest.TestCase):
+class TestHaproxyDriverRemoteInterface(unittest.TestCase):
     def setUp(self):
-        self.remote_interface = RemoteInterface(device_fake, frontend)
+        self.frontend = get_fake_HaproxyFrontend('test')
+        self.remote_interface = RemoteControl.RemoteInterface(device_fake)
         self.remote_interface.ssh = Mock()
         file_channel = MagicMock(spec=file)
         self.remote_interface.ssh.exec_command.return_value = [file_channel,
                                                  file_channel, file_channel]
 
     def test_add_ip(self):
-        self.assertTrue(self.remote_interface.add_ip())
+        self.assertTrue(self.remote_interface.add_ip(self.frontend))
 
     def test_del_ip(self):
-        self.assertTrue(self.remote_interface.del_ip())
+        self.assertTrue(self.remote_interface.del_ip(self.frontend))
 
 
-class TestHaproxyDriverRemoteSocketOperation (unittest.TestCase):
+class TestHaproxyDriverRemoteSocketOperation(unittest.TestCase):
     def setUp(self):
-        self.remote_socket = RemoteSocketOperation(device_fake,
-                                                backend, rserver)
-        self.remote_socket.ssh = Mock()
-        file_channel = MagicMock(spec=file)
-        self.remote_socket.ssh.exec_command.return_value = [file_channel,
-                                                file_channel, file_channel]
+        self.remote_socket = RemoteControl.RemoteSocketOperation(device_fake)
+        self.remote_socket.ssh = init_ssh_mock()
+        self.driver = init_driver_with_mock()
 
     def test_get_statistics(self):
-        self.assertTrue(self.remote_socket.get_statistics())
+        sf = get_fake_server_farm('sf-01', {})
+        self.assertTrue(self.remote_socket.\
+                        get_statistics(self.driver.remote_socket, sf))
 
 
-class TestHaproxyDeriverAllFunctions (unittest.TestCase):
+class TestHaproxyDriverAllFunctions(unittest.TestCase):
     def setUp(self):
-        self.remote_socket = RemoteSocketOperation(device_fake,
-                                                backend, rserver)
-        self.remote_socket.ssh = Mock()
-        file_channel = MagicMock(spec=file)
-        self.remote_socket.ssh.exec_command.return_value = [file_channel,
-                                                file_channel, file_channel]
-        self.driver = HaproxyDriver(conf, device_fake)
+        self.driver = init_driver_with_mock()
 
     def test_create_real_server(self):
-        self.driver.create_real_server(haproxy_rserver)
+        # check implementation of this method in HAProxy driver
+        ha_rserver = get_fake_Haproxy_rserver('Test_Rserver')
+        self.assertTrue(self.driver.create_real_server(ha_rserver) == None)
 
     def test_delete_real_server(self):
-        self.driver.delete_real_server(haproxy_rserver)
+        # check implementation of this method in HAProxy driver
+        ha_rserver = get_fake_Haproxy_rserver('test01')
+        self.assertTrue(self.driver.delete_real_server(ha_rserver) == None)
 
     def test_suspend_real_server(self):
+        server_farm = get_fake_server_farm('sf-01', {})
+        rserver = get_fake_rserver('real_server1', {'port': 950})
         self.driver.suspend_real_server(server_farm, rserver)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
 
     def test_activate_real_server(self):
+        server_farm = get_fake_server_farm('sf-02', {})
+        rserver = get_fake_rserver('real_server2', {'maxCon': 40000})
         self.driver.activate_real_server(server_farm, rserver)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
 
     def test_create_probe(self):
-        self.driver.create_probe(probe)
-
-    def test_create_probe_tcp(self):
-        self.driver.create_probe(probe_tcp)
-
-    def test_create_probe_https(self):
-        self.driver.create_probe(probe_https)
+        # check implementation of this method in HAProxy driver
+        probe = get_fake_probe('test-0002', {})
+        self.assertTrue(self.driver.create_probe(probe) == None)
 
     def test_delete_probe(self):
-        self.driver.delete_probe(probe_tcp)
+        # check implementation of this method in HAProxy driver
+        probe_tcp = get_fake_probe('test-0002', {})
+        self.assertTrue(self.driver.delete_probe(probe_tcp) == None)
+
+    def test_add_tcp_probe_to_server_farm(self):
+        probe = get_fake_probe('test-00344', {'type': 'tcp'})
+        sf = get_fake_server_farm('sf-003', {})
+        self.driver.add_probe_to_server_farm(sf, probe)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
+
+    def test_add_http_probe_to_server_farm(self):
+        probe = get_fake_probe('test-00344', {'type': 'http'})
+        sf = get_fake_server_farm('sf-003', {})
+        self.driver.add_probe_to_server_farm(sf, probe)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
+
+    def test_add_https_probe_to_server_farm(self):
+        probe = get_fake_probe('test-00234', {'type': 'https'})
+        sf = get_fake_server_farm('sf-003', {})
+        self.driver.add_probe_to_server_farm(sf, probe)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
+
+    def test_delete_http_probe_from_server_farm(self):
+        probe = get_fake_probe('test-0002', {'type': 'http'})
+        sf = get_fake_server_farm('sf-006', {})
+        self.driver.delete_probe_from_server_farm(sf, probe)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
+
+    def test_delete_https_probe_from_server_farm(self):
+        probe = get_fake_probe('Test-003', {'type': 'https'})
+        sf = get_fake_server_farm('sf-006', {})
+        self.driver.delete_probe_from_server_farm(sf, probe)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
 
     def test_create_server_farm_with_round_robin(self):
-        self.driver.create_server_farm(server_farm, predictor)
+        sf = get_fake_server_farm('SF-001', {})
+        predictor = get_fake_predictor('testPredictor01',
+                                  {'type': 'roundrobin'})
+        self.driver.create_server_farm(sf, predictor)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
 
     def test_create_server_farm_with_leastconnections(self):
-        self.driver.create_server_farm(server_farm, predictor_leastconnections)
+        sf = get_fake_server_farm('SF-001', {})
+        predictor_connections = get_fake_predictor('testPredictor01',
+                                        {'type': 'leastconnections'})
+        self.driver.create_server_farm(sf, predictor_connections)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
 
     def test_create_server_farm_with_hashaddr(self):
-        self.driver.create_server_farm(server_farm, predictor_hashaddr)
+        sf = get_fake_server_farm('SF-001', {})
+        predictor_hashaddr = get_fake_predictor('testPredictor01',
+                                             {'type': 'hashaddr'})
+        self.driver.create_server_farm(sf, predictor_hashaddr)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
 
     def test_create_server_farm_with_hashurl(self):
-        self.driver.create_server_farm(server_farm, predictor_hashurl)
+        sf = get_fake_server_farm('SF-001', {})
+        predictor_hashurl = get_fake_predictor('testPredictor01',
+                                             {'type': 'hashurl'})
+        self.driver.create_server_farm(sf, predictor_hashurl)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
 
     def test_delete_server_farm(self):
-        self.driver.delete_server_farm(server_farm)
+        sf = get_fake_server_farm('SF-001', {})
+        self.driver.delete_server_farm(sf)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
 
     def test_add_real_server_to_server_farm(self):
-        self.driver.add_real_server_to_server_farm(\
-                        server_farm, rserver)
+        sf = get_fake_server_farm('sf-153', {})
+        rs = get_fake_rserver('real_server205', {'port': '23'})
+        self.driver.add_real_server_to_server_farm(sf, rs)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
 
     def test_delete_real_server_from_server_farm(self):
-        self.driver.delete_real_server_from_server_farm(server_farm, \
-                                                        rserver)
+        sf = get_fake_server_farm('sf-15', {})
+        rs = get_fake_rserver('real_server2', {'port': 1122})
+        self.driver.delete_real_server_from_server_farm(sf, rs)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
 
     def test_create_virtual_ip(self):
+        virtualserver = get_fake_virtual_ip('test', {})
+        server_farm = get_fake_server_farm('sf-120', {})
         self.driver.create_virtual_ip(virtualserver, server_farm)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
 
     def test_delete_virtual_ip(self):
+        virtualserver = get_fake_virtual_ip('test', {})
         self.driver.delete_virtual_ip(virtualserver)
+        self.driver.finalize_config(True)
+        self.assertTrue(self.driver.remote_config.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
+
+    def test_get_statistics(self):
+        sf = get_fake_server_farm('sf-153', {})
+        self.driver.get_statistics(sf)
+        self.assertTrue(self.driver.remote_socket.ssh.\
+                        exec_command.called == 1, 'Error in work with ssh')
 
 if __name__ == "__main__":
     unittest.main()
