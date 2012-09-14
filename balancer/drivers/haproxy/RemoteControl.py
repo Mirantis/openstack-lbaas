@@ -101,8 +101,8 @@ class RemoteService(object):
                                        ' -p /var/run/haproxy.pid'
                                        ' -sf $(cat /var/run/haproxy.pid)')[1]
         status = stdout.channel.recv_exit_status()
-        logger.debug('[HAPROXY] haproxy restart output: {0}'.format(stdout.read()))
-        logger.debug('[HAPROXY] haproxy restart returned - {0}'.format(status))
+        logger.debug('[HAPROXY] haproxy restart output: %s', stdout.read())
+        logger.debug('[HAPROXY] haproxy restart returned - %s', status)
 
         self.ssh.close()
         return status == 0
