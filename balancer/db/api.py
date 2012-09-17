@@ -135,6 +135,17 @@ def loadbalancer_get_all_by_vm_id(conf, tenant_id, vm_id):
     return query.all()
 
 
+def loadbalancer_get_all_by_device_id(conf, device_id):
+    session = get_session(conf)
+    query = session.query(models.LoadBalancer).filter_by(device_id=device_id)
+    lb_refs = query.all()
+    if not lb_refs:
+        raise exception.LoadBalancerNotFound('No loadbalancer '
+                                             'for the device %s found'
+                                             % device_id)
+    return lb_refs
+
+
 def loadbalancer_create(conf, values):
     session = get_session(conf)
     with session.begin():

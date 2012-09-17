@@ -389,5 +389,15 @@ def device_show_protocols(conf):
 
 
 def device_delete(conf, device_id):
-    db_api.device_destroy(conf, device_id)
-    drivers.delete_device_driver(conf, device_id)
+    try:
+        lb_refs = db_api.loadbalancer_get_all_by_device_id(conf, device_id)
+    except exc.LoadBalancerNotFound:
+        db_api.device_destroy(conf, device_id)
+        drivers.delete_device_driver(conf, device_id)
+        return
+    lbs = []
+    for lb_ref in lb_refs:
+        lb = db_api.unpack_extra(lb_ref)
+        lbs.append(lb['id'])
+    raise exc.DeviceConflict('Device %s is in use now by loadbalancers %s' %
+                             (device_id, ', '.join(lbs)))

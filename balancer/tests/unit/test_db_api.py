@@ -345,6 +345,15 @@ class TestDBAPI(unittest.TestCase):
                          [dict(lb.iteritems()) for lb in lbs2])
         self.assertFalse(lbs3)
 
+    def test_loadbalancer_get_all_by_device_id(self):
+        lb_fake1 = get_fake_lb('1', 'tenant1')
+        lb_ref1 = db_api.loadbalancer_create(self.conf, lb_fake1)
+        lbs1 = db_api.loadbalancer_get_all_by_device_id(self.conf, '1')
+        with self.assertRaises(exception.LoadBalancerNotFound):
+            db_api.loadbalancer_get_all_by_device_id(self.conf, '2')
+        self.assertEqual([dict(lb_ref1.iteritems())],
+                         [dict(lb.iteritems()) for lb in lbs1])
+
     def test_lb_count_active_by_device(self):
         lb_fake1 = get_fake_lb('1', 'tenant1')
         lb_fake2 = get_fake_lb('1', 'tenant2')

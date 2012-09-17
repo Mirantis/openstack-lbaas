@@ -64,3 +64,11 @@ class PredictorNotFound(NotFound):
 
 class VirtualServerNotFound(NotFound):
     message = 'Virtual Server not found'
+
+
+class DeviceConflict(exception.HTTPConflict):
+    message = 'Conflict while device deleting'
+
+    def __init__(self, message=None, **kwargs):
+        super(DeviceConflict, self).__init__(message)
+        self.kwargs = kwargs
