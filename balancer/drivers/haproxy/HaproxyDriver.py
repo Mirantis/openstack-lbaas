@@ -72,6 +72,7 @@ class HaproxyDriver(base_driver.BaseDriver):
         self.config_was_deployed = True
         self.remote_socket = RemoteSocketOperation(self.device_ref)
         self.remote_interface = RemoteInterface(self.device_ref)
+        self.remote_service = RemoteService(self.device_ref)
 
     def request_context(self):
         mgr = super(HaproxyDriver, self).request_context()
@@ -79,9 +80,11 @@ class HaproxyDriver(base_driver.BaseDriver):
         return mgr
 
     def _get_config(self):
-        self.remote_config.get_config()
-        self.config_was_deployed = False
-        logger.debug("Marking as not deployed")
+        if self.config_was_deployed:
+            self.remote_config.get_config()
+            logger.debug("Marking as not deployed")
+            self.config_was_deployed = False
+
         return self.config_file
 
     def add_probe_to_server_farm(self, serverfarm, probe):
