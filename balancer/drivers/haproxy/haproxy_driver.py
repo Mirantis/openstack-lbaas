@@ -22,7 +22,6 @@ from remote_control import RemoteSocketOperation, RemoteInterface,\
                            RemoteService
 from config_manager import ConfigManager, HaproxyBackend, HaproxyFronted,\
                            HaproxyRserver
-from lib2to3.fixer_util import is_list
 
 
 LOG = logging.getLogger(__name__)
