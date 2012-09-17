@@ -35,8 +35,6 @@ class HaproxyDriver(base_driver.BaseDriver):
         device_extra = device_ref.get('extra') or {}
         self.haproxy_socket = device_extra.get('socket') or '/tmp/haproxy.sock'
         self.interface = device_extra.get('interface') or 'eth0'
-        self.configfilename = (device_extra.get('remote_conf_file') or
-                               'haproxy.cfg')
         self.remote_socket = RemoteSocketOperation(device_ref)
         self.remote_interface = RemoteInterface(device_ref)
         self.remote_service = RemoteService(device_ref)
