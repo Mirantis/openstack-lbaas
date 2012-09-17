@@ -96,9 +96,13 @@ class RemoteService(object):
         self.ssh.connect(self.host, username=self.user, password=self.password)
 
         logger.debug('[HAPROXY] restarting haproxy')
-        stdout = self.ssh.exec_command('sudo service haproxy restart')[1]
+        stdout = self.ssh.exec_command('sudo haproxy'
+                                       ' -f /etc/haproxy/haproxy.cfg'
+                                       ' -p /var/run/haproxy.pid'
+                                       ' -sf $(cat /var/run/haproxy.pid)')[1]
         status = stdout.channel.recv_exit_status()
-        logger.debug('[HAPROXY] haproxy restart result - {0}'.format(status))
+        logger.debug('[HAPROXY] haproxy restart output: %s', stdout.read())
+        logger.debug('[HAPROXY] haproxy restart returned - %s', status)
 
         self.ssh.close()
         return status == 0

@@ -25,8 +25,18 @@ from balancer.drivers.haproxy.RemoteControl import RemoteSocketOperation
 
 logger = logging.getLogger(__name__)
 
+ALGORITHMS_MAPPING = {
+    'ROUND_ROBIN': 'roundrobin',
+    'LEAST_CONNECTION': 'leastconn',
+    'HASH_SOURCE': 'source',
+    'HASH_URI': 'uri',
+}
+
 
 class HaproxyDriver(base_driver.BaseDriver):
+    algorithms = ALGORITHMS_MAPPING
+    default_algorithm = ALGORITHMS_MAPPING['ROUND_ROBIN']
+
     def __init__(self, conf, device_ref):
         super(HaproxyDriver, self).__init__(conf, device_ref)
         device_extra = self.device_ref.get('extra') or {}
@@ -62,6 +72,7 @@ class HaproxyDriver(base_driver.BaseDriver):
         self.config_was_deployed = True
         self.remote_socket = RemoteSocketOperation(self.device_ref)
         self.remote_interface = RemoteInterface(self.device_ref)
+        self.remote_service = RemoteService(self.device_ref)
 
     def request_context(self):
         mgr = super(HaproxyDriver, self).request_context()
@@ -69,9 +80,11 @@ class HaproxyDriver(base_driver.BaseDriver):
         return mgr
 
     def _get_config(self):
-        self.remote_config.get_config()
-        self.config_was_deployed = False
-        logger.debug("Marking as not deployed")
+        if self.config_was_deployed:
+            self.remote_config.get_config()
+            logger.debug("Marking as not deployed")
+            self.config_was_deployed = False
+
         return self.config_file
 
     def add_probe_to_server_farm(self, serverfarm, probe):
@@ -259,14 +272,14 @@ class HaproxyDriver(base_driver.BaseDriver):
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['id']
 
-        if predictor.get('type').lower() == 'roundrobin':
-            haproxy_serverfarm.balance = 'roundrobin'
-        elif predictor.get('type').lower() == 'leastconnections':
-            haproxy_serverfarm.balance = 'leastconn'
-        elif predictor.get('type').lower() == 'hashaddr':
-            haproxy_serverfarm.balance = 'source'
-        elif predictor.get('type').lower() == 'hashurl':
-            haproxy_serverfarm.balance = 'uri'
+        predictor_type = predictor['type'].upper()
+        algorithm = self.algorithms.get(predictor_type)
+        if algorithm is not None:
+            haproxy_serverfarm.balance = algorithm
+        else:
+            logger.warning("Unknown algorithm %r, used default value %r.",
+                           predictor_type, self.default_algorithm)
+            haproxy_serverfarm.balance = self.default_algorithm
 
         config_file = self._get_config()
         config_file.add_backend(haproxy_serverfarm)

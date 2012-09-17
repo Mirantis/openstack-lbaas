@@ -255,6 +255,7 @@ probe_vm['extra'] = {'description': 'Created by test. Probe type VM', \
                    'minMemBurstThresh': '97'}
 
 predictor = {'id': 'test_pr', 'type': 'roudrobin'}
+predictor['extra'] = {}
 
 predictor_bandwidth = {'id': 'test_pr', 'type': 'leastbandwidth'}
 predictor_bandwidth['extra'] = {'accessTime': '10'}

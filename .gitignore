@@ -4,5 +4,3 @@ balancer.sqlite
 covhtml
 run_tests.log
 .coverage
-.idea
-

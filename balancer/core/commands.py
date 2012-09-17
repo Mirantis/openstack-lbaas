@@ -155,15 +155,15 @@ def delete_server_farm(ctx, sf):
 
 
 @with_rollback
-def create_server_farm(ctx, sf):
+def create_server_farm(ctx, sf_ref):
     try:
-        pr = db_api.predictor_get_all_by_sf_id(ctx.conf, sf['id'])
-        ctx.device.create_server_farm(sf, pr)
-        db_api.serverfarm_update(ctx.conf, sf['id'], {'deployed': True})
+        predictor_ref = db_api.predictor_get_by_sf_id(ctx.conf, sf_ref['id'])
+        ctx.device.create_server_farm(sf_ref, predictor_ref)
+        db_api.serverfarm_update(ctx.conf, sf_ref['id'], {'deployed': True})
         yield
     except Exception:
         with utils.save_and_reraise_exception():
-            delete_server_farm(ctx, sf)
+            delete_server_farm(ctx, sf_ref)
 
 
 @with_rollback
