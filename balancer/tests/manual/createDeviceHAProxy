@@ -4,11 +4,13 @@
  "version": "1",
  "supports_ipv6": 0,
  "requires_vip_ip": 1,
- "has_acl": 1,
- "supports_vlan": 1,
  "ip": "192.168.19.245",
  "port": "22",
  "user": "user",
  "password": "swordfish",
- "capabilities": {"algorithms":"RoundRobin"}
+ "capabilities":
+ {
+   "algorithms": ["RoundRobin", "hashurl"],
+   "protocols": ["TCP","HTTP"]
+ }
 }

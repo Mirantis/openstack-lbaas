@@ -277,7 +277,7 @@ class JSONResponseSerializer(object):
 
     def default(self, response, result):
         logger.debug("JSONSerializer default method called.")
-        response.headers.add('Content-Type', 'application/json')
+        response.headers['Content-Type'] = 'application/json'
         response.body = self.to_json(result)
 
 

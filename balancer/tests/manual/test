@@ -1,8 +1,0 @@
-LB_URL=http://localhost:8181/loadbalancers
-Dev_URL=http://localhost:8181/devices
-curl -v -H "Content-Type: application/json" -X POST --data "@createLBcommand" $LB_URL
-
-#curl -v -H "Content-Type: application/json" -X POST --data "@createDevice" $Dev_URL
-
-#curl http://localhost:8181/loadbalancers   --data @createLBcommand
-

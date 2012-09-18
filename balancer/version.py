@@ -1,4 +1,4 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
+    # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 # Copyright 2011 OpenStack LLC.
 # All Rights Reserved.
@@ -24,7 +24,7 @@ except ImportError:
                     'revision_id': 'LOCALREVISION',
                     'revno': 0}
 
-SKELETON_VERSION = ['2011', '3']
+SKELETON_VERSION = ['2012', '1']
 YEAR, COUNT = SKELETON_VERSION
 
 FINAL = False   # This becomes true at Release Candidate time

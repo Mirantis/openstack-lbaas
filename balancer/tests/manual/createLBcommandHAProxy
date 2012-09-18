@@ -26,8 +26,6 @@
             "rateConnection": "1000",
             "status": "INSERVICE",
             "condition": "ENABLED",
-            "vm_instance": "RServer001",
-            "vm_id": "0001-0001-0001-0001"
         },
         {
             "address": "127.0.0.1",
@@ -40,8 +38,6 @@
             "rateConnection": "1000",
             "status": "INSERVICE",
             "condition": "ENABLED",
-            "vm_instance": "RServer002",
-            "vm_id": "0002-0002-0002-0002"
         },
         {
             "address": "127.0.0.1",
@@ -54,8 +50,6 @@
             "rateConnection": "1000",
             "status": "INSERVICE",
             "condition": "ENABLED",
-            "vm_instance": "RServer003",
-            "vm_id": "0003-0003-0003-0003"
         }
     ],
     "healthMonitor": [

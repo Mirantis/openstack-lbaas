@@ -14,25 +14,43 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-Welcome to Skeleton's documentation!
+Welcome to LBaaS's documentation!
 ===================================
 
-Description of Skeleton project
+LBaaS (Load Balancer as a Service) is a
+service that allows to manage multiple hardware and software-based
+load balancers in an OpenStack cloud environment using a RESTful API,
+and to provide LB services to OpenStack tenants. It is designed specifically for
+OpenStack, but can also be used as a standalone service to manage a set of
+load balancers via a single unified API.
 
-Concepts
-========
-
-.. toctree::
-   :maxdepth: 1
-
-Using Skeleton
+Using LBaaS
 ==============
 
-.. toctree::
-   :maxdepth: 1
+Initial Setup
+---------------
 
-   gettingstarted
-   installing
+Create virtualenv that required for executing code and tests: ::
+
+ # cd openstack-lbaas
+ # ./run_tests -V -f
+
+Note, virtualenv needs to be updated any time code dependencies are changed. Virtualenv is created in .venv folder
+
+Initialize database: ::
+
+ # ./.venv/bin/python bin/balancer-api --dbsync
+
+The database is located in balancer.sqlite
+
+Run and Test
+---------------
+
+Run LBaaS: ::
+
+  # ./.venv/bin/python ./bin/balancer-api --config-file etc/balancer-api-paste.ini --debug
+
+By default the server is started on port 8181
 
 Developer Docs
 ==============
@@ -40,10 +58,8 @@ Developer Docs
 .. toctree::
    :maxdepth: 1
 
-Outstanding Documentation Tasks
-===============================
-
-.. todolist::
+   devref/driver
+   devref/api
 
 Indices and tables
 ==================
@@ -51,3 +67,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+

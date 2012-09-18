@@ -33,7 +33,7 @@ import sys
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.append([os.path.abspath('../skeleton'),
+sys.path.append([os.path.abspath('../../balancer'),
     os.path.abspath('..'),
     os.path.abspath('../bin')
     ])
@@ -69,15 +69,15 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Skeleton'
-copyright = u'2011-present, OpenStack, LLC.'
+project = u'LBaaS'
+copyright = u'2012-present, OpenStack, LLC.'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-from skeleton import version as skeleton_version
+from balancer import version as skeleton_version
 # The full version, including alpha/beta/rc tags.
 release = skeleton_version.version_string()
 # The short X.Y version.
@@ -126,11 +126,7 @@ modindex_common_prefix = ['skeleton.']
 # List of tuples 'sourcefile', 'target', u'title', u'Authors name', 'manual'
 
 man_pages = [
-    ('man/skeletonapi', 'skeleton-api', u'Skeleton API Server',
-     [u'OpenStack'], 1),
-    ('man/skeletonregistry', 'skeleton-registry', u'Skeleton Registry Server',
-     [u'OpenStack'], 1),
-    ('man/skeletonmanage', 'skeleton-manage', u'Skeleton Management Utility',
+    ('man/lbaas', 'lbaas', u'LBaaS Service',
      [u'OpenStack'], 1)
  ]
 
@@ -244,9 +240,9 @@ latex_documents = [
 #latex_use_modindex = True
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'python': ('http://docs.python.org/', None),
-                       'dashboard': ('http://dashboard.openstack.org', None),
-                       'glance': ('http://glance.openstack.org', None),
-                       'keystone': ('http://keystone.openstack.org', None),
-                       'nova': ('http://nova.openstack.org', None),
-                       'swift': ('http://swift.openstack.org', None)}
+#intersphinx_mapping = {'python': ('http://docs.python.org/', None),
+#                       'dashboard': ('http://dashboard.openstack.org', None),
+#                       'glance': ('http://glance.openstack.org', None),
+#                       'keystone': ('http://keystone.openstack.org', None),
+#                       'nova': ('http://nova.openstack.org', None),
+#                       'swift': ('http://swift.openstack.org', None)}

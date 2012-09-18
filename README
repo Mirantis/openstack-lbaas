@@ -81,7 +81,7 @@ a) Create file createDeviceHAProxy with the following content:
 Note, ip needs to be changed to the real one! Figure out it youself based on the output of ifconfig.
 
 b) Execute script:
- # ./CreateDev.sh HAProxy
+ # ./createDevice.sh HAProxy
 
 c) If all is right, the information about newly created device will be returned:
 {"device": {"name": "HAP-001", "has_acl": 1, "ip": "192.168.19.245", "requires_vip_ip": 1, "capabilities": {"algorithms": "RoundRobin"}, "id": "c1dfe0c69bff49d296fc0d613417efcf", "version": "1", "user": "user", "supports_ipv6": 0, "password": "swordfish", "type": "HAPROXY", "port": "22", "supports_vlan": 1}}
@@ -89,7 +89,7 @@ c) If all is right, the information about newly created device will be returned:
 Write out value for device/id, it will be used later for creating load balancer
 
 3, Check that device is added in DB
- # ./listDev.sh
+ # ./listDevice.sh
 
 4. Create load balancer
 # cat createLBcommandHAProxy
