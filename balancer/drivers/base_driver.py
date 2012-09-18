@@ -244,10 +244,7 @@ class BaseDriver(object):
         raise NotImplementedError
 
     def get_capabilities(self):
-        try:
-            return self.device_ref['extra'].get('capabilities')
-        except KeyError, TypeError:
-            return None
+        return {}
 
 
 def is_sequence(arg):
