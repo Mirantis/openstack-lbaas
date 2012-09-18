@@ -18,10 +18,8 @@
 import logging
 
 from balancer.drivers import base_driver
-from remote_control import RemoteSocketOperation, RemoteInterface,\
-                           RemoteService
-from config_manager import ConfigManager, HaproxyBackend, HaproxyFronted,\
-                           HaproxyRserver
+from remote_control import *
+from config_manager import *
 
 
 LOG = logging.getLogger(__name__)
@@ -31,13 +29,12 @@ class HaproxyDriver(base_driver.BaseDriver):
     def __init__(self, conf, device_ref):
         super(HaproxyDriver, self).__init__(conf, device_ref)
 
-        device_extra = device_ref.get('extra') or {}
-        self.haproxy_socket = device_extra.get('socket') or '/tmp/haproxy.sock'
-        self.interface = device_extra.get('interface') or 'eth0'
-        self.remote_socket = RemoteSocketOperation(device_ref)
-        self.remote_interface = RemoteInterface(device_ref)
-        self.remote_service = RemoteService(device_ref)
-        self.config_manager = ConfigManager(device_ref)
+        self._remote_ctrl = RemoteControl(device_ref)
+        self.remote_socket = RemoteSocketOperation(device_ref,
+                                                   self._remote_ctrl)
+        self.remote_interface = RemoteInterface(device_ref, self._remote_ctrl)
+        self.remote_service = RemoteService(self._remote_ctrl)
+        self.config_manager = ConfigManager(device_ref, self._remote_ctrl)
 
     def request_context(self):
         mgr = super(HaproxyDriver, self).request_context()
@@ -69,8 +66,8 @@ class HaproxyDriver(base_driver.BaseDriver):
 
             new_lines.append(option)
 
-            # TODO: add handling of 'expected' field
-            # from probe ('http-check expect ...')
+        # TODO: add handling of 'expected' field
+        # from probe ('http-check expect ...')
         elif probe_type == 'tcp' or probe_type == 'connect':
             new_lines.append('option httpchk')
         elif probe_type == 'https':
@@ -257,4 +254,5 @@ class HaproxyDriver(base_driver.BaseDriver):
                 if not self.remote_service.restart():
                     LOG.error("Failed to restart haproxy")
 
+        self._remote_ctrl.close()
         return True

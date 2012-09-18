@@ -1,18 +1,16 @@
 import logging
 import os.path
 
-from remote_control import RemoteControl
-
 LOG = logging.getLogger(__name__)
 
 
 class ConfigManager(object):
-    def __init__(self, device_ref):
+    def __init__(self, device_ref, remote_ctrl):
         device_extra = device_ref.get('extra') or {}
         self.remote_config_path = (device_extra.get('remote_config_path') or
                             '/etc/haproxy/haproxy.cfg')
         self.local_config_path = '/tmp/haproxy.cfg'
-        self.remote_control = RemoteControl(device_ref)
+        self.remote_control = remote_ctrl
         self.config = {}
         self.need_deploy = False
 
@@ -42,7 +40,8 @@ class ConfigManager(object):
                                                         lines))
         for key in self.config:
             if block.type in key and block.name in key:
-                self.config[key] += lines
+                for line in lines:
+                    self.config[key].append('\t' + line)
 
         self._apply_config()
 
@@ -67,7 +66,7 @@ class ConfigManager(object):
             LOG.warn('Empty backend name')
             return
 
-        server_line = ('\tserver {0} {1}:{2} {3} maxconn {4} '
+        server_line = ('server {0} {1}:{2} {3} maxconn {4} '
                        'inter {5} rise {6} fall {7}'
                        .format(server.name, server.address,
                               server.port, server.check,
