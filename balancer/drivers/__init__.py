@@ -10,7 +10,7 @@ LOG = logging.getLogger(__name__)
 drivers_opt = cfg.ListOpt('device_drivers',
         default=[
             'ace=balancer.drivers.cisco_ace.ace_driver.AceDriver',
-            'haproxy=balancer.drivers.haproxy.HaproxyDriver.HaproxyDriver',
+            'haproxy=balancer.drivers.haproxy.haproxy_driver.HaproxyDriver',
         ],
         help="Balancer devices' drivers.")
 

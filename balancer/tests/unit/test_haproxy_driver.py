@@ -4,8 +4,8 @@ import unittest
 import paramiko
 from mock import Mock, MagicMock, patch
 
-import balancer.drivers.haproxy.HaproxyDriver as Driver
-import balancer.drivers.haproxy.RemoteControl as RemoteControl
+import balancer.drivers.haproxy.haproxy_driver as Driver
+import balancer.drivers.haproxy.remote_control as RemoteControl
 
 device_fake = {'id': 'fake1',
                'type': 'FAKE',
@@ -15,27 +15,25 @@ device_fake = {'id': 'fake1',
                'user': 'user1',
                'password': 'secrete1',
                'extra': {'interface': 'eth0',
-               'socket': '/tmp/haproxy.sock',
-               'remote_conf_dir': '/etc/haproxy',
-               'remote_conf_file': 'haproxy.cfg'}}
+               'socket': '/tmp/haproxy.sock'}}
 
 conf = []
 
 
 def init_ssh_mock():
     mock_for_ssh = Mock()
+    mock_channel = Mock()
+    mock_channel.channel.recv_exit_status.return_value = 0
+    mock_channel.read.return_value = "fake"
     mock_for_ssh.exec_command.return_value = \
-         [MagicMock(spec=file), MagicMock(spec=file), MagicMock(spec=file)]
+         [mock_channel, mock_channel, mock_channel]
     return mock_for_ssh
 
 
 def init_driver_with_mock():
     mock_for_ssh = init_ssh_mock()
     driver = Driver.HaproxyDriver(conf, device_fake)
-    driver.remote_config.ssh = mock_for_ssh
-    driver.remote_socket.ssh = mock_for_ssh
-    driver.remote_interface.ssh = mock_for_ssh
-    driver.config_file = Mock()
+    driver._remote_ctrl._ssh = mock_for_ssh
     return driver
 
 
@@ -97,32 +95,11 @@ def get_fake_Haproxy_rserver(id_):
     return haproxy_rserver
 
 
-class TestHaproxyDriverRemoteConfig(unittest.TestCase):
-    def setUp(self):
-        self.remote_config = RemoteControl.RemoteConfig(device_fake, '/tmp',
-                                             '/etc/haproxy', 'haproxy.conf')
-        self.remote_config.ssh = Mock()
-
-    def test_get_config(self):
-        self.assertTrue(self.remote_config.get_config())
-
-    def test_put_config(self):
-        self.assertTrue(self.remote_config.put_config())
-
-    def test_validate_config_bad(self):
-        file_channel = MagicMock(spec=file)
-        self.remote_config.ssh.exec_command.return_value = [file_channel,
-                                              file_channel, file_channel]
-        self.assertFalse(self.remote_config.validate_config())
-
-
 class TestHaproxyDriverRemoteService(unittest.TestCase):
     def setUp(self):
-        self.remote_service = RemoteControl.RemoteService(device_fake)
-        self.remote_service.ssh = Mock()
-        a = Mock()
-        a.file_channel = MagicMock(spec=file)
-        self.remote_service.ssh.exec_command.return_value = [a, a, a]
+        remote_ctrl = RemoteControl.RemoteControl(device_fake)
+        remote_ctrl._ssh = init_ssh_mock()
+        self.remote_service = RemoteControl.RemoteService(remote_ctrl)
 
     def test_start_service(self):
         self.remote_service.start()
@@ -137,11 +114,10 @@ class TestHaproxyDriverRemoteService(unittest.TestCase):
 class TestHaproxyDriverRemoteInterface(unittest.TestCase):
     def setUp(self):
         self.frontend = get_fake_HaproxyFrontend('test')
-        self.remote_interface = RemoteControl.RemoteInterface(device_fake)
-        self.remote_interface.ssh = Mock()
-        file_channel = MagicMock(spec=file)
-        self.remote_interface.ssh.exec_command.return_value = [file_channel,
-                                                 file_channel, file_channel]
+        remote_ctrl = RemoteControl.RemoteControl(device_fake)
+        remote_ctrl._ssh = init_ssh_mock()
+        self.remote_interface = RemoteControl.RemoteInterface(device_fake,
+                                                              remote_ctrl)
 
     def test_add_ip(self):
         self.assertTrue(self.remote_interface.add_ip(self.frontend))
@@ -152,8 +128,10 @@ class TestHaproxyDriverRemoteInterface(unittest.TestCase):
 
 class TestHaproxyDriverRemoteSocketOperation(unittest.TestCase):
     def setUp(self):
-        self.remote_socket = RemoteControl.RemoteSocketOperation(device_fake)
-        self.remote_socket.ssh = init_ssh_mock()
+        remote_ctrl = RemoteControl.RemoteControl(device_fake)
+        remote_ctrl._ssh = init_ssh_mock()
+        self.remote_socket = RemoteControl.RemoteSocketOperation(device_fake,
+                                                                 remote_ctrl)
         self.driver = init_driver_with_mock()
 
     def test_get_statistics(self):
@@ -165,6 +143,7 @@ class TestHaproxyDriverRemoteSocketOperation(unittest.TestCase):
 class TestHaproxyDriverAllFunctions(unittest.TestCase):
     def setUp(self):
         self.driver = init_driver_with_mock()
+        open('/tmp/haproxy.cfg', 'w')
 
     def test_create_real_server(self):
         # check implementation of this method in HAProxy driver
@@ -181,7 +160,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
         rserver = get_fake_rserver('real_server1', {'port': 950})
         self.driver.suspend_real_server(server_farm, rserver)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_activate_real_server(self):
@@ -189,7 +168,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
         rserver = get_fake_rserver('real_server2', {'maxCon': 40000})
         self.driver.activate_real_server(server_farm, rserver)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_create_probe(self):
@@ -207,7 +186,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
         sf = get_fake_server_farm('sf-003', {})
         self.driver.add_probe_to_server_farm(sf, probe)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_add_http_probe_to_server_farm(self):
@@ -215,7 +194,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
         sf = get_fake_server_farm('sf-003', {})
         self.driver.add_probe_to_server_farm(sf, probe)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_add_https_probe_to_server_farm(self):
@@ -223,7 +202,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
         sf = get_fake_server_farm('sf-003', {})
         self.driver.add_probe_to_server_farm(sf, probe)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_delete_http_probe_from_server_farm(self):
@@ -231,7 +210,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
         sf = get_fake_server_farm('sf-006', {})
         self.driver.delete_probe_from_server_farm(sf, probe)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_delete_https_probe_from_server_farm(self):
@@ -239,7 +218,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
         sf = get_fake_server_farm('sf-006', {})
         self.driver.delete_probe_from_server_farm(sf, probe)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_create_server_farm_with_round_robin(self):
@@ -248,7 +227,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
                                   {'type': 'roundrobin'})
         self.driver.create_server_farm(sf, predictor)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_create_server_farm_with_leastconnections(self):
@@ -257,7 +236,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
                                         {'type': 'leastconnections'})
         self.driver.create_server_farm(sf, predictor_connections)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_create_server_farm_with_hashaddr(self):
@@ -266,7 +245,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
                                              {'type': 'hashaddr'})
         self.driver.create_server_farm(sf, predictor_hashaddr)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_create_server_farm_with_hashurl(self):
@@ -275,14 +254,14 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
                                              {'type': 'hashurl'})
         self.driver.create_server_farm(sf, predictor_hashurl)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_delete_server_farm(self):
         sf = get_fake_server_farm('SF-001', {})
         self.driver.delete_server_farm(sf)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_add_real_server_to_server_farm(self):
@@ -290,7 +269,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
         rs = get_fake_rserver('real_server205', {'port': '23'})
         self.driver.add_real_server_to_server_farm(sf, rs)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_delete_real_server_from_server_farm(self):
@@ -298,7 +277,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
         rs = get_fake_rserver('real_server2', {'port': 1122})
         self.driver.delete_real_server_from_server_farm(sf, rs)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_create_virtual_ip(self):
@@ -306,20 +285,20 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
         server_farm = get_fake_server_farm('sf-120', {})
         self.driver.create_virtual_ip(virtualserver, server_farm)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_delete_virtual_ip(self):
         virtualserver = get_fake_virtual_ip('test', {})
         self.driver.delete_virtual_ip(virtualserver)
         self.driver.finalize_config(True)
-        self.assertTrue(self.driver.remote_config.ssh.\
+        self.assertTrue(self.driver.config_manager.remote_control._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
     def test_get_statistics(self):
         sf = get_fake_server_farm('sf-153', {})
         self.driver.get_statistics(sf)
-        self.assertTrue(self.driver.remote_socket.ssh.\
+        self.assertTrue(self.driver.remote_socket.remote_ctrl._ssh.\
                         exec_command.called == 1, 'Error in work with ssh')
 
 if __name__ == "__main__":
