@@ -57,6 +57,7 @@ if __name__ == '__main__':
         conf()
 
         if conf.dbsync:
+            config.setup_logging(conf)
             session.sync(conf)
         else:
             app = config.load_paste_app(conf)
