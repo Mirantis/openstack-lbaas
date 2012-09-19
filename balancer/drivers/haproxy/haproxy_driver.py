@@ -59,8 +59,10 @@ class HaproxyDriver(base_driver.BaseDriver):
         """
         Add a probe into server farm
 
-        :param serverfarm: ServerFarm
-        :param probe: Probe
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
+        :param probe: Probe \
+        - see :py:class:`balancer.db.models.Probe`
         """
         probe_type = probe['type'].lower()
         if probe_type not in ('http', 'https', 'tcp', 'connect'):
@@ -96,8 +98,10 @@ class HaproxyDriver(base_driver.BaseDriver):
         """
         Delete probe from server farm
 
-        :param serverfarm: ServerFarm
-        :param probe: Probe
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
+        :param probe: Probe \
+        - see :py:class:`balancer.db.models.Probe`
         """
         backend = HaproxyBackend()
         backend.name = serverfarm['id']
@@ -112,9 +116,7 @@ class HaproxyDriver(base_driver.BaseDriver):
         if del_lines:
             self.config_manager.del_lines_from_block(backend, del_lines)
 
-    '''
-        For compatibility with drivers for other devices
-    '''
+    # For compatibility with drivers for other devices
     def create_real_server(self, rserver):
         pass
 
@@ -137,8 +139,10 @@ class HaproxyDriver(base_driver.BaseDriver):
         """
         Add a node (rserver) into load balancer (serverfarm)
 
-        :param serverfarm: ServerFarm
-        :param rserver: Server
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
+        :param rserver: Server \
+        - see :py:class:`balancer.db.models.Server`
         """
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['id']
@@ -161,8 +165,10 @@ class HaproxyDriver(base_driver.BaseDriver):
         """
         Delete node (rserver) from the specified loadbalancer (serverfarm)
 
-        :param serverfarm: ServerFram
-        :param rserver: Server
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
+        :param rserver: Server \
+        - see :py:class:`balancer.db.models.Server`
         """
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['id']
@@ -178,10 +184,12 @@ class HaproxyDriver(base_driver.BaseDriver):
 
     def create_virtual_ip(self, virtualserver, serverfarm):
         """
-        Create a new vip (virtual IP).
+        Create a new vip (virtual IP)
 
-        :param virtualserver: VirtualServer
-        :param serverfarm: ServerFarm
+        :param virtualserver: VirtualServer \
+        - see :py:class:`balancer.db.models.VirtualServer`
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
         """
         if not bool(virtualserver['id']):
             LOG.error('Virtualserver name is empty')
@@ -202,7 +210,8 @@ class HaproxyDriver(base_driver.BaseDriver):
         """
         Delete vip from loadbalancer
 
-        :param virtualserver: VirtualServer
+        :param virtualserver: VirtualServer \
+        - see :py:class:`balancer.db.models.VirtualServer`
         """
         LOG.debug('Delete VIP')
         if not bool(virtualserver['id']):
@@ -243,21 +252,25 @@ class HaproxyDriver(base_driver.BaseDriver):
         """
         Put node into inactive state (suspend)
 
-        :param serverfarm: ServerFarm
-        :param rserver: Server
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
+        :param rserver: Server \
+        - see :py:class:`balancer.db.models.Server`
         """
-        self.operationWithRServer(serverfarm, rserver, 'suspend')
+        self._operationWithRServer(serverfarm, rserver, 'suspend')
 
     def activate_real_server(self, serverfarm, rserver):
         """
         Put node into active state (activate)
 
-        :param serverfarm: ServerFarm
-        :param rserver: Server
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
+        :param rserver: Server \
+        - see :py:class:`balancer.db.models.Server`
         """
-        self.operationWithRServer(serverfarm, rserver, 'activate')
+        self._operationWithRServer(serverfarm, rserver, 'activate')
 
-    def operationWithRServer(self, serverfarm, rserver, type_of_operation):
+    def _operationWithRServer(self, serverfarm, rserver, type_of_operation):
         haproxy_rserver = HaproxyRserver()
         haproxy_rserver.name = rserver['id']
         haproxy_serverfarm = HaproxyBackend()
@@ -275,8 +288,11 @@ class HaproxyDriver(base_driver.BaseDriver):
     def create_server_farm(self, serverfarm, predictor):
         """
         Create a new loadbalancer (server farm)
-        :param serverfarm: ServerFarm
-        :param predictor: Predictor
+
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
+        :param predictor: Predictor \
+        - see :py:class:`balancer.db.models.Predictor`
         """
         if not bool(serverfarm['id']):
             LOG.error('Serverfarm name is empty')

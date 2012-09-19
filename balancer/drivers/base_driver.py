@@ -40,72 +40,204 @@ class BaseDriver(object):
         return False
 
     def import_certificate_or_key(self):
+        """
+        not used in API
+        """
         raise NotImplementedError
 
     def create_ssl_proxy(self, ssl_proxy):
+        """
+        not used in API
+        """
         raise NotImplementedError
 
     def delete_ssl_proxy(self, ssl_proxy):
+        """
+        not used in API
+        """
         raise NotImplementedError
 
     def add_ssl_proxy_to_virtual_ip(self, vip, ssl_proxy):
+        """
+        not used in API
+        """
         raise NotImplementedError
 
     def remove_ssl_proxy_from_virtual_ip(self, vip, ssl_proxy):
+        """
+        not used in API
+        """
         raise NotImplementedError
 
     def create_real_server(self, rserver):
+        """
+        Create a new real server (node)
+
+        :param rserver: Server \
+         - see :py:class:`balancer.db.models.Server`
+        """
         raise NotImplementedError
 
     def delete_real_server(self, rserver):
+        """
+        Delete real server (node)
+
+        :param rserver: Server \
+         - see :py:class:`balancer.db.models.Server`
+        """
         raise NotImplementedError
 
     def activate_real_server(self, serverfarm, rserver):
+        """
+        Put node into active state (activate)
+
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
+        :param rserver: Server \
+        - see :py:class:`balancer.db.models.Server`
+        """
         raise NotImplementedError
 
     def activate_real_server_global(self, rserver):
+        """
+        not used in API. deprecated
+        """
         raise NotImplementedError
 
     def suspend_real_server(self, serverfarm, rserver):
+        """
+        Put node into inactive state (suspend)
+
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
+        :param rserver: Server \
+        - see :py:class:`balancer.db.models.Server`
+        """
         raise NotImplementedError
 
     def suspend_real_server_global(self, rserver):
+        """
+        not used in API. deprecated
+        """
         raise NotImplementedError
 
     def create_probe(self, probe):
+        """
+        Create probe for health monitoring
+
+        :param probe: Probe \
+        - see :py:class:`balancer.db.models.Probe`
+        :return:
+        """
         raise NotImplementedError
 
     def delete_probe(self, probe):
+        """
+        Delete probe
+
+        :param probe: Probe \
+        - see :py:class:`balancer.db.models.Probe`
+        :return:
+        """
         raise NotImplementedError
 
     def create_server_farm(self, serverfarm, predictor):
+        """
+        Create a new loadbalancer (server farm)
+
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
+        :param predictor: Predictor \
+        - see :py:class:`balancer.db.models.Predictor`
+        """
         raise NotImplementedError
 
     def delete_server_farm(self, serverfarm):
+        """
+        Delete a load balancer (server farm)
+        """
         raise NotImplementedError
 
     def add_real_server_to_server_farm(self, serverfarm, rserver):
+        """
+        Add a node (rserver) into load balancer (serverfarm)
+
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
+        :param rserver: Server \
+        - see :py:class:`balancer.db.models.Server`
+        """
         raise NotImplementedError
 
     def delete_real_server_from_server_farm(self, serverfarm, rserver):
+        """
+        Delete node (rserver) from the specified loadbalancer (serverfarm)
+
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
+        :param rserver: Server \
+        - see :py:class:`balancer.db.models.Server`
+        """
         raise NotImplementedError
 
     def add_probe_to_server_farm(self, serverfarm, probe):
+        """
+        Add a probe into server farm
+
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
+        :param probe: Probe \
+        - see :py:class:`balancer.db.models.Probe`
+        """
         raise NotImplementedError
 
     def delete_probe_from_server_farm(self, serverfarm, probe):
+        """
+        Delete probe from server farm
+
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
+        :param probe: Probe \
+        - see :py:class:`balancer.db.models.Probe`
+        """
         raise NotImplementedError
 
     def create_stickiness(self, sticky):
+        """
+        Create a new stickiness object
+
+        :param sticky: Sticky \
+         - see :py:class:`balancer.db.models.Sticky`
+        """
         raise NotImplementedError
 
     def delete_stickiness(self, sticky):
+        """
+        Delete a stickiness object
+
+        :param sticky: Sticky \
+         - see :py:class:`balancer.db.models.Sticky`
+        """
         raise NotImplementedError
 
     def create_virtual_ip(self, vip, serverfarm):
+        """
+        Create a new vip (virtual IP)
+
+        :param virtualserver: VirtualServer \
+        - see :py:class:`balancer.db.models.VirtualServer`
+        :param serverfarm: ServerFarm \
+        - see :py:class:`balancer.db.models.ServerFarm`
+        """
         raise NotImplementedError
 
     def delete_virtual_ip(self, vip):
+        """
+        Delete vip from loadbalancer
+
+        :param virtualserver: VirtualServer \
+        - see :py:class:`balancer.db.models.VirtualServer`
+        """
         raise NotImplementedError
 
     def get_statistics(self, serverfarm, rserver):
