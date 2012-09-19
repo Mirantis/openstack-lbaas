@@ -94,7 +94,7 @@ Write out value for device/id, it will be used later for creating load balancer
 4. Create load balancer
 # cat createLBcommandHAProxy
 {
-    "device_id": "c1dfe0c69bff49d296fc0d613417efcf",
+    "device_id": "a854586622ea4282a705e7b1ee833409",
     "name": "testLB001",
     "protocol": "HTTP",
     "transport": "TCP",
@@ -105,7 +105,7 @@ Write out value for device/id, it will be used later for creating load balancer
             "mask": "255.255.255.255",
             "type": "PUBLIC",
             "ipVersion": "IPv4",
-            "port": "99",
+            "port": "80",
             "ICMPreply": "True"
         }
     ],
@@ -120,9 +120,7 @@ Write out value for device/id, it will be used later for creating load balancer
             "rateBandwidth": "12",
             "rateConnection": "1000",
             "status": "INSERVICE",
-            "condition": "ENABLED",
-            "vm_instance": "RServer001",
-            "vm_id": "0001-0001-0001-0001"
+            "condition": "ENABLED"
         },
         {
             "address": "127.0.0.1",
@@ -134,9 +132,7 @@ Write out value for device/id, it will be used later for creating load balancer
             "rateBandwidth": "12",
             "rateConnection": "1000",
             "status": "INSERVICE",
-            "condition": "ENABLED",
-            "vm_instance": "RServer002",
-            "vm_id": "0002-0002-0002-0002"
+            "condition": "ENABLED"
         },
         {
             "address": "127.0.0.1",
@@ -148,9 +144,7 @@ Write out value for device/id, it will be used later for creating load balancer
             "rateBandwidth": "12",
             "rateConnection": "1000",
             "status": "INSERVICE",
-            "condition": "ENABLED",
-            "vm_instance": "RServer003",
-            "vm_id": "0003-0003-0003-0003"
+            "condition": "ENABLED"
         }
     ],
     "healthMonitor": [

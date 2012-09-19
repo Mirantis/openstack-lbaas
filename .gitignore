@@ -4,3 +4,5 @@ balancer.sqlite
 covhtml
 run_tests.log
 .coverage
+doc/html
+doc/source/apidoc
