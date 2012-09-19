@@ -1,11 +1,11 @@
-This is the OpenStack LBaaS project. 
+This is the OpenStack LBaaS project.
 * Project overview: https://docs.google.com/document/pub?id=1DRgQhZJ73EyzQ2KvzVQd7Li9YEL7fXWBp8reMdAEhiM
 * Screencast: http://www.youtube.com/watch?v=NgAL-kfdbtE
 * API draft: https://docs.google.com/document/pub?id=11WWy7MQN1RIK7XdvQtUwkC_EIrykEDproFy9Pekm3wI
 * Roadmap: https://docs.google.com/document/pub?id=1yJZXI0WfpAZKhHaLQu7LaxGLrs4REmn0a5bYVbvsCTQ
 
-Getting started with LBaaS DevBox
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Getting started with LBaaS DevBox
+
 LBaaS DevBox is Linux-based VM with pre-installed services to simplify development and testing.
 It can be downloaded from https://docs.google.com/open?id=0B1mJ0eQoi7tEZmlYWHVyUjA3dlk
 
@@ -20,11 +20,13 @@ There are 2 users:
  * developer/swordfish for development purposes
  * user/swordfish for configuring haproxy service
 
-Get LBaaS sources
-~~~~~~~~~~~~~~~~~
+## Get LBaaS sources
+
 Log in as "developer". Then check-out new sources:
-# rm -rf openstack-lbaas
-# git clone https://github.com/Mirantis/openstack-lbaas.git
+```bash
+rm -rf openstack-lbaas
+git clone https://github.com/Mirantis/openstack-lbaas.git
+```
 
 Source code layout:
  * balancer - LBaaS core  
@@ -38,61 +40,78 @@ Source code layout:
        * manual - manual tests for LBaaS API
        * unit - unit tests
 
-Initial Setup
-~~~~~~~~~~~~~
+## Initial Setup
 
-1. Create virtualenv that required for executing code and tests
- # cd openstack-lbaas
- # ./run_tests -V -f
+### Create virtualenv that required for executing code and tests
+```bash
+ cd openstack-lbaas
+ ./run_tests -V -f
+```
 Note, virtualenv needs to be updated any time code dependencies are changed. Virtualenv is created in .venv folder
  
-2. Initialize database
- # ./.venv/bin/python bin/balancer-api --dbsync
+### Initialize database
+```bash
+ ./.venv/bin/python bin/balancer-api --dbsync
+```
 The database is located in balancer.sqlite
 
-Run and Test
-~~~~~~~~~~~~
+### Run and Test
 
-1. Run LBaaS:
- # ./.venv/bin/python ./bin/balancer-api --config-file etc/balancer-api-paste.ini --debug
+#### Run LBaaS:
+```bash
+ ./.venv/bin/python ./bin/balancer-api --config-file etc/balancer-api-paste.ini --debug
+```
 By default the server is started on port 8181   
 
-2. Add HA Proxy device to LBaaS database
-a) Create file createDeviceHAProxy with the following content:
+#### Add HA Proxy device to LBaaS database
 
-# cd balancer/tests/manual/
- 
-# cat CreateDeviceHAProxy
+Create file createDeviceHAProxy with the following content:
+
+```json
 {
  "name": "HAP-001",
  "type": "HAPROXY",
  "version": "1",
  "supports_ipv6": 0,
  "requires_vip_ip": 1,
- "has_acl": 1,
- "supports_vlan": 1,
  "ip": "192.168.19.245",
  "port": "22",
  "user": "user",
  "password": "swordfish",
- "capabilities": {"algorithms":"RoundRobin"}
+ "capabilities":
+ {
+   "algorithms": ["RoundRobin"],
+   "protocols": ["TCP","HTTP"]
+ }
 }
- 
-Note, ip needs to be changed to the real one! Figure out it youself based on the output of ifconfig.
+```
 
-b) Execute script:
- # ./createDevice.sh HAProxy
+**Note:** ``ip`` needs to be changed to the real one! Figure out it yourself based on the output of ifconfig.
 
-c) If all is right, the information about newly created device will be returned:
+Execute script:
+
+```bash
+./CreateDev.sh HAProxy
+```
+
+If all is right, the information about newly created device will be returned:
+
+```
 {"device": {"name": "HAP-001", "has_acl": 1, "ip": "192.168.19.245", "requires_vip_ip": 1, "capabilities": {"algorithms": "RoundRobin"}, "id": "c1dfe0c69bff49d296fc0d613417efcf", "version": "1", "user": "user", "supports_ipv6": 0, "password": "swordfish", "type": "HAPROXY", "port": "22", "supports_vlan": 1}}
+```
 
 Write out value for device/id, it will be used later for creating load balancer
 
-3, Check that device is added in DB
- # ./listDevice.sh
+Check that device is added in DB
+```bash
+./listDev.sh
+```
 
-4. Create load balancer
-# cat createLBcommandHAProxy
+#### Create load balancer
+
+Create file createLBcommandHAProxy with the following content:
+
+```json
 {
     "device_id": "a854586622ea4282a705e7b1ee833409",
     "name": "testLB001",
@@ -165,9 +184,28 @@ Write out value for device/id, it will be used later for creating load balancer
         }
     ]
 }
+```
 
- # ./createLB.sh HAProxy
+Execute script:
 
-5. Check the load balancer
- # curl http://localhost:99/
+```bash
+./createLB.sh HAProxy
+```
+
+#### Check the load balancer
+
+```bash
+curl http://localhost:80/
+```
+
 HAProxy should return different results upon page reload. There are 3 different pages / servers in the server farm.
+
+## Developers Documentation
+
+Docs can be built by the following commands:
+
+```bash
+cd doc
+./compile_docs.sh
+```
+To view docs, open `doc/html/index.html` in the browser.
