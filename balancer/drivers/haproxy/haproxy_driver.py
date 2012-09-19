@@ -33,6 +33,10 @@ ALGORITHMS_MAPPING = {
 
 
 class HaproxyDriver(base_driver.BaseDriver):
+    """
+    This is the driver for HAProxy loadbalancer (http://haproxy.1wt.eu/)
+    """
+
     algorithms = ALGORITHMS_MAPPING
     default_algorithm = ALGORITHMS_MAPPING['ROUND_ROBIN']
 
@@ -52,10 +56,12 @@ class HaproxyDriver(base_driver.BaseDriver):
         return mgr
 
     def add_probe_to_server_farm(self, serverfarm, probe):
-        '''
-            Haproxy supports only tcp (connect),
-            http and https (limited) probes
-        '''
+        """
+        Add a probe into server farm
+
+        :param serverfarm: ServerFarm
+        :param probe: Probe
+        """
         probe_type = probe['type'].lower()
         if probe_type not in ('http', 'https', 'tcp', 'connect'):
             LOG.debug('unsupported probe type %s, exit',
@@ -87,6 +93,12 @@ class HaproxyDriver(base_driver.BaseDriver):
             self.config_manager.add_lines_to_block(backend, new_lines)
 
     def delete_probe_from_server_farm(self, serverfarm, probe):
+        """
+        Delete probe from server farm
+
+        :param serverfarm: ServerFarm
+        :param probe: Probe
+        """
         backend = HaproxyBackend()
         backend.name = serverfarm['id']
 
@@ -122,6 +134,12 @@ class HaproxyDriver(base_driver.BaseDriver):
         pass
 
     def add_real_server_to_server_farm(self, serverfarm, rserver):
+        """
+        Add a node (rserver) into load balancer (serverfarm)
+
+        :param serverfarm: ServerFarm
+        :param rserver: Server
+        """
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['id']
         haproxy_rserver = HaproxyRserver()
@@ -140,6 +158,12 @@ class HaproxyDriver(base_driver.BaseDriver):
                                         haproxy_rserver)
 
     def delete_real_server_from_server_farm(self, serverfarm, rserver):
+        """
+        Delete node (rserver) from the specified loadbalancer (serverfarm)
+
+        :param serverfarm: ServerFram
+        :param rserver: Server
+        """
         haproxy_serverfarm = HaproxyBackend()
         haproxy_serverfarm.name = serverfarm['id']
         haproxy_rserver = HaproxyRserver()
@@ -153,6 +177,12 @@ class HaproxyDriver(base_driver.BaseDriver):
                                            haproxy_rserver.name)
 
     def create_virtual_ip(self, virtualserver, serverfarm):
+        """
+        Create a new vip (virtual IP).
+
+        :param virtualserver: VirtualServer
+        :param serverfarm: ServerFarm
+        """
         if not bool(virtualserver['id']):
             LOG.error('Virtualserver name is empty')
             return 'VIRTUALSERVER NAME ERROR'
@@ -169,6 +199,11 @@ class HaproxyDriver(base_driver.BaseDriver):
                                          haproxy_serverfarm)
 
     def delete_virtual_ip(self, virtualserver):
+        """
+        Delete vip from loadbalancer
+
+        :param virtualserver: VirtualServer
+        """
         LOG.debug('Delete VIP')
         if not bool(virtualserver['id']):
             LOG.error('Virtualserver name is empty')
@@ -205,9 +240,21 @@ class HaproxyDriver(base_driver.BaseDriver):
         return statistics
 
     def suspend_real_server(self, serverfarm, rserver):
+        """
+        Put node into inactive state (suspend)
+
+        :param serverfarm: ServerFarm
+        :param rserver: Server
+        """
         self.operationWithRServer(serverfarm, rserver, 'suspend')
 
     def activate_real_server(self, serverfarm, rserver):
+        """
+        Put node into active state (activate)
+
+        :param serverfarm: ServerFarm
+        :param rserver: Server
+        """
         self.operationWithRServer(serverfarm, rserver, 'activate')
 
     def operationWithRServer(self, serverfarm, rserver, type_of_operation):
@@ -226,6 +273,11 @@ class HaproxyDriver(base_driver.BaseDriver):
             self.remote_socket.activate_server(haproxy_serverfarm, rserver)
 
     def create_server_farm(self, serverfarm, predictor):
+        """
+        Create a new loadbalancer (server farm)
+        :param serverfarm: ServerFarm
+        :param predictor: Predictor
+        """
         if not bool(serverfarm['id']):
             LOG.error('Serverfarm name is empty')
             return 'SERVERFARM FARM NAME ERROR'
@@ -247,6 +299,9 @@ class HaproxyDriver(base_driver.BaseDriver):
         self.config_manager.add_backend(haproxy_serverfarm)
 
     def delete_server_farm(self, serverfarm):
+        """
+        Delete a load balancer (server farm)
+        """
         if not bool(serverfarm['id']):
             LOG.error('Serverfarm name is empty')
             return 'SERVER FARM NAME ERROR'
@@ -255,10 +310,10 @@ class HaproxyDriver(base_driver.BaseDriver):
 
         self.config_manager.delete_block(haproxy_serverfarm)
 
-    """
-       Putting config back on device
-    """
     def finalize_config(self, good):
+        """
+           Store config on the haproxy VM
+        """
         if good:
             if self.config_manager.deploy_config():
                 if not self.remote_service.restart():
