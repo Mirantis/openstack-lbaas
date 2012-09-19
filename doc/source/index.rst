@@ -67,6 +67,14 @@ API Docs
 
    apidoc/balancer.api.v1
 
+Models
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   apidoc/balancer.db
+
 Driver Docs
 ------------
 .. toctree::

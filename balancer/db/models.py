@@ -34,7 +34,11 @@ def create_uuid():
 
 
 class Device(DictBase, Base):
-    """Represents a load balancer appliance."""
+    """
+    Represents a load balancer appliance - a physical device (like F5 BigIP) or
+    a software system (such as HAProxy) that can perform load balancing
+    functions
+    """
 
     __tablename__ = 'device'
     id = Column(String(32), primary_key=True, default=create_uuid)
@@ -49,7 +53,18 @@ class Device(DictBase, Base):
 
 
 class LoadBalancer(DictBase, Base):
-    """Represents an instance of load balancer applience for a tenant."""
+    """
+    Represents an instance of load balancer appliance for a tenant.
+    This is a subsystem behind a virtual IP, i.e. the VIP itself,
+    the load balancer instance serving this particular VIP,
+    the server farm behind it, and the health probes.
+
+    :var name: string
+    :var algorithm: string - load balancing algorithm (e.g. RoundRobin)
+    :var protocol: string - load balancing protocol (e.g. TCP, HTTP)
+    :var tenant_id: string - OpenStack tenant ID
+    :var extra: dictionary - additional attributes
+    """
 
     __tablename__ = 'loadbalancer'
     id = Column(String(32), primary_key=True, default=create_uuid)
@@ -73,7 +88,13 @@ class LoadBalancer(DictBase, Base):
 
 
 class ServerFarm(DictBase, Base):
-    """Represents a server farm."""
+    """
+    Represents a server farm - a set of servers providing the same backend
+    application, managed by a single LB pool.
+
+    :var name: string
+    :var extra: dictionary - additional attributes
+    """
 
     __tablename__ = 'serverfarm'
     id = Column(String(32), primary_key=True, default=create_uuid)
@@ -90,7 +111,18 @@ class ServerFarm(DictBase, Base):
 
 
 class VirtualServer(DictBase, Base):
-    """Represents a Virtual IP."""
+    """
+    Represents a Virtual IP - an IP address on which the LB Appliance listens
+    to traffic from clients. This is the address seen by the clients.
+    Client requests to this IP are routed by the load balancer to backend
+    application instances.
+
+    :var name: string
+    :var address: string - IP address of VIP to accept traffic
+    :var mask: string - network mask
+    :var port: string - tcp port
+    :var extra: dictionary - additional attributes
+    """
 
     __tablename__ = 'virtualserver'
     id = Column(String(32), primary_key=True, default=create_uuid)
@@ -113,7 +145,20 @@ class VirtualServer(DictBase, Base):
 
 
 class Server(DictBase, Base):
-    """Represents a real server."""
+    """
+    Represents a real server (Node) - a single server providing a single
+    backend application instance.
+
+    :var name: string
+    :var type: string (not used!)
+    :var address: string - IPv4 or IPv6 Address of the node
+    :var port: string - application port on which the node listens
+    :var weight: integer - weight of the node with respect to other nodes in \
+    the same SF. Semantics of weight depends on the particular balancer \
+    algorithm
+    :var status: string - current health status of the node
+    :var extra: dictionary - additional attributes
+    """
 
     __tablename__ = 'server'
     id = Column(String(32), primary_key=True, default=create_uuid)
@@ -135,7 +180,14 @@ class Server(DictBase, Base):
 
 
 class Probe(DictBase, Base):
-    """Represents a health monitoring."""
+    """
+    Represents a health monitoring. The probe can be implemented by ICMP ping,
+    or more sophisticated way, like sending HTTP GET to specified URL
+
+    :var type: string - type of probe (HTTP, HTTPS, ICMP, CONNECT, etc.) \
+    - real set depends on driver support
+    :var extra: dictionary - additional attributes
+    """
 
     __tablename__ = 'probe'
     id = Column(String(32), primary_key=True, default=create_uuid)
@@ -151,7 +203,9 @@ class Probe(DictBase, Base):
 
 
 class Sticky(DictBase, Base):
-    """Represents a persistent session."""
+    """
+    Represents a persistent session.
+    """
 
     __tablename__ = 'sticky'
     id = Column(String(32), primary_key=True, default=create_uuid)
@@ -167,7 +221,11 @@ class Sticky(DictBase, Base):
 
 
 class Predictor(DictBase, Base):
-    """Represents a algorithm of selecting server."""
+    """
+    Represents an algorithm of selecting server by load balancer.
+
+    :var type: string - the algorithm, e.g. RoundRobin
+    """
 
     __tablename__ = 'predictor'
     id = Column(String(32), primary_key=True, default=create_uuid)
