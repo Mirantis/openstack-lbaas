@@ -10,7 +10,7 @@
  "password": "swordfish",
  "capabilities":
  {
-   "algorithms": ["RoundRobin", "hashurl"],
+   "algorithms": ["RoundRobin"],
    "protocols": ["TCP","HTTP"]
  }
 }
