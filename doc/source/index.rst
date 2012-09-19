@@ -24,6 +24,11 @@ and to provide LB services to OpenStack tenants. It is designed specifically for
 OpenStack, but can also be used as a standalone service to manage a set of
 load balancers via a single unified API.
 
+* Project overview: https://docs.google.com/document/pub?id=1DRgQhZJ73EyzQ2KvzVQd7Li9YEL7fXWBp8reMdAEhiM
+* Screencast: http://www.youtube.com/watch?v=NgAL-kfdbtE
+* API draft: https://docs.google.com/document/pub?id=11WWy7MQN1RIK7XdvQtUwkC_EIrykEDproFy9Pekm3wI
+* Roadmap: https://docs.google.com/document/pub?id=1yJZXI0WfpAZKhHaLQu7LaxGLrs4REmn0a5bYVbvsCTQ
+
 Using LBaaS
 ==============
 
@@ -55,11 +60,19 @@ By default the server is started on port 8181
 Developer Docs
 ==============
 
+API Docs
+------------
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 4
 
-   devref/driver
-   devref/api
+   apidoc/balancer.api.v1
+
+Driver Docs
+------------
+.. toctree::
+   :maxdepth: 4
+
+   apidoc/balancer.drivers
 
 Indices and tables
 ==================
