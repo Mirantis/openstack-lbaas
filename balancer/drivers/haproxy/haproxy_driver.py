@@ -29,6 +29,7 @@ ALGORITHMS_MAPPING = {
     'LEAST_CONNECTION': 'leastconn',
     'HASH_SOURCE': 'source',
     'HASH_URI': 'uri',
+    'STATIC_RR': 'static-rr',
 }
 
 
@@ -337,3 +338,9 @@ class HaproxyDriver(base_driver.BaseDriver):
 
         self._remote_ctrl.close()
         return True
+
+    def get_capabilities(self):
+        capabilities = {}
+        capabilities['algorithms'] = list(self.algorithms.keys())
+        capabilities['protocols'] = ['HTTP', 'TCP']
+        return capabilities

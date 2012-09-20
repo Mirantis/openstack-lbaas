@@ -739,3 +739,18 @@ class Ace_DriverTestCase(unittest.TestCase):
     def test_delete_ssl_proxy(self):
         self.driver.delete_ssl_proxy(ssl_proxy)
         self.assertTrue(urllib2.urlopen().read.call_count == 1)
+
+    def test_get_capabilities(self):
+        protocols = ['HTTP', 'TCP', 'HTTPS', 'RTSP', \
+                     'SIP-TCP', 'SIP-UDP', 'UDP', \
+                     'FTP', 'Generic', 'RDP', 'DNS', \
+                     'RADIUS', ]
+        algorithms = list(self.driver.algorithms.keys())
+
+        self.assertTrue(self.driver.algorithms)
+        self.assertTrue(self.driver.default_algorithm)
+
+        test = self.driver.get_capabilities()
+
+        self.assertListEqual(test['algorithms'], algorithms)
+        self.assertListEqual(test['protocols'], protocols)

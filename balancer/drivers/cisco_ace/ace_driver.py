@@ -22,13 +22,34 @@ import logging
 import ipaddr
 from balancer.drivers.base_driver import BaseDriver
 from balancer.drivers.base_driver import is_sequence
-import openstack.common.exception
 
 
 LOG = logging.getLogger(__name__)
 
+ALGORITHMS_MAPPING = {
+    'ROUND_ROBIN': 'roundrobin',
+    'RESPONSE': 'response',
+    'LEAST_CONNECTION': 'leastconnections',
+    'LEAST_BANDWIDTH': 'leastbandwidth',
+    'LEAST_LOADED': 'leastloaded',
+    'HASH_ADDRESS': 'hash address',
+    'HASH_URL': 'hash url',
+    'HASH_COOKIE': 'hash cookie',
+    'HASH_CONTENT': 'hash content',
+    'HASH_HEADER': 'hash header',
+    'HASH_LAYER4_PAYLOAD': 'hash layer4-payload',
+}
+
 
 class AceDriver(BaseDriver):
+
+    """
+    This is the driver for Cisco ACE (cisco.com)
+    """
+
+    algorithms = ALGORITHMS_MAPPING
+    default_algorithm = ALGORITHMS_MAPPING['ROUND_ROBIN']
+
     def __init__(self,  conf,  device_ref):
         #super(AceDriver, self).__init__(conf, device_ref) ???
         url = "https://%s:%s/bin/xml_agent" % (device_ref['ip'], \
@@ -105,7 +126,7 @@ class AceDriver(BaseDriver):
         if vip_extra.get('allVLANs'):
             cmd += "global"
         else:
-            cmd += "int-" + str(hashlib.md5(vip_extra['VLAN']).hexdigest())
+            cmd += "int-" + str(md5(vip_extra['VLAN']).hexdigest())
         cmd += "\nclass " + vip['id'] + \
                "\nno nat dynamic " + nat_pool['number'] + \
                " vlan " + nat_pool['vlan']
@@ -304,7 +325,7 @@ class AceDriver(BaseDriver):
         pr_tm = ['echo tcp', 'finger',  'tcp',  'rtsp',  'http',
                  'https', 'imap',  'pop',  'sip-tcp',  'smtp',  'telnet']
         pr_cr = ['http', 'https',  'imap',  'pop', 'radius']
-        pr_rg = ['http', 'https',  'sip-tcp',  'sup-udp',  'tcp',  'udp']
+        pr_rg = ['http', 'https',  'sip-tcp',  'sip-udp',  'tcp',  'udp']
         cmd = "\nprobe " + pr_type + " " + probe['id']
         if pr_extra.get('description'):
             cmd += "\ndescription " + pr_extra['description']
@@ -499,7 +520,7 @@ class AceDriver(BaseDriver):
         if rs_extra.get('weight'):
             cmd += "\nweight " + str(rs_extra['weight'])
         if rs_extra.get('backupRS'):
-            cmd += "\nbackup-rserver " + srv_extra['backupRS']
+            cmd += "\nbackup-rserver " + rs_extra['backupRS']
             if rs_extra.get('backupRSport'):
                 cmd += " " + str(rs_extra['backupRSport'])
         if rs_extra.get('maxCon') and rs_extra.get('minCon'):
@@ -746,3 +767,12 @@ class AceDriver(BaseDriver):
         cmd = "no access-list vip-acl extended permit ip any host " + \
               vip['address']
         self.deployConfig(cmd)
+
+    def get_capabilities(self):
+        capabilities = {}
+        capabilities['algorithms'] = list(self.algorithms.keys())
+        capabilities['protocols'] = ['HTTP', 'TCP', 'HTTPS', 'RTSP', \
+                                     'SIP-TCP', 'SIP-UDP', 'UDP', \
+                                     'FTP', 'Generic', 'RDP', 'DNS', \
+                                     'RADIUS', ]
+        return capabilities
