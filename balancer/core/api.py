@@ -118,8 +118,6 @@ def update_lb(conf, tenant_id, lb_id, lb_body):
     old_lb_ref = copy.deepcopy(lb_ref)
     db_api.pack_update(lb_ref, lb_body)
     lb_ref = db_api.loadbalancer_update(conf, lb_id, lb_ref)
-    print(lb_ref['algorithm'], old_lb_ref['algorithm'])
-    print(lb_ref['protocol'], old_lb_ref['protocol'])
     if (lb_ref['algorithm'] == old_lb_ref['algorithm'] and
         lb_ref['protocol'] == old_lb_ref['protocol']):
         logger.debug("In LB %r algorithm and protocol have not changed, "
