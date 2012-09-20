@@ -42,6 +42,11 @@ Source code layout:
 
 ## Initial Setup
 
+### Make sure the following packeges are installed:
+   gcc
+   python-dev
+   libsqlite3-dev
+
 ### Create virtualenv that required for executing code and tests
 ```bash
  cd openstack-lbaas
@@ -86,12 +91,12 @@ Create file createDeviceHAProxy with the following content:
 }
 ```
 
-**Note:** ``ip`` needs to be changed to the real one! Figure out it yourself based on the output of ifconfig.
+**Note:** ``ip`` needs to be changed to the address of the box where HAProxy is located.
 
 Execute script:
 
 ```bash
-./CreateDev.sh HAProxy
+./createDevice.sh HAProxy
 ```
 
 If all is right, the information about newly created device will be returned:
@@ -104,7 +109,7 @@ Write out value for device/id, it will be used later for creating load balancer
 
 Check that device is added in DB
 ```bash
-./listDev.sh
+./listDevice.sh
 ```
 
 #### Create load balancer
@@ -113,7 +118,7 @@ Create file createLBcommandHAProxy with the following content:
 
 ```json
 {
-    "device_id": "a854586622ea4282a705e7b1ee833409",
+    "device_id": "c1dfe0c69bff49d296fc0d613417efcf",
     "name": "testLB001",
     "protocol": "HTTP",
     "transport": "TCP",
@@ -185,6 +190,8 @@ Create file createLBcommandHAProxy with the following content:
     ]
 }
 ```
+Configuration above assumes there are three web applications running on the box with HAProxy on ports 8001, 8002, 8003.
+Change node count or node addresses to whatever you actually have.
 
 Execute script:
 
@@ -192,13 +199,17 @@ Execute script:
 ./createLB.sh HAProxy
 ```
 
+This will deploy HAProxy configuration and restart HAProxy. 
+Note that configuration is added to whatever configuration has been already deployed on the box.
+In case of issues check the file /etc/haproxy/haproxy.cfg on the box with HAProxy
+
 #### Check the load balancer
 
 ```bash
-curl http://localhost:80/
+curl http://haproxy_ip:port/
 ```
 
-HAProxy should return different results upon page reload. There are 3 different pages / servers in the server farm.
+HAProxy should return page content from backend nodes.
 
 ## Developers Documentation
 
