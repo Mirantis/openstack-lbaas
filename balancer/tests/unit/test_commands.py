@@ -607,13 +607,13 @@ class TestLoadbalancer(unittest.TestCase):
 
     @mock.patch("balancer.core.commands.remove_probe_from_server_farm")
     @mock.patch("balancer.core.commands.delete_probe")
-    def test_makeDeleteProbeFromLBChain(self, mock_f1, mock_f2):
-        cmd.makeDeleteProbeFromLBChain(self.ctx, self.balancer, self.probe)
+    def test_remove_probe_from_loadbalancer(self, mock_f1, mock_f2):
+        cmd.remove_probe_from_loadbalancer(self.ctx, 'fakesf', self.probe)
         self.assertTrue(mock_f1.called, "delete_probe not called")
         self.assertTrue(mock_f2.called,
                         "remove_probe_from_server_farm not called")
         mock_f1.assert_called_once_with(self.ctx, self.probe)
-        mock_f2.assert_called_once_with(self.ctx, self.balancer.sf, self.probe)
+        mock_f2.assert_called_once_with(self.ctx, 'fakesf', self.probe)
 
     @mock.patch("balancer.core.commands.create_sticky")
     def test_add_sticky_to_loadbalancer(self, mock_func):
