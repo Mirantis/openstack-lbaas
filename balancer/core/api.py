@@ -117,11 +117,29 @@ def update_lb(conf, tenant_id, lb_id, lb_body):
     lb_ref = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     old_lb_ref = copy.deepcopy(lb_ref)
     db_api.pack_update(lb_ref, lb_body)
-    new_lb_ref = db_api.loadbalancer_update(conf, lb_id, lb_ref)
+    lb_ref = db_api.loadbalancer_update(conf, lb_id, lb_ref)
+    print(lb_ref['algorithm'], old_lb_ref['algorithm'])
+    print(lb_ref['protocol'], old_lb_ref['protocol'])
+    if (lb_ref['algorithm'] == old_lb_ref['algorithm'] and
+        lb_ref['protocol'] == old_lb_ref['protocol']):
+        logger.debug("In LB %r algorithm and protocol have not changed, "
+                     "nothing to do on the device %r.",
+                     lb_ref['id'], lb_ref['device_id'])
+        return
+    sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_ref['id'])[0]
+    if lb_ref['algorithm'] != old_lb_ref['algorithm']:
+        predictor_ref = db_api.predictor_get_by_sf_id(conf, sf_ref['id'])
+        db_api.predictor_update(conf, predictor_ref['id'],
+                                {'type': lb_ref['algorithm']})
+    vips = db_api.virtualserver_get_all_by_sf_id(conf, sf_ref['id'])
+    servers = db_api.server_get_all_by_sf_id(conf, sf_ref['id'])
+    probes = db_api.probe_get_all_by_sf_id(conf, sf_ref['id'])
+    stickies = db_api.sticky_get_all_by_sf_id(conf, sf_ref['id'])
     device_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
     with device_driver.request_context() as ctx:
         try:
-            commands.update_loadbalancer(ctx, old_lb_ref, new_lb_ref)
+            commands.update_loadbalancer(ctx, sf_ref, vips, servers, probes,
+                                         stickies)
         except Exception:
             with utils.save_and_reraise_exception():
                 db_api.loadbalancer_update(conf, lb_id,

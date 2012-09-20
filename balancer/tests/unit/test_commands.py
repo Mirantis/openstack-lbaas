@@ -565,14 +565,46 @@ class TestLoadbalancer(unittest.TestCase):
             self.assertTrue(mok.called, "This mock didn't call %s"
                     % mok._mock_name)
 
-    @mock.patch("balancer.db.api.serverfarm_get_all_by_lb_id")
+    @mock.patch("balancer.core.commands.delete_vip")
+    @mock.patch("balancer.core.commands.remove_node_from_loadbalancer")
+    @mock.patch("balancer.core.commands.remove_probe_from_loadbalancer")
+    @mock.patch("balancer.core.commands.delete_sticky")
+    @mock.patch("balancer.core.commands.delete_server_farm")
     @mock.patch("balancer.core.commands.create_server_farm")
-    def test_update_loadbalancer(self, mock_func, mock_get):
-        self.lb0 = mock.MagicMock()
-        mock_get.return_value = ['serverfarm']
-        cmd.update_loadbalancer(self.ctx, self.balancer, self.lb0)
-        self.assertTrue(mock_func.called, "function not called")
-        mock_func.assert_called_once_with(self.ctx, 'serverfarm')
+    @mock.patch("balancer.core.commands.create_vip")
+    @mock.patch("balancer.core.commands.add_node_to_loadbalancer")
+    @mock.patch("balancer.core.commands.add_probe_to_server_farm")
+    @mock.patch("balancer.core.commands.create_sticky")
+    def test_update_loadbalancer(self,
+                                 mock_create_sticky,
+                                 mock_add_probe_to_server_farm,
+                                 mock_add_node_to_loadbalancer,
+                                 mock_create_vip,
+                                 mock_create_server_farm,
+                                 mock_delete_server_farm,
+                                 mock_delete_sticky,
+                                 mock_remove_probe_from_loadbalancer,
+                                 mock_remove_node_from_loadbalancer,
+                                 mock_delete_vip):
+        sf_ref = 'fakesf'
+        vips = ['fakevip']
+        servers = ['fakeserver']
+        probes = ['fakeprobe']
+        stickies = ['fakesticky']
+        cmd.update_loadbalancer(self.ctx, sf_ref, vips, servers, probes,
+                                stickies)
+        mock_delete_vip.assert_called_once_with(self.ctx, 'fakevip')
+        mock_remove_node_from_loadbalancer.assert_called_once_with(self.ctx,
+            sf_ref, 'fakeserver')
+        mock_remove_probe_from_loadbalancer.assert_called_once_with(self.ctx,
+            sf_ref, 'fakeprobe')
+        mock_delete_sticky.assert_called_once_with(self.ctx, 'fakesticky')
+        mock_delete_server_farm.assert_called_once_with(self.ctx, sf_ref)
+        mock_create_server_farm.assert_called_once_with(self.ctx, sf_ref)
+        mock_create_vip.assert_called_once_with(self.ctx, 'fakevip', sf_ref)
+        mock_add_probe_to_server_farm.assert_called_once_with(self.ctx, sf_ref,
+            'fakeprobe')
+        mock_create_sticky.assert_called_once_with(self.ctx, 'fakesticky')
 
     @mock.patch("balancer.core.commands.create_rserver")
     @mock.patch("balancer.core.commands.add_rserver_to_server_farm")

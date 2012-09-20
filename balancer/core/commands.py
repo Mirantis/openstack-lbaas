@@ -306,11 +306,25 @@ def delete_loadbalancer(ctx, lb):
     db_api.loadbalancer_destroy(ctx.conf, lb['id'])
 
 
-def update_loadbalancer(ctx, old_bal_ref,  new_bal_ref):
-    if old_bal_ref['algorithm'] != new_bal_ref['algorithm']:
-        sf_ref = db_api.serverfarm_get_all_by_lb_id(ctx.conf,
-                                                    new_bal_ref['id'])[0]
-        create_server_farm(ctx, sf_ref)
+def update_loadbalancer(ctx, sf_ref, vips, servers, probes, stickies):
+    for vip_ref in vips:
+        delete_vip(ctx, vip_ref)
+    for server_ref in servers:
+        remove_node_from_loadbalancer(ctx, sf_ref, server_ref)
+    for probe_ref in probes:
+        remove_probe_from_loadbalancer(ctx, sf_ref, probe_ref)
+    for sticky_ref in stickies:
+        delete_sticky(ctx, sticky_ref)
+    delete_server_farm(ctx, sf_ref)
+    create_server_farm(ctx, sf_ref)
+    for vip_ref in vips:
+        create_vip(ctx, vip_ref, sf_ref)
+    for server_ref in servers:
+        add_node_to_loadbalancer(ctx, sf_ref, server_ref)
+    for probe_ref in probes:
+        add_probe_to_server_farm(ctx, sf_ref, probe_ref)
+    for sticky_ref in stickies:
+        create_sticky(ctx, sticky_ref)
 
 
 def add_node_to_loadbalancer(ctx, sf, rserver):
