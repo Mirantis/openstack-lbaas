@@ -19,12 +19,15 @@ device_fake = {'id': 'fake1',
 
 conf = []
 
-
-def init_ssh_mock():
-    mock_for_ssh = Mock()
+def init_mock_channel():
     mock_channel = Mock()
     mock_channel.channel.recv_exit_status.return_value = 0
     mock_channel.read.return_value = "fake"
+    return mock_channel
+
+def init_ssh_mock():
+    mock_for_ssh = Mock()
+    mock_channel = init_mock_channel()
     mock_for_ssh.exec_command.return_value = \
          [mock_channel, mock_channel, mock_channel]
     return mock_for_ssh
@@ -97,39 +100,82 @@ def get_fake_Haproxy_rserver(id_):
 
 class TestHaproxyDriverRemoteService(unittest.TestCase):
     def setUp(self):
+        self.ssh = init_ssh_mock()
         remote_ctrl = RemoteControl.RemoteControl(device_fake)
-        remote_ctrl._ssh = init_ssh_mock()
+        remote_ctrl._ssh = self.ssh
         self.remote_service = RemoteControl.RemoteService(remote_ctrl)
 
     def test_start_service(self):
         self.remote_service.start()
+        self.ssh.exec_command.assert_called_once_with('sudo service haproxy start')
 
     def test_stop_service(self):
         self.remote_service.stop()
+        self.ssh.exec_command.assert_called_once_with('sudo service haproxy stop')
 
     def test_restart_service(self):
         self.remote_service.restart()
+        self.ssh.exec_command.assert_called_once_with('sudo haproxy'
+                              ' -f /etc/haproxy/haproxy.cfg'
+                              ' -p /var/run/haproxy.pid'
+                              ' -sf $(cat /var/run/haproxy.pid)')
 
 
 class TestHaproxyDriverRemoteInterface(unittest.TestCase):
     def setUp(self):
+        self.ssh = init_ssh_mock()
         self.frontend = get_fake_HaproxyFrontend('test')
         remote_ctrl = RemoteControl.RemoteControl(device_fake)
-        remote_ctrl._ssh = init_ssh_mock()
+        remote_ctrl._ssh = self.ssh
         self.remote_interface = RemoteControl.RemoteInterface(device_fake,
                                                               remote_ctrl)
 
     def test_add_ip(self):
+        # ip wasn't configured on the interface
         self.assertTrue(self.remote_interface.add_ip(self.frontend))
+        self.assertEqual(self.ssh.exec_command.call_count, 2)
+        self.assertEqual(self.ssh.exec_command.call_args_list[0][0][0],
+                         'ip addr show dev eth0')
+        self.assertEqual(self.ssh.exec_command.call_args_list[1][0][0],
+                         'sudo ip addr add 1.1.1.1/32 dev eth0')
+
+        # ip was already configured on the interface
+        self.ssh.reset_mock()
+        mock_channel = init_mock_channel()
+        mock_channel.read.return_value = "1.1.1.1"
+        self.ssh.exec_command.return_value = [mock_channel, mock_channel,
+                                              mock_channel]
+        self.assertTrue(self.remote_interface.add_ip(self.frontend))
+        self.assertEqual(self.ssh.exec_command.call_count, 1)
+        self.assertEqual(self.ssh.exec_command.call_args[0][0],
+                         'ip addr show dev eth0')
 
     def test_del_ip(self):
+        # ip wasn't configured on the interface
         self.assertTrue(self.remote_interface.del_ip(self.frontend))
+        self.assertEqual(self.ssh.exec_command.call_count, 1)
+        self.assertEqual(self.ssh.exec_command.call_args[0][0],
+                         'ip addr show dev eth0')
+
+        # ip was already configured on the interface
+        self.ssh.reset_mock()
+        mock_channel = init_mock_channel()
+        mock_channel.read.return_value = "1.1.1.1"
+        self.ssh.exec_command.return_value = [mock_channel, mock_channel,
+                                              mock_channel]
+        self.assertTrue(self.remote_interface.del_ip(self.frontend))
+        self.assertEqual(self.ssh.exec_command.call_count, 2)
+        self.assertEqual(self.ssh.exec_command.call_args_list[0][0][0],
+                         'ip addr show dev eth0')
+        self.assertEqual(self.ssh.exec_command.call_args_list[1][0][0],
+                         'sudo ip addr del 1.1.1.1/32 dev eth0')
 
 
 class TestHaproxyDriverRemoteSocketOperation(unittest.TestCase):
     def setUp(self):
         remote_ctrl = RemoteControl.RemoteControl(device_fake)
-        remote_ctrl._ssh = init_ssh_mock()
+        self.ssh = init_ssh_mock()
+        remote_ctrl._ssh = self.ssh
         self.remote_socket = RemoteControl.RemoteSocketOperation(device_fake,
                                                                  remote_ctrl)
         self.driver = init_driver_with_mock()
