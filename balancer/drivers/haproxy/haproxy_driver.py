@@ -185,7 +185,6 @@ class HaproxyDriver(base_driver.BaseDriver):
         backend = HaproxyBackend(serverfarm['id'])
         LOG.debug('Create VIP %s' % backend.name)
         self.remote_interface.add_ip(frontend)
-
         self.config_manager.add_frontend(frontend,
                                          backend)
 
