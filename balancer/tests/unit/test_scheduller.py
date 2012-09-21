@@ -7,17 +7,18 @@ from balancer.common import cfg
 
 
 def fake_filter(conf, lb_ref, dev_ref):
-    return True if ord(dev_ref) > 98 else False
+    return True if dev_ref['id'] > 2 else False
 
 
 def fake_cost(conf, lb_ref, dev_ref):
-    return 1. * ord(dev_ref)
+    return 1. * dev_ref['id']
 
 
 class TestScheduler(unittest.TestCase):
     def setUp(self):
         self.conf = mock.MagicMock()
-        self.lb_ref = mock.Mock()
+        self.lb_ref = mock.MagicMock()
+        self.devices = [{'id': 1}, {'id': 2}, {'id': 3}, {'id': 4}]
         self.attrs = {'device_filters':
                  ['%s.fake_filter' % __name__],
                  'device_cost_functions':
@@ -27,23 +28,43 @@ class TestScheduler(unittest.TestCase):
 
     @mock.patch('balancer.db.api.device_get_all')
     def test_scheduler_no_proper_devs(self, dev_get_all):
-        dev_get_all.return_value = ['a', 'b']
+        dev_get_all.return_value = self.devices[:2]
         with self.assertRaises(exp.NoValidDevice):
-            scheduler.schedule_loadbalancer(self.conf, self.lb_ref)
+            scheduler.schedule(self.conf, self.lb_ref)
             self.assertTrue(dev_get_all.called)
 
     @mock.patch('balancer.db.api.device_get_all')
     def test_scheduler_with_proper_devs(self, dev_get_all):
-        dev_get_all.return_value = ['a', 'b', 'c', 'd']
-        res = scheduler.schedule_loadbalancer(self.conf, self.lb_ref)
+        dev_get_all.return_value = self.devices
+        res = scheduler.schedule(self.conf, self.lb_ref)
         self.assertTrue(dev_get_all.called)
-        self.assertEqual('c', res)
+        self.assertEqual({'id': 3}, res)
+
+    @mock.patch('balancer.db.api.device_get_all')
+    @mock.patch('balancer.db.api.device_get')
+    def test_scheduler_reschedule_former(self, device_get, device_get_all):
+        device_get.return_value = {'id': 3}
+        device_get_all.return_value = self.devices
+        device = scheduler.reschedule(self.conf, self.lb_ref)
+        self.assertTrue(device_get.called)
+        self.assertFalse(device_get_all.called)
+        self.assertEqual({'id': 3}, device)
+
+    @mock.patch('balancer.db.api.device_get_all')
+    @mock.patch('balancer.db.api.device_get')
+    def test_scheduler_reschedule_novel(self, device_get, device_get_all):
+        device_get.return_value = {'id': 1}
+        device_get_all.return_value = self.devices
+        device = scheduler.reschedule(self.conf, self.lb_ref)
+        self.assertTrue(device_get.called)
+        self.assertTrue(device_get_all.called)
+        self.assertEqual({'id': 3}, device)
 
     @mock.patch('balancer.db.api.device_get_all')
     def test_scheduler_without_devices(self, dev_get_all):
         dev_get_all.return_value = []
         with self.assertRaises(exp.DeviceNotFound):
-            scheduler.schedule_loadbalancer(self.conf, self.lb_ref)
+            scheduler.schedule(self.conf, self.lb_ref)
             self.assertTrue(dev_get_all.called)
 
     @mock.patch('balancer.db.api.device_get_all')
@@ -53,10 +74,10 @@ class TestScheduler(unittest.TestCase):
         conf._oparser.parse_args.return_value = mock.Mock(), None
         conf._oparser.parse_args.return_value[0].__dict__ = self.attrs
         conf()
-        dev_get_all.return_value = ['a', 'b', 'c', 'd']
-        res = scheduler.schedule_loadbalancer(conf, self.lb_ref)
+        dev_get_all.return_value = self.devices
+        res = scheduler.schedule(conf, self.lb_ref)
         self.assertTrue(dev_get_all.called)
-        self.assertEqual('c', res)
+        self.assertEqual({'id': 3}, res)
 
 
 class TestFilterCapabilities(unittest.TestCase):

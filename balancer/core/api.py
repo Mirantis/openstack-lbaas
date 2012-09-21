@@ -93,7 +93,7 @@ def create_lb(conf, params):
     vips = params.pop('virtualIps', [])
     values = db_api.loadbalancer_pack_extra(params)
     lb_ref = db_api.loadbalancer_create(conf, values)
-    device = scheduler.schedule_loadbalancer(conf, lb_ref)
+    device = scheduler.schedule(conf, lb_ref)
     device_driver = drivers.get_device_driver(conf, device['id'])
     lb = db_api.unpack_extra(lb_ref)
     lb['device_id'] = device['id']

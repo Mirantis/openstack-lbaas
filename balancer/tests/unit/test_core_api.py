@@ -27,8 +27,7 @@ class TestDecorators(unittest.TestCase):
 
 class TestBalancer(unittest.TestCase):
     patch_balancer = mock.patch("balancer.loadbalancers.vserver.Balancer")
-    patch_scheduler = mock.patch(
-            "balancer.core.scheduler.schedule_loadbalancer")
+    patch_scheduler = mock.patch("balancer.core.scheduler.schedule")
     patch_logger = mock.patch("logging.getLogger")
 
     def setUp(self):

@@ -31,12 +31,9 @@ bind_opts = [
 ]
 
 
-def schedule_loadbalancer(conf, lb_ref):
+def _process_config(conf):
     conf.register_opts(bind_opts)
     device_filters = [utils.import_class(foo) for foo in conf.device_filters]
-    all_devices = db_api.device_get_all(conf)
-    if not all_devices:
-        raise exp.DeviceNotFound
     cost_functions = []
     for fullname in conf.device_cost_functions:
         conf_name = 'device_cost_%s_weight' % fullname.rpartition('.')[-1]
@@ -46,19 +43,53 @@ def schedule_loadbalancer(conf, lb_ref):
             conf.register_opt(cfg.FloatOpt(conf_name, default=1.))
             weight = getattr(conf, conf_name)
         cost_functions.append((utils.import_class(fullname), weight))
-    filtered_devices = [dev for dev in all_devices
-                        if all(filt(conf, lb_ref, dev)
-                        for filt in device_filters)]
+    return device_filters, cost_functions
+
+
+def _filter_devices(conf, lb_ref, devices, filters):
+    filtered_devices = [device_ref for device_ref in devices
+                            if all(filter(conf, lb_ref, device_ref)
+                                   for filter in filters)]
     if not filtered_devices:
         raise exp.NoValidDevice
-    costed = []
-    for dev in filtered_devices:
-        w = 0.
-        for cost_func, weight in cost_functions:
-            w += weight * cost_func(conf, lb_ref, dev)
-        costed.append((w, dev))
-    costed.sort()
-    return costed[0][1]
+    return filtered_devices
+
+
+def _weight_devices(conf, lb_ref, devices, cost_functions):
+    weighted = []
+    for device_ref in devices:
+        weight = 0.0
+        for cost_func, cost_weight in cost_functions:
+            weight += cost_weight * cost_func(conf, lb_ref, device_ref)
+        weighted.append((weight, device_ref))
+    weighted.sort()
+    return weighted
+
+
+def schedule(conf, lb_ref):
+    filters, cost_functions = _process_config(conf)
+    devices = db_api.device_get_all(conf)
+    if not devices:
+        raise exp.DeviceNotFound
+    filtered = _filter_devices(conf, lb_ref, devices, filters)
+    weighted = _weight_devices(conf, lb_ref, filtered, cost_functions)
+    return weighted[0][1]
+
+
+def reschedule(conf, lb_ref):
+    filters, cost_functions = _process_config(conf)
+    device_ref = db_api.device_get(conf, lb_ref['device_id'])
+    try:
+        _filter_devices(conf, lb_ref, [device_ref], filters)
+    except exp.NoValidDevice:
+        devices = db_api.device_get_all(conf)
+        devices = [dev_ref for dev_ref in devices
+                       if dev_ref['id'] != device_ref['id']]
+        filtered = _filter_devices(conf, lb_ref, devices, filters)
+        weighted = _weight_devices(conf, lb_ref, filtered, cost_functions)
+        return weighted[0][1]
+    else:
+        return device_ref
 
 
 def filter_capabilities(conf, lb_ref, dev_ref):
