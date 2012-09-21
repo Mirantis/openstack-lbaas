@@ -44,7 +44,7 @@ ALGORITHMS_MAPPING = {
 class AceDriver(BaseDriver):
 
     """
-    This is the driver for Cisco ACE loadbalancer (http://haproxy.1wt.eu/)
+    This is the driver for Cisco ACE (cisco.com)
     """
 
     algorithms = ALGORITHMS_MAPPING
