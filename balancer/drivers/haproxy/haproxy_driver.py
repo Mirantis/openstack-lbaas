@@ -71,8 +71,7 @@ class HaproxyDriver(base_driver.BaseDriver):
                          probe_type)
             return
 
-        backend = HaproxyBackend()
-        backend.name = serverfarm['id']
+        backend = HaproxyBackend(serverfarm['id'])
 
         new_lines = []
         if probe_type == 'http':
@@ -104,8 +103,7 @@ class HaproxyDriver(base_driver.BaseDriver):
         :param probe: Probe \
         - see :py:class:`balancer.db.models.Probe`
         """
-        backend = HaproxyBackend()
-        backend.name = serverfarm['id']
+        backend = HaproxyBackend(serverfarm['id'])
 
         probe_type = probe['type'].lower()
         del_lines = []
@@ -145,21 +143,12 @@ class HaproxyDriver(base_driver.BaseDriver):
         :param rserver: Server \
         - see :py:class:`balancer.db.models.Server`
         """
-        haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['id']
-        haproxy_rserver = HaproxyRserver()
-        haproxy_rserver.name = rserver['id']
-        haproxy_rserver.weight = rserver.get('weight') or 1
-        haproxy_rserver.address = rserver['address']
-        haproxy_rserver.port = rserver.get('port') or 0
-        if rserver.get('extra'):
-            haproxy_rserver.maxconn = rserver['extra'].get('maxCon') or 10000
-        #Modify remote config file, check and restart remote haproxy
+        haproxy_rserver = HaproxyRserver(rserver)
         LOG.debug('Creating rserver %s in the '
                      'backend block %s' %
-                     (haproxy_rserver.name, haproxy_serverfarm.name))
+                     (haproxy_rserver.name, serverfarm['id']))
 
-        self.config_manager.add_rserver(haproxy_serverfarm.name,
+        self.config_manager.add_rserver(serverfarm['id'],
                                         haproxy_rserver)
 
     def delete_real_server_from_server_farm(self, serverfarm, rserver):
@@ -171,16 +160,13 @@ class HaproxyDriver(base_driver.BaseDriver):
         :param rserver: Server \
         - see :py:class:`balancer.db.models.Server`
         """
-        haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['id']
-        haproxy_rserver = HaproxyRserver()
-        haproxy_rserver.name = rserver['id']
+        haproxy_rserver = HaproxyRserver(rserver)
         #Modify remote config file, check and restart remote haproxy
         LOG.debug('Deleting rserver %s in the '
                      'backend block %s' %
-                     (haproxy_rserver.name, haproxy_serverfarm.name))
+                     (haproxy_rserver.name, serverfarm['id']))
 
-        self.config_manager.delete_rserver(haproxy_serverfarm.name,
+        self.config_manager.delete_rserver(serverfarm['id'],
                                            haproxy_rserver.name)
 
     def create_virtual_ip(self, virtualserver, serverfarm):
@@ -194,18 +180,14 @@ class HaproxyDriver(base_driver.BaseDriver):
         """
         if not bool(virtualserver['id']):
             LOG.error('Virtualserver name is empty')
-            return 'VIRTUALSERVER NAME ERROR'
-        haproxy_virtualserver = HaproxyFronted()
-        haproxy_virtualserver.name = virtualserver['id']
-        haproxy_virtualserver.bind_address = virtualserver['address']
-        haproxy_virtualserver.bind_port = virtualserver.get('port') or 0
-        haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['id']
-        LOG.debug('Create VIP %s' % haproxy_serverfarm.name)
-        self.remote_interface.add_ip(haproxy_virtualserver)
+            return
+        frontend = HaproxyFronted(virtualserver)
+        backend = HaproxyBackend(serverfarm['id'])
+        LOG.debug('Create VIP %s' % backend.name)
+        self.remote_interface.add_ip(frontend)
 
-        self.config_manager.add_frontend(haproxy_virtualserver,
-                                         haproxy_serverfarm)
+        self.config_manager.add_frontend(frontend,
+                                         backend)
 
     def delete_virtual_ip(self, virtualserver):
         """
@@ -217,36 +199,37 @@ class HaproxyDriver(base_driver.BaseDriver):
         LOG.debug('Delete VIP')
         if not bool(virtualserver['id']):
             LOG.error('Virtualserver name is empty')
-            return 'VIRTUALSERVER NAME ERROR'
-        haproxy_virtualserver = HaproxyFronted()
-        haproxy_virtualserver.name = virtualserver['id']
-        haproxy_virtualserver.bind_address = virtualserver['address']
+            return
+        frontend = HaproxyFronted(virtualserver)
         #Check ip for using in the another frontend
         if not (self.config_manager.
-                find_string_in_any_block(haproxy_virtualserver.bind_address,
+                find_string_in_any_block(frontend.bind_address,
                                          'frontend')):
             LOG.debug('ip %s is not used in any '
                          'frontend, deleting it from remote interface' %
-                         haproxy_virtualserver.bind_address)
-            self.remote_interface.del_ip(haproxy_virtualserver)
-        self.config_manager.delete_block(haproxy_virtualserver)
+                         frontend.bind_address)
+            self.remote_interface.del_ip(frontend)
+        self.config_manager.delete_block(frontend)
 
-    def get_statistics(self, serverfarm):
+    def get_statistics(self, serverfarm, rserver):
         # TODO: Need to check work of this function with real device
-        out = self.remote_socket.get_statistics(self.remote_socket,\
-                                    serverfarm['id'])
+        out = self.remote_socket.get_statistics(serverfarm['id'],
+                                                rserver['id'])
         statistics = {}
         if out:
             status_line = out.split(",")
             stat_count = len(status_line)
             statistics['weight'] = status_line[18] if stat_count > 18 else ''
             statistics['state'] = status_line[17] if stat_count > 17 else ''
-            statistics['connCurrent'] = [4] if stat_count > 4 else ''
-            statistics['connTotal'] = [7] if stat_count > 7 else ''
-            statistics['connFail'] = [13] if stat_count > 13 else ''
-            statistics['connMax'] = [5] if stat_count > 5 else ''
-            statistics['connRateLimit'] = [34] if stat_count > 34 else ''
-            statistics['bandwRateLimit'] = [35] if stat_count > 35 else ''
+            statistics['connCurrent'] = (status_line[4] if stat_count > 4
+                                         else '')
+            statistics['connTotal'] = status_line[7] if stat_count > 7 else ''
+            statistics['connFail'] = status_line[13] if stat_count > 13 else ''
+            statistics['connMax'] = status_line[5] if stat_count > 5 else ''
+            statistics['connRateLimit'] = (status_line[34] if stat_count > 34
+                                           else '')
+            statistics['bandwRateLimit'] = (status_line[35] if stat_count > 35
+                                            else '')
         return statistics
 
     def suspend_real_server(self, serverfarm, rserver):
@@ -272,10 +255,8 @@ class HaproxyDriver(base_driver.BaseDriver):
         self._operationWithRServer(serverfarm, rserver, 'activate')
 
     def _operationWithRServer(self, serverfarm, rserver, type_of_operation):
-        haproxy_rserver = HaproxyRserver()
-        haproxy_rserver.name = rserver['id']
-        haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['id']
+        haproxy_rserver = HaproxyRserver(rserver)
+        haproxy_serverfarm = HaproxyBackend(serverfarm['id'])
 
         if type_of_operation == 'suspend':
             self.config_manager.enable_rserver(haproxy_serverfarm.name,
@@ -297,9 +278,8 @@ class HaproxyDriver(base_driver.BaseDriver):
         """
         if not bool(serverfarm['id']):
             LOG.error('Serverfarm name is empty')
-            return 'SERVERFARM FARM NAME ERROR'
-        haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['id']
+            return
+        haproxy_serverfarm = HaproxyBackend(serverfarm['id'])
 
         if isinstance(predictor, list):
             predictor = predictor[0]
@@ -321,9 +301,8 @@ class HaproxyDriver(base_driver.BaseDriver):
         """
         if not bool(serverfarm['id']):
             LOG.error('Serverfarm name is empty')
-            return 'SERVER FARM NAME ERROR'
-        haproxy_serverfarm = HaproxyBackend()
-        haproxy_serverfarm.name = serverfarm['id']
+            return
+        haproxy_serverfarm = HaproxyBackend(serverfarm['id'])
 
         self.config_manager.delete_block(haproxy_serverfarm)
 

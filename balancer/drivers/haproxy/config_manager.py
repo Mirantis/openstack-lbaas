@@ -72,6 +72,8 @@ class ConfigManager(object):
                               server.port, server.check,
                               server.maxconn, server.inter,
                               server.rise, server.fall))
+        if server.disabled:
+            server_line += ' disabled'
         self.add_lines_to_block(HaproxyBackend(backend_name), (server_line,))
 
     def delete_rserver(self, backend_name, server_name):
@@ -92,14 +94,14 @@ class ConfigManager(object):
         self._fetch_config()
         for block in self.config:
             if 'backend' in block and backend_name in block:
-                for line in self.comfig[block]:
+                for line in self.config[block]:
                     if 'server' in line and server_name in line:
                         if not enable:
                             new_line = line + ' disabled'
                         else:
-                            new_lline = line.replace(' disabled', '')
-                        self.config[block].remove(line)
-                        self.config[block].append(new_line)
+                            new_line = line.replace(' disabled', '')
+                        self.config[block][self.config[block].index(line)] =\
+                            new_line
         self._apply_config()
 
     def add_frontend(self, fronted, backend=None):
@@ -205,10 +207,10 @@ class ConfigManager(object):
         for line in (self.config.get('defaults') or []):
             config_file.write(line + '\n')
 
-        for block in self.config:
+        for block in sorted(self.config):
             if block != 'global' and block != 'defaults':
                 config_file.write('%s\n' % block)
-                for line in self.config[block]:
+                for line in sorted(self.config[block]):
                     config_file.write('%s\n' % line)
 
         config_file.close()
@@ -233,12 +235,12 @@ class HaproxyConfigBlock(object):
 
 
 class HaproxyFronted(HaproxyConfigBlock):
-    def __init__(self, name=''):
-        super(HaproxyFronted, self).__init__(name, 'frontend')
-        self.bind_address = ''
-        self.bind_port = ''
+    def __init__(self, vip_ref):
+        super(HaproxyFronted, self).__init__(vip_ref['id'], 'frontend')
+        self.bind_address = vip_ref['address']
+        self.bind_port = vip_ref['port']
         self.default_backend = ''
-        self.mode = 'http'
+        self.mode = vip_ref.get('extra', {}).get('protocol', 'http')
 
 
 class HaproxyBackend(HaproxyConfigBlock):
@@ -256,28 +258,32 @@ class HaproxyListen(HaproxyConfigBlock):
 
 
 class HaproxyRserver():
-    def __init__(self, name=''):
-        self.name = name
-        self.address = ''
+    def __init__(self, rserver_ref):
+        self.name = rserver_ref['id']
+        self.address = rserver_ref.get('address', '')
         self.check = 'check'
-        self.cookie = ''
-        self.disabled = False
-        self.error_limit = 10
-        self.fall = '3'
-        self.id = ''
-        self.inter = 2000
-        self.fastinter = 2000
-        self.downinter = 2000
-        self.maxconn = 32
-        self.minconn = 0
-        self.observe = ''
-        self.on_error = ''
-        self.port = ''
-        self.redir = ''
-        self.rise = '2'
-        self.slowstart = 0
-        self.source_addres = ''
-        self.source_min_port = ''
-        self.source_max_port = ''
-        self.track = ''
-        self.weight = 1
+        self.cookie = rserver_ref.get('extra', {}).get('cookie', '')
+        self.disabled =\
+            rserver_ref.get('condition', 'enabled').lower() != 'enabled'
+        self.error_limit = rserver_ref.get('extra', {}).get('error_limit', 10)
+        self.fall = rserver_ref.get('extra', {}).get('fall', 3)
+        self.id = rserver_ref.get('extra', {}).get('id', '')
+        self.inter = rserver_ref.get('extra', {}).get('inter', 2000)
+        self.fastinter = rserver_ref.get('extra', {}).get('fastinter', 2000)
+        self.downinter = rserver_ref.get('extra', {}).get('downinter', 2000)
+        self.maxconn = rserver_ref.get('extra', {}).get('maxconn', 32)
+        self.minconn = rserver_ref.get('extra', {}).get('minconn', 0)
+        self.observe = rserver_ref.get('extra', {}).get('observe', '')
+        self.on_error = rserver_ref.get('extra', {}).get('on_error', '')
+        self.port = rserver_ref.get('port', '')
+        self.redir = rserver_ref.get('extra', {}).get('redir', '')
+        self.rise = rserver_ref.get('extra', {}).get('rise', 2)
+        self.slowstart = rserver_ref.get('extra', {}).get('slowstart', 0)
+        self.source_addres = rserver_ref.get('extra',
+                                             {}).get('source_addres', '')
+        self.source_min_port = rserver_ref.get('extra',
+                                               {}).get('source_min_port', '')
+        self.source_max_port = rserver_ref.get('extra',
+                                               {}).get('source_max_port', '')
+        self.track = rserver_ref.get('extra', {}).get('track', '')
+        self.weight = rserver_ref.get('extra', {}).get('weight', 1)
