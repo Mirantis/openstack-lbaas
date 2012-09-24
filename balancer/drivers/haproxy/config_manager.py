@@ -72,6 +72,8 @@ class ConfigManager(object):
                               server.port, server.check,
                               server.maxconn, server.inter,
                               server.rise, server.fall))
+        if server.disabled:
+            server_line += ' disabled'
         self.add_lines_to_block(HaproxyBackend(backend_name), (server_line,))
 
     def delete_rserver(self, backend_name, server_name):

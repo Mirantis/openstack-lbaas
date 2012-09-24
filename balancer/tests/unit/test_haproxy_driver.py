@@ -388,6 +388,10 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
         self.driver.add_real_server_to_server_farm(sf, rs)
         self.check_line_on_pos('\tserver test_server3 1.1.1.3:23 check maxconn'
                                ' 2000 inter 100 rise 3 fall 4', 28)
+        rs['condition'] = 'disabled'
+        self.driver.add_real_server_to_server_farm(sf, rs)
+        self.check_line_on_pos('\tserver test_server3 1.1.1.3:23 check maxconn'
+                               ' 2000 inter 100 rise 3 fall 4 disabled', 29)
 
     def test_delete_real_server_from_server_farm(self):
         sf = get_fake_server_farm('test_backend1', {})
@@ -500,6 +504,15 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
         self.ssh.exec_command.assert_called_once_with(
                         'haproxy -c -f /tmp/haproxy.cfg.remote')
         self.assertTrue(self.ssh.close.called)
+
+    def test_get_capabilities(self):
+        capabilities = self.driver.get_capabilities()
+        self.assertEqual(capabilities, {'algorithms': ['STATIC_RR',
+                                                       'ROUND_ROBIN',
+                                                       'HASH_SOURCE',
+                                                       'LEAST_CONNECTION',
+                                                       'HASH_URI'],
+                                        'protocols': ['HTTP', 'TCP']})
 
 if __name__ == "__main__":
     unittest.main()
