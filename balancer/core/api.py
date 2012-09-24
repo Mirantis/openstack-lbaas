@@ -129,7 +129,14 @@ def update_lb(conf, tenant_id, lb_id, lb_body):
         predictor_ref = db_api.predictor_get_by_sf_id(conf, sf_ref['id'])
         db_api.predictor_update(conf, predictor_ref['id'],
                                 {'type': lb_ref['algorithm']})
+
     vips = db_api.virtualserver_get_all_by_sf_id(conf, sf_ref['id'])
+    if lb_ref['protocol'] != old_lb_ref['protocol']:
+        vip_update_values = {'extra': {'protocol': lb_ref['protocol']}}
+        for vip in vips:
+            db_api.pack_update(vip, vip_update_values)
+            db_api.virtualserver_update(conf, vip['id'], vip)
+
     servers = db_api.server_get_all_by_sf_id(conf, sf_ref['id'])
     probes = db_api.probe_get_all_by_sf_id(conf, sf_ref['id'])
     stickies = db_api.sticky_get_all_by_sf_id(conf, sf_ref['id'])

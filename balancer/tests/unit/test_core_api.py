@@ -148,6 +148,7 @@ class TestBalancer(unittest.TestCase):
     @mock.patch("balancer.db.api.predictor_get_by_sf_id")
     @mock.patch("balancer.db.api.predictor_update")
     @mock.patch("balancer.db.api.virtualserver_get_all_by_sf_id")
+    @mock.patch("balancer.db.api.virtualserver_update")
     @mock.patch("balancer.db.api.server_get_all_by_sf_id")
     @mock.patch("balancer.db.api.probe_get_all_by_sf_id")
     @mock.patch("balancer.db.api.sticky_get_all_by_sf_id")
@@ -159,13 +160,14 @@ class TestBalancer(unittest.TestCase):
                        mock_sticky_get_all_by_sf_id,
                        mock_probe_get_all_by_sf_id,
                        mock_server_get_all_by_sf_id,
+                       mock_virtualserver_update,
                        mock_virtualserver_get_all_by_sf_id,
                        mock_predictor_update,
                        mock_predictor_get_by_sf_id,
                        mock_serverfarm_get_all_by_lb_id,
                        mock_loadbalancer_update,
                        mock_loadbalancer_get):
-        lb_body = {'algorithm': 'FAKE_ALGO1'}
+        lb_body = {'algorithm': 'FAKE_ALGO1', 'protocol': 'FAKE_PROTO1'}
         mock_loadbalancer_get.return_value = {
             'id': self.lb_id,
             'device_id': 'fakedeviceid',
@@ -178,13 +180,14 @@ class TestBalancer(unittest.TestCase):
             'device_id': 'fakedeviceid',
             'name': 'fakename',
             'algorithm': 'FAKE_ALGO1',
-            'protocol': 'FAKE_PROTO0',
+            'protocol': 'FAKE_PROTO1',
         }
         sf_ref = {'id': 'fakesfid'}
         mock_serverfarm_get_all_by_lb_id.return_value = [sf_ref]
         predictor_ref = {'id': 'fakepredid'}
         mock_predictor_get_by_sf_id.return_value = predictor_ref
-        mock_vips = mock_virtualserver_get_all_by_sf_id.return_value
+        vip_ref = {'id': 'fakevipid', 'extra': {'protocol': 'FAKE_PROTO0'}}
+        mock_virtualserver_get_all_by_sf_id.return_value = [vip_ref]
         mock_servers = mock_server_get_all_by_sf_id.return_value
         mock_probes = mock_probe_get_all_by_sf_id.return_value
         mock_stickies = mock_sticky_get_all_by_sf_id.return_value
@@ -199,8 +202,12 @@ class TestBalancer(unittest.TestCase):
                                                             sf_ref['id'])
         mock_predictor_update.assert_called_once_with(self.conf,
             predictor_ref['id'], {'type': 'FAKE_ALGO1'})
-        for mock_func in [mock_virtualserver_get_all_by_sf_id,
-                          mock_server_get_all_by_sf_id,
+        mock_virtualserver_get_all_by_sf_id.assert_called_once_with(self.conf,
+                                                            sf_ref['id'])
+        mock_virtualserver_update.assert_called_once_with(self.conf,
+            vip_ref['id'], {'id': 'fakevipid',
+                            'extra': {'protocol': 'FAKE_PROTO1'}})
+        for mock_func in [mock_server_get_all_by_sf_id,
                           mock_probe_get_all_by_sf_id,
                           mock_sticky_get_all_by_sf_id]:
             mock_func.assert_called_once_with(self.conf, sf_ref['id'])
@@ -208,7 +215,7 @@ class TestBalancer(unittest.TestCase):
                                                        lb_ref['device_id'])
         with mock_device_driver.request_context() as ctx:
             mock_update_loadbalancer.assert_called_once_with(ctx, sf_ref,
-                mock_vips, mock_servers, mock_probes, mock_stickies)
+                [vip_ref], mock_servers, mock_probes, mock_stickies)
         mock_loadbalancer_update.assert_has_calls([
             mock.call(self.conf, self.lb_id, lb_ref),
             mock.call(self.conf, self.lb_id, {'status': 'ACTIVE'}),
