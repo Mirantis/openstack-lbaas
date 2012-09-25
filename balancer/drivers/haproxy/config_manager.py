@@ -262,31 +262,29 @@ class HaproxyListen(HaproxyConfigBlock):
 
 class HaproxyRserver():
     def __init__(self, rserver_ref):
+        extra_params = rserver_ref.get('extra', {})
         self.name = rserver_ref['id']
         self.address = rserver_ref.get('address', '')
         self.check = 'check'
         self.cookie = rserver_ref.get('extra', {}).get('cookie', '')
         self.disabled =\
-            rserver_ref.get('condition', 'enabled').lower() != 'enabled'
-        self.error_limit = rserver_ref.get('extra', {}).get('error_limit', 10)
-        self.fall = rserver_ref.get('extra', {}).get('fall', 3)
-        self.id = rserver_ref.get('extra', {}).get('id', '')
-        self.inter = rserver_ref.get('extra', {}).get('inter', 2000)
-        self.fastinter = rserver_ref.get('extra', {}).get('fastinter', 2000)
-        self.downinter = rserver_ref.get('extra', {}).get('downinter', 2000)
-        self.maxconn = rserver_ref.get('extra', {}).get('maxconn', 32)
-        self.minconn = rserver_ref.get('extra', {}).get('minconn', 0)
-        self.observe = rserver_ref.get('extra', {}).get('observe', '')
-        self.on_error = rserver_ref.get('extra', {}).get('on_error', '')
+            extra_params.get('condition', 'enabled').lower() != 'enabled'
+        self.error_limit = extra_params.get('error_limit', 10)
+        self.fall = extra_params.get('fall', 3)
+        self.id = extra_params.get('id', '')
+        self.inter = extra_params.get('inter', 2000)
+        self.fastinter = extra_params.get('fastinter', 2000)
+        self.downinter = extra_params.get('downinter', 2000)
+        self.maxconn = extra_params.get('maxconn', 32)
+        self.minconn = extra_params.get('minconn', 0)
+        self.observe = extra_params.get('observe', '')
+        self.on_error = extra_params.get('on_error', '')
         self.port = rserver_ref.get('port', '')
-        self.redir = rserver_ref.get('extra', {}).get('redir', '')
-        self.rise = rserver_ref.get('extra', {}).get('rise', 2)
-        self.slowstart = rserver_ref.get('extra', {}).get('slowstart', 0)
-        self.source_addres = rserver_ref.get('extra',
-                                             {}).get('source_addres', '')
-        self.source_min_port = rserver_ref.get('extra',
-                                               {}).get('source_min_port', '')
-        self.source_max_port = rserver_ref.get('extra',
-                                               {}).get('source_max_port', '')
-        self.track = rserver_ref.get('extra', {}).get('track', '')
-        self.weight = rserver_ref.get('extra', {}).get('weight', 1)
+        self.redir = extra_params.get('redir', '')
+        self.rise = extra_params.get('rise', 2)
+        self.slowstart = extra_params.get('slowstart', 0)
+        self.source_addres = extra_params.get('source_addres', '')
+        self.source_min_port = extra_params.get('source_min_port', '')
+        self.source_max_port = extra_params.get('source_max_port', '')
+        self.track = extra_params.get('track', '')
+        self.weight = extra_params.get('weight', 1)
