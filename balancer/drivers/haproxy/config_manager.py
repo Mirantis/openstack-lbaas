@@ -190,6 +190,9 @@ class ConfigManager(object):
                 elif line.find('frontend') == 0:
                     cur_block = line
                     self.config[cur_block] = []
+                elif cur_block == '':
+                    cur_block = 'comments'
+                    self.config[cur_block] = [line]
                 else:
                     self.config[cur_block].append(line)
 
@@ -200,15 +203,15 @@ class ConfigManager(object):
                   self.local_config_path)
         config_file = open(self.local_config_path, 'w')
 
-        config_file.write('global\n')
-        for line in (self.config.get('global') or []):
+        for line in self.config.get('comments', []):
             config_file.write(line + '\n')
-        config_file.write('defaults\n')
-        for line in (self.config.get('defaults') or []):
-            config_file.write(line + '\n')
+        for section in ['global', 'defaults']:
+            config_file.write(section + '\n')
+            for line in (self.config.get(section, [])):
+                config_file.write(line + '\n')
 
         for block in sorted(self.config):
-            if block != 'global' and block != 'defaults':
+            if block not in ['comments', 'global', 'defaults']:
                 config_file.write('%s\n' % block)
                 for line in sorted(self.config[block]):
                     config_file.write('%s\n' % line)
