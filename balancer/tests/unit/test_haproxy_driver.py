@@ -388,7 +388,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
         self.driver.add_real_server_to_server_farm(sf, rs)
         self.check_line_on_pos('\tserver test_server3 1.1.1.3:23 check maxconn'
                                ' 2000 inter 100 rise 3 fall 4', 28)
-        rs['condition'] = 'disabled'
+        rs['extra']['condition'] = 'disabled'
         self.driver.add_real_server_to_server_farm(sf, rs)
         self.check_line_on_pos('\tserver test_server3 1.1.1.3:23 check maxconn'
                                ' 2000 inter 100 rise 3 fall 4 disabled', 29)
