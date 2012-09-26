@@ -60,6 +60,23 @@ Note, virtualenv needs to be updated any time code dependencies are changed. Vir
 ```
 The database is located in balancer.sqlite
 
+### Intergation with Keystone
+
+Authorization in LBaaS is configured by setting pipeline in `balancer-api-paste.ini`:
+```
+pipeline = authtoken context apiv1app
+```
+This line makes Paste.deploy create a pipeline of wsgi filters (see http://pythonpaste.org/wsgifilter/) for request processing.
+- authtoken (keystone wsgi filter), defined in ini-file authorizes user in keystone populating request with additional X-Auth- http headers containing various information about reuqest.
+- context (ContextMiddleware class in lbaas) creates request context which later to be used in authorization decisions.
+- apiv1app - LBaaS wsgi application
+
+Default configuration:
+```
+pipeline = apiv1app
+```
+makes LBaaS work as if every request had admin privileges.
+
 ### Run and Test
 
 #### Run LBaaS:
