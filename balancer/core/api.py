@@ -135,7 +135,7 @@ def create_lb(conf, params):
                                             'deployed': False})
     db_api.loadbalancer_update(conf, lb_ref['id'],
                                {'status': lb_status.ACTIVE,
-                                'deployd': True})
+                                'deployed': True})
     return lb_ref['id']
 
 
