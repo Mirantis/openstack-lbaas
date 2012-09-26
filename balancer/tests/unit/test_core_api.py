@@ -243,6 +243,18 @@ class TestBalancer(unittest.TestCase):
             mock.call(self.conf, self.lb_id, {'status': 'ACTIVE'}),
         ])
 
+        # reschedule returns another device
+        mock_reschedule.return_value = {'id': 'anotherdeviceid'}
+        mock_loadbalancer_update.reset_mock()
+        mock_loadbalancer_get.return_value['algorithm'] = 'FAKE_ALGO0'
+        api.update_lb(self.conf, 'faketenantid', self.lb_id, lb_body,
+                      async=False)
+        mock_loadbalancer_update.assert_has_calls([
+            mock.call(self.conf, self.lb_id, lb_ref),
+            mock.call(self.conf, self.lb_id, {'device_id': 'anotherdeviceid'}),
+            mock.call(self.conf, self.lb_id, {'status': 'ACTIVE'}),
+        ])
+
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.db.api.sticky_get_all_by_sf_id")
     @mock.patch("balancer.db.api.probe_get_all_by_sf_id")
@@ -327,6 +339,19 @@ class TestBalancer(unittest.TestCase):
         mock_serverfarm_get_all_by_lb_id.return_value = [sf_ref]
         predictor_ref = {'id': 'fakepredid'}
         mock_predictor_get_by_sf_id.return_value = predictor_ref
+
+        # assume core.commands.delete_loadbalancer raises error
+        mock_delete_loadbalancer.side_effect = exception.Invalid
+        self.assertRaises(exception.Invalid, api.update_lb, self.conf,
+                          'faketenantid', self.lb_id, lb_body, async=False)
+        mock_loadbalancer_update.assert_has_calls([
+            mock.call(self.conf, self.lb_id, lb_ref),
+            mock.call(self.conf, self.lb_id, {'status': 'ERROR'}), ])
+
+        # assume core.commands.create_loadbalancer raises error
+        mock_delete_loadbalancer.side_effect = None
+        mock_loadbalancer_update.reset_mock()
+        mock_loadbalancer_get.return_value['algorithm'] = 'FAKE_ALGO0'
         mock_create_loadbalancer.side_effect = exception.Invalid
         self.assertRaises(exception.Invalid, api.update_lb, self.conf,
                           'faketenantid', self.lb_id, lb_body, async=False)
