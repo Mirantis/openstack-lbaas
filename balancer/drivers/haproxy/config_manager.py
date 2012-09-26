@@ -243,7 +243,7 @@ class HaproxyFronted(HaproxyConfigBlock):
         self.bind_address = vip_ref['address']
         self.bind_port = vip_ref['port']
         self.default_backend = ''
-        self.mode = vip_ref.get('extra', {}).get('protocol', 'http')
+        self.mode = vip_ref.get('extra', {}).get('protocol', 'http').lower()
 
 
 class HaproxyBackend(HaproxyConfigBlock):
