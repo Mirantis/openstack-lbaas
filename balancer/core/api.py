@@ -88,27 +88,54 @@ def lb_show_details(conf, tenant_id, lb_id):
 
 
 def create_lb(conf, params):
-    nodes = params.pop('nodes', [])
-    probes = params.pop('healthMonitor', [])
-    vips = params.pop('virtualIps', [])
-    values = db_api.loadbalancer_pack_extra(params)
-    lb_ref = db_api.loadbalancer_create(conf, values)
-    device = scheduler.schedule(conf, lb_ref)
-    device_driver = drivers.get_device_driver(conf, device['id'])
-    lb = db_api.unpack_extra(lb_ref)
-    lb['device_id'] = device['id']
-    lb_ref = db_api.loadbalancer_pack_extra(lb)
-    try:
-        with device_driver.request_context() as ctx:
-            commands.create_loadbalancer(ctx, lb_ref, nodes, probes, vips)
+    node_values = params.pop('nodes', [])
+    probe_values = params.pop('healthMonitor', [])
+    vip_values = params.pop('virtualIps', [])
+    lb_values = db_api.loadbalancer_pack_extra(params)
 
-    except (exception.Error, exception.Invalid):
-        lb_ref.status = lb_status.ERROR
-        lb_ref.deployed = 'False'
-    else:
-        lb_ref.status = lb_status.ACTIVE
-        lb_ref.deployed = 'True'
-    db_api.loadbalancer_update(conf, lb['id'], lb_ref)
+    lb_ref = db_api.loadbalancer_create(conf, lb_values)
+    sf_ref = db_api.serverfarm_create(conf, {'lb_id': lb_ref['id']})
+    db_api.predictor_create(conf, {'sf_id': sf_ref['id'],
+                                   'type': lb_ref['algorithm']})
+    vip_update_values = {'protocol': lb_ref['protocol']}
+
+    vips = []
+    for vip in vip_values:
+        vip = db_api.virtualserver_pack_extra(vip)
+        db_api.pack_update(vip, vip_update_values)
+        vip['lb_id'] = lb_ref['id']
+        vip['sf_id'] = sf_ref['id']
+        vips.append(db_api.virtualserver_create(conf, vip))
+
+    servers = []
+    for server in node_values:
+        server = db_api.server_pack_extra(server)
+        server['sf_id'] = sf_ref['id']
+        servers.append(db_api.server_create(conf, server))
+
+    probes = []
+    for probe in probe_values:
+        probe = db_api.probe_pack_extra(probe)
+        probe['lb_id'] = lb_ref['id']
+        probe['sf_id'] = sf_ref['id']
+        probes.append(db_api.probe_create(conf, probe))
+
+    device_ref = scheduler.schedule(conf, lb_ref)
+    db_api.loadbalancer_update(conf, lb_ref['id'],
+                               {'device_id': device_ref['id']})
+    device_driver = drivers.get_device_driver(conf, device_ref['id'])
+    with device_driver.request_context() as ctx:
+        try:
+            commands.create_loadbalancer(ctx, sf_ref, vips, servers, probes,
+                                         [])
+        except Exception:
+            with utils.save_and_reraise_exception():
+                db_api.loadbalancer_update(conf, lb_ref['id'],
+                                           {'status': lb_status.ERROR,
+                                            'deployed': False})
+    db_api.loadbalancer_update(conf, lb_ref['id'],
+                               {'status': lb_status.ACTIVE,
+                                'deployed': True})
     return lb_ref['id']
 
 
@@ -117,24 +144,79 @@ def update_lb(conf, tenant_id, lb_id, lb_body):
     lb_ref = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     old_lb_ref = copy.deepcopy(lb_ref)
     db_api.pack_update(lb_ref, lb_body)
-    new_lb_ref = db_api.loadbalancer_update(conf, lb_id, lb_ref)
-    device_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
-    with device_driver.request_context() as ctx:
+    lb_ref = db_api.loadbalancer_update(conf, lb_id, lb_ref)
+    if (lb_ref['algorithm'] == old_lb_ref['algorithm'] and
+        lb_ref['protocol'] == old_lb_ref['protocol']):
+        logger.debug("In LB %r algorithm and protocol have not changed, "
+                     "nothing to do on the device %r.",
+                     lb_ref['id'], lb_ref['device_id'])
+        return
+
+    sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_ref['id'])[0]
+    if lb_ref['algorithm'] != old_lb_ref['algorithm']:
+        predictor_ref = db_api.predictor_get_by_sf_id(conf, sf_ref['id'])
+        db_api.predictor_update(conf, predictor_ref['id'],
+                                {'type': lb_ref['algorithm']})
+
+    vips = db_api.virtualserver_get_all_by_sf_id(conf, sf_ref['id'])
+    if lb_ref['protocol'] != old_lb_ref['protocol']:
+        vip_update_values = {'protocol': lb_ref['protocol']}
+        for vip in vips:
+            db_api.pack_update(vip, vip_update_values)
+            db_api.virtualserver_update(conf, vip['id'], vip)
+
+    servers = db_api.server_get_all_by_sf_id(conf, sf_ref['id'])
+    probes = db_api.probe_get_all_by_sf_id(conf, sf_ref['id'])
+    stickies = db_api.sticky_get_all_by_sf_id(conf, sf_ref['id'])
+
+    device_ref = scheduler.reschedule(conf, lb_ref)
+    if device_ref['id'] != lb_ref['device_id']:
+        from_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
+        to_driver = drivers.get_device_driver(conf, device_ref['id'])
+        lb_ref = db_api.loadbalancer_update(conf, lb_ref['id'],
+                                            {'device_id': device_ref['id']})
+    else:
+        from_driver = drivers.get_device_driver(conf, device_ref['id'])
+        to_driver = from_driver
+
+    with from_driver.request_context() as ctx:
         try:
-            commands.update_loadbalancer(ctx, old_lb_ref, new_lb_ref)
+            commands.delete_loadbalancer(ctx, sf_ref, vips, servers, probes,
+                                         stickies)
         except Exception:
             with utils.save_and_reraise_exception():
-                db_api.loadbalancer_update(conf, lb_id,
+                db_api.loadbalancer_update(conf, lb_ref['id'],
                                            {'status': lb_status.ERROR})
-    db_api.loadbalancer_update(conf, lb_id,
+    with to_driver.request_context() as ctx:
+        try:
+            commands.create_loadbalancer(ctx, sf_ref, vips, servers, probes,
+                                         stickies)
+        except Exception:
+            with utils.save_and_reraise_exception():
+                db_api.loadbalancer_update(conf, lb_ref['id'],
+                                           {'status': lb_status.ERROR})
+    db_api.loadbalancer_update(conf, lb_ref['id'],
                                {'status': lb_status.ACTIVE})
 
 
 def delete_lb(conf, tenant_id, lb_id):
-    lb = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
-    device_driver = drivers.get_device_driver(conf, lb['device_id'])
+    lb_ref = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
+    sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_ref['id'])[0]
+    vips = db_api.virtualserver_get_all_by_sf_id(conf, sf_ref['id'])
+    servers = db_api.server_get_all_by_sf_id(conf, sf_ref['id'])
+    probes = db_api.probe_get_all_by_sf_id(conf, sf_ref['id'])
+    stickies = db_api.sticky_get_all_by_sf_id(conf, sf_ref['id'])
+    device_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
     with device_driver.request_context() as ctx:
-        commands.delete_loadbalancer(ctx, lb)
+        commands.delete_loadbalancer(ctx, sf_ref, vips, servers, probes,
+                                     stickies)
+    db_api.probe_destroy_by_sf_id(conf, sf_ref['id'])
+    db_api.sticky_destroy_by_sf_id(conf, sf_ref['id'])
+    db_api.server_destroy_by_sf_id(conf, sf_ref['id'])
+    db_api.virtualserver_destroy_by_sf_id(conf, sf_ref['id'])
+    db_api.predictor_destroy_by_sf_id(conf, sf_ref['id'])
+    db_api.serverfarm_destroy(conf, sf_ref['id'])
+    db_api.loadbalancer_destroy(conf, lb_ref['id'])
 
 
 def lb_add_nodes(conf, tenant_id, lb_id, nodes):
