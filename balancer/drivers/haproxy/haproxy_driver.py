@@ -76,10 +76,10 @@ class HaproxyDriver(base_driver.BaseDriver):
         new_lines = []
         if probe_type == 'http':
             option = 'option httpchk'
-            method = probe.get('method')
+            method = (probe.get('extra') or {}).get('method')
             option = option + ' ' + (method if method else 'GET')
 
-            HTTPurl = probe.get('path', '')
+            HTTPurl = (probe.get('extra') or {}).get('path')
             option = option + ' ' + (HTTPurl if HTTPurl else '/')
 
             new_lines.append(option)
