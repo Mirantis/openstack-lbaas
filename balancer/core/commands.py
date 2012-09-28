@@ -244,73 +244,28 @@ def create_vip(ctx, vip, server_farm):
             delete_vip(ctx, vip)
 
 
-def create_loadbalancer(ctx, balancer, nodes, probes, vips):
-    lb = db_api.unpack_extra(balancer)
-    sf = db_api.serverfarm_create(ctx.conf, {'lb_id': lb['id']})
-    if 'algorithm' in lb:
-        predictor_params = {'sf_id': sf['id'], 'type': lb['algorithm']}
-    else:
-        predictor_params = {'sf_id': sf['id']}
-    db_api.predictor_create(ctx.conf, predictor_params)
-    create_server_farm(ctx, sf)
-    for node in nodes:
-        node_values = db_api.server_pack_extra(node)
-        node_values['sf_id'] = sf['id']
-        rs_ref = db_api.server_create(ctx.conf, node_values)
-        create_rserver(ctx, rs_ref)
-        add_rserver_to_server_farm(ctx, sf, rs_ref)
-
-    for probe in probes:
-        probe_values = db_api.probe_pack_extra(probe)
-        probe_values['lb_id'] = lb['id']
-        probe_values['sf_id'] = sf['id']
-        probe_ref = db_api.probe_create(ctx.conf, probe_values)
-        create_probe(ctx,  probe_ref)
-        add_probe_to_server_farm(ctx, sf, probe_ref)
-
-    for vip in vips:
-        vip_values = db_api.virtualserver_pack_extra(vip)
-        vip_values['lb_id'] = lb['id']
-        vip_values['sf_id'] = sf['id']
-        if not vip_values.get('extra'):
-            vip_values['extra'] = {'protocol': lb['protocol']}
-        elif 'protocol' not in vip_values['extra']:
-            vip_values['extra']['protocol'] = lb['protocol']
-        vip_ref = db_api.virtualserver_create(ctx.conf, vip_values)
-        create_vip(ctx, vip_ref, sf)
+def create_loadbalancer(ctx, sf_ref, vips, servers, probes, stickies):
+    create_server_farm(ctx, sf_ref)
+    for vip_ref in vips:
+        create_vip(ctx, vip_ref, sf_ref)
+    for server_ref in servers:
+        add_node_to_loadbalancer(ctx, sf_ref, server_ref)
+    for probe_ref in probes:
+        add_probe_to_loadbalancer(ctx, sf_ref, probe_ref)
+    for sticky_ref in stickies:
+        create_sticky(ctx, sticky_ref)
 
 
-def delete_loadbalancer(ctx, lb):
-    sf = db_api.serverfarm_get_all_by_lb_id(ctx.conf, lb['id'])[0]
-    vips = db_api.virtualserver_get_all_by_sf_id(ctx.conf, sf['id'])
-    rs = db_api.server_get_all_by_sf_id(ctx.conf, sf['id'])
-    probes = db_api.probe_get_all_by_sf_id(ctx.conf, sf['id'])
-    stickies = db_api.sticky_get_all_by_sf_id(ctx.conf, sf['id'])
-    for vip in vips:
-        delete_vip(ctx, vip)
-    for rserver in rs:
-        delete_rserver_from_server_farm(ctx, sf, rserver)
-        delete_rserver(ctx, rserver)
-    for probe in probes:
-        remove_probe_from_server_farm(ctx, sf, probe)
-        delete_probe(ctx, probe)
-    for sticky in stickies:
-        delete_sticky(ctx, sticky)
-    delete_server_farm(ctx, sf)
-    db_api.predictor_destroy_by_sf_id(ctx.conf, sf['id'])
-    db_api.server_destroy_by_sf_id(ctx.conf, sf['id'])
-    db_api.probe_destroy_by_sf_id(ctx.conf, sf['id'])
-    db_api.virtualserver_destroy_by_sf_id(ctx.conf, sf['id'])
-    db_api.sticky_destroy_by_sf_id(ctx.conf, sf['id'])
-    db_api.serverfarm_destroy(ctx.conf, sf['id'])
-    db_api.loadbalancer_destroy(ctx.conf, lb['id'])
-
-
-def update_loadbalancer(ctx, old_bal_ref,  new_bal_ref):
-    if old_bal_ref['algorithm'] != new_bal_ref['algorithm']:
-        sf_ref = db_api.serverfarm_get_all_by_lb_id(ctx.conf,
-                                                    new_bal_ref['id'])[0]
-        create_server_farm(ctx, sf_ref)
+def delete_loadbalancer(ctx, sf_ref, vips, servers, probes, stickies):
+    for vip_ref in vips:
+        delete_vip(ctx, vip_ref)
+    for server_ref in servers:
+        remove_node_from_loadbalancer(ctx, sf_ref, server_ref)
+    for probe_ref in probes:
+        remove_probe_from_loadbalancer(ctx, sf_ref, probe_ref)
+    for sticky_ref in stickies:
+        delete_sticky(ctx, sticky_ref)
+    delete_server_farm(ctx, sf_ref)
 
 
 def add_node_to_loadbalancer(ctx, sf, rserver):
@@ -328,9 +283,9 @@ def add_probe_to_loadbalancer(ctx, sf_ref, probe_ref):
     add_probe_to_server_farm(ctx, sf_ref, probe_ref)
 
 
-def makeDeleteProbeFromLBChain(ctx, balancer, probe):
-    remove_probe_from_server_farm(ctx, balancer.sf, probe)
-    delete_probe(ctx, probe)
+def remove_probe_from_loadbalancer(ctx, sf_ref, probe_ref):
+    remove_probe_from_server_farm(ctx, sf_ref, probe_ref)
+    delete_probe(ctx, probe_ref)
 
 
 def add_sticky_to_loadbalancer(ctx, balancer, sticky):

@@ -25,9 +25,6 @@ class RemoteControl(object):
             self._ssh.close()
             self.closed = True
 
-    def __del__(self):
-        self.close()
-
     def perform(self, command):
         self.open()
         LOG.debug('performing command: {0}'.format(command))
@@ -131,41 +128,38 @@ class RemoteSocketOperation(object):
         self.interface = device_extra.get('interface') or 'eth0'
         self.haproxy_socket = device_extra.get('socket') or '/tmp/haproxy.sock'
         self.remote_ctrl = remote_ctrl
-        self.backend_name = ''
-        self.rserver_name = ''
 
     def suspend_server(self, backend, rserver):
-        self.backend_name = backend.name
-        self.rserver_name = rserver['id']
-        self._operation_with_server_via_socket('disable')
+        self._operation_with_server_via_socket('disable', backend.name,
+                                               rserver['id'])
         return True
 
     def activate_server(self, backend, rserver):
-        self.backend_name = backend.name
-        self.rserver_name = rserver['id']
-        self._operation_with_server_via_socket('enable')
+        self._operation_with_server_via_socket('enable', backend.name,
+                                                rserver['id'])
         return True
 
-    def _operation_with_server_via_socket(self, operation):
+    def _operation_with_server_via_socket(self, operation, backend_name,
+                                          server_name):
         ssh_out = self.remote_ctrl.perform(
                 'echo %s server %s/%s | sudo socat stdio unix-connect:%s' %
-                (operation,  self.backend_name,
-                 self.rserver_name, self.haproxy_socket))[1]
+                (operation,  backend_name,
+                 server_name, self.haproxy_socket))[1]
         if  ssh_out == "":
             out = 'ok'
         else:
             out = 'is not ok'
         LOG.debug('Disable server %s/%s. Result is "%s"' %
-                      (self.backend_name, self.rserver_name, out))
+                      (backend_name, server_name, out))
 
-    def get_statistics(self, socket, backend):
+    def get_statistics(self, backend_name, server_name):
         """
             Get statistics from rserver / server farm
-            for all serverafarm use BACKEND as self.rserver_name
+            for all server farms use BACKEND as self.rserver_name
         """
         ssh_out = self.remote_ctrl.perform(
-           'echo show stat | sudo socat stdio unix-connect:%s | grep %s' %
-            (socket, backend))[1]
+           'echo show stat | sudo socat stdio unix-connect:%s | grep %s,%s' %
+            (self.haproxy_socket, backend_name, server_name))[1]
         LOG.debug('Get statistics about reserver %s/%s.'
-                    ' Result is \'%s\' ', backend, ssh_out)
+                    ' Result is \'%s\' ', backend_name, ssh_out)
         return ssh_out
