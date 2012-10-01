@@ -31,7 +31,7 @@ from balancer.db import api as db_api
 from balancer import utils
 
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 def asynchronous(func):
@@ -61,12 +61,12 @@ def lb_find_for_vm(conf, tenant_id, vm_id):
 
 
 def lb_get_data(conf, tenant_id, lb_id):
-    logger.debug("Getting information about loadbalancer with id: %s" % lb_id)
+    LOG.debug("Getting information about loadbalancer with id: %s" % lb_id)
     lb = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     lb_dict = db_api.unpack_extra(lb)
     if 'virtualIps' in lb_dict:
         lb_dict.pop("virtualIps")
-    logger.debug("Got information: %s" % list)
+    LOG.debug("Got information: %s" % list)
     return lb_dict
 
 
@@ -147,7 +147,7 @@ def update_lb(conf, tenant_id, lb_id, lb_body):
     lb_ref = db_api.loadbalancer_update(conf, lb_id, lb_ref)
     if (lb_ref['algorithm'] == old_lb_ref['algorithm'] and
         lb_ref['protocol'] == old_lb_ref['protocol']):
-        logger.debug("In LB %r algorithm and protocol have not changed, "
+        LOG.debug("In LB %r algorithm and protocol have not changed, "
                      "nothing to do on the device %r.",
                      lb_ref['id'], lb_ref['device_id'])
         return
@@ -267,7 +267,7 @@ def lb_change_node_status(conf, tenant_id, lb_id, lb_node_id, lb_node_status):
     rsname = rs['name']
     if rs['parent_id'] != "":
         rs['name'] = rs['parent_id']
-    logger.debug("Changing RServer status to: %s" % lb_node_status)
+    LOG.debug("Changing RServer status to: %s" % lb_node_status)
     device_driver = drivers.get_device_driver(conf, lb['device_id'])
     with device_driver.request_context() as ctx:
         if lb_node_status == "inservice":
@@ -313,7 +313,7 @@ def lb_show_probes(conf, tenant_id, lb_id):
 
 
 def lb_add_probe(conf, tenant_id, lb_id, probe_dict):
-    logger.debug("Got new probe description %s" % probe_dict)
+    LOG.debug("Got new probe description %s" % probe_dict)
     # NOTE(akscram): historically strange validation, wrong place for it.
     if probe_dict['type'] is None:
         return
@@ -365,7 +365,7 @@ def lb_show_sticky(conf, tenant_id, lb_id):
 
 
 def lb_add_sticky(conf, tenant_id, lb_id, st):
-    logger.debug("Got new sticky description %s" % st)
+    LOG.debug("Got new sticky description %s" % st)
     if st['type'] is None:
         return
     lb = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
@@ -390,7 +390,7 @@ def lb_delete_sticky(conf, tenant_id, lb_id, sticky_id):
 
 
 def lb_add_vip(conf, tenant_id, lb_id, vip_dict):
-    logger.debug("Called lb_add_vip(), conf: %r, lb_id: %s, vip_dict: %r",
+    LOG.debug("Called lb_add_vip(), conf: %r, lb_id: %s, vip_dict: %r",
                  conf, lb_id, vip_dict)
     lb_ref = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     # NOTE(akscram): server farms are really only create problems than
@@ -417,7 +417,7 @@ def lb_add_vip(conf, tenant_id, lb_id, vip_dict):
 
 
 def lb_delete_vip(conf, tenant_id, lb_id, vip_id):
-    logger.debug("Called lb_delete_vip(), conf: %r, lb_id: %s, vip_id: %s",
+    LOG.debug("Called lb_delete_vip(), conf: %r, lb_id: %s, vip_id: %s",
                  conf, lb_id, vip_id)
     lb_ref = db_api.loadbalancer_get(conf, lb_id, tenant_id=tenant_id)
     vip_ref = db_api.virtualserver_get(conf, vip_id)
@@ -441,7 +441,7 @@ def device_create(conf, **params):
 
 def device_info(params):
     query = params['query_params']
-    logger.debug("DeviceInfoWorker start with Params: %s Query: %s",
+    LOG.debug("DeviceInfoWorker start with Params: %s Query: %s",
                                                             params, query)
     return
 
@@ -450,11 +450,15 @@ def device_show_algorithms(conf):
     devices = db_api.device_get_all(conf)
     algorithms = []
     for device in devices:
-        device_driver = drivers.get_device_driver(conf, device['id'])
-        capabilities = device_driver.get_capabilities()
-        if capabilities is not None:
-            algorithms += [a for a in capabilities.get('algorithms', [])
-                    if a not in algorithms]
+        try:
+            device_driver = drivers.get_device_driver(conf, device['id'])
+            capabilities = device_driver.get_capabilities()
+            if capabilities is not None:
+                algorithms += [a for a in capabilities.get('algorithms', [])
+                               if a not in algorithms]
+        except Exception:
+            LOG.warn('Failed to get supported algorithms of device %s',
+                     device['name'], exc_info=True)
     return algorithms
 
 
@@ -462,11 +466,15 @@ def device_show_protocols(conf):
     devices = db_api.device_get_all(conf)
     protocols = []
     for device in devices:
-        device_driver = drivers.get_device_driver(conf, device['id'])
-        capabilities = device_driver.get_capabilities()
-        if capabilities is not None:
-            protocols += [a for a in capabilities.get('protocols', [])
-                    if a not in protocols]
+        try:
+            device_driver = drivers.get_device_driver(conf, device['id'])
+            capabilities = device_driver.get_capabilities()
+            if capabilities is not None:
+                protocols += [a for a in capabilities.get('protocols', [])
+                              if a not in protocols]
+        except Exception:
+            LOG.warn('Failed to get supported protocols of device %s',
+                     device['name'], exc_info=True)
     return protocols
 
 
