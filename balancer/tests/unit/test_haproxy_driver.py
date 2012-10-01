@@ -100,8 +100,8 @@ def get_fake_virtual_ip(id_, parameters):
 
 
 def get_fake_probe(id_, parameters):
-    probe = {'id': id_, 'type': 'HTTP', 'requestMethodType': 'GET', \
-             'path': '/test.html', 'minExpectStatus': '300'}
+    probe = {'id': id_, 'type': 'HTTP', 'extra': {'requestMethodType': 'GET',\
+             'path': '/test.html', 'minExpectStatus': '300'}}
     probe.update(parameters)
     return probe
 
