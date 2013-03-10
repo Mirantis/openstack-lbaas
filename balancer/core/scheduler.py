@@ -115,5 +115,21 @@ def filter_capabilities(conf, lb_ref, dev_ref):
     return True
 
 
+def filter_vip(conf, lb_ref, dev_ref):
+    vips = db_api.virtualserver_get_all_by_lb_id(lb_ref['id'])
+    if not vips:
+        LOG.info('Loadbalancer %s has no VIPs, skipping VIP filter',
+                 lb_ref['id'])
+        return True
+    if len(vips) > 1:
+        LOG.error('VIP filter does not support more than one VIP per LB')
+        return False
+    vip = vips[0]['address']
+    try:
+        return dev_ref['extra']['only_vip'] == vip
+    except KeyError:
+        return True
+
+
 def lbs_on(conf, lb_ref, dev_ref):
     return db_api.lb_count_active_by_device(conf, dev_ref['id'])

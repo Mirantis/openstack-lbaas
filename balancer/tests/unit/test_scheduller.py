@@ -137,6 +137,42 @@ class TestFilterCapabilities(unittest.TestCase):
         self.assertTrue(res)
 
 
+class TestFilterVip(unittest.TestCase):
+    def setUp(self):
+        self.conf = mock.MagicMock()
+        self.lb_ref = {'id': 1}
+        self.dev_ref = {'id': 2, 'extra': {'only_vip': '1.2.3.4'}}
+        self.patch_get_vips = mock.patch(
+                "balancer.db.api.virtualserver_get_all_by_lb_id")
+        self.mock_get_vips = self.patch_get_vips.start()
+
+    def tearDown(self):
+        self.assertEquals([mock.call(1)], self.mock_get_vips.call_args_list)
+        self.patch_get_vips.stop()
+
+    def test_proper(self):
+        self.mock_get_vips.return_value = [{'address': '1.2.3.4'}]
+        res = scheduler.filter_vip(self.conf, self.lb_ref, self.dev_ref)
+        self.assertTrue(res)
+
+    def test_novip(self):
+        self.mock_get_vips.return_value = []
+        res = scheduler.filter_vip(self.conf, self.lb_ref, self.dev_ref)
+        self.assertTrue(res)
+
+    def test_manyvips(self):
+        self.mock_get_vips.return_value = [{'address': '1.2.3.4'},
+                                           {'address': '5.6.7.8'}]
+        res = scheduler.filter_vip(self.conf, self.lb_ref, self.dev_ref)
+        self.assertFalse(res)
+
+    def test_baddev(self):
+        self.dev_ref['extra'] = {}
+        self.mock_get_vips.return_value = [{'address': '1.2.3.4'}]
+        res = scheduler.filter_vip(self.conf, self.lb_ref, self.dev_ref)
+        self.assertTrue(res)
+
+
 class TestWeigthsFunctions(unittest.TestCase):
     def setUp(self):
         self.conf = mock.MagicMock()
