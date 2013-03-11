@@ -126,7 +126,7 @@ def filter_vip(conf, lb_ref, dev_ref):
         return False
     vip = vips[0]['address']
     try:
-        return dev_ref['extra']['only_vip'] == vip
+        return dev_ref['extra']['sole_vip'] == vip
     except KeyError:
         return True
 
