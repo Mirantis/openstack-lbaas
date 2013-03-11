@@ -7,6 +7,7 @@ from mock import Mock, MagicMock, patch
 
 import balancer.drivers.haproxy.haproxy_driver as Driver
 import balancer.drivers.haproxy.remote_control as RemoteControl
+from balancer.drivers.haproxy import solevip
 
 device_fake = {'id': 'fake1',
                'type': 'FAKE',
@@ -513,6 +514,22 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
                                                        'LEAST_CONNECTION',
                                                        'HASH_URI'],
                                         'protocols': ['HTTP', 'TCP']})
+
+class TestSoleVipHaproxyDriver(unittest.TestCase):
+    def setUp(self):
+        self.ssh = init_ssh_mock()
+        self.driver = solevip.SoleVipHaproxyDriver(conf, device_fake)
+        self.driver._remote_ctrl._ssh = mock_for_ssh
+
+    def test_helper(self):
+        f = Mock()
+        wrapped = solevip._check_and_subst_vip(f)
+        _self = Mock(spec=['device_ref'])
+        _self.device_ref = {'extra': {'sole_vip': '1.1.1.1',
+                                      'sole_rip': '2.2.2.2'}}
+        wrapped(_self, {'address': '1.1.1.1'})
+        self.asertEquals(f.call_args_list, [call({'address': '2.2.2.2'})])
+        self.asserRaises(solevip.SoleVipException, wrapped, {'address': 'bad'})
 
 if __name__ == "__main__":
     unittest.main()
