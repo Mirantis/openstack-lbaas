@@ -13,7 +13,7 @@ def _check_and_subst_vip(f):
         if 'sole_vip' in dev_extra:
             if virtualserver['address'] != dev_extra['sole_vip']:
                 raise SoleVipException("VIP address is not supported")
-            virtualserver = virtualserver.copy()
+            virtualserver = dict(virtualserver)
             if 'sole_rip' in dev_extra:
                 virtualserver['address'] = dev_extra['sole_rip']
         f(self, virtualserver, *args, **kwargs)
