@@ -1,3 +1,5 @@
+import functools
+
 from balancer.drivers.haproxy import haproxy_driver
 
 
@@ -19,5 +21,7 @@ def _check_and_subst_vip(f):
 
 
 class SoleVipHaproxyDriver(haproxy_driver.HaproxyDriver):
-    create_virtual_ip = _check_and_subst_vip(create_virtual_ip)
-    delete_virtual_ip = _check_and_subst_vip(delete_virtual_ip)
+    create_virtual_ip = _check_and_subst_vip(
+            haproxy_driver.HaproxyDriver.create_virtual_ip)
+    delete_virtual_ip = _check_and_subst_vip(
+            haproxy_driver.HaproxyDriver.delete_virtual_ip)
