@@ -3,7 +3,8 @@ import functools
 from balancer.drivers.haproxy import haproxy_driver
 
 
-class SoleVipException(Exception): pass
+class SoleVipException(Exception):
+    pass
 
 
 def _check_and_subst_vip(f):

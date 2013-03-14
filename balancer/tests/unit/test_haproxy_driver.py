@@ -515,6 +515,7 @@ class TestHaproxyDriverAllFunctions(unittest.TestCase):
                                                        'HASH_URI'],
                                         'protocols': ['HTTP', 'TCP']})
 
+
 class TestSoleVipHaproxyDriver(unittest.TestCase):
     def setUp(self):
         self.ssh = init_ssh_mock()
