@@ -410,9 +410,13 @@ def lb_add_vip(conf, tenant_id, lb_id, vip_dict):
     elif 'protocol' not in values['extra']:
         values['extra']['protocol'] = lb_ref['protocol']
     vip_ref = db_api.virtualserver_create(conf, values)
-    device_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
-    with device_driver.request_context() as ctx:
-        commands.create_vip(ctx, vip_ref, sf_ref)
+    device_ref = scheduler.reschedule(conf, lb_ref)
+    if device_ref['id'] != lb_ref['device_id']:
+        update_lb(conf, tenant_id, lb_id, {})
+    else:
+        device_driver = drivers.get_device_driver(conf, lb_ref['device_id'])
+        with device_driver.request_context() as ctx:
+            commands.create_vip(ctx, vip_ref, sf_ref)
     return db_api.unpack_extra(vip_ref)
 
 

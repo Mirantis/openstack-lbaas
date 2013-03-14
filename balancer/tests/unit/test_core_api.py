@@ -617,6 +617,7 @@ class TestBalancer(unittest.TestCase):
         for mok in mocks:
             self.assertTrue(mok.called)
 
+    @mock.patch("balancer.core.scheduler.reschedule", autospec=True)
     @mock.patch("balancer.db.api.unpack_extra", autospec=True)
     @mock.patch("balancer.core.commands.create_vip", autospec=True)
     @mock.patch("balancer.drivers.get_device_driver", autospec=True)
@@ -631,7 +632,8 @@ class TestBalancer(unittest.TestCase):
                         mock_virtualserver_create,
                         mock_get_device_driver,
                         mock_create_vip,
-                        mock_unpack_extra):
+                        mock_unpack_extra,
+                        mock_reschedule):
         # Mock
         lb_ref = {
             'id': 'fakelbid',
@@ -648,6 +650,7 @@ class TestBalancer(unittest.TestCase):
         ctx.__enter__.return_value = enter_ctx = mock.Mock()
         mock_get_device_driver.return_value = \
             mock.Mock(request_context=mock.Mock(return_value=ctx))
+        mock_reschedule.return_value = {'id': lb_ref['device_id']}
         # Call
         api.lb_add_vip(self.conf, 'fake_tenant', 'fakelbid', 'fakevipdict')
         # Assert
