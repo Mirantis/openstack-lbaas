@@ -147,7 +147,8 @@ class TestFilterVip(unittest.TestCase):
         self.mock_get_vips = self.patch_get_vips.start()
 
     def tearDown(self):
-        self.assertEquals([mock.call(1)], self.mock_get_vips.call_args_list)
+        self.assertEquals([mock.call(self.conf, 1)],
+                          self.mock_get_vips.call_args_list)
         self.patch_get_vips.stop()
 
     def test_proper(self):

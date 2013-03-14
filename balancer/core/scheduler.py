@@ -116,7 +116,7 @@ def filter_capabilities(conf, lb_ref, dev_ref):
 
 
 def filter_vip(conf, lb_ref, dev_ref):
-    vips = db_api.virtualserver_get_all_by_lb_id(lb_ref['id'])
+    vips = db_api.virtualserver_get_all_by_lb_id(conf, lb_ref['id'])
     if not vips:
         LOG.info('Loadbalancer %s has no VIPs, skipping VIP filter',
                  lb_ref['id'])
