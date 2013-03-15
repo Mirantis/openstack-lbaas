@@ -150,7 +150,7 @@ def update_lb(conf, tenant_id, lb_id, lb_body):
         LOG.debug("In LB %r algorithm and protocol have not changed, "
                      "nothing to do on the device %r.",
                      lb_ref['id'], lb_ref['device_id'])
-        return
+        LOG.debug("But we'll try anyway")
 
     sf_ref = db_api.serverfarm_get_all_by_lb_id(conf, lb_ref['id'])[0]
     if lb_ref['algorithm'] != old_lb_ref['algorithm']:

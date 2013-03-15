@@ -255,6 +255,9 @@ class TestBalancer(unittest.TestCase):
             mock.call(self.conf, self.lb_id, {'status': 'ACTIVE'}),
         ])
 
+    @patch_reschedule
+    @mock.patch("balancer.core.commands.create_loadbalancer")
+    @mock.patch("balancer.core.commands.delete_loadbalancer")
     @mock.patch("balancer.drivers.get_device_driver")
     @mock.patch("balancer.db.api.sticky_get_all_by_sf_id")
     @mock.patch("balancer.db.api.probe_get_all_by_sf_id")
@@ -269,6 +272,8 @@ class TestBalancer(unittest.TestCase):
                                mock_loadbalancer_get,
                                mock_loadbalancer_update,
                                *mock_funcs):
+        mock_reschedule = mock_funcs[-1]
+        mock_reschedule.return_value = {'id': 'fakedeviceid'}
         lb_body = {'name': 'fakenewname'}
         mock_loadbalancer_get.return_value = {
             'id': self.lb_id,
