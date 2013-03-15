@@ -482,6 +482,17 @@ def device_show_protocols(conf):
     return protocols
 
 
+def device_show_vips(conf):
+    devices = db_api.device_get_all(conf)
+    vips = []
+    for device in devices:
+        try:
+            vips.append(device['extra']['sole_vip'])
+        except KeyError:
+            pass
+    return vips
+
+
 def device_delete(conf, device_id):
     try:
         lb_refs = db_api.loadbalancer_get_all_by_device_id(conf, device_id)

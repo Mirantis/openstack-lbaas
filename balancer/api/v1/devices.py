@@ -123,6 +123,11 @@ class Controller(object):
         protocols = core_api.device_show_protocols(self.conf)
         return {'protocols': protocols}
 
+    def show_vips(self, req):
+        LOG.debug("Got VIPs request. Request: %s", req)
+        vips = core_api.device_show_vips(self.conf)
+        return {'vips': vips}
+
     def _validate_params(self, params):
         pass
 

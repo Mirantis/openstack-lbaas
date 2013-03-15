@@ -98,5 +98,9 @@ class API(wsgi.Router):
                        controller=device_resource,
                        action="show_protocols",
                        conditions={'method': ["GET"]})
+        mapper.connect("/vips",
+                       controller=device_resource,
+                       action="show_vips",
+                       conditions={'method': ["GET"]})
 
         super(API, self).__init__(mapper)
