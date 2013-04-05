@@ -12,12 +12,12 @@ class RemoteControl(object):
     def __init__(self, conf, device_ref):
         self.host = device_ref['ip']
         self.user = device_ref['user']
-        if 'password' in device_ref:
+        self.password = device_ref.get('password')
+        if self.password:
             LOG.warn('Using SSH password to access HAproxy device %s',
                      device_ref['id'])
-            self.password = device_ref['password']
+            self.key = None
         else:
-            self.password = None
             try:
                 self.key = conf.haproxy_ssh_key_path
             except cfg.NoSuchOptError:
@@ -29,7 +29,7 @@ class RemoteControl(object):
 
     def open(self):
         if self.closed:
-            if self.password is not None:
+            if self.password:
                 self._ssh.connect(self.host, username=self.user,
                                   password=self.password)
             else:
