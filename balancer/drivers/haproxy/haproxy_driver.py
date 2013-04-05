@@ -44,7 +44,7 @@ class HaproxyDriver(base_driver.BaseDriver):
     def __init__(self, conf, device_ref):
         super(HaproxyDriver, self).__init__(conf, device_ref)
 
-        self._remote_ctrl = RemoteControl(device_ref)
+        self._remote_ctrl = RemoteControl(conf, device_ref)
         self.remote_socket = RemoteSocketOperation(device_ref,
                                                    self._remote_ctrl)
         self.remote_interface = RemoteInterface(device_ref, self._remote_ctrl)

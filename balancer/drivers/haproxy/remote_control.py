@@ -1,23 +1,40 @@
 import logging
 import paramiko
 
+from balancer.common import cfg
 
 LOG = logging.getLogger(__name__)
 
+key_opt = cfg.StrOpt('haproxy_ssh_key_path')
+
 
 class RemoteControl(object):
-    def __init__(self, device_ref):
+    def __init__(self, conf, device_ref):
         self.host = device_ref['ip']
         self.user = device_ref['user']
-        self.password = device_ref['password']
+        if 'password' in device_ref:
+            LOG.warn('Using SSH password to access HAproxy device %s',
+                     device_ref['id'])
+            self.password = device_ref['password']
+        else:
+            self.password = None
+            try:
+                self.key = conf.haproxy_ssh_key_path
+            except cfg.NoSuchOptError:
+                conf.register_opt(key_opt)
+                self.key = conf.haproxy_ssh_key_path
         self._ssh = paramiko.SSHClient()
         self._ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.closed = True
 
     def open(self):
         if self.closed:
-            self._ssh.connect(self.host, username=self.user,
-                              password=self.password)
+            if self.password is not None:
+                self._ssh.connect(self.host, username=self.user,
+                                  password=self.password)
+            else:
+                self._ssh.connect(self.host, username=self.user,
+                                  key_filename=self.key)
             self.closed = False
 
     def close(self):

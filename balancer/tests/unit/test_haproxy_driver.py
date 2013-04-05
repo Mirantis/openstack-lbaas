@@ -138,7 +138,9 @@ def get_fake_Haproxy_rserver(id_):
 class TestHaproxyDriverRemoteService(unittest.TestCase):
     def setUp(self):
         self.ssh = init_ssh_mock()
-        remote_ctrl = RemoteControl.RemoteControl(device_fake)
+        cfg = Mock()
+        cfg.haproxy_ssh_key_path = '/nonexistent'
+        remote_ctrl = RemoteControl.RemoteControl(cfg, device_fake)
         remote_ctrl._ssh = self.ssh
         self.remote_service = RemoteControl.RemoteService(remote_ctrl)
 
@@ -164,7 +166,9 @@ class TestHaproxyDriverRemoteInterface(unittest.TestCase):
     def setUp(self):
         self.ssh = init_ssh_mock()
         self.frontend = get_fake_HaproxyFrontend('test')
-        remote_ctrl = RemoteControl.RemoteControl(device_fake)
+        cfg = Mock()
+        cfg.haproxy_ssh_key_path = '/nonexistent'
+        remote_ctrl = RemoteControl.RemoteControl(cfg, device_fake)
         remote_ctrl._ssh = self.ssh
         self.remote_interface = RemoteControl.RemoteInterface(device_fake,
                                                               remote_ctrl)
@@ -213,7 +217,9 @@ class TestHaproxyDriverRemoteInterface(unittest.TestCase):
 class TestHaproxyDriverRemoteSocketOperation(unittest.TestCase):
     def setUp(self):
         self.ssh = init_ssh_mock()
-        remote_ctrl = RemoteControl.RemoteControl(device_fake)
+        cfg = Mock()
+        cfg.haproxy_ssh_key_path = '/nonexistent'
+        remote_ctrl = RemoteControl.RemoteControl(cfg, device_fake)
         remote_ctrl._ssh = self.ssh
         self.backend = get_fake_HaproxyBackend('test_backend')
         self.rserver = get_fake_rserver('test_rserver', {})
