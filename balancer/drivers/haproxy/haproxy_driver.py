@@ -129,10 +129,31 @@ class HaproxyDriver(base_driver.BaseDriver):
         pass
 
     def create_stickiness(self, sticky):
-        pass
+        backend = HaproxyBackend(sticky['sf_id'])
+        sticky_type = sticky['type'].lower()
+        extra = sticky.get('extra') or {}
+        new_lines = []
+        if sticky_type == 'http-cookie':
+            option = "appsession %s len %s timeoun %s request-learn" % (
+                    extra['cookie'],
+                    extra.get('length', 16),
+                    extra.get('timeout', '1h'))
+            new_lines.append(option)
+        else:
+            LOG.error('Unsupported sticky type %s', sticky_type)
+            return
+        if new_lines:
+            self.config_manager.add_lines_to_block(backend, new_lines)
 
     def delete_stickiness(self, sticky):
-        pass
+        backend = HaproxyBackend(sticky['sf_id'])
+        sticky_type = sticky['type'].lower()
+        del_lines = []
+        if sticky_type == 'http-cookie':
+            del_lines.append('appsession')
+
+        if del_lines:
+            self.config_manager.del_lines_from_block(backend, del_lines)
 
     def add_real_server_to_server_farm(self, serverfarm, rserver):
         """
