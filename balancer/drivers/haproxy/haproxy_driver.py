@@ -134,7 +134,7 @@ class HaproxyDriver(base_driver.BaseDriver):
         extra = sticky.get('extra') or {}
         new_lines = []
         if sticky_type == 'http-cookie':
-            option = "appsession %s len %s timeoun %s request-learn" % (
+            option = "appsession %s len %s timeout %s request-learn" % (
                     extra['cookie'],
                     extra.get('length', 16),
                     extra.get('timeout', '1h'))
