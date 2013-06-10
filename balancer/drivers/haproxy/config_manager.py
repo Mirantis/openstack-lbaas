@@ -121,6 +121,15 @@ class ConfigManager(object):
         if backend is not None:
             frontend_block.append('\tdefault_backend %s' %
                                            backend.name)
+            backend_block = self.config['backend %s' % backend.name]
+            mode_str = '\tmode %s' % fronted.mode
+            found = False
+            for i, s in enumerate(backend_block):
+                if s.startswith('\tmode'):
+                    found = True
+                    backend_block[i] = mode_str
+            if not found:
+                backend_block.append(mode_str)
         self.config['frontend %s' % fronted.name] = frontend_block
         self._apply_config()
 
